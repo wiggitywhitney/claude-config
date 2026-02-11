@@ -29,12 +29,6 @@ Every PR must go through CodeRabbit review before merge. This is a hard requirem
 6. Only stop for user input if something is truly ambiguous or has major architectural implications
 7. After ALL comments are addressed, merge the PR
 
-## Code Style Guidelines
-
-**Code Block Language Identifiers:**
-- Always use `text` (not empty) for plain text code blocks in markdown
-- Use appropriate language identifiers: `bash` for shell commands, `javascript` for JS code, `json` for JSON examples, `text` for plain text or generic examples
-
 ## Git Conventions
 
 - Don't squash git commits
