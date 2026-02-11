@@ -7,9 +7,10 @@
 #   standard — Check for debug code and .only in tracked files (default)
 #   pre-pr   — Standard checks + npm audit + secrets in staged diff + .env staging check
 #
-# Intentional console.log/debugger can be suppressed two ways:
+# Intentional console.log can be suppressed two ways:
 #   1. Inline: add an eslint-disable comment on the line (e.g., // eslint-disable-line no-console)
-#   2. File-level: add path patterns to .verifyignore in the project root
+#   2. File-level: add path patterns to .console-allow in the project root
+# Note: .console-allow only affects the console.log check. debugger and .only checks are unaffected.
 #
 # Exit codes:
 #   0 — All checks passed
@@ -65,19 +66,19 @@ except Exception:
   done <<< "$BIN_FILES"
 fi
 
-# Read .verifyignore for additional path exclusions
-if [ -f "$PROJECT_DIR/.verifyignore" ]; then
+# Read .console-allow for additional path exclusions
+if [ -f "$PROJECT_DIR/.console-allow" ]; then
   while IFS= read -r pattern; do
     # Skip empty lines and comments
     pattern=$(echo "$pattern" | sed 's/#.*//' | xargs)
     if [ -n "$pattern" ]; then
       CONSOLE_EXCLUDES+=(":!$pattern")
     fi
-  done < "$PROJECT_DIR/.verifyignore"
+  done < "$PROJECT_DIR/.console-allow"
 fi
 
 # Check for console.log in source files
-# Excluded: node_modules, test files, test scripts, CLI entry points, .verifyignore patterns
+# Excluded: node_modules, test files, test scripts, CLI entry points, .console-allow patterns
 # Lines with eslint-disable comments are filtered out (intentional usage)
 CONSOLE_LOGS=$(git grep -n 'console\.log' -- '*.js' '*.ts' '*.jsx' '*.tsx' "${CONSOLE_EXCLUDES[@]}" 2>/dev/null | grep -v 'eslint-disable' || true)
 if [ -n "$CONSOLE_LOGS" ]; then
@@ -165,9 +166,12 @@ if [ $ISSUES_FOUND -eq 0 ]; then
 else
   echo "FINDINGS:"
   echo -e "$FINDINGS"
-  echo "If these are intentional, suppress them by:"
+  echo "If console.log is intentional (CLI output, operational logging), suppress it:"
   echo "  - Inline: add // eslint-disable-line no-console to the line"
-  echo "  - File-level: add the file path to .verifyignore in the project root"
+  echo "  - File-level: add the file path to .console-allow in the project root"
+  echo "Do not suppress console.log that needs to be removed or fixed, even if the file"
+  echo "is out of scope of the current commit. Fix it instead."
+  echo "(This only affects the console.log check. debugger and .only checks are unaffected.)"
   echo ""
   echo "RESULT: Security check FAILED"
 fi
