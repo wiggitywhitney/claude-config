@@ -1,6 +1,6 @@
 # PRD #1: Shared Claude Code Testing & Developer Infrastructure
 
-**Status**: Draft
+**Status**: In Progress
 **Priority**: High
 **Created**: 2026-02-11
 **GitHub Issue**: [#1](https://github.com/wiggitywhitney/claude-config/issues/1)
@@ -143,9 +143,9 @@ How to use this repo:
 ### Milestone 1: /verify Skill (Highest Value)
 Create the global `/verify` slash command that runs build → type check → lint → tests → security scan as a pre-PR verification loop. Install to `~/.claude/skills/verify/`. Includes a PreToolUse hook on `git commit` that runs verification scripts as a gate — blocks the commit if any phase fails. Test against commit-story-v2 to validate it works on a real project.
 
-- [ ] `/verify` skill created with auto-detection and stop-on-failure loop
-- [ ] PreToolUse hook on `git commit` runs verification and blocks on failure
-- [ ] Tested successfully in commit-story-v2
+- [x] `/verify` skill created with auto-detection and stop-on-failure loop
+- [x] PreToolUse hook on `git commit` runs verification and blocks on failure
+- [x] Tested successfully in commit-story-v2
 
 ### Milestone 2: Testing Decision Guide + Testing Rules
 Create the testing decision guide mapping project types to strategies, and the Always/Never testing rules. These two deliverables are closely related and form the intellectual foundation of the toolkit.
