@@ -1,0 +1,55 @@
+# Claude Config
+
+Shared Claude Code testing infrastructure, safety config, and developer tooling across all of Whitney's repos.
+
+## YOLO Workflow Mode
+
+When running PRD workflows, continue through the full cycle without stopping for confirmation:
+- `/prd-start` → automatically invoke `/prd-next`
+- After task completion → automatically invoke `/prd-update-progress`
+- After progress update → automatically invoke `/prd-next` for the next task
+- Continue until PRD is complete, then invoke `/prd-done`
+
+**NEVER ask "Shall I continue?" or "Do you want to proceed?" or "Ready to start?"** - just proceed. The user will interrupt if needed.
+
+**EXCEPTION: CodeRabbit reviews are REQUIRED before merging any PR.** Create the PR, wait for CodeRabbit to complete its review, then process ALL CodeRabbit feedback with the user before merging. This is non-negotiable.
+
+## CodeRabbit Reviews (MANDATORY)
+
+Every PR must go through CodeRabbit review before merge. This is a hard requirement, not optional.
+
+**Timing:** CodeRabbit reviews take ~5 minutes to complete. After creating a PR, wait at least 5 minutes before checking for the review. Do NOT poll every 30 seconds.
+
+**Process:**
+1. Create the PR and push to remote
+2. Wait 5 minutes, then check for CodeRabbit review using `mcp__coderabbitai__get_coderabbit_reviews`
+3. If review not ready, wait another 2-3 minutes before checking again
+4. For each CodeRabbit comment: explain the issue, give a recommendation, then **follow your own recommendation** (YOLO mode)
+5. After addressing each issue, use `mcp__coderabbitai__resolve_comment` to mark resolved
+6. Only stop for user input if something is truly ambiguous or has major architectural implications
+7. After ALL comments are addressed, merge the PR
+
+## Code Style Guidelines
+
+**Code Block Language Identifiers:**
+- Always use `text` (not empty) for plain text code blocks in markdown
+- Use appropriate language identifiers: `bash` for shell commands, `javascript` for JS code, `json` for JSON examples, `text` for plain text or generic examples
+
+## Git Conventions
+
+- Don't squash git commits
+- Make a new branch for each new feature
+- Never reference task management systems in code files or documentation
+- Create a new PR to merge to main anytime there are codebase additions
+- Make sure CodeRabbit review has been examined and is approved by human before merging PR
+
+## Secrets Management (vals)
+
+This project uses [vals](https://github.com/helmfile/vals) for secrets management, pulling from GCP Secrets Manager.
+
+**Exporting secrets to shell (for MCP servers):**
+```bash
+eval $(vals eval -f .vals.yaml --output shell)
+```
+
+Secrets are configured in `.vals.yaml` (gitignored).
