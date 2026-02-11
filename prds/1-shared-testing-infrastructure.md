@@ -200,6 +200,12 @@ Write the README explaining how to use the toolkit and apply it to new projects.
 - **Rationale**: The skill provides the interactive experience when you want Claude to interpret failures, suggest fixes, and retry. The hook provides 100% deterministic enforcement with zero context usage and zero prompt compliance risk. Both use the same underlying scripts, keeping behavior consistent.
 - **Impact**: The skill and hook share the same scripts but serve different purposes; neither replaces the other
 
+### Decision 6: Replace CLAUDE.md Style Rules with Hooks
+- **Date**: 2026-02-11
+- **Decision**: Replace the CLAUDE.md rule about markdown code block language specifiers with a PostToolUse hook on `Write|Edit`. The hook runs a stateful parser (tracks opening vs closing fences) and feeds violations back to Claude immediately after writing.
+- **Rationale**: CLAUDE.md style rules have two costs: they consume context window space on every conversation, and prompt compliance isn't 100%. A PostToolUse hook is deterministic (zero context, 100% enforcement) and catches issues at the moment of writing — before they reach commit or CodeRabbit review. This principle applies to any behavioral rule that can be checked programmatically.
+- **Impact**: Removes code block language specifier rule from CLAUDE.md; adds PostToolUse hook and `check-markdown-codeblocks.py` script to the toolkit
+
 ### Decision 3: LangGraph Not Needed
 - **Date**: 2026-02-11
 - **Decision**: Use skill + scripts, not LangGraph, for orchestrating the verification process
