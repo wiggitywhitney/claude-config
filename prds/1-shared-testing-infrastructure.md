@@ -141,9 +141,10 @@ How to use this repo:
 ## Milestones
 
 ### Milestone 1: /verify Skill (Highest Value)
-Create the global `/verify` slash command that runs build → type check → lint → tests → security scan as a pre-PR verification loop. Install to `~/.claude/skills/verify/`. Test against commit-story-v2 to validate it works on a real project.
+Create the global `/verify` slash command that runs build → type check → lint → tests → security scan as a pre-PR verification loop. Install to `~/.claude/skills/verify/`. Includes a PreToolUse hook on `git commit` that runs verification scripts as a gate — blocks the commit if any phase fails. Test against commit-story-v2 to validate it works on a real project.
 
 - [ ] `/verify` skill created with auto-detection and stop-on-failure loop
+- [ ] PreToolUse hook on `git commit` runs verification and blocks on failure
 - [ ] Tested successfully in commit-story-v2
 
 ### Milestone 2: Testing Decision Guide + Testing Rules
@@ -169,7 +170,7 @@ Write the README explaining how to use the toolkit and apply it to new projects.
 - Per-project test suites (those belong in each repo's own PRD)
 - CI/CD pipeline templates (future enhancement)
 - Python/Go `/verify` support (Node.js/TypeScript first, extensible later)
-- Hooks system (future enhancement — may add pre-commit hooks later)
+- Full hooks system (future enhancement — the single `/verify` PreToolUse hook is in scope, but a comprehensive hooks framework is not)
 - Agent definitions (not needed for this toolkit's scope)
 - LangGraph orchestration — the verification process is linear (not a complex state machine), so a skill + scripts approach is sufficient. LangGraph would add infrastructure overhead (Python runtime, API keys, separate system) without meaningful benefit for a sequential 5-phase process.
 
@@ -186,6 +187,18 @@ Write the README explaining how to use the toolkit and apply it to new projects.
 - **Decision**: The `pre-pr` mode runs four specific additional checks beyond the standard 5-phase verification
 - **Rationale**: Based on research sources (Michael Forrester, Affaan Mustafa), these are the highest-value pre-PR security checks that catch common mistakes before code reaches remote
 - **Impact**: `security-check.sh` script scope expanded; `pre-pr` mode is now concretely defined rather than vaguely "extra security"
+
+### Decision 4: PreToolUse Hook on git commit (Enforcement Gate)
+- **Date**: 2026-02-11
+- **Decision**: Add a global PreToolUse hook on `Bash` that detects `git commit` commands and runs the verification scripts directly as a blocking gate. No state tracking — runs fresh every time.
+- **Rationale**: The hook runs the same deterministic scripts (detect-project, verify-phase, security-check) every time a commit is attempted. If any phase fails, the commit is blocked. No timestamp files or state management needed. Commit was chosen over push because it provides earlier feedback and implicitly makes all pushes safe (you can't push unverified commits). Push doesn't need its own hook since every committed change has already been verified.
+- **Impact**: Added to Milestone 1; moves hooks from "out of scope" to "targeted single hook in scope"; eliminates need for CLAUDE.md rules about running /verify
+
+### Decision 5: Two-Layer Verification Design
+- **Date**: 2026-02-11
+- **Decision**: `/verify` exists as two complementary layers: (1) the skill for interactive use — AI-orchestrated with fix-and-retry loop, and (2) the hook for enforcement — deterministic gate on commit using the same scripts
+- **Rationale**: The skill provides the interactive experience when you want Claude to interpret failures, suggest fixes, and retry. The hook provides 100% deterministic enforcement with zero context usage and zero prompt compliance risk. Both use the same underlying scripts, keeping behavior consistent.
+- **Impact**: The skill and hook share the same scripts but serve different purposes; neither replaces the other
 
 ### Decision 3: LangGraph Not Needed
 - **Date**: 2026-02-11
