@@ -35,8 +35,35 @@ echo "=== Security Check (mode: $MODE) ==="
 echo "Directory: $PROJECT_DIR"
 echo "---"
 
-# Check for console.log in source files (not in node_modules, not in test files)
-CONSOLE_LOGS=$(git grep -n 'console\.log' -- '*.js' '*.ts' '*.jsx' '*.tsx' ':!node_modules' ':!*.test.*' ':!*.spec.*' ':!*__tests__*' 2>/dev/null || true)
+# Build exclusion list for console.log check
+CONSOLE_EXCLUDES=(':!node_modules' ':!*.test.*' ':!*.spec.*' ':!*__tests__*' ':!scripts/test-*')
+
+# Exclude CLI entry points listed in package.json bin field
+if [ -f "$PROJECT_DIR/package.json" ]; then
+  BIN_FILES=$(python3 -c "
+import json
+try:
+    with open('$PROJECT_DIR/package.json') as f:
+        pkg = json.load(f)
+    bin_field = pkg.get('bin', {})
+    if isinstance(bin_field, str):
+        print(bin_field)
+    elif isinstance(bin_field, dict):
+        for path in bin_field.values():
+            print(path)
+except Exception:
+    pass
+" 2>/dev/null || true)
+  while IFS= read -r bin_file; do
+    if [ -n "$bin_file" ]; then
+      CONSOLE_EXCLUDES+=(":!$bin_file")
+    fi
+  done <<< "$BIN_FILES"
+fi
+
+# Check for console.log in source files
+# Excluded: node_modules, test files, test scripts, CLI entry points (from package.json bin)
+CONSOLE_LOGS=$(git grep -n 'console\.log' -- '*.js' '*.ts' '*.jsx' '*.tsx' "${CONSOLE_EXCLUDES[@]}" 2>/dev/null || true)
 if [ -n "$CONSOLE_LOGS" ]; then
   add_finding "Found console.log statements in source files:"
   while IFS= read -r line; do
