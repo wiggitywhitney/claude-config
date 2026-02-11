@@ -7,6 +7,10 @@
 #   standard — Check for debug code and .only in tracked files (default)
 #   pre-pr   — Standard checks + npm audit + secrets in staged diff + .env staging check
 #
+# Intentional console.log/debugger can be suppressed two ways:
+#   1. Inline: add an eslint-disable comment on the line (e.g., // eslint-disable-line no-console)
+#   2. File-level: add path patterns to .verifyignore in the project root
+#
 # Exit codes:
 #   0 — All checks passed
 #   1 — Issues found (details printed to stdout)
@@ -61,9 +65,21 @@ except Exception:
   done <<< "$BIN_FILES"
 fi
 
+# Read .verifyignore for additional path exclusions
+if [ -f "$PROJECT_DIR/.verifyignore" ]; then
+  while IFS= read -r pattern; do
+    # Skip empty lines and comments
+    pattern=$(echo "$pattern" | sed 's/#.*//' | xargs)
+    if [ -n "$pattern" ]; then
+      CONSOLE_EXCLUDES+=(":!$pattern")
+    fi
+  done < "$PROJECT_DIR/.verifyignore"
+fi
+
 # Check for console.log in source files
-# Excluded: node_modules, test files, test scripts, CLI entry points (from package.json bin)
-CONSOLE_LOGS=$(git grep -n 'console\.log' -- '*.js' '*.ts' '*.jsx' '*.tsx' "${CONSOLE_EXCLUDES[@]}" 2>/dev/null || true)
+# Excluded: node_modules, test files, test scripts, CLI entry points, .verifyignore patterns
+# Lines with eslint-disable comments are filtered out (intentional usage)
+CONSOLE_LOGS=$(git grep -n 'console\.log' -- '*.js' '*.ts' '*.jsx' '*.tsx' "${CONSOLE_EXCLUDES[@]}" 2>/dev/null | grep -v 'eslint-disable' || true)
 if [ -n "$CONSOLE_LOGS" ]; then
   add_finding "Found console.log statements in source files:"
   while IFS= read -r line; do
@@ -71,8 +87,8 @@ if [ -n "$CONSOLE_LOGS" ]; then
   done <<< "$CONSOLE_LOGS"
 fi
 
-# Check for debugger statements
-DEBUGGERS=$(git grep -n 'debugger' -- '*.js' '*.ts' '*.jsx' '*.tsx' ':!node_modules' 2>/dev/null || true)
+# Check for debugger statements (eslint-disable filter applied here too)
+DEBUGGERS=$(git grep -n 'debugger' -- '*.js' '*.ts' '*.jsx' '*.tsx' ':!node_modules' 2>/dev/null | grep -v 'eslint-disable' || true)
 if [ -n "$DEBUGGERS" ]; then
   add_finding "Found debugger statements:"
   while IFS= read -r line; do
@@ -149,6 +165,10 @@ if [ $ISSUES_FOUND -eq 0 ]; then
 else
   echo "FINDINGS:"
   echo -e "$FINDINGS"
+  echo "If these are intentional, suppress them by:"
+  echo "  - Inline: add // eslint-disable-line no-console to the line"
+  echo "  - File-level: add the file path to .verifyignore in the project root"
+  echo ""
   echo "RESULT: Security check FAILED"
 fi
 
