@@ -49,12 +49,38 @@ Phase 4: Tests        → All tests pass?
 Phase 5: Security     → No vulnerabilities or leftover debug code?
 ```
 
-Key design decisions:
+#### Architecture: Skill + Deterministic Scripts
+
+The `/verify` skill uses a **hybrid architecture**: a skill prompt that defines the process and behavioral constraints, underpinned by deterministic bash scripts that do the actual work.
+
+**Why a skill, not just a script?** The skill controls Claude's autonomous behavior — ensuring it follows the defined verification process (phases, ordering, stop-on-failure rules) rather than improvising its own approach. The skill is a behavioral contract, not AI-powered verification.
+
+**Why scripts underneath?** Every verification phase is deterministic — file existence checks, command execution, grep patterns, exit codes. Scripts provide reliable, predictable results with no AI inference overhead.
+
+**Script components:**
+
+| Script | Responsibility |
+|---|---|
+| `detect-project.sh` | Reads config files (package.json, tsconfig.json, etc.), outputs project type and available commands |
+| `verify-phase.sh` | Runs a single verification phase by name, returns exit code |
+| `security-check.sh` | Greps for debug code, secrets, .only, staged .env files |
+
+**The skill orchestrates the scripts**: calls each in sequence, interprets results per the defined rules, communicates findings, and suggests fixes when phases fail.
+
+#### Key design decisions:
 - **Stop on first failure, fix, restart from step 1** (from Michael Forrester's approach)
 - **Auto-detect project type** — reads package.json, tsconfig.json, etc. to determine commands
 - **Node.js/TypeScript first**, extensible to Python/Go later
 - **Supports arguments**: `quick` (build + types only), `full` (default), `pre-pr` (full + security)
+- **Script-first principle** — all verification logic is deterministic; AI handles orchestration and communication only
 - Inspired by Michael Forrester's 8-step verify command and Affaan Mustafa's verification-loop skill
+
+#### Pre-PR Security Checks (`pre-pr` mode)
+In addition to the standard 5-phase verification, `pre-pr` mode runs:
+- `npm audit` for dependency vulnerabilities
+- Grep for hardcoded secrets/API keys in the staged diff
+- Grep for leftover `console.log` / `debugger` statements
+- Check that no `.env` files are staged
 
 ### 3. CLAUDE.md Templates
 Starter templates with testing rules baked in:
@@ -145,3 +171,24 @@ Write the README explaining how to use the toolkit and apply it to new projects.
 - Python/Go `/verify` support (Node.js/TypeScript first, extensible later)
 - Hooks system (future enhancement — may add pre-commit hooks later)
 - Agent definitions (not needed for this toolkit's scope)
+- LangGraph orchestration — the verification process is linear (not a complex state machine), so a skill + scripts approach is sufficient. LangGraph would add infrastructure overhead (Python runtime, API keys, separate system) without meaningful benefit for a sequential 5-phase process.
+
+## Decision Log
+
+### Decision 1: Hybrid Skill + Scripts Architecture
+- **Date**: 2026-02-11
+- **Decision**: `/verify` will be a Claude Code skill (behavioral prompt) that orchestrates deterministic bash scripts, not a pure skill or pure bash script
+- **Rationale**: The skill controls Claude's autonomous behavior (follow this process, in this order, with these rules). The scripts handle all deterministic work (project detection, command execution, pattern matching). This aligns with the script-first principle: use scripts for file operations, validation, and command execution; use AI for process control, interpretation, and communication.
+- **Impact**: Milestone 1 deliverable includes both a skill prompt file and supporting bash scripts
+
+### Decision 2: Pre-PR Security Checks Defined
+- **Date**: 2026-02-11
+- **Decision**: The `pre-pr` mode runs four specific additional checks beyond the standard 5-phase verification
+- **Rationale**: Based on research sources (Michael Forrester, Affaan Mustafa), these are the highest-value pre-PR security checks that catch common mistakes before code reaches remote
+- **Impact**: `security-check.sh` script scope expanded; `pre-pr` mode is now concretely defined rather than vaguely "extra security"
+
+### Decision 3: LangGraph Not Needed
+- **Date**: 2026-02-11
+- **Decision**: Use skill + scripts, not LangGraph, for orchestrating the verification process
+- **Rationale**: The verification process is linear (phase 1 → 2 → 3 → 4 → 5 with one conditional restart edge). LangGraph adds value for complex state machines with branching, parallel paths, or multi-agent coordination. For a sequential checklist, the overhead of a Python runtime, LangGraph dependency, and separate API calls isn't justified.
+- **Impact**: No Python/LangGraph dependency; simpler deployment as markdown + bash
