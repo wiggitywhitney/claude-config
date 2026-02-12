@@ -141,11 +141,14 @@ How to use this repo:
 ## Milestones
 
 ### Milestone 1: /verify Skill (Highest Value)
-Create the global `/verify` slash command that runs build → type check → lint → tests → security scan as a pre-PR verification loop. Install to `~/.claude/skills/verify/`. Includes a PreToolUse hook on `git commit` that runs verification scripts as a gate — blocks the commit if any phase fails. Test against commit-story-v2 to validate it works on a real project.
+Create the global `/verify` slash command that runs build → type check → lint → tests → security scan as a pre-PR verification loop. Install to `~/.claude/skills/verify/`. Includes a PreToolUse hook on `git commit` that runs verification as a deterministic, diff-scoped gate — blocks the commit if any phase fails. Test against commit-story-v2 to validate it works on a real project.
 
 - [x] `/verify` skill created with auto-detection and stop-on-failure loop
 - [x] PreToolUse hook on `git commit` runs verification and blocks on failure
 - [x] Tested successfully in commit-story-v2
+- [ ] Refactor hook to scope security checks to staged diff only (fix crash from vendor files with invalid Unicode)
+- [ ] Scope lint phase to changed files only in the hook
+- [ ] Keep build/typecheck as whole-project in the hook
 
 ### Milestone 2: Testing Decision Guide + Testing Rules
 Create the testing decision guide mapping project types to strategies, and the Always/Never testing rules. These two deliverables are closely related and form the intellectual foundation of the toolkit.
@@ -194,17 +197,29 @@ Write the README explaining how to use the toolkit and apply it to new projects.
 - **Rationale**: The hook runs the same deterministic scripts (detect-project, verify-phase, security-check) every time a commit is attempted. If any phase fails, the commit is blocked. No timestamp files or state management needed. Commit was chosen over push because it provides earlier feedback and implicitly makes all pushes safe (you can't push unverified commits). Push doesn't need its own hook since every committed change has already been verified.
 - **Impact**: Added to Milestone 1; moves hooks from "out of scope" to "targeted single hook in scope"; eliminates need for CLAUDE.md rules about running /verify
 
-### Decision 5: Two-Layer Verification Design
+### Decision 5: Two-Layer Verification Design (Updated 2026-02-11)
 - **Date**: 2026-02-11
-- **Decision**: `/verify` exists as two complementary layers: (1) the skill for interactive use — AI-orchestrated with fix-and-retry loop, and (2) the hook for enforcement — deterministic gate on commit using the same scripts
-- **Rationale**: The skill provides the interactive experience when you want Claude to interpret failures, suggest fixes, and retry. The hook provides 100% deterministic enforcement with zero context usage and zero prompt compliance risk. Both use the same underlying scripts, keeping behavior consistent.
-- **Impact**: The skill and hook share the same scripts but serve different purposes; neither replaces the other
+- **Decision**: `/verify` exists as two complementary layers: (1) the skill for ad-hoc full-codebase verification, and (2) the hook for enforcement — a deterministic, diff-scoped commit gate
+- **Rationale**: The skill runs all 5 phases across the whole codebase for thorough pre-PR sweeps. The hook runs the same phases but scoped to the staged diff — lightweight, fast, and only checks what you're actually committing. Fix-and-retry is emergent from Claude Code's hook system (deny → Claude sees error → Claude fixes → retries commit → hook fires again), so neither layer needs to orchestrate retry loops explicitly.
+- **Impact**: The hook is diff-scoped and lightweight; the skill remains full-codebase. The hook does its own inline diff-scoped checks rather than calling the same whole-codebase scripts.
 
 ### Decision 6: Replace CLAUDE.md Style Rules with Hooks
 - **Date**: 2026-02-11
 - **Decision**: Replace the CLAUDE.md rule about markdown code block language specifiers with a PostToolUse hook on `Write|Edit`. The hook runs a stateful parser (tracks opening vs closing fences) and feeds violations back to Claude immediately after writing.
 - **Rationale**: CLAUDE.md style rules have two costs: they consume context window space on every conversation, and prompt compliance isn't 100%. A PostToolUse hook is deterministic (zero context, 100% enforcement) and catches issues at the moment of writing — before they reach commit or CodeRabbit review. This principle applies to any behavioral rule that can be checked programmatically.
 - **Impact**: Removes code block language specifier rule from CLAUDE.md; adds PostToolUse hook and `check-markdown-codeblocks.py` script to the toolkit
+
+### Decision 7: Hook Scoped to Git Diff
+- **Date**: 2026-02-11
+- **Decision**: The pre-commit hook scopes all checks to `git diff --cached` (staged files only), not the whole codebase. Security checks (console.log, debugger, .only) grep the staged diff for added lines. Lint runs on changed files only. Build and typecheck remain whole-project (they inherently must be).
+- **Rationale**: Scanning the whole codebase on every commit is expensive, noisy, and dangerous. In practice, `git grep` across the whole repo found console.log in third-party vendor files (`.obsidian/plugins/dataview/main.js`) that contained invalid Unicode surrogates, which broke Claude API JSON serialization and caused a crash loop. Scoping to the diff means you only check what you're actually committing — faster, safer, and no false positives from vendor code.
+- **Impact**: Refactored `pre-commit-hook.sh` to do diff-scoped security checks inline rather than calling `security-check.sh`. The skill's `security-check.sh` remains unchanged for full-codebase ad-hoc use.
+
+### Decision 8: Fix-and-Retry is Emergent
+- **Date**: 2026-02-11
+- **Decision**: The fix-and-retry loop does not need to be explicitly orchestrated in the skill or hook. It emerges naturally from Claude Code's hook system.
+- **Rationale**: When the pre-commit hook blocks a commit (returns `deny` with an error reason), Claude Code reads the denial reason, fixes the issue, and attempts the commit again — which triggers the hook again. This IS the fix-and-retry loop. It requires zero additional orchestration, zero context cost, and works consistently because it's a property of the hook system, not prompt compliance. The `/verify` skill can stay as-is for ad-hoc use.
+- **Impact**: No changes to skill; confirms the hook design is sufficient without AI orchestration.
 
 ### Decision 3: LangGraph Not Needed
 - **Date**: 2026-02-11
