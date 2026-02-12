@@ -21,12 +21,17 @@ INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))" 2>/dev/null || echo "")
 
 # Only act on git commit commands
-if ! echo "$COMMAND" | grep -qE '^\s*git\s+commit\b|&&\s*git\s+commit\b'; then
+# Must handle: git commit, git -C <path> commit, && git commit, etc.
+if ! echo "$COMMAND" | grep -qE '(^|\s|&&\s*|;\s*)git\s+(-[a-zA-Z]\s+\S+\s+)*commit\b'; then
   exit 0  # Not a commit command, allow it
 fi
 
 # Determine project directory from hook input
-PROJECT_DIR=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('cwd','.'))" 2>/dev/null || echo ".")
+# If git -C <path> is used, that path overrides cwd
+PROJECT_DIR=$(echo "$COMMAND" | grep -oE '\-C\s+\S+' | head -1 | sed 's/-C\s*//' || true)
+if [ -z "$PROJECT_DIR" ]; then
+  PROJECT_DIR=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('cwd','.'))" 2>/dev/null || echo ".")
+fi
 
 # Resolve script directory (same directory as this script)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -123,5 +128,6 @@ print(json.dumps(result))
 "
 else
   # All phases passed — allow the commit
+  echo "verify: pre-commit check passed ✓" >&2
   exit 0
 fi
