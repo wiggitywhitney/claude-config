@@ -84,6 +84,10 @@ CONSOLE_LOGS=$(git grep -n 'console\.log' -- '*.js' '*.ts' '*.jsx' '*.tsx' "${CO
 if [ -n "$CONSOLE_LOGS" ]; then
   add_finding "Found console.log statements in source files:"
   while IFS= read -r line; do
+    # Truncate long lines (minified vendor JS can be thousands of chars with invalid Unicode)
+    if [ ${#line} -gt 200 ]; then
+      line="${line:0:200}..."
+    fi
     FINDINGS="${FINDINGS}    $line\n"
   done <<< "$CONSOLE_LOGS"
 fi
@@ -93,6 +97,9 @@ DEBUGGERS=$(git grep -n 'debugger' -- '*.js' '*.ts' '*.jsx' '*.tsx' ':!node_modu
 if [ -n "$DEBUGGERS" ]; then
   add_finding "Found debugger statements:"
   while IFS= read -r line; do
+    if [ ${#line} -gt 200 ]; then
+      line="${line:0:200}..."
+    fi
     FINDINGS="${FINDINGS}    $line\n"
   done <<< "$DEBUGGERS"
 fi
@@ -102,6 +109,9 @@ ONLY_TESTS=$(git grep -n '\.only' -- '*.test.*' '*.spec.*' '*__tests__*' ':!node
 if [ -n "$ONLY_TESTS" ]; then
   add_finding "Found .only in test files (focused tests that skip others):"
   while IFS= read -r line; do
+    if [ ${#line} -gt 200 ]; then
+      line="${line:0:200}..."
+    fi
     FINDINGS="${FINDINGS}    $line\n"
   done <<< "$ONLY_TESTS"
 fi

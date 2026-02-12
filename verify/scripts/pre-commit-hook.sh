@@ -99,8 +99,18 @@ if [ -n "$FAILED_PHASE" ]; then
   # Pass data via environment variables to avoid shell interpolation issues
   VERIFY_FAILED_PHASE="$FAILED_PHASE" VERIFY_FAILURE_OUTPUT="$FAILURE_OUTPUT" python3 -c "
 import json, os
+
 phase = os.environ['VERIFY_FAILED_PHASE']
 output = os.environ['VERIFY_FAILURE_OUTPUT']
+
+# Sanitize output: remove invalid Unicode surrogates that break JSON serialization
+output = output.encode('utf-8', errors='replace').decode('utf-8')
+
+# Truncate to prevent oversized API payloads
+MAX_OUTPUT = 4000
+if len(output) > MAX_OUTPUT:
+    output = output[:MAX_OUTPUT] + '\n\n... (output truncated)'
+
 reason = f'Verification failed at phase: {phase}. Fix the issue and try again.\n\n{output}'
 result = {
     'hookSpecificOutput': {
