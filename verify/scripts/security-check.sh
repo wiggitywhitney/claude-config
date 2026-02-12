@@ -7,10 +7,13 @@
 #   standard — Check for debug code and .only in tracked files (default)
 #   pre-pr   — Standard checks + npm audit + secrets in staged diff + .env staging check
 #
-# Intentional console.log can be suppressed two ways:
-#   1. Inline: add an eslint-disable comment on the line (e.g., // eslint-disable-line no-console)
-#   2. File-level: add path patterns to .console-allow in the project root
-# Note: .console-allow only affects the console.log check. debugger and .only checks are unaffected.
+# Skipping paths:
+#   Third-party/vendor files can be excluded from ALL security checks by adding
+#   path patterns to .verify-skip in the project root (one pattern per line).
+#   Example: .obsidian/plugins/ to skip Obsidian plugin vendor code.
+#
+#   For inline suppression of individual lines, add an eslint-disable comment
+#   (e.g., // eslint-disable-line no-console).
 #
 # Exit codes:
 #   0 — All checks passed
@@ -40,8 +43,9 @@ echo "=== Security Check (mode: $MODE) ==="
 echo "Directory: $PROJECT_DIR"
 echo "---"
 
-# Build exclusion list for console.log check
-CONSOLE_EXCLUDES=(':!node_modules' ':!*.test.*' ':!*.spec.*' ':!*__tests__*' ':!scripts/test-*')
+# Build shared exclusion list for ALL security checks
+# These paths are skipped for console.log, debugger, AND .only checks
+SKIP_PATHS=(':!node_modules' ':!*.test.*' ':!*.spec.*' ':!*__tests__*' ':!scripts/test-*')
 
 # Exclude CLI entry points listed in package.json bin field
 if [ -f "$PROJECT_DIR/package.json" ]; then
@@ -61,26 +65,34 @@ except Exception:
 " 2>/dev/null || true)
   while IFS= read -r bin_file; do
     if [ -n "$bin_file" ]; then
-      CONSOLE_EXCLUDES+=(":!$bin_file")
+      SKIP_PATHS+=(":!$bin_file")
     fi
   done <<< "$BIN_FILES"
 fi
 
-# Read .console-allow for additional path exclusions
-if [ -f "$PROJECT_DIR/.console-allow" ]; then
+# Read .verify-skip for additional path exclusions (applies to ALL checks)
+# Also support legacy .console-allow for backwards compatibility
+SKIP_FILE=""
+if [ -f "$PROJECT_DIR/.verify-skip" ]; then
+  SKIP_FILE="$PROJECT_DIR/.verify-skip"
+elif [ -f "$PROJECT_DIR/.console-allow" ]; then
+  SKIP_FILE="$PROJECT_DIR/.console-allow"
+fi
+
+if [ -n "$SKIP_FILE" ]; then
   while IFS= read -r pattern; do
     # Skip empty lines and comments
     pattern=$(echo "$pattern" | sed 's/#.*//' | xargs)
     if [ -n "$pattern" ]; then
-      CONSOLE_EXCLUDES+=(":!$pattern")
+      SKIP_PATHS+=(":!$pattern")
     fi
-  done < "$PROJECT_DIR/.console-allow"
+  done < "$SKIP_FILE"
 fi
 
 # Check for console.log in source files
-# Excluded: node_modules, test files, test scripts, CLI entry points, .console-allow patterns
+# Excluded: node_modules, test files, test scripts, CLI entry points, .verify-skip patterns
 # Lines with eslint-disable comments are filtered out (intentional usage)
-CONSOLE_LOGS=$(git grep -n 'console\.log' -- '*.js' '*.ts' '*.jsx' '*.tsx' "${CONSOLE_EXCLUDES[@]}" 2>/dev/null | grep -v 'eslint-disable' || true)
+CONSOLE_LOGS=$(git grep -n 'console\.log' -- '*.js' '*.ts' '*.jsx' '*.tsx' "${SKIP_PATHS[@]}" 2>/dev/null | grep -v 'eslint-disable' || true)
 if [ -n "$CONSOLE_LOGS" ]; then
   add_finding "Found console.log statements in source files:"
   while IFS= read -r line; do
@@ -93,7 +105,7 @@ if [ -n "$CONSOLE_LOGS" ]; then
 fi
 
 # Check for debugger statements (eslint-disable filter applied here too)
-DEBUGGERS=$(git grep -n 'debugger' -- '*.js' '*.ts' '*.jsx' '*.tsx' ':!node_modules' 2>/dev/null | grep -v 'eslint-disable' || true)
+DEBUGGERS=$(git grep -n 'debugger' -- '*.js' '*.ts' '*.jsx' '*.tsx' "${SKIP_PATHS[@]}" 2>/dev/null | grep -v 'eslint-disable' || true)
 if [ -n "$DEBUGGERS" ]; then
   add_finding "Found debugger statements:"
   while IFS= read -r line; do
@@ -105,7 +117,7 @@ if [ -n "$DEBUGGERS" ]; then
 fi
 
 # Check for .only in test files (focused tests that skip other tests)
-ONLY_TESTS=$(git grep -n '\.only' -- '*.test.*' '*.spec.*' '*__tests__*' ':!node_modules' 2>/dev/null || true)
+ONLY_TESTS=$(git grep -n '\.only' -- '*.test.*' '*.spec.*' '*__tests__*' "${SKIP_PATHS[@]}" 2>/dev/null || true)
 if [ -n "$ONLY_TESTS" ]; then
   add_finding "Found .only in test files (focused tests that skip others):"
   while IFS= read -r line; do
@@ -176,12 +188,17 @@ if [ $ISSUES_FOUND -eq 0 ]; then
 else
   echo "FINDINGS:"
   echo -e "$FINDINGS"
-  echo "If console.log is intentional (CLI output, operational logging), suppress it:"
-  echo "  - Inline: add // eslint-disable-line no-console to the line"
-  echo "  - File-level: add the file path to .console-allow in the project root"
-  echo "Do not suppress console.log that needs to be removed or fixed, even if the file"
-  echo "is out of scope of the current commit. Fix it instead."
-  echo "(This only affects the console.log check. debugger and .only checks are unaffected.)"
+  echo "HOW TO FIX:"
+  echo ""
+  echo "  If this is YOUR code — fix the issue (remove debug code, unfocus tests)."
+  echo ""
+  echo "  If this is THIRD-PARTY/VENDOR code you don't control:"
+  echo "    Add the file or directory path to .verify-skip in the project root."
+  echo "    Example: echo '.obsidian/plugins/' >> .verify-skip"
+  echo "    This skips the path for ALL security checks (console.log, debugger, .only)."
+  echo ""
+  echo "  For INTENTIONAL console.log in your own code (CLI output, logging):"
+  echo "    Add // eslint-disable-line no-console on the line."
   echo ""
   echo "RESULT: Security check FAILED"
 fi
