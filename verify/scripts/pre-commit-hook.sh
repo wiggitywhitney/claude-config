@@ -28,7 +28,7 @@ fi
 
 # Determine project directory from hook input
 # If git -C <path> is used, that path overrides cwd
-PROJECT_DIR=$(echo "$COMMAND" | grep -oE '\-C\s+\S+' | head -1 | sed 's/-C\s*//' || true)
+PROJECT_DIR=$(echo "$COMMAND" | grep -oE '\-C\s+\S+' | head -1 | sed 's/^-C[[:space:]]*//' || true)
 if [ -z "$PROJECT_DIR" ]; then
   PROJECT_DIR=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('cwd','.'))" 2>/dev/null || echo ".")
 fi
