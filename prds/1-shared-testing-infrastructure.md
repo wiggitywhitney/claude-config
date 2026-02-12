@@ -146,9 +146,13 @@ Create the global `/verify` slash command that runs build → type check → lin
 - [x] `/verify` skill created with auto-detection and stop-on-failure loop
 - [x] PreToolUse hook on `git commit` runs verification and blocks on failure
 - [x] Tested successfully in commit-story-v2
-- [ ] Refactor hook to scope security checks to staged diff only (fix crash from vendor files with invalid Unicode)
+- [x] Tested successfully in Journal repo (second real project, caught vendor file issues)
+- [x] Hook handles `git -C <path> commit` pattern used by Claude Code
+- [x] Output truncation and Unicode sanitization prevent API crash from vendor files
+- [x] `.verify-skip` file excludes vendor paths from all security checks
+- [x] Keep build/typecheck as whole-project in the hook (inherently must be)
+- [ ] Scope security checks to staged diff only in the hook (Decision 7)
 - [ ] Scope lint phase to changed files only in the hook
-- [ ] Keep build/typecheck as whole-project in the hook
 
 ### Milestone 2: Testing Decision Guide + Testing Rules
 Create the testing decision guide mapping project types to strategies, and the Always/Never testing rules. These two deliverables are closely related and form the intellectual foundation of the toolkit.
