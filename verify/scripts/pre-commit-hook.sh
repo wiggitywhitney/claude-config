@@ -127,6 +127,6 @@ result = {
 print(json.dumps(result))
 "
 else
-  # All phases passed — output JSON allow decision so Claude Code surfaces the message
-  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"verify: pre-commit check passed ✓"}}'
+  # All phases passed — additionalContext is visible to Claude, permissionDecisionReason is visible to the user
+  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"verify: pre-commit check passed ✓","additionalContext":"verify: pre-commit check passed ✓"}}'
 fi
