@@ -225,6 +225,12 @@ Write the README explaining how to use the toolkit and apply it to new projects.
 - **Rationale**: When the pre-commit hook blocks a commit (returns `deny` with an error reason), Claude Code reads the denial reason, fixes the issue, and attempts the commit again — which triggers the hook again. This IS the fix-and-retry loop. It requires zero additional orchestration, zero context cost, and works consistently because it's a property of the hook system, not prompt compliance. The `/verify` skill can stay as-is for ad-hoc use.
 - **Impact**: No changes to skill; confirms the hook design is sufficient without AI orchestration.
 
+### Decision 9: Hook Success Visibility via additionalContext
+- **Date**: 2026-02-11
+- **Decision**: PreToolUse hooks must use `additionalContext` (not just `permissionDecisionReason`) for Claude to see allow-decision messages. Both fields are needed: `permissionDecisionReason` is shown to the user, `additionalContext` is shown to Claude.
+- **Rationale**: Discovered through testing that allow decisions with only `permissionDecisionReason` were invisible to Claude — it silently proceeded. The `additionalContext` field is what Claude Code injects into the AI's context. Using both ensures the success message ("verify: pre-commit check passed") is visible to both human and AI.
+- **Impact**: Updated hook JSON output to include both fields. Confirmed working in Journal repo.
+
 ### Decision 3: LangGraph Not Needed
 - **Date**: 2026-02-11
 - **Decision**: Use skill + scripts, not LangGraph, for orchestrating the verification process
