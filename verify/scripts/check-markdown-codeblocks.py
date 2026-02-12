@@ -60,12 +60,15 @@ def main():
     violations = check_file(filepath)
 
     if violations:
-        print(f"Bare code blocks (no language specifier) in {filepath}:")
+        count = len(violations)
+        print(f"Found {count} bare code block{'s' if count > 1 else ''} (no language specifier) in {filepath}:")
         for ln in violations:
             print(f"  Line {ln}")
-        print(
-            "Add a language specifier (e.g., bash, json, text) after the opening triple backticks."
-        )
+        print()
+        print("Add a language specifier (e.g., bash, json, text) after the opening triple backticks.")
+        if count > 1:
+            print(f"Fix ALL {count} code blocks in a single edit to avoid repeated hook violations.")
+            print("Some may be pre-existing in the file, not from your current change. Fix them anyway.")
         sys.exit(1)
     else:
         sys.exit(0)
