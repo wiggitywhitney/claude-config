@@ -140,8 +140,8 @@ How to use this repo:
 
 ## Milestones
 
-### Milestone 1: /verify Skill (Highest Value)
-Create the global `/verify` slash command that runs build → type check → lint → tests → security scan as a pre-PR verification loop. Install to `~/.claude/skills/verify/`. Includes a PreToolUse hook on `git commit` that runs verification as a deterministic, diff-scoped gate — blocks the commit if any phase fails. Test against commit-story-v2 to validate it works on a real project.
+### Milestone 1: /verify Skill + Tiered Verification Hooks (Highest Value)
+Create the global `/verify` slash command for ad-hoc interactive verification. Create three deterministic PreToolUse hooks that gate git events at increasing verification levels: quick+lint on commit, full on push, pre-pr on PR creation (Decisions 10, 11). All hooks run scripts directly — no skill invocation. Install to `~/.claude/skills/verify/`. Test against commit-story-v2 and Journal repo.
 
 - [x] `/verify` skill created with auto-detection and stop-on-failure loop
 - [x] PreToolUse hook on `git commit` runs verification and blocks on failure
@@ -153,6 +153,10 @@ Create the global `/verify` slash command that runs build → type check → lin
 - [x] Keep build/typecheck as whole-project in the hook (inherently must be)
 - [ ] Scope security checks to staged diff only in the hook (Decision 7)
 - [ ] Scope lint phase to changed files only in the hook
+- [ ] Refactor commit hook from full to quick+lint mode (Decision 10)
+- [ ] Add PreToolUse hook on `git push` running full verification (Decision 10)
+- [ ] Add PreToolUse hook on `gh pr create` running pre-pr verification (Decision 10)
+- [ ] All hooks are purely deterministic — scripts only, no skill invocation (Decision 11)
 
 ### Milestone 2: Testing Decision Guide + Testing Rules
 Create the testing decision guide mapping project types to strategies, and the Always/Never testing rules. These two deliverables are closely related and form the intellectual foundation of the toolkit.
@@ -177,7 +181,7 @@ Write the README explaining how to use the toolkit and apply it to new projects.
 - Per-project test suites (those belong in each repo's own PRD)
 - CI/CD pipeline templates (future enhancement)
 - Python/Go `/verify` support (Node.js/TypeScript first, extensible later)
-- Full hooks system (future enhancement — the single `/verify` PreToolUse hook is in scope, but a comprehensive hooks framework is not)
+- General-purpose hooks framework (the three tiered verification hooks are in scope per Decision 10, but a broader hooks system for arbitrary enforcement is not)
 - Agent definitions (not needed for this toolkit's scope)
 - LangGraph orchestration — the verification process is linear (not a complex state machine), so a skill + scripts approach is sufficient. LangGraph would add infrastructure overhead (Python runtime, API keys, separate system) without meaningful benefit for a sequential 5-phase process.
 
@@ -236,3 +240,22 @@ Write the README explaining how to use the toolkit and apply it to new projects.
 - **Decision**: Use skill + scripts, not LangGraph, for orchestrating the verification process
 - **Rationale**: The verification process is linear (phase 1 → 2 → 3 → 4 → 5 with one conditional restart edge). LangGraph adds value for complex state machines with branching, parallel paths, or multi-agent coordination. For a sequential checklist, the overhead of a Python runtime, LangGraph dependency, and separate API calls isn't justified.
 - **Impact**: No Python/LangGraph dependency; simpler deployment as markdown + bash
+
+### Decision 10: Tiered Verification Hooks (Supersedes Decision 4)
+- **Date**: 2026-02-14
+- **Decision**: Replace the single full-verification commit hook with three tiered hooks, each mapped to a git event and running the appropriate verification mode:
+
+| Git Event | Hook Type | Verification Mode | Phases |
+|---|---|---|---|
+| `git commit` | PreToolUse | quick + lint | Build, Type Check, Lint |
+| `git push` | PreToolUse | full | Build, Type Check, Lint, Tests, Security |
+| `git pr create` | PreToolUse | pre-pr | Build, Type Check, Lint, Tests, Security (expanded) |
+
+- **Rationale**: Decision 4 assumed full verification per commit was acceptable. In practice, running the full suite (including tests) on every commit is too heavy and slows iteration. The three verification modes (`quick`, `full`, `pre-pr`) already exist in the `/verify` skill — they just weren't wired to the right git events. Tiered hooks match the natural escalation: commits are frequent and should be fast, pushes are deliberate sharing points worth thorough checks, and PRs are the final gate before review.
+- **Impact**: Refactors Milestone 1 from a single commit hook to three hooks. The commit hook becomes lighter (quick + lint). Push and PR hooks are new deliverables. The existing scripts (`detect-project.sh`, `verify-phase.sh`, `security-check.sh`) support all three tiers without modification.
+
+### Decision 11: All Hooks Are Purely Deterministic (No Skill Invocation)
+- **Date**: 2026-02-14
+- **Decision**: All verification hooks run scripts directly. No hook invokes the `/verify` skill. The `/verify` skill remains exclusively for ad-hoc interactive use when a human explicitly runs `/verify`.
+- **Rationale**: The existing commit hook already works this way — it calls `detect-project.sh`, `verify-phase.sh`, and `security-check.sh` directly without involving the skill. This is the right pattern. Hooks are enforcement gates. They should be deterministic, fast, and predictable. Invoking a skill from a hook would add AI inference overhead and non-determinism to what should be a pass/fail gate. The new push and PR hooks follow the same purely-deterministic pattern. This clarifies the relationship between the skill and the hooks established in Decision 5: the skill is for interactive exploration (AI orchestrates scripts, communicates findings, suggests fixes), the hooks are for enforcement (scripts only, no AI, pass/fail).
+- **Impact**: Confirms the architecture pattern for all three tiered hooks. No changes to existing scripts. The skill and hooks share the same script library but serve different purposes.
