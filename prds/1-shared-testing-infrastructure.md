@@ -45,8 +45,8 @@ Global slash command installed at `~/.claude/skills/verify/` that runs a verific
 Phase 1: Build        → Compiles cleanly?
 Phase 2: Type Check   → Types are sound?
 Phase 3: Lint         → Style rules pass?
-Phase 4: Tests        → All tests pass?
-Phase 5: Security     → No vulnerabilities or leftover debug code?
+Phase 4: Security     → No vulnerabilities or leftover debug code?
+Phase 5: Tests        → All tests pass?
 ```
 
 #### Architecture: Skill + Deterministic Scripts
@@ -248,8 +248,8 @@ Write the README explaining how to use the toolkit and apply it to new projects.
 | Git Event | Hook Type | Verification Mode | Phases |
 |---|---|---|---|
 | `git commit` | PreToolUse | quick + lint | Build, Type Check, Lint |
-| `git push` | PreToolUse | full | Build, Type Check, Lint, Tests, Security |
-| `git pr create` | PreToolUse | pre-pr | Build, Type Check, Lint, Tests, Security (expanded) |
+| `git push` | PreToolUse | full | Build, Type Check, Lint, Security, Tests |
+| `git pr create` | PreToolUse | pre-pr | Build, Type Check, Lint, Security (expanded), Tests |
 
 - **Rationale**: Decision 4 assumed full verification per commit was acceptable. In practice, running the full suite (including tests) on every commit is too heavy and slows iteration. The three verification modes (`quick`, `full`, `pre-pr`) already exist in the `/verify` skill — they just weren't wired to the right git events. Tiered hooks match the natural escalation: commits are frequent and should be fast, pushes are deliberate sharing points worth thorough checks, and PRs are the final gate before review.
 - **Impact**: Refactors Milestone 1 from a single commit hook to three hooks. The commit hook becomes lighter (quick + lint). Push and PR hooks are new deliverables. The existing scripts (`detect-project.sh`, `verify-phase.sh`, `security-check.sh`) support all three tiers without modification.
@@ -259,3 +259,9 @@ Write the README explaining how to use the toolkit and apply it to new projects.
 - **Decision**: All verification hooks run scripts directly. No hook invokes the `/verify` skill. The `/verify` skill remains exclusively for ad-hoc interactive use when a human explicitly runs `/verify`.
 - **Rationale**: The existing commit hook already works this way — it calls `detect-project.sh`, `verify-phase.sh`, and `security-check.sh` directly without involving the skill. This is the right pattern. Hooks are enforcement gates. They should be deterministic, fast, and predictable. Invoking a skill from a hook would add AI inference overhead and non-determinism to what should be a pass/fail gate. The new push and PR hooks follow the same purely-deterministic pattern. This clarifies the relationship between the skill and the hooks established in Decision 5: the skill is for interactive exploration (AI orchestrates scripts, communicates findings, suggests fixes), the hooks are for enforcement (scripts only, no AI, pass/fail).
 - **Impact**: Confirms the architecture pattern for all three tiered hooks. No changes to existing scripts. The skill and hooks share the same script library but serve different purposes.
+
+### Decision 12: Security Before Tests (Fail-Fast Ordering)
+- **Date**: 2026-02-17
+- **Decision**: Swap the order of Security and Tests in all verification modes that include both. The phase order is now: Build → Type Check → Lint → Security → Tests. This applies to the `full` and `pre-pr` modes (push and PR hooks), and to the `/verify` skill's full/pre-pr runs. The `quick` mode (commit hook) is unaffected since it runs neither.
+- **Rationale**: Security checks are cheap — grepping the staged diff for console.log, debugger, .only, and .env files takes milliseconds. Tests can take seconds to minutes. Under the stop-on-first-failure rule, a failed phase triggers a fix and restart from phase 1. Running the expensive phase last means you only pay that cost after all cheap checks have passed. If security ran after tests, a trivial issue like a staged `.env` file would waste the entire test run before being caught — and then tests would have to run again after the fix.
+- **Impact**: Updates phase ordering in the `/verify` skill description and Decision 10's tiered hook table. The push and PR hooks (not yet built) should implement this order from the start. The existing `pre-commit-hook.sh` will also be updated when it's refactored to quick+lint mode per Decision 10 (tests and security drop out entirely, so the order change is moot for that hook).
