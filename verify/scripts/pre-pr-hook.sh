@@ -56,6 +56,17 @@ CMD_TYPECHECK=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load
 CMD_LINT=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('lint') or '')" 2>/dev/null || echo "")
 CMD_TEST=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('test') or '')" 2>/dev/null || echo "")
 
+# Compute diff base for scoping security checks (Decision 7)
+# Hooks scope checks to branch changes, not the whole repo.
+DIFF_BASE=$(git -C "$PROJECT_DIR" rev-parse --abbrev-ref '@{upstream}' 2>/dev/null || echo "")
+if [ -z "$DIFF_BASE" ]; then
+  if git -C "$PROJECT_DIR" rev-parse --verify origin/main &>/dev/null; then
+    DIFF_BASE="origin/main"
+  elif git -C "$PROJECT_DIR" rev-parse --verify origin/master &>/dev/null; then
+    DIFF_BASE="origin/master"
+  fi
+fi
+
 # Run verification phases in order, stop on first failure
 FAILED_PHASE=""
 FAILURE_OUTPUT=""
@@ -97,7 +108,7 @@ fi
 
 # Phase 4: Security (pre-pr expanded mode, before tests per Decision 12)
 if [ -z "$FAILED_PHASE" ]; then
-  security_output=$("$SCRIPT_DIR/security-check.sh" "pre-pr" "$PROJECT_DIR" 2>&1)
+  security_output=$("$SCRIPT_DIR/security-check.sh" "pre-pr" "$PROJECT_DIR" "$DIFF_BASE" 2>&1)
   if [ $? -ne 0 ]; then
     FAILED_PHASE="security"
     FAILURE_OUTPUT="$security_output"

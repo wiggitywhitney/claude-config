@@ -151,7 +151,7 @@ Create the global `/verify` slash command for ad-hoc interactive verification. C
 - [x] Output truncation and Unicode sanitization prevent API crash from vendor files
 - [x] `.verify-skip` file excludes vendor paths from all security checks
 - [x] Keep build/typecheck as whole-project in the hook (inherently must be)
-- [ ] Scope security checks to staged diff only in the hook (Decision 7)
+- [x] Scope security checks to staged diff only in the hook (Decision 7)
 - [ ] Scope lint phase to changed files only in the hook
 - [x] Refactor commit hook from full to quick+lint mode (Decision 10)
 - [x] Add PreToolUse hook on `git push` running full verification (Decision 10)
