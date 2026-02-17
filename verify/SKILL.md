@@ -72,15 +72,7 @@ Skip if mode is `quick`.
 bash scripts/verify-phase.sh lint "<lint-command>" .
 ```
 
-### Phase 4: Tests
-
-Skip if mode is `quick`.
-
-```bash
-bash scripts/verify-phase.sh test "<test-command>" .
-```
-
-### Phase 5: Security
+### Phase 4: Security
 
 Skip if mode is `quick`.
 
@@ -92,6 +84,14 @@ If mode is `pre-pr`, use expanded checks instead:
 
 ```bash
 bash scripts/security-check.sh pre-pr .
+```
+
+### Phase 5: Tests
+
+Skip if mode is `quick`.
+
+```bash
+bash scripts/verify-phase.sh test "<test-command>" .
 ```
 
 ## Step 3: Handle Failures
@@ -119,8 +119,8 @@ Project: [project_type] ([project_dir])
 Phase 1 - Build:      [PASSED | FAILED | SKIPPED (no command)]
 Phase 2 - Type Check:  [PASSED | FAILED | SKIPPED (no command)]
 Phase 3 - Lint:        [PASSED | FAILED | SKIPPED (no command) | SKIPPED (quick mode)]
-Phase 4 - Tests:       [PASSED | FAILED | SKIPPED (no command) | SKIPPED (quick mode)]
-Phase 5 - Security:    [PASSED | FAILED | SKIPPED (quick mode)]
+Phase 4 - Security:    [PASSED | FAILED | SKIPPED (quick mode)]
+Phase 5 - Tests:       [PASSED | FAILED | SKIPPED (no command) | SKIPPED (quick mode)]
 
 Overall: [ALL PASSED | FAILED at Phase N]
 ```
