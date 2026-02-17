@@ -176,6 +176,14 @@ Write the README explaining how to use the toolkit and apply it to new projects.
 - [ ] README covers all deliverables with clear instructions
 - [ ] End-to-end walkthrough of applying toolkit to a project works
 
+### Milestone 5: Anki Card Review
+Review existing Anki cards in `~/Documents/Journal/make Anki cards/finished/` to ensure they accurately reflect the current implementation. Three card sets are relevant:
+
+- [ ] Review "CARDS MADE - Claude Code Skills.md" (18 cards) — verify skill frontmatter fields, safety guardrails, and tool access control are current
+- [ ] Review "CARDS MADE - Claude Code Plugins and Ralph Loops.md" (30 cards) — verify hooks, verification patterns, and autonomous looping cards reflect tiered hooks (Decisions 10-12)
+- [ ] Review "CARDS MADE - Claude Code Native Tools.md" (9 cards) — verify tool categories are current
+- [ ] Update any cards that are stale or inaccurate given the current implementation
+
 ## Out of Scope
 
 - Per-project test suites (those belong in each repo's own PRD)
