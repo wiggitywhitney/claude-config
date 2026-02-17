@@ -153,10 +153,10 @@ Create the global `/verify` slash command for ad-hoc interactive verification. C
 - [x] Keep build/typecheck as whole-project in the hook (inherently must be)
 - [ ] Scope security checks to staged diff only in the hook (Decision 7)
 - [ ] Scope lint phase to changed files only in the hook
-- [ ] Refactor commit hook from full to quick+lint mode (Decision 10)
-- [ ] Add PreToolUse hook on `git push` running full verification (Decision 10)
-- [ ] Add PreToolUse hook on `gh pr create` running pre-pr verification (Decision 10)
-- [ ] All hooks are purely deterministic — scripts only, no skill invocation (Decision 11)
+- [x] Refactor commit hook from full to quick+lint mode (Decision 10)
+- [x] Add PreToolUse hook on `git push` running full verification (Decision 10)
+- [x] Add PreToolUse hook on `gh pr create` running pre-pr verification (Decision 10)
+- [x] All hooks are purely deterministic — scripts only, no skill invocation (Decision 11)
 
 ### Milestone 2: Testing Decision Guide + Testing Rules
 Create the testing decision guide mapping project types to strategies, and the Always/Never testing rules. These two deliverables are closely related and form the intellectual foundation of the toolkit.
