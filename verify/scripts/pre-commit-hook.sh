@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
-# pre-commit-hook.sh — PreToolUse hook that gates git commit on verification
+# pre-commit-hook.sh — PreToolUse hook that gates git commit on quick+lint verification
 #
 # Installed as a Claude Code PreToolUse hook on Bash.
-# Detects git commit commands, runs verification scripts, and blocks
-# the commit if any phase fails.
+# Detects git commit commands, runs quick+lint verification (Build, Type Check,
+# Lint) and blocks the commit if any phase fails.
+#
+# This is the lightest tier of verification (Decision 10):
+#   git commit  → quick+lint (this hook)
+#   git push    → full verification (pre-push-hook.sh)
+#   gh pr create → pre-pr verification (pre-pr-hook.sh)
 #
 # Input: JSON on stdin from Claude Code (PreToolUse event)
 # Output: JSON on stdout with permissionDecision
@@ -41,11 +46,10 @@ DETECTION=$("$SCRIPT_DIR/detect-project.sh" "$PROJECT_DIR" 2>/dev/null || echo '
 
 PROJECT_TYPE=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('project_type','unknown'))" 2>/dev/null || echo "unknown")
 
-# Extract available commands (empty string if project type is unknown or command not available)
+# Extract available commands for quick+lint mode (Build, Type Check, Lint only)
 CMD_BUILD=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('build') or '')" 2>/dev/null || echo "")
 CMD_TYPECHECK=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('typecheck') or '')" 2>/dev/null || echo "")
 CMD_LINT=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('lint') or '')" 2>/dev/null || echo "")
-CMD_TEST=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('test') or '')" 2>/dev/null || echo "")
 
 # Run verification phases in order, stop on first failure
 FAILED_PHASE=""
@@ -71,6 +75,9 @@ run_phase() {
   return 0
 }
 
+# Quick+lint mode: Build → Type Check → Lint (Decision 10)
+# Security and tests are deferred to push and PR hooks respectively.
+
 # Phase 1: Build
 run_phase "build" "$CMD_BUILD" || true
 
@@ -79,23 +86,9 @@ if [ -z "$FAILED_PHASE" ]; then
   run_phase "typecheck" "$CMD_TYPECHECK" || true
 fi
 
-# Phase 3: Lint
+# Phase 3: Lint (only if typecheck passed)
 if [ -z "$FAILED_PHASE" ]; then
   run_phase "lint" "$CMD_LINT" || true
-fi
-
-# Phase 4: Tests
-if [ -z "$FAILED_PHASE" ]; then
-  run_phase "test" "$CMD_TEST" || true
-fi
-
-# Phase 5: Security
-if [ -z "$FAILED_PHASE" ]; then
-  security_output=$("$SCRIPT_DIR/security-check.sh" "standard" "$PROJECT_DIR" 2>&1)
-  if [ $? -ne 0 ]; then
-    FAILED_PHASE="security"
-    FAILURE_OUTPUT="$security_output"
-  fi
 fi
 
 # Return decision
@@ -128,5 +121,5 @@ print(json.dumps(result))
 "
 else
   # All phases passed — additionalContext is visible to Claude, permissionDecisionReason is visible to the user
-  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"verify: pre-commit check passed ✓","additionalContext":"verify: pre-commit check passed ✓"}}'
+  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"verify: commit quick+lint passed ✓","additionalContext":"verify: commit quick+lint passed (build, typecheck, lint) ✓"}}'
 fi
