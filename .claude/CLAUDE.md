@@ -4,15 +4,11 @@ Shared Claude Code testing infrastructure, safety config, and developer tooling 
 
 ## YOLO Workflow Mode
 
-When running PRD workflows, continue through the full cycle without stopping for confirmation:
-- `/prd-start` → automatically invoke `/prd-next`
-- After task completion → automatically invoke `/prd-update-progress`
-- After progress update → automatically invoke `/prd-next` for the next task
-- Continue until PRD is complete, then invoke `/prd-done`
+Proceed without trivial confirmations. Never ask "Shall I continue?", "Do you want to proceed?", or "Ready to start?" — just do the work. The user will interrupt if needed.
 
-**NEVER ask "Shall I continue?" or "Do you want to proceed?" or "Ready to start?"** - just proceed. The user will interrupt if needed.
+**Do ask** when something is ambiguous, when a decision has major implications, or when you need to deviate from what the PRD explicitly defines. This follows the same principle as Getting Help: ask for clarification rather than making assumptions.
 
-**EXCEPTION: CodeRabbit reviews are REQUIRED before merging any PR.** Create the PR, wait for CodeRabbit to complete its review, then process ALL CodeRabbit feedback with the user before merging. This is non-negotiable.
+**CodeRabbit reviews are REQUIRED before merging any PR.** Create the PR, wait for CodeRabbit to complete its review, then process ALL CodeRabbit feedback with the user before merging. This is non-negotiable.
 
 ## CodeRabbit Reviews (MANDATORY)
 
