@@ -173,6 +173,8 @@ Create the CLAUDE.md starter templates with testing rules baked in, and the thre
 - [ ] CLAUDE.md templates created (general + Node.js/TypeScript), based on refactored real config
 - [ ] Per-language rule files created in `rules/languages/` (Decision 13)
 - [ ] Permission profiles are valid, tested configurations
+- [ ] Create commit message hook that blocks AI/Claude/Co-Authored-By references in commits (Decision 17)
+- [ ] Add dotfile override checks (`.skip-branching`, `.skip-coderabbit`) to existing hooks (Decision 16)
 
 ### Milestone 4: README + Integration Testing
 Write the README explaining how to use the toolkit and apply it to new projects. Do a final integration pass ensuring everything works together.
@@ -295,3 +297,16 @@ Review existing Anki cards in `~/Documents/Journal/make Anki cards/finished/` to
 - **Decision**: Milestone 3 should begin with a CLAUDE.md audit and refactor of Whitney's own global (`~/.claude/CLAUDE.md`) and project-level CLAUDE.md files before writing generalized templates. This is a learning exercise that directly informs template design.
 - **Rationale**: Practicing on real config and then generalizing produces better templates than designing from theory. The refactor applies Forrester's patterns: lean CLAUDE.md (~150 lines max), deterministic rules moved to hooks, domain-specific rules factored into `rules/` files, HTML comments documenting what hooks enforce. Improvements apply regardless of whether they're testing-related — the goal is a clean, well-factored configuration.
 - **Impact**: Milestone 3 gains a new first item: audit and refactor Whitney's CLAUDE.md files. The refactored result becomes the basis for the generalized templates.
+
+### Decision 16: Per-Repo Rule Overrides via Dotfiles
+- **Date**: 2026-02-18
+- **Decision**: Individual repos can opt out of globally-enforced rules by placing dotfiles at the project root (e.g., `.skip-branching`, `.skip-coderabbit`). Global hooks check for these files and skip enforcement when present.
+- **Rationale**: Global CLAUDE.md and hooks enforce strict defaults (feature branches, CodeRabbit reviews, verification). But some repos have legitimate reasons to opt out — private repos don't use CodeRabbit, the Journal repo doesn't need branch protection. Dotfiles are visible to humans (`ls -a`), committed to git (decisions tracked in history), and checked at the hook level (deterministic, zero context cost). This is an extension of the existing `.verify-skip` pattern.
+- **Impact**: Hooks gain dotfile checks. Global CLAUDE.md states strict defaults; per-repo dotfiles declare exceptions.
+
+### Decision 17: Professional Commit Messages — No AI Attribution
+- **Date**: 2026-02-18
+- **Decision**: Commit messages must never reference Claude, AI, Anthropic, or include Co-Authored-By AI attribution. Enforced by a PreToolUse hook on Bash that detects git commit commands and blocks messages containing these patterns.
+- **Reference Implementation**: `peopleforrester/llm-coding-workflow` `claude-config/hooks/check-commit-message.sh` — extracts only the commit message (handles heredoc, `-m`, `--message` formats), checks against AI attribution patterns, blocks on match (exit 2). Key technique: extract minimal relevant data before checking to avoid false positives from file paths.
+- **Rationale**: Commit messages should describe the technical change, not how it was produced. A hook provides deterministic enforcement (100% compliance, zero context cost) rather than relying on CLAUDE.md prompt compliance.
+- **Impact**: New hook added to Milestone 3. Claude Code's default Co-Authored-By behavior is overridden by the hook blocking and forcing a rewrite.
