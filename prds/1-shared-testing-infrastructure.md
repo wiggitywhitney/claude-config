@@ -169,8 +169,8 @@ Create the CLAUDE.md starter templates with testing rules baked in, and the thre
 
 - [x] Research `claude-config/` directory of `peopleforrester/llm-coding-workflow` (CLAUDE.md, rules/, hooks/, skills/, settings.json)
 - [x] Audit and refactor Whitney's global `~/.claude/CLAUDE.md` — factor out what can move to hooks/rules, apply Forrester's patterns (HTML comments for hook docs, lean file, etc.)
-- [ ] Audit and refactor project-level CLAUDE.md files using same principles
-- [ ] CLAUDE.md templates created (general + Node.js/TypeScript), based on refactored real config
+- [x] Audit and refactor project-level CLAUDE.md files using same principles
+- [ ] CLAUDE.md templates created (general + Node.js/TypeScript), based on refactored real config. Once complete, apply to: choose-your-ai-adventure, mcp-hello-world, commit_story, commit-story-v1, spider-rainbows
 - [ ] Per-language rule files created in `rules/languages/` (Decision 13)
 - [ ] Permission profiles are valid, tested configurations
 - [ ] Create commit message hook that blocks AI/Claude/Co-Authored-By references in commits (Decision 17)
