@@ -190,6 +190,15 @@ Review existing Anki cards in `~/Documents/Journal/make Anki cards/finished/` to
 - [ ] Review "CARDS MADE - Claude Code Native Tools.md" (9 cards) — verify tool categories are current
 - [ ] Update any cards that are stale or inaccurate given the current implementation
 
+### Milestone 6: Test Tier Enforcement Hooks with Dotfile Opt-Outs
+Enforce that every project has unit, integration, and end-to-end tests — unless the repo explicitly opts out via dotfiles (`.skip-e2e`, `.skip-integration`). Builds on the verification hooks from Milestone 1 and the dotfile override pattern from Decision 16.
+
+- [ ] Define what "has tests" means per project type (Node.js/TypeScript: test runner config + test files exist; detect via package.json scripts, test directories)
+- [ ] Create hook that checks test tier presence on git push or PR creation
+- [ ] Hook respects `.skip-e2e` and `.skip-integration` dotfiles — skips enforcement for opted-out tiers
+- [ ] Hook warns (not blocks) when test tiers are missing — gives teams time to add coverage rather than hard-blocking
+- [ ] Tested across at least two repos with different test configurations
+
 ## Out of Scope
 
 - Per-project test suites (those belong in each repo's own PRD)
@@ -310,3 +319,9 @@ Review existing Anki cards in `~/Documents/Journal/make Anki cards/finished/` to
 - **Reference Implementation**: `peopleforrester/llm-coding-workflow` `claude-config/hooks/check-commit-message.sh` — extracts only the commit message (handles heredoc, `-m`, `--message` formats), checks against AI attribution patterns, blocks on match (exit 2). Key technique: extract minimal relevant data before checking to avoid false positives from file paths.
 - **Rationale**: Commit messages should describe the technical change, not how it was produced. A hook provides deterministic enforcement (100% compliance, zero context cost) rather than relying on CLAUDE.md prompt compliance.
 - **Impact**: New hook added to Milestone 3. Claude Code's default Co-Authored-By behavior is overridden by the hook blocking and forcing a rewrite.
+
+### Decision 18: Test Tier Enforcement as Separate Milestone
+- **Date**: 2026-02-18
+- **Decision**: Add Milestone 6 to enforce test tier presence (unit, integration, e2e) via hooks, with dotfile opt-outs (`.skip-e2e`, `.skip-integration`). Warn-only, not blocking.
+- **Rationale**: The global CLAUDE.md already states the testing default ("Every project MUST have unit, integration, and end-to-end tests") and the dotfile opt-out pattern. But that's prompt compliance only. Hook enforcement makes it deterministic. Warn-only (not block) is appropriate because adding test coverage is gradual — hard-blocking would prevent any commits in repos that don't yet have all three tiers. This builds on Decision 16's dotfile pattern and Milestone 1's verification hooks.
+- **Impact**: New Milestone 6 added after Anki review. Does not block Milestones 3-5.
