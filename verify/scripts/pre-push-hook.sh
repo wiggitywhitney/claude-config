@@ -140,7 +140,7 @@ MAX_OUTPUT = 4000
 if len(output) > MAX_OUTPUT:
     output = output[:MAX_OUTPUT] + '\n\n... (output truncated)'
 
-reason = f'Push blocked — full verification failed at phase: {phase}. Fix the issue and try again.\n\n{output}'
+reason = f'Push blocked — full verification failed at phase: {phase}. Fix the underlying code to resolve the error. NEVER add lint-disable comments, @ts-ignore, type:ignore, eslint-disable, or similar suppression annotations to bypass the check. Fix the actual problem in the code.\n\n{output}'
 result = {
     'hookSpecificOutput': {
         'hookEventName': 'PreToolUse',
