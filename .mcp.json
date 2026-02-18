@@ -1,5 +1,9 @@
 {
   "mcpServers": {
+    "commit-story": {
+      "command": "node",
+      "args": ["/Users/whitney.lee/Documents/Repositories/commit-story-v2/src/mcp/server.js"]
+    },
     "coderabbitai": {
       "command": "npx",
       "args": ["coderabbitai-mcp@latest"],
