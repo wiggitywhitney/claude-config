@@ -54,7 +54,7 @@ CMD_TYPECHECK=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load
 CMD_LINT=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('lint') or '')" 2>/dev/null || echo "")
 CMD_TEST=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('test') or '')" 2>/dev/null || echo "")
 
-# Compute diff base for scoping security checks (Decision 7)
+# Compute diff base for scoping lint and security checks (Decision 7)
 # Hooks scope checks to branch changes, not the whole repo.
 DIFF_BASE=$(git -C "$PROJECT_DIR" rev-parse --abbrev-ref '@{upstream}' 2>/dev/null || echo "")
 if [ -z "$DIFF_BASE" ]; then
@@ -99,9 +99,14 @@ if [ -z "$FAILED_PHASE" ]; then
   run_phase "typecheck" "$CMD_TYPECHECK" || true
 fi
 
-# Phase 3: Lint
+# Phase 3: Lint — scoped to branch diff (Decision 7)
 if [ -z "$FAILED_PHASE" ]; then
-  run_phase "lint" "$CMD_LINT" || true
+  LINT_SCOPE="${DIFF_BASE:-staged}"
+  lint_output=$("$SCRIPT_DIR/lint-changed.sh" "$LINT_SCOPE" "$PROJECT_DIR" "$CMD_LINT" 2>&1)
+  if [ $? -ne 0 ]; then
+    FAILED_PHASE="lint"
+    FAILURE_OUTPUT="$lint_output"
+  fi
 fi
 
 # Phase 4: Security (standard mode, before tests per Decision 12)

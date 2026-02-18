@@ -86,9 +86,13 @@ if [ -z "$FAILED_PHASE" ]; then
   run_phase "typecheck" "$CMD_TYPECHECK" || true
 fi
 
-# Phase 3: Lint (only if typecheck passed)
+# Phase 3: Lint — scoped to staged files only (Decision 7)
 if [ -z "$FAILED_PHASE" ]; then
-  run_phase "lint" "$CMD_LINT" || true
+  lint_output=$("$SCRIPT_DIR/lint-changed.sh" "staged" "$PROJECT_DIR" "$CMD_LINT" 2>&1)
+  if [ $? -ne 0 ]; then
+    FAILED_PHASE="lint"
+    FAILURE_OUTPUT="$lint_output"
+  fi
 fi
 
 # Return decision
