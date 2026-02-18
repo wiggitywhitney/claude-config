@@ -209,6 +209,40 @@ Present findings in this focused format:
 If yes, I'll help you design the implementation approach. If no, let me know what you'd prefer to work on instead.
 ```
 
+## Step 6b: Create Milestone Task List (After Confirmation)
+
+When the user confirms they want to work on the recommended task, create tasks for the **current milestone only** using TaskCreate. This provides progress tracking scoped to the active milestone.
+
+### Process
+
+1. **Identify the current milestone** from the PRD (the one containing the recommended task)
+2. **Create a task for each unchecked item** in that milestone using TaskCreate:
+   - `subject`: The milestone checkbox item text (imperative form)
+   - `description`: Include the PRD number, milestone name, and any relevant context
+   - `activeForm`: Present continuous form of the task (e.g., "Researching claude-config directory")
+3. **Set the recommended task to `in_progress`** using TaskUpdate
+4. **Set dependencies** if milestone items have a natural ordering (use `addBlockedBy`)
+
+### Key Rules
+
+- **Only create tasks for the current milestone** — do not create tasks for future milestones
+- **One task per unchecked milestone item** — map 1:1 with PRD checkboxes
+- **Skip already-checked items** — only create tasks for `[ ]` items, not `[x]` items
+- **Keep task subjects concise** — use the PRD checkbox text, don't embellish
+- When the milestone completes and `/prd-next` runs again for the next milestone, create a fresh set of tasks
+
+### Example
+
+For a milestone with these items:
+```text
+- [x] Research reference implementation
+- [ ] Audit global CLAUDE.md
+- [ ] Audit project-level CLAUDE.md files
+- [ ] Create CLAUDE.md templates
+```
+
+Create 3 tasks (skipping the checked item), set "Audit global CLAUDE.md" to `in_progress`.
+
 ## Step 7: Design Discussion (If Confirmed)
 
 If the user confirms they want to work on the recommended task, then dive into:
