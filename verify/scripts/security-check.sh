@@ -20,6 +20,11 @@
 #   For inline suppression of individual lines, add an eslint-disable comment
 #   (e.g., // eslint-disable-line no-console).
 #
+# Known vulnerabilities:
+#   npm audit findings for packages with no available fix can be acknowledged in
+#   .audit-known-vulns (one package name per line, comments with #). Listed
+#   packages are excluded from findings in both diff-scoped and repo-scoped modes.
+#
 # Exit codes:
 #   0 — All checks passed
 #   1 — Issues found (details printed to stdout)
@@ -96,6 +101,19 @@ fi
 
 # Source file exclusions (for console.log/debugger — excludes test files too)
 SOURCE_SKIP=("${BASE_SKIP[@]}" ':!*.test.*' ':!*.spec.*' ':!*__tests__*' ':!scripts/test-*')
+
+# Read .audit-known-vulns for accepted npm audit vulnerabilities (package names, one per line).
+# Listed packages are excluded from audit findings in both diff-scoped and repo-scoped modes.
+# Use this for known vulnerabilities with no available fix.
+AUDIT_KNOWN_VULNS=()
+if [ -f "$PROJECT_DIR/.audit-known-vulns" ]; then
+  while IFS= read -r vuln; do
+    vuln=$(echo "$vuln" | sed 's/#.*//' | xargs)
+    if [ -n "$vuln" ]; then
+      AUDIT_KNOWN_VULNS+=("$vuln")
+    fi
+  done < "$PROJECT_DIR/.audit-known-vulns"
+fi
 
 # --- Helper: grep added lines in a git diff ---
 # Usage: diff_grep <pattern> <exclude_pattern> <diff_base> <pathspecs...>
@@ -246,27 +264,80 @@ if [ "$MODE" = "pre-pr" ]; then
     fi
   fi
 
-  # npm audit runs regardless of scope (checks dependencies, not code)
+  # npm audit — diff-scoped when DIFF_BASE is provided (Decision 7)
   if [ -f "$PROJECT_DIR/package.json" ] && command -v npm &>/dev/null; then
-    echo "Running npm audit..."
-    AUDIT_OUTPUT=$(npm audit --json 2>/dev/null || true)
-    VULN_COUNT=$(echo "$AUDIT_OUTPUT" | python3 -c "
+    if [ -n "$DIFF_BASE" ]; then
+      # Diff-scoped: only flag NEW vulnerabilities introduced by this branch
+      DEP_FILES_CHANGED=$(git diff --name-only "$DIFF_BASE"...HEAD 2>/dev/null | grep -E '(package\.json|package-lock\.json)$' || true)
+
+      if [ -n "$DEP_FILES_CHANGED" ]; then
+        echo "Running npm audit (dependency files changed — comparing against base)..."
+        AUDIT_TMPDIR=$(mktemp -d)
+
+        # Audit current branch
+        npm audit --json > "$AUDIT_TMPDIR/branch.json" 2>/dev/null || true
+
+        # Reconstruct base lockfile for comparison
+        git show "$DIFF_BASE:package.json" > "$AUDIT_TMPDIR/package.json" 2>/dev/null || true
+        git show "$DIFF_BASE:package-lock.json" > "$AUDIT_TMPDIR/package-lock.json" 2>/dev/null || true
+        (cd "$AUDIT_TMPDIR" && npm audit --json --package-lock-only > base.json 2>/dev/null || true)
+
+        # Compare: only count vulnerabilities not present on base and not in .audit-known-vulns
+        KNOWN_VULNS_JSON=$(printf '%s\n' "${AUDIT_KNOWN_VULNS[@]+"${AUDIT_KNOWN_VULNS[@]}"}" | python3 -c "
+import sys, json
+print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))
+" 2>/dev/null || echo "[]")
+
+        NEW_VULN_COUNT=$(python3 -c "
+import json
+
+def load_vuln_keys(path):
+    try:
+        with open(path) as f:
+            data = json.load(f)
+        return set(data.get('vulnerabilities', {}).keys())
+    except Exception:
+        return set()
+
+known = set(json.loads('$KNOWN_VULNS_JSON'))
+branch = load_vuln_keys('$AUDIT_TMPDIR/branch.json')
+base = load_vuln_keys('$AUDIT_TMPDIR/base.json')
+print(len(branch - base - known))
+" 2>/dev/null || echo "0")
+
+        rm -rf "$AUDIT_TMPDIR"
+
+        if [ "$NEW_VULN_COUNT" -gt 0 ] 2>/dev/null; then
+          add_finding "npm audit found $NEW_VULN_COUNT NEW vulnerability(ies) introduced by this branch. Run 'npm audit' for details."
+        fi
+      fi
+    else
+      # Repo-scoped: check all vulnerabilities, minus .audit-known-vulns (for /verify skill ad-hoc use)
+      echo "Running npm audit..."
+      KNOWN_VULNS_JSON=$(printf '%s\n' "${AUDIT_KNOWN_VULNS[@]+"${AUDIT_KNOWN_VULNS[@]}"}" | python3 -c "
+import sys, json
+print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))
+" 2>/dev/null || echo "[]")
+
+      VULN_COUNT=$(npm audit --json 2>/dev/null | python3 -c "
 import json, sys
 try:
     data = json.load(sys.stdin)
-    # npm audit JSON format varies by version
-    if 'metadata' in data and 'vulnerabilities' in data['metadata']:
+    known = set(json.loads('$KNOWN_VULNS_JSON'))
+    if 'vulnerabilities' in data:
+        unknown = set(data['vulnerabilities'].keys()) - known
+        total = len(unknown)
+    elif 'metadata' in data and 'vulnerabilities' in data['metadata']:
         total = data['metadata']['vulnerabilities'].get('total', 0)
-    elif 'vulnerabilities' in data:
-        total = len(data['vulnerabilities'])
     else:
         total = 0
     print(total)
 except Exception:
     print(0)
 " 2>/dev/null || echo "0")
-    if [ "$VULN_COUNT" -gt 0 ] 2>/dev/null; then
-      add_finding "npm audit found $VULN_COUNT vulnerability(ies). Run 'npm audit' for details."
+      if [ "$VULN_COUNT" -gt 0 ] 2>/dev/null; then
+        add_finding "npm audit found $VULN_COUNT vulnerability(ies) (excluding known). Run 'npm audit' for details."
+      fi
     fi
   fi
 fi
@@ -290,6 +361,11 @@ else
   echo ""
   echo "  For INTENTIONAL console.log in your own code (CLI output, logging):"
   echo "    Add // eslint-disable-line no-console on the line."
+  echo ""
+  echo "  For npm audit vulnerabilities with NO AVAILABLE FIX:"
+  echo "    Add the package name to .audit-known-vulns in the project root (one per line)."
+  echo "    Example: echo 'nth-check' >> .audit-known-vulns"
+  echo "    Re-evaluate periodically — fixes may become available."
   echo ""
   echo "RESULT: Security check FAILED"
 fi
