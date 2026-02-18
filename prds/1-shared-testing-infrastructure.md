@@ -161,8 +161,8 @@ Create the global `/verify` slash command for ad-hoc interactive verification. C
 ### Milestone 2: Testing Decision Guide + Testing Rules
 Create the testing decision guide mapping project types to strategies, and the Always/Never testing rules. These two deliverables are closely related and form the intellectual foundation of the toolkit.
 
-- [ ] Testing decision guide covers all 5 project types with concrete guidance
-- [ ] Testing rules documented as Always/Never patterns
+- [x] Testing decision guide covers all 5 project types with concrete guidance
+- [x] Testing rules documented as Always/Never patterns
 
 ### Milestone 3: CLAUDE.md Templates + Permission Profiles
 Create the CLAUDE.md starter templates with testing rules baked in, and the three permission profile configurations. These are the "apply to a new project" deliverables. Work in three phases: (1) research Forrester's `claude-config/` directory fresh per Decision 14, (2) audit and refactor Whitney's own CLAUDE.md files per Decision 15, (3) generalize into templates. Language-specific rules factored into `rules/languages/` per Decision 13.
