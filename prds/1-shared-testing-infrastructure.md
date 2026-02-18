@@ -167,7 +167,7 @@ Create the testing decision guide mapping project types to strategies, and the A
 ### Milestone 3: CLAUDE.md Templates + Permission Profiles
 Create the CLAUDE.md starter templates with testing rules baked in, and the three permission profile configurations. These are the "apply to a new project" deliverables. Work in three phases: (1) research Forrester's `claude-config/` directory fresh per Decision 14, (2) audit and refactor Whitney's own CLAUDE.md files per Decision 15, (3) generalize into templates. Language-specific rules factored into `rules/languages/` per Decision 13.
 
-- [ ] Research `claude-config/` directory of `peopleforrester/llm-coding-workflow` (CLAUDE.md, rules/, hooks/, skills/, settings.json)
+- [x] Research `claude-config/` directory of `peopleforrester/llm-coding-workflow` (CLAUDE.md, rules/, hooks/, skills/, settings.json)
 - [ ] Audit and refactor Whitney's global `~/.claude/CLAUDE.md` — factor out what can move to hooks/rules, apply Forrester's patterns (HTML comments for hook docs, lean file, etc.)
 - [ ] Audit and refactor project-level CLAUDE.md files using same principles
 - [ ] CLAUDE.md templates created (general + Node.js/TypeScript), based on refactored real config
