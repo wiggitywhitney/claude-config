@@ -1,4 +1,4 @@
-# Research: Forrester's `claude-config/` Directory
+# Research: Reference Implementation — `claude-config/` Directory
 
 **Source**: `https://github.com/peopleforrester/llm-coding-workflow/tree/main/claude-config`
 **Analyzed**: 2026-02-18
@@ -68,7 +68,7 @@ The core architectural insight is a **four-tier content distribution** that mini
 
 ### What's IN CLAUDE.md
 
-- **Interaction preferences**: "Address me as Michael"
+- **Interaction preferences**: Custom name addressing
 - **Universal code principles**: Prefer simple solutions, match surrounding style, smallest reasonable changes
 - **Permission gates**: Ask before reimplementing, no fallback mechanisms without permission
 - **Testing philosophy**: TDD process, no-exceptions test policy, pristine test output
@@ -208,7 +208,7 @@ This is a pattern worth borrowing: **extract the minimal relevant data, then che
 }
 ```
 
-**Notable**: No explicit `allow`/`deny` permission lists. Forrester runs in full autonomous mode (`skipDangerousModePermissionPrompt: true`) and relies on hooks + CLAUDE.md rules for safety instead of permission restrictions.
+**Notable**: No explicit `allow`/`deny` permission lists. The reference implementation runs in full autonomous mode (`skipDangerousModePermissionPrompt: true`) and relies on hooks + CLAUDE.md rules for safety instead of permission restrictions.
 
 ---
 
@@ -244,17 +244,17 @@ Skills are behavioral/process prompts. They tell Claude **how** to do something,
 7. **Universal `code-style.md`** at rules root for cross-language conventions
 8. **Commit message scoping technique** — extract minimal relevant data before checking
 
-### Contextual Differences (Whitney vs Forrester)
+### Contextual Differences (Whitney's Config vs Reference Implementation)
 
-| Aspect | Forrester | Whitney |
-|--------|-----------|---------|
+| Aspect | Reference Implementation | Whitney |
+|--------|--------------------------|---------|
 | Permission model | Full autonomous (skipDangerousModePermissionPrompt) | Tiered verification hooks |
 | Safety philosophy | CLAUDE.md rules + commit message hook | Tiered hooks (commit/push/PR) + settings.json deny lists |
 | Branch strategy | staging → main | feature branches → main |
 | Primary languages | Python, TypeScript | TypeScript primary |
 | Rules density | Many placeholders, few rich | N/A (building from scratch) |
 
-Whitney's approach is more defense-in-depth (layered hooks + permission deny lists). The templates should reflect this rather than Forrester's full-autonomous model.
+Whitney's approach is more defense-in-depth (layered hooks + permission deny lists). The templates should reflect this rather than the reference implementation's full-autonomous model.
 
 ---
 
