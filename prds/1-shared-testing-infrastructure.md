@@ -165,9 +165,13 @@ Create the testing decision guide mapping project types to strategies, and the A
 - [ ] Testing rules documented as Always/Never patterns
 
 ### Milestone 3: CLAUDE.md Templates + Permission Profiles
-Create the CLAUDE.md starter templates with testing rules baked in, and the three permission profile configurations. These are the "apply to a new project" deliverables.
+Create the CLAUDE.md starter templates with testing rules baked in, and the three permission profile configurations. These are the "apply to a new project" deliverables. Work in three phases: (1) research Forrester's `claude-config/` directory fresh per Decision 14, (2) audit and refactor Whitney's own CLAUDE.md files per Decision 15, (3) generalize into templates. Language-specific rules factored into `rules/languages/` per Decision 13.
 
-- [ ] CLAUDE.md templates created (general + Node.js/TypeScript)
+- [ ] Research `claude-config/` directory of `peopleforrester/llm-coding-workflow` (CLAUDE.md, rules/, hooks/, skills/, settings.json)
+- [ ] Audit and refactor Whitney's global `~/.claude/CLAUDE.md` — factor out what can move to hooks/rules, apply Forrester's patterns (HTML comments for hook docs, lean file, etc.)
+- [ ] Audit and refactor project-level CLAUDE.md files using same principles
+- [ ] CLAUDE.md templates created (general + Node.js/TypeScript), based on refactored real config
+- [ ] Per-language rule files created in `rules/languages/` (Decision 13)
 - [ ] Permission profiles are valid, tested configurations
 
 ### Milestone 4: README + Integration Testing
@@ -273,3 +277,21 @@ Review existing Anki cards in `~/Documents/Journal/make Anki cards/finished/` to
 - **Decision**: Swap the order of Security and Tests in all verification modes that include both. The phase order is now: Build → Type Check → Lint → Security → Tests. This applies to the `full` and `pre-pr` modes (push and PR hooks), and to the `/verify` skill's full/pre-pr runs. The `quick` mode (commit hook) is unaffected since it runs neither.
 - **Rationale**: Security checks are cheap — grepping the staged diff for console.log, debugger, .only, and .env files takes milliseconds. Tests can take seconds to minutes. Under the stop-on-first-failure rule, a failed phase triggers a fix and restart from phase 1. Running the expensive phase last means you only pay that cost after all cheap checks have passed. If security ran after tests, a trivial issue like a staged `.env` file would waste the entire test run before being caught — and then tests would have to run again after the fix.
 - **Impact**: Updates phase ordering in the `/verify` skill description and Decision 10's tiered hook table. The push and PR hooks (not yet built) should implement this order from the start. The existing `pre-commit-hook.sh` will also be updated when it's refactored to quick+lint mode per Decision 10 (tests and security drop out entirely, so the order change is moot for that hook).
+
+### Decision 13: Per-Language Rules Factored Out of CLAUDE.md
+- **Date**: 2026-02-18
+- **Decision**: Language-specific rules (Python, TypeScript, Go, etc.) should be factored into separate files rather than inlined in CLAUDE.md templates. Templates reference per-language rule files instead of embedding language rules inline.
+- **Rationale**: CLAUDE.md context is expensive — every rule consumes tokens on every conversation. Language-specific rules (import ordering, type annotation conventions, linter configuration) are irrelevant when working in a different language. Factoring them into `rules/languages/python.md`, `rules/languages/typescript.md`, etc. means only the relevant language rules are loaded. Pattern observed in Michael Forrester's llm-coding-workflow repo, which uses this exact structure.
+- **Impact**: Milestone 3 CLAUDE.md templates will include a `rules/` directory structure with per-language files rather than monolithic templates. Templates will document how to include only relevant language rules.
+
+### Decision 14: Milestone 3 Research Scope — llm-coding-workflow
+- **Date**: 2026-02-18
+- **Decision**: When implementing Milestone 3, the implementing agent must research the `claude-config/` directory of `https://github.com/peopleforrester/llm-coding-workflow` before writing any deliverables. Research scope: `CLAUDE.md` (137 lines), `rules/` (12 domain-specific files including per-language), `hooks/` (3 Claude Code automation hooks), `skills/` (25+ custom commands), and `settings.json`. Skip `src/`, `tests/`, `assessments/`, and `design-decisions/` — those are CLI implementation, not config patterns. Borrowing verbatim patterns is acceptable where they fit.
+- **Rationale**: That repo's `claude-config/` directory is a production reference implementation of a mature Claude Code configuration. The 137-line CLAUDE.md demonstrates how to keep the file lean by factoring deterministic rules into hooks, domain-specific rules into `rules/` files, and using HTML comments to document hook-enforced rules for human readers without burning Claude's context. Understanding the content distribution pattern (what goes where and why) is more valuable than any single file.
+- **Impact**: Milestone 3 implementation begins with research of the `claude-config/` directory to understand the content distribution pattern, then applies it.
+
+### Decision 15: Refactor Own CLAUDE.md Before Writing Templates
+- **Date**: 2026-02-18
+- **Decision**: Milestone 3 should begin with a CLAUDE.md audit and refactor of Whitney's own global (`~/.claude/CLAUDE.md`) and project-level CLAUDE.md files before writing generalized templates. This is a learning exercise that directly informs template design.
+- **Rationale**: Practicing on real config and then generalizing produces better templates than designing from theory. The refactor applies Forrester's patterns: lean CLAUDE.md (~150 lines max), deterministic rules moved to hooks, domain-specific rules factored into `rules/` files, HTML comments documenting what hooks enforce. Improvements apply regardless of whether they're testing-related — the goal is a clean, well-factored configuration.
+- **Impact**: Milestone 3 gains a new first item: audit and refactor Whitney's CLAUDE.md files. The refactored result becomes the basis for the generalized templates.
