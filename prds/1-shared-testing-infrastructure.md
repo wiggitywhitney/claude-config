@@ -132,10 +132,10 @@ How to use this repo:
 
 ## Success Criteria
 
-- [ ] All 6 deliverables exist in the repo
-- [ ] `/verify` skill has been tested in at least one real project (commit-story-v2)
-- [ ] README explains how to apply this toolkit to a new repo
-- [ ] Testing decision guide covers all 5 project types listed above
+- [x] All 6 deliverables exist in the repo
+- [x] `/verify` skill has been tested in at least one real project (commit-story-v2)
+- [x] README explains how to apply this toolkit to a new repo
+- [x] Testing decision guide covers all 5 project types listed above
 - [x] Permission profiles documented as guide with tier-down pattern (Decision 20)
 
 ## Milestones
@@ -188,10 +188,10 @@ Enforce that every project has unit, integration, and end-to-end tests — unles
 ### Milestone 5: README + Integration Testing
 Write the README explaining how to use the toolkit and apply it to new projects. Do a final integration pass ensuring everything works together. Documentation follows the execute-then-document principle (Decision 21): every example must come from real execution, not invented output.
 
-- [ ] README covers all deliverables with clear instructions
-- [ ] All README examples are validated by executing them against a real project
-- [ ] End-to-end walkthrough of applying toolkit to a new project works
-- [ ] Cross-references between guides, templates, rules, and README are verified
+- [x] README covers all deliverables with clear instructions
+- [x] All README examples are validated by executing them against a real project
+- [x] End-to-end walkthrough of applying toolkit to a new project works
+- [x] Cross-references between guides, templates, rules, and README are verified
 
 ### Milestone 6: Anki Card Review + Creation
 Review existing Anki cards for accuracy, then create new cards capturing what was built in this PRD. Cards are both a learning tool and a completeness check — if something can't be turned into a clear card, the concept may not be well enough understood.
