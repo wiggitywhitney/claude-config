@@ -173,7 +173,7 @@ Create the CLAUDE.md starter templates with testing rules baked in, and the thre
 - [x] CLAUDE.md templates created (general + Node.js/TypeScript), based on refactored real config and Decision 19 patterns (lean ~150 lines, `rules/` with path-based activation, placeholder stubs). Applied to: choose-your-ai-adventure, mcp-hello-world, commit_story, commit-story-v1, spider-rainbows. Authoring guide at `guides/claude-md-guide.md`.
 - [x] Per-language rule files created in `rules/languages/` with `paths:` frontmatter activation (Decision 13, Decision 19 pattern 2-3): TypeScript, JavaScript, Shell (real rules); Python, Go (placeholders)
 - [x] Permission profiles documented as guide with tier-down pattern from autonomous baseline (Decision 20)
-- [ ] Create commit message hook that blocks AI/Claude/Co-Authored-By references in commits (Decision 17). Prompt-level rule already exists in global CLAUDE.md; this adds deterministic hook enforcement.
+- [x] Create commit message hook that blocks AI/Claude/Co-Authored-By references in commits (Decision 17). Prompt-level rule already exists in global CLAUDE.md; this adds deterministic hook enforcement.
 - [ ] Add dotfile override checks (`.skip-branching`, `.skip-coderabbit`) to existing hooks (Decision 16). Prompt-level rule already exists in global CLAUDE.md; this adds deterministic hook enforcement.
 
 ### Milestone 4: Test Tier Enforcement Hooks with Dotfile Opt-Outs
