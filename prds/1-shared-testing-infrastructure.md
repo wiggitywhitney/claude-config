@@ -176,28 +176,38 @@ Create the CLAUDE.md starter templates with testing rules baked in, and the thre
 - [ ] Create commit message hook that blocks AI/Claude/Co-Authored-By references in commits (Decision 17). Prompt-level rule already exists in global CLAUDE.md; this adds deterministic hook enforcement.
 - [ ] Add dotfile override checks (`.skip-branching`, `.skip-coderabbit`) to existing hooks (Decision 16). Prompt-level rule already exists in global CLAUDE.md; this adds deterministic hook enforcement.
 
-### Milestone 4: README + Integration Testing
-Write the README explaining how to use the toolkit and apply it to new projects. Do a final integration pass ensuring everything works together.
-
-- [ ] README covers all deliverables with clear instructions
-- [ ] End-to-end walkthrough of applying toolkit to a project works
-
-### Milestone 5: Anki Card Review
-Review existing Anki cards in `~/Documents/Journal/make Anki cards/finished/` to ensure they accurately reflect the current implementation. Three card sets are relevant:
-
-- [ ] Review "CARDS MADE - Claude Code Skills.md" (18 cards) — verify skill frontmatter fields, safety guardrails, and tool access control are current
-- [ ] Review "CARDS MADE - Claude Code Plugins and Ralph Loops.md" (30 cards) — verify hooks, verification patterns, and autonomous looping cards reflect tiered hooks (Decisions 10-12)
-- [ ] Review "CARDS MADE - Claude Code Native Tools.md" (9 cards) — verify tool categories are current
-- [ ] Update any cards that are stale or inaccurate given the current implementation
-
-### Milestone 6: Test Tier Enforcement Hooks with Dotfile Opt-Outs
-Enforce that every project has unit, integration, and end-to-end tests — unless the repo explicitly opts out via dotfiles (`.skip-e2e`, `.skip-integration`). Builds on the verification hooks from Milestone 1 and the dotfile override pattern from Decision 16.
+### Milestone 4: Test Tier Enforcement Hooks with Dotfile Opt-Outs
+Enforce that every project has unit, integration, and end-to-end tests — unless the repo explicitly opts out via dotfiles (`.skip-e2e`, `.skip-integration`). Builds on the verification hooks from Milestone 1 and the dotfile override pattern from Decision 16. Natural continuation of the hook work in Milestones 1 and 3 (Decision 21).
 
 - [ ] Define what "has tests" means per project type (Node.js/TypeScript: test runner config + test files exist; detect via package.json scripts, test directories)
 - [ ] Create hook that checks test tier presence on git push or PR creation
 - [ ] Hook respects `.skip-e2e` and `.skip-integration` dotfiles — skips enforcement for opted-out tiers
 - [ ] Hook warns (not blocks) when test tiers are missing — gives teams time to add coverage rather than hard-blocking
 - [ ] Tested across at least two repos with different test configurations
+
+### Milestone 5: README + Integration Testing
+Write the README explaining how to use the toolkit and apply it to new projects. Do a final integration pass ensuring everything works together. Documentation follows the execute-then-document principle (Decision 21): every example must come from real execution, not invented output.
+
+- [ ] README covers all deliverables with clear instructions
+- [ ] All README examples are validated by executing them against a real project
+- [ ] End-to-end walkthrough of applying toolkit to a new project works
+- [ ] Cross-references between guides, templates, rules, and README are verified
+
+### Milestone 6: Anki Card Review + Creation
+Review existing Anki cards for accuracy, then create new cards capturing what was built in this PRD. Cards are both a learning tool and a completeness check — if something can't be turned into a clear card, the concept may not be well enough understood.
+
+**Review existing cards** in `~/Documents/Journal/make Anki cards/finished/`:
+- [ ] Review "CARDS MADE - Claude Code Skills.md" (18 cards) — verify skill frontmatter fields, safety guardrails, and tool access control are current
+- [ ] Review "CARDS MADE - Claude Code Plugins and Ralph Loops.md" (30 cards) — verify hooks, verification patterns, and autonomous looping cards reflect tiered hooks (Decisions 10-12)
+- [ ] Review "CARDS MADE - Claude Code Native Tools.md" (9 cards) — verify tool categories are current
+- [ ] Update any cards that are stale or inaccurate given the current implementation
+
+**Create new cards** for PRD 1 deliverables:
+- [ ] Cards for CLAUDE.md authoring patterns (lean files, hierarchy, @imports, what to include/exclude)
+- [ ] Cards for per-language rule files (paths: frontmatter, placeholder pattern, organization)
+- [ ] Cards for permission profile tiers (conservative/balanced/autonomous, deny list, tier-down pattern)
+- [ ] Cards for the verify skill and tiered hooks (commit/push/PR, phase ordering, Decision 12)
+- [ ] Cards for hook authoring conventions (exit 2 vs exit 0, dotfile opt-outs)
 
 ## Out of Scope
 
@@ -207,6 +217,7 @@ Enforce that every project has unit, integration, and end-to-end tests — unles
 - General-purpose hooks framework (the three tiered verification hooks are in scope per Decision 10, but a broader hooks system for arbitrary enforcement is not)
 - Agent definitions (not needed for this toolkit's scope)
 - LangGraph orchestration — the verification process is linear (not a complex state machine), so a skill + scripts approach is sufficient. LangGraph would add infrastructure overhead (Python runtime, API keys, separate system) without meaningful benefit for a sequential 5-phase process.
+- `/write-docs` skill — Vfarcic's `dot-ai` repo has a reusable documentation skill that enforces execute-then-document, chunk-by-chunk writing with user confirmation gates. Valuable pattern but out of scope for PRD 1 (testing infrastructure). The execute-then-document principle is adopted for Milestone 5's README. A full write-docs skill is a candidate for a future PRD.
 
 ## Decision Log
 
@@ -343,3 +354,13 @@ Enforce that every project has unit, integration, and end-to-end tests — unles
 - **Decision**: Replace the three standalone permission profile JSON files (conservative/balanced/autonomous) with a guide document (`guides/permission-profiles.md`) that explains the three tiers, documents the universal deny list, and shows how to tier down from Whitney's existing autonomous config. No standalone profile files are created.
 - **Rationale**: The PRD originally referenced Forrester's `claude-dotfiles` repo which implemented three-tier permission profiles. However, Forrester's own newer production repo (`llm-coding-workflow`) has evolved past permission profiles entirely — it uses `skipDangerousModePermissionPrompt: true` and relies on hooks for safety instead. Whitney's existing `settings.json` is a battle-tested autonomous profile. Creating conservative and balanced profile files we never use means shipping untested security configurations — the PRD requires "valid, tested configurations." A guide documenting the pattern and tier-down approach provides the same reference value without the risk of untested artifacts. This follows Decision 19 pattern 3: let real usage drive content.
 - **Impact**: Milestone 3 permission profiles item changes from "create three profile files" to "create permission profiles guide." The Milestone 3 checkbox and Success Criteria are updated to reflect the guide deliverable.
+
+### Decision 21: Milestone Reorder and Documentation Principles
+- **Date**: 2026-02-18
+- **Decision**: Reorder Milestones 4-6 and expand scope:
+  - **M4: Test Tier Enforcement Hooks** (was M6) — moved earlier as natural continuation of hook work from M1 and M3.
+  - **M5: README + Integration Testing** (was M4) — wraps up the toolkit. Adopts the execute-then-document principle from Vfarcic's `dot-ai` write-docs skill: every example in the README must come from real execution, not invented output. README examples are validated by actually running them against a real project.
+  - **M6: Anki Card Review + Creation** (was M5) — expanded from "review existing cards" to also "create new cards for PRD 1 deliverables." Cards are both a learning tool and a completeness check.
+  - A full `/write-docs` skill (Vfarcic's pattern) is noted as a future PRD candidate, not in scope for PRD 1.
+- **Rationale**: Hook work should stay grouped together while context is fresh. README is a wrap-up activity that benefits from all other deliverables being complete. Anki card creation belongs last because it captures the full picture. The execute-then-document principle prevents stale or hypothetical examples in documentation — a real problem when documentation is written before or separately from implementation.
+- **Impact**: Milestones 4-6 renumbered and rescoped. Out of Scope updated with write-docs skill note.
