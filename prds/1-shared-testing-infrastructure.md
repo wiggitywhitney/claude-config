@@ -179,11 +179,11 @@ Create the CLAUDE.md starter templates with testing rules baked in, and the thre
 ### Milestone 4: Test Tier Enforcement Hooks with Dotfile Opt-Outs
 Enforce that every project has unit, integration, and end-to-end tests — unless the repo explicitly opts out via dotfiles (`.skip-e2e`, `.skip-integration`). Builds on the verification hooks from Milestone 1 and the dotfile override pattern from Decision 16. Natural continuation of the hook work in Milestones 1 and 3 (Decision 21).
 
-- [ ] Define what "has tests" means per project type (Node.js/TypeScript: test runner config + test files exist; detect via package.json scripts, test directories)
-- [ ] Create hook that checks test tier presence on git push or PR creation
-- [ ] Hook respects `.skip-e2e` and `.skip-integration` dotfiles — skips enforcement for opted-out tiers
-- [ ] Hook warns (not blocks) when test tiers are missing — gives teams time to add coverage rather than hard-blocking
-- [ ] Tested across at least two repos with different test configurations
+- [x] Define what "has tests" means per project type (Node.js/TypeScript: test runner config + test files exist; detect via package.json scripts, test directories)
+- [x] Create hook that checks test tier presence on git push or PR creation
+- [x] Hook respects `.skip-e2e` and `.skip-integration` dotfiles — skips enforcement for opted-out tiers
+- [x] Hook warns (not blocks) when test tiers are missing — gives teams time to add coverage rather than hard-blocking
+- [x] Tested across at least two repos with different test configurations
 
 ### Milestone 5: README + Integration Testing
 Write the README explaining how to use the toolkit and apply it to new projects. Do a final integration pass ensuring everything works together. Documentation follows the execute-then-document principle (Decision 21): every example must come from real execution, not invented output.
