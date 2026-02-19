@@ -1,6 +1,6 @@
 # PRD #1: Shared Claude Code Testing & Developer Infrastructure
 
-**Status**: In Progress
+**Status**: Complete
 **Priority**: High
 **Created**: 2026-02-11
 **GitHub Issue**: [#1](https://github.com/wiggitywhitney/claude-config/issues/1)
@@ -197,17 +197,17 @@ Write the README explaining how to use the toolkit and apply it to new projects.
 Review existing Anki cards for accuracy, then create new cards capturing what was built in this PRD. Cards are both a learning tool and a completeness check — if something can't be turned into a clear card, the concept may not be well enough understood.
 
 **Review existing cards** in `~/Documents/Journal/make Anki cards/finished/`:
-- [ ] Review "CARDS MADE - Claude Code Skills.md" (18 cards) — verify skill frontmatter fields, safety guardrails, and tool access control are current
-- [ ] Review "CARDS MADE - Claude Code Plugins and Ralph Loops.md" (30 cards) — verify hooks, verification patterns, and autonomous looping cards reflect tiered hooks (Decisions 10-12)
-- [ ] Review "CARDS MADE - Claude Code Native Tools.md" (9 cards) — verify tool categories are current
-- [ ] Update any cards that are stale or inaccurate given the current implementation
+- [x] Review "CARDS MADE - Claude Code Skills.md" (18 cards) — verify skill frontmatter fields, safety guardrails, and tool access control are current
+- [x] Review "CARDS MADE - Claude Code Plugins and Ralph Loops.md" (30 cards) — verify hooks, verification patterns, and autonomous looping cards reflect tiered hooks (Decisions 10-12)
+- [x] Review "CARDS MADE - Claude Code Native Tools.md" (9 cards) — verify tool categories are current
+- [x] Update any cards that are stale or inaccurate given the current implementation
 
 **Create new cards** for PRD 1 deliverables:
-- [ ] Cards for CLAUDE.md authoring patterns (lean files, hierarchy, @imports, what to include/exclude)
-- [ ] Cards for per-language rule files (paths: frontmatter, placeholder pattern, organization)
-- [ ] Cards for permission profile tiers (conservative/balanced/autonomous, deny list, tier-down pattern)
-- [ ] Cards for the verify skill and tiered hooks (commit/push/PR, phase ordering, Decision 12)
-- [ ] Cards for hook authoring conventions (exit 2 vs exit 0, dotfile opt-outs)
+- [x] Cards for CLAUDE.md authoring patterns (lean files, hierarchy, @imports, what to include/exclude)
+- [x] Cards for per-language rule files (paths: frontmatter, placeholder pattern, organization)
+- [x] Cards for permission profile tiers (conservative/balanced/autonomous, deny list, tier-down pattern)
+- [x] Cards for the verify skill and tiered hooks (commit/push/PR, phase ordering, Decision 12)
+- [x] Cards for hook authoring conventions (exit 2 vs exit 0, dotfile opt-outs)
 
 ## Out of Scope
 
