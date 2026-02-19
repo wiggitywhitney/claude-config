@@ -174,7 +174,7 @@ Create the CLAUDE.md starter templates with testing rules baked in, and the thre
 - [x] Per-language rule files created in `rules/languages/` with `paths:` frontmatter activation (Decision 13, Decision 19 pattern 2-3): TypeScript, JavaScript, Shell (real rules); Python, Go (placeholders)
 - [x] Permission profiles documented as guide with tier-down pattern from autonomous baseline (Decision 20)
 - [x] Create commit message hook that blocks AI/Claude/Co-Authored-By references in commits (Decision 17). Prompt-level rule already exists in global CLAUDE.md; this adds deterministic hook enforcement.
-- [ ] Add dotfile override checks (`.skip-branching`, `.skip-coderabbit`) to existing hooks (Decision 16). Prompt-level rule already exists in global CLAUDE.md; this adds deterministic hook enforcement.
+- [x] Add dotfile override checks (`.skip-branching`, `.skip-coderabbit`) to existing hooks (Decision 16). Prompt-level rule already exists in global CLAUDE.md; this adds deterministic hook enforcement.
 
 ### Milestone 4: Test Tier Enforcement Hooks with Dotfile Opt-Outs
 Enforce that every project has unit, integration, and end-to-end tests — unless the repo explicitly opts out via dotfiles (`.skip-e2e`, `.skip-integration`). Builds on the verification hooks from Milestone 1 and the dotfile override pattern from Decision 16. Natural continuation of the hook work in Milestones 1 and 3 (Decision 21).
