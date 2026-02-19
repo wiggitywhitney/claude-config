@@ -136,7 +136,7 @@ How to use this repo:
 - [ ] `/verify` skill has been tested in at least one real project (commit-story-v2)
 - [ ] README explains how to apply this toolkit to a new repo
 - [ ] Testing decision guide covers all 5 project types listed above
-- [ ] Permission profiles are valid `settings.json` configurations
+- [x] Permission profiles documented as guide with tier-down pattern (Decision 20)
 
 ## Milestones
 
@@ -170,11 +170,11 @@ Create the CLAUDE.md starter templates with testing rules baked in, and the thre
 - [x] Research `claude-config/` directory of `peopleforrester/llm-coding-workflow` (CLAUDE.md, rules/, hooks/, skills/, settings.json)
 - [x] Audit and refactor Whitney's global `~/.claude/CLAUDE.md` — factor out what can move to hooks/rules, apply Forrester's patterns (HTML comments for hook docs, lean file, etc.)
 - [x] Audit and refactor project-level CLAUDE.md files using same principles
-- [ ] CLAUDE.md templates created (general + Node.js/TypeScript), based on refactored real config. Once complete, apply to: choose-your-ai-adventure, mcp-hello-world, commit_story, commit-story-v1, spider-rainbows
-- [ ] Per-language rule files created in `rules/languages/` (Decision 13)
-- [ ] Permission profiles are valid, tested configurations
-- [ ] Create commit message hook that blocks AI/Claude/Co-Authored-By references in commits (Decision 17)
-- [ ] Add dotfile override checks (`.skip-branching`, `.skip-coderabbit`) to existing hooks (Decision 16)
+- [x] CLAUDE.md templates created (general + Node.js/TypeScript), based on refactored real config and Decision 19 patterns (lean ~150 lines, `rules/` with path-based activation, placeholder stubs). Applied to: choose-your-ai-adventure, mcp-hello-world, commit_story, commit-story-v1, spider-rainbows. Authoring guide at `guides/claude-md-guide.md`.
+- [x] Per-language rule files created in `rules/languages/` with `paths:` frontmatter activation (Decision 13, Decision 19 pattern 2-3): TypeScript, JavaScript, Shell (real rules); Python, Go (placeholders)
+- [x] Permission profiles documented as guide with tier-down pattern from autonomous baseline (Decision 20)
+- [ ] Create commit message hook that blocks AI/Claude/Co-Authored-By references in commits (Decision 17). Prompt-level rule already exists in global CLAUDE.md; this adds deterministic hook enforcement.
+- [ ] Add dotfile override checks (`.skip-branching`, `.skip-coderabbit`) to existing hooks (Decision 16). Prompt-level rule already exists in global CLAUDE.md; this adds deterministic hook enforcement.
 
 ### Milestone 4: README + Integration Testing
 Write the README explaining how to use the toolkit and apply it to new projects. Do a final integration pass ensuring everything works together.
@@ -325,3 +325,21 @@ Enforce that every project has unit, integration, and end-to-end tests — unles
 - **Decision**: Add Milestone 6 to enforce test tier presence (unit, integration, e2e) via hooks, with dotfile opt-outs (`.skip-e2e`, `.skip-integration`). Warn-only, not blocking.
 - **Rationale**: The global CLAUDE.md already states the testing default ("Every project MUST have unit, integration, and end-to-end tests") and the dotfile opt-out pattern. But that's prompt compliance only. Hook enforcement makes it deterministic. Warn-only (not block) is appropriate because adding test coverage is gradual — hard-blocking would prevent any commits in repos that don't yet have all three tiers. This builds on Decision 16's dotfile pattern and Milestone 1's verification hooks.
 - **Impact**: New Milestone 6 added after Anki review. Does not block Milestones 3-5.
+
+### Decision 19: Template Design Patterns from Forrester Research
+- **Date**: 2026-02-18
+- **Decision**: Adopt the following patterns from `peopleforrester/llm-coding-workflow`'s `claude-config/` directory (per Decision 14 research scope) as the design basis for CLAUDE.md templates and per-language rule files:
+  1. **Lean CLAUDE.md (~100-150 lines)** — Factor domain-specific rules into `rules/` files rather than inlining everything. CLAUDE.md stays behavioral and structural; rules files handle domain specifics.
+  2. **Path-based rule activation via frontmatter** — Per-language rule files use `paths:` frontmatter (e.g., `paths: ["**/*.ts", "**/*.tsx"]`) so Claude Code only loads them when working in relevant file contexts. Reduces token cost.
+  3. **Placeholder rule files** — Create stubs with correct `paths:` frontmatter and "Add rules as patterns emerge" rather than filling with speculative rules. Let real usage drive rule content.
+  4. **Blocking hooks (exit 2) for zero-tolerance rules only** — Reserve hard-blocking denial for rules that must never be violated (e.g., commit message policy). Use warning hooks (exit 0 with advisory output) for style and quality guidance.
+  5. **HTML comments documenting hook-enforced rules** — Already adopted in Whitney's global CLAUDE.md. Keeps humans informed about what hooks enforce without consuming Claude's context tokens on rules that are deterministically enforced anyway.
+  6. **Permission profiles in settings.json** — Forrester's repo does not configure Claude Code's `permissions` block, but our PRD calls for three profiles (conservative/balanced/autonomous). Whitney's existing `settings.json` is close to the autonomous profile and serves as the starting point.
+- **Rationale**: Forrester's `claude-config/` is a production reference implementation with 137-line CLAUDE.md, 12 rule files, 3 hooks, and 25+ skills. The content distribution pattern (what goes where and why) is the most valuable takeaway: CLAUDE.md for behavior, `rules/` for domain specifics with path activation, hooks for deterministic enforcement. This matches the refactoring already done in Decisions 15 and 6.
+- **Impact**: Directly informs Milestone 3 template structure. Templates will include a `rules/` directory with per-language stubs using `paths:` frontmatter. Also confirms that Milestone 3's commit message hook (Decision 17) and dotfile overrides (Decision 16) already have prompt-level rules in global CLAUDE.md — the remaining work is purely hook enforcement.
+
+### Decision 20: Permission Profiles as Guide, Not Standalone Files
+- **Date**: 2026-02-18
+- **Decision**: Replace the three standalone permission profile JSON files (conservative/balanced/autonomous) with a guide document (`guides/permission-profiles.md`) that explains the three tiers, documents the universal deny list, and shows how to tier down from Whitney's existing autonomous config. No standalone profile files are created.
+- **Rationale**: The PRD originally referenced Forrester's `claude-dotfiles` repo which implemented three-tier permission profiles. However, Forrester's own newer production repo (`llm-coding-workflow`) has evolved past permission profiles entirely — it uses `skipDangerousModePermissionPrompt: true` and relies on hooks for safety instead. Whitney's existing `settings.json` is a battle-tested autonomous profile. Creating conservative and balanced profile files we never use means shipping untested security configurations — the PRD requires "valid, tested configurations." A guide documenting the pattern and tier-down approach provides the same reference value without the risk of untested artifacts. This follows Decision 19 pattern 3: let real usage drive content.
+- **Impact**: Milestone 3 permission profiles item changes from "create three profile files" to "create permission profiles guide." The Milestone 3 checkbox and Success Criteria are updated to reflect the guide deliverable.

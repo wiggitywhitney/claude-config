@@ -33,6 +33,14 @@ Every PR must go through CodeRabbit review before merge. This is a hard requirem
 - Create a new PR to merge to main anytime there are codebase additions
 - Make sure CodeRabbit review has been examined and is approved by human before merging PR
 
+## Hook & Rule Authoring Conventions
+
+**Hook severity:** Use exit 2 (blocking deny) only for zero-tolerance rules that must never be violated (e.g., commit message policy, verification failures). Use exit 0 with advisory `additionalContext` for style and quality guidance where violations are informational, not blocking.
+
+**Rule file frontmatter:** All rule files in `rules/` must include `paths:` frontmatter so Claude Code only loads them in relevant file contexts. Example: `paths: ["**/*.ts", "**/*.tsx"]` for TypeScript rules. This reduces token cost by avoiding irrelevant rules in every conversation.
+
+**Placeholder rule files:** When creating a new rule file for a domain that doesn't have established patterns yet, create a stub with correct `paths:` frontmatter and a single line: "Add rules as patterns emerge from real usage." Do not fill rule files with speculative rules — let real usage drive content.
+
 ## Secrets Management (vals)
 
 This project uses [vals](https://github.com/helmfile/vals) for secrets management, pulling from GCP Secrets Manager.
