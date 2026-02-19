@@ -163,7 +163,7 @@ if [ -n "$DIFF_BASE" ]; then
   DEBUGGERS=$(diff_grep 'debugger' 'eslint-disable' "$DIFF_BASE" \
     '*.js' '*.ts' '*.jsx' '*.tsx' "${SOURCE_SKIP[@]}")
 
-  ONLY_TESTS=$(diff_grep '\.only' '' "$DIFF_BASE" \
+  ONLY_TESTS=$(diff_grep '\.only[[:space:]]*\(' '' "$DIFF_BASE" \
     '*.test.*' '*.spec.*' '*__tests__*' "${BASE_SKIP[@]}")
 else
   # Repo-scoped: check all tracked files (for /verify skill ad-hoc use)
@@ -174,7 +174,7 @@ else
   DEBUGGERS=$(git grep -n 'debugger' -- '*.js' '*.ts' '*.jsx' '*.tsx' "${SOURCE_SKIP[@]}" 2>/dev/null | grep -v 'eslint-disable' || true)
 
   # .only uses BASE_SKIP (not SOURCE_SKIP) so test file includes aren't cancelled out
-  ONLY_TESTS=$(git grep -n '\.only' -- '*.test.*' '*.spec.*' '*__tests__*' "${BASE_SKIP[@]}" 2>/dev/null || true)
+  ONLY_TESTS=$(git grep -n '\.only[[:space:]]*(' -- '*.test.*' '*.spec.*' '*__tests__*' "${BASE_SKIP[@]}" 2>/dev/null || true)
 fi
 
 # Process findings (same for both scopes)
