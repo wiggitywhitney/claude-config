@@ -64,9 +64,45 @@ elif [ "$HAS_CARGO" = true ]; then
   PROJECT_TYPE="rust"
 fi
 
-# --- Detect available commands (Node.js projects) ---
+# --- Detect available commands ---
 
-if [ "$HAS_PACKAGE_JSON" = true ]; then
+if [ "$HAS_GOMOD" = true ]; then
+  # Go project command detection
+  # Decision 1: Prefer Makefile targets over raw Go commands
+  HAS_MAKEFILE=false
+  if [ -f "$PROJECT_DIR/Makefile" ]; then
+    HAS_MAKEFILE=true
+  fi
+
+  # Detect build command
+  if [ "$HAS_MAKEFILE" = true ] && grep -qE '^build[[:space:]]*:' "$PROJECT_DIR/Makefile"; then
+    CMD_BUILD="make build"
+  else
+    CMD_BUILD="go build ./..."
+  fi
+
+  # Decision 3: CMD_TYPECHECK left empty — go build implies typecheck
+
+  # Detect lint command
+  # Priority: Makefile lint target > golangci-lint > Makefile vet target > go vet
+  if [ "$HAS_MAKEFILE" = true ] && grep -qE '^lint[[:space:]]*:' "$PROJECT_DIR/Makefile"; then
+    CMD_LINT="make lint"
+  elif command -v golangci-lint &>/dev/null; then
+    CMD_LINT="golangci-lint run"
+  elif [ "$HAS_MAKEFILE" = true ] && grep -qE '^vet[[:space:]]*:' "$PROJECT_DIR/Makefile"; then
+    CMD_LINT="make vet"
+  else
+    CMD_LINT="go vet ./..."
+  fi
+
+  # Detect test command
+  if [ "$HAS_MAKEFILE" = true ] && grep -qE '^test[[:space:]]*:' "$PROJECT_DIR/Makefile"; then
+    CMD_TEST="make test"
+  else
+    CMD_TEST="go test ./..."
+  fi
+
+elif [ "$HAS_PACKAGE_JSON" = true ]; then
   # Read package.json scripts using python3 (available on macOS)
   SCRIPTS_JSON=$(DETECT_PKG_PATH="$PROJECT_DIR/package.json" python3 -c "
 import json, sys, os
