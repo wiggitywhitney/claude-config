@@ -1,6 +1,6 @@
 # PRD #8: Go Language Verification Support
 
-**Status**: Not Started
+**Status**: In Progress
 **Priority**: High
 **Created**: 2026-02-20
 **Issue**: [#8](https://github.com/wiggitywhitney/claude-config/issues/8)
@@ -27,8 +27,8 @@ Add full Go project support across the verification infrastructure:
 
 ## Success Criteria
 
-- [ ] `detect-project.sh` returns correct build/typecheck/lint/test commands for a Go project with `go.mod`
-- [ ] `detect-project.sh` detects and uses Makefile targets when available (Kubebuilder pattern)
+- [x] `detect-project.sh` returns correct build/typecheck/lint/test commands for a Go project with `go.mod`
+- [x] `detect-project.sh` detects and uses Makefile targets when available (Kubebuilder pattern)
 - [ ] `lint-changed.sh` scopes `golangci-lint` to changed `.go` files on commit, full lint on push
 - [ ] `detect-test-tiers.sh` correctly identifies Go unit, integration, and e2e test tiers
 - [ ] Pre-commit hook runs `go build`/`go vet`/`golangci-lint` for Go projects
@@ -82,12 +82,12 @@ All changes are within the existing claude-config verification infrastructure:
 ## Implementation Milestones
 
 ### Milestone 1: Go Command Detection in detect-project.sh
-- [ ] Add Go command detection block (parallel to the Node.js block at lines 69-123)
-- [ ] Detect Makefile targets: `make build`, `make lint`, `make test`, `make vet`
-- [ ] Fall back to Go CLI: `go build ./...`, `go vet ./...`, `go test ./...`
-- [ ] Detect `golangci-lint` availability and prefer it over `go vet` for lint command
-- [ ] Leave `CMD_TYPECHECK` empty (Decision 3: go build implies typecheck)
-- [ ] Write tests validating Go detection with and without Makefile
+- [x] Add Go command detection block (parallel to the Node.js block at lines 69-123)
+- [x] Detect Makefile targets: `make build`, `make lint`, `make test`, `make vet`
+- [x] Fall back to Go CLI: `go build ./...`, `go vet ./...`, `go test ./...`
+- [x] Detect `golangci-lint` availability and prefer it over `go vet` for lint command
+- [x] Leave `CMD_TYPECHECK` empty (Decision 3: go build implies typecheck)
+- [x] Write tests validating Go detection with and without Makefile
 
 ### Milestone 2: Go Lint Scoping in lint-changed.sh
 - [ ] Extend file extension filter to include `.go` files
