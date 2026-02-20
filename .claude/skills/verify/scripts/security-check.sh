@@ -36,6 +36,12 @@ MODE="${1:-standard}"
 PROJECT_DIR="${2:-.}"
 DIFF_BASE="${3:-}"
 
+# Validate mode
+if [ "$MODE" != "standard" ] && [ "$MODE" != "pre-pr" ]; then
+  echo "ERROR: Invalid mode '$MODE'. Supported modes: standard, pre-pr"
+  exit 2
+fi
+
 # Resolve to absolute path
 PROJECT_DIR="$(cd "$PROJECT_DIR" && pwd)" || { echo "ERROR: Cannot resolve project directory: ${2:-.}"; exit 2; }
 cd "$PROJECT_DIR" || exit 2
@@ -217,8 +223,8 @@ if [ "$MODE" = "pre-pr" ]; then
   if [ -n "$DIFF_BASE" ]; then
     # Diff-scoped: check branch diff for .env files and secrets
 
-    # Check for .env files in branch changes
-    ENV_FILES=$(git diff --name-only "$DIFF_BASE"...HEAD 2>/dev/null | grep -E '\.env' || true)
+    # Check for .env files in branch changes (honoring .verify-skip)
+    ENV_FILES=$(git diff --name-only "$DIFF_BASE"...HEAD -- "${BASE_SKIP[@]}" 2>/dev/null | grep -E '\.env' || true)
     if [ -n "$ENV_FILES" ]; then
       add_finding "Found .env files in branch changes:"
       while IFS= read -r line; do
@@ -226,8 +232,8 @@ if [ "$MODE" = "pre-pr" ]; then
       done <<< "$ENV_FILES"
     fi
 
-    # Check for hardcoded secrets/API keys in branch diff (added lines only)
-    BRANCH_DIFF=$(git diff "$DIFF_BASE"...HEAD 2>/dev/null || true)
+    # Check for hardcoded secrets/API keys in branch diff (added lines only, honoring .verify-skip)
+    BRANCH_DIFF=$(git diff "$DIFF_BASE"...HEAD -- "${BASE_SKIP[@]}" 2>/dev/null || true)
     if [ -n "$BRANCH_DIFF" ]; then
       SECRET_PATTERNS='(api[_-]?key|api[_-]?secret|access[_-]?token|auth[_-]?token|secret[_-]?key|private[_-]?key|password)\s*[=:]\s*["'"'"'][^\s"'"'"']{8,}'
       SECRETS_FOUND=$(echo "$BRANCH_DIFF" | grep -E '^\+[^+]' | grep -iE "$SECRET_PATTERNS" || true)
@@ -241,8 +247,8 @@ if [ "$MODE" = "pre-pr" ]; then
   else
     # Repo-scoped: check staged diff (original behavior for /verify skill)
 
-    # Check for .env files staged for commit
-    STAGED_ENV=$(git diff --cached --name-only 2>/dev/null | grep -E '\.env' || true)
+    # Check for .env files staged for commit (honoring .verify-skip)
+    STAGED_ENV=$(git diff --cached --name-only -- "${BASE_SKIP[@]}" 2>/dev/null | grep -E '\.env' || true)
     if [ -n "$STAGED_ENV" ]; then
       add_finding "Found .env files staged for commit:"
       while IFS= read -r line; do
@@ -250,8 +256,8 @@ if [ "$MODE" = "pre-pr" ]; then
       done <<< "$STAGED_ENV"
     fi
 
-    # Check for hardcoded secrets/API keys in staged diff
-    STAGED_DIFF=$(git diff --cached 2>/dev/null || true)
+    # Check for hardcoded secrets/API keys in staged diff (honoring .verify-skip)
+    STAGED_DIFF=$(git diff --cached -- "${BASE_SKIP[@]}" 2>/dev/null || true)
     if [ -n "$STAGED_DIFF" ]; then
       # Look for common secret patterns in added lines only
       SECRET_PATTERNS='(api[_-]?key|api[_-]?secret|access[_-]?token|auth[_-]?token|secret[_-]?key|private[_-]?key|password)\s*[=:]\s*["'"'"'][^\s"'"'"']{8,}'
