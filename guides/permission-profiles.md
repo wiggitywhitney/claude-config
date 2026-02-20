@@ -19,7 +19,7 @@ Permissions are set in `~/.claude/settings.json` under the `permissions` key. Th
 For learning, sensitive projects, or unfamiliar codebases. Claude asks before most actions.
 
 - **Auto-allow:** Read-only operations (Read, Glob, Grep, git status/log/diff/branch)
-- **Ask for:** All writes (Write, Edit), all bash commands, git commit/push
+- **Ask for:** All writes (Write, Edit), all other bash commands, git commit/push
 - **Best for:** First time using Claude Code, working in production repos, onboarding new team members
 
 ### Balanced
@@ -45,8 +45,12 @@ All tiers share the same deny list. These are always blocked regardless of trust
 ```json
 "deny": [
   "Read(.env)", "Read(.env.*)", "Read(**/.env)", "Read(**/.env.*)",
+  "Write(.env)", "Write(.env.*)", "Write(**/.env)", "Write(**/.env.*)",
+  "Edit(.env)", "Edit(.env.*)", "Edit(**/.env)", "Edit(**/.env.*)",
   "Read(*.pem)", "Read(**/*.pem)", "Read(*.key)", "Read(**/*.key)",
+  "Write(*.pem)", "Write(**/*.pem)", "Write(*.key)", "Write(**/*.key)",
   "Read(~/.ssh/**)", "Read(~/.aws/**)", "Read(~/.docker/**)",
+  "Write(~/.ssh/**)", "Write(~/.aws/**)", "Write(~/.docker/**)",
   "Read(**/credentials*)", "Read(**/secrets/**)", "Read(**/.npmrc)",
   "Read(id_rsa*)", "Read(id_ed25519*)",
   "Bash(sudo *)", "Bash(sudo)",
@@ -59,7 +63,7 @@ All tiers share the same deny list. These are always blocked regardless of trust
 
 ## Reference Implementation
 
-The autonomous tier is the starting point in production. To tier down:
+The reference implementation below starts from the autonomous tier. To tier down:
 
 1. **Autonomous → Balanced:** Move `git commit`, `git push`, `Write`, `Edit`, `rm` from `allow` to `ask`.
 2. **Balanced → Conservative:** Move npm/pnpm scripts, git status/log/diff from `allow` to `ask`. Remove auto-allow for most bash commands.

@@ -4,7 +4,7 @@
 **Priority**: Low
 **Created**: 2026-02-18
 **GitHub Issue**: [#4](https://github.com/wiggitywhitney/claude-config/issues/4)
-**Context**: Inspired by the ABOUTME convention in `peopleforrester/llm-coding-workflow`. Every code file starts with a brief 2-line description of its purpose. A PostToolUse hook warns when files are missing the header, gradually adopting the convention as files are created or modified.
+**Context**: Inspired by the ABOUTME convention in `peopleforrester/llm-coding-workflow`. Every code file starts with a brief 2-line description of its purpose. A PreToolUse hook blocks on missing headers (exit 2), triggering fix-and-retry to gradually adopt the convention as files are created or modified.
 
 ---
 
@@ -53,7 +53,7 @@ Whitney's implementation extends this to be language-agnostic, supporting multip
 ### 1. ABOUTME Hook Script
 A PreToolUse hook script that:
 - Detects file type from extension
-- For Write: checks `tool_input.content` for ABOUTME in first few lines
+- For Write: checks `tool_input.content` for ABOUTME in first 3 lines
 - For Edit: reads existing file from disk, checks first 3 lines for ABOUTME
 - Blocks on missing headers (exit 2), triggering fix-and-retry
 - Skips files that don't need headers (index files, config files, generated files)

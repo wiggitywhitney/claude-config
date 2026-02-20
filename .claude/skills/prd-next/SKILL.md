@@ -17,8 +17,9 @@ You are helping analyze an existing Product Requirements Document (PRD) to sugge
 3. **Analyze Current Implementation** - Understand what's implemented vs what's missing (skip if recent context available)
 4. **Identify the Single Best Next Task** - Find the one task that should be worked on next
 5. **Present Recommendation** - Give clear rationale and wait for confirmation
-6. **Create Milestone Task List** - After confirmation, create tasks for the current milestone
-7. **Design Discussion** - If confirmed, dive into implementation design details
+6. **Single Task Recommendation** - Present the highest-priority task and wait for confirmation
+6b. **Create Milestone Task List** - After confirmation, create tasks for the current milestone
+7. **Design Discussion** - Dive into implementation design details
 8. **Implementation** - User implements the task
 9. **Update Progress** - Prompt user to run /prd-update-progress
 
@@ -222,7 +223,7 @@ When the user confirms they want to work on the recommended task, create tasks f
    - `description`: Include the PRD number, milestone name, and any relevant context
    - `activeForm`: Present continuous form of the task (e.g., "Researching claude-config directory")
 3. **Set the recommended task to `in_progress`** using TaskUpdate
-4. **Set dependencies** if milestone items have a natural ordering (use `addBlockedBy`)
+4. **Set dependencies** if milestone items have a natural ordering (use TaskUpdate with `addBlockedBy`)
 
 ### Key Rules
 

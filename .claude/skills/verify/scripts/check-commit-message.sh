@@ -81,7 +81,7 @@ patterns = [
     (r"claude\s*code", "Claude Code"),
     (r"\bclaude\b", "Claude"),
     (r"\banthropic\b", "Anthropic"),
-    (r"generated\s+with", "Generated with"),
+    (r"generated\s+with\s+(ai|claude|anthropic|llm|gpt|copilot)", "Generated with AI"),
     (r"co-authored-by.*claude", "Co-Authored-By Claude"),
     (r"co-authored-by.*anthropic", "Co-Authored-By Anthropic"),
     (r"\bai\s+assistant\b", "AI assistant"),

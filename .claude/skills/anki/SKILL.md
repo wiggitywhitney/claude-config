@@ -297,7 +297,6 @@ Notes:
 - **Always include `TARGET DECK: AWSAIPractitionerCert`** before each START block
 - No `<!--ID: -->` line needed - Anki adds these on import
 - Tags are optional
-- TARGET DECK line is optional (only needed for specific decks)
 
 ### Embedding Images
 

@@ -59,10 +59,10 @@ BASE_SKIP=(':!node_modules')
 
 # Exclude CLI entry points listed in package.json bin field
 if [ -f "$PROJECT_DIR/package.json" ]; then
-  BIN_FILES=$(python3 -c "
-import json
+  BIN_FILES=$(SECURITY_PKG_PATH="$PROJECT_DIR/package.json" python3 -c "
+import json, os
 try:
-    with open('$PROJECT_DIR/package.json') as f:
+    with open(os.environ['SECURITY_PKG_PATH']) as f:
         pkg = json.load(f)
     bin_field = pkg.get('bin', {})
     if isinstance(bin_field, str):

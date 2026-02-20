@@ -21,12 +21,13 @@ def check_file(filepath):
     inside_code_block = False
     line_number = 0
 
-    with open(filepath, "r", encoding="utf-8") as f:
+    with open(filepath, "r", encoding="utf-8", errors="replace") as f:
         for line in f:
             line_number += 1
-            stripped = line.rstrip()
+            stripped = line.strip()
 
             # Check for fence lines (``` optionally followed by language)
+            # strip() handles up to 3 spaces of indentation per CommonMark spec
             if stripped.startswith("```"):
                 if not inside_code_block:
                     # Opening fence — check for language specifier
@@ -53,7 +54,7 @@ def main():
     if ext not in (".md", ".mdx", ".markdown"):
         sys.exit(0)
 
-    # File must exist
+    # Skip files that don't exist (e.g., deleted before hook ran)
     if not os.path.isfile(filepath):
         sys.exit(0)
 

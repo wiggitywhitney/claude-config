@@ -18,7 +18,7 @@ Build this repo (claude-config) as a shared toolkit containing reusable testing 
 
 ## Research Foundation
 
-Full research at `commit-story-v2/docs/research/testing-infrastructure-research.md` (local reference — see commit-story-v2 repo). Key sources:
+Full research at [`wiggitywhitney/commit-story-v2` `docs/research/testing-infrastructure-research.md`](https://github.com/wiggitywhitney/commit-story-v2/blob/main/docs/research/testing-infrastructure-research.md). Key sources:
 
 - **Viktor Farcic (dot-ai)**: Integration-first testing, mandatory CLAUDE.md checklist, 10-layer quality gates
 - **Michael Forrester (claude-dotfiles)**: 8-step `/verify` command, permission profiles (conservative/balanced/autonomous), TDD enforcement rules
@@ -283,7 +283,7 @@ Review existing Anki cards for accuracy, then create new cards capturing what wa
 |---|---|---|---|
 | `git commit` | PreToolUse | quick + lint | Build, Type Check, Lint |
 | `git push` | PreToolUse | full | Build, Type Check, Lint, Security, Tests |
-| `git pr create` | PreToolUse | pre-pr | Build, Type Check, Lint, Security (expanded), Tests |
+| `gh pr create` | PreToolUse | pre-pr | Build, Type Check, Lint, Security (expanded), Tests |
 
 - **Rationale**: Decision 4 assumed full verification per commit was acceptable. In practice, running the full suite (including tests) on every commit is too heavy and slows iteration. The three verification modes (`quick`, `full`, `pre-pr`) already exist in the `/verify` skill — they just weren't wired to the right git events. Tiered hooks match the natural escalation: commits are frequent and should be fast, pushes are deliberate sharing points worth thorough checks, and PRs are the final gate before review.
 - **Impact**: Refactors Milestone 1 from a single commit hook to three hooks. The commit hook becomes lighter (quick + lint). Push and PR hooks are new deliverables. The existing scripts (`detect-project.sh`, `verify-phase.sh`, `security-check.sh`) support all three tiers without modification.

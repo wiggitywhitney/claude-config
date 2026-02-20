@@ -48,7 +48,7 @@ Rules use `paths:` frontmatter so they only activate when Claude works on matchi
 If you want the Always/Never testing patterns available in your project:
 
 ```bash
-ln -s ~/Documents/Repositories/claude-config/rules/testing-rules.md /path/to/your-project/.claude/rules/testing.md
+ln -s /path/to/claude-config/rules/testing-rules.md /path/to/your-project/.claude/rules/testing.md
 ```
 
 ### 4. Reference the testing decision guide
