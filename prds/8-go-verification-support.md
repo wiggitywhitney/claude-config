@@ -30,7 +30,7 @@ Add full Go project support across the verification infrastructure:
 - [x] `detect-project.sh` returns correct build/typecheck/lint/test commands for a Go project with `go.mod`
 - [x] `detect-project.sh` detects and uses Makefile targets when available (Kubebuilder pattern)
 - [x] `lint-changed.sh` scopes `golangci-lint` to changed `.go` files on commit, full lint on push
-- [ ] `detect-test-tiers.sh` correctly identifies Go unit, integration, and e2e test tiers
+- [x] `detect-test-tiers.sh` correctly identifies Go unit, integration, and e2e test tiers
 - [ ] Pre-commit hook runs `go build`/`go vet`/`golangci-lint` for Go projects
 - [ ] Pre-push hook runs full test suite for Go projects
 - [ ] `rules/languages/go.md` contains actionable Go patterns from real Kubebuilder usage
@@ -97,11 +97,11 @@ All changes are within the existing claude-config verification infrastructure:
 - [x] Write tests validating Go lint scoping
 
 ### Milestone 3: Go Test Tier Detection in detect-test-tiers.sh
-- [ ] Add Go test tier detection block (parallel to Node.js and Python blocks)
-- [ ] Unit: detect `_test.go` files without integration/e2e build tags
-- [ ] Integration: detect `//go:build integration` tags or `tests/integration/` directory
-- [ ] E2E: detect `//go:build e2e` tags, envtest usage, or Kind cluster setup
-- [ ] Write tests validating Go test tier detection
+- [x] Add Go test tier detection block (parallel to Node.js and Python blocks)
+- [x] Unit: detect `_test.go` files without integration/e2e build tags
+- [x] Integration: detect `//go:build integration` tags or `tests/integration/` directory
+- [x] E2E: detect `//go:build e2e` tags, envtest usage, or Kind cluster setup
+- [x] Write tests validating Go test tier detection
 
 ### Milestone 4: Go Security Checks and Language Rules
 - [ ] Extend `security-check.sh` debug code patterns to Go files (`fmt.Println`, `fmt.Printf` in non-main packages, `log.Print` without structured logger)

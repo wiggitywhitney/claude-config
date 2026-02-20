@@ -19,6 +19,12 @@
 #     Unit:        tests/unit/ dir, OR test_*.py files in tests/
 #     Integration: tests/integration/ dir with test_*.py files
 #     E2E:         tests/e2e/ dir, OR selenium/playwright in dependencies
+#
+#   Go:
+#     Unit:        _test.go files without integration/e2e build tags
+#     Integration: //go:build integration tag, OR tests/integration/ dir with _test.go
+#     E2E:         //go:build e2e tag, tests/e2e/ or test/e2e/ dir with _test.go,
+#                  envtest import, or Kind import
 
 set -euo pipefail
 
@@ -209,6 +215,85 @@ except Exception:
 " 2>/dev/null; then
       HAS_E2E=true
     fi
+  fi
+
+fi
+
+# --- Go detection ---
+
+if [ "$PROJECT_TYPE" = "go" ]; then
+
+  # Collect all _test.go files once (up to 50 files, skip vendor/.git)
+  GO_TEST_FILES=$(find "$PROJECT_DIR" -maxdepth 4 -name "*_test.go" \
+    -not -path "*/.git/*" -not -path "*/vendor/*" 2>/dev/null | head -50)
+
+  if [ -n "$GO_TEST_FILES" ]; then
+
+    # --- Unit tests ---
+    # A _test.go file is a unit test if it does NOT have integration or e2e build tags
+    while IFS= read -r testfile; do
+      if ! head -5 "$testfile" 2>/dev/null | grep -qE '//go:build\s+(integration|e2e)'; then
+        HAS_UNIT=true
+        break
+      fi
+    done <<< "$GO_TEST_FILES"
+
+    # --- Integration tests ---
+    # Check for //go:build integration tag in any _test.go file
+    while IFS= read -r testfile; do
+      if head -5 "$testfile" 2>/dev/null | grep -qE '//go:build\s+integration'; then
+        HAS_INTEGRATION=true
+        break
+      fi
+    done <<< "$GO_TEST_FILES"
+
+    # --- E2E tests ---
+    # Check for //go:build e2e tag in any _test.go file
+    while IFS= read -r testfile; do
+      if head -5 "$testfile" 2>/dev/null | grep -qE '//go:build\s+e2e'; then
+        HAS_E2E=true
+        break
+      fi
+    done <<< "$GO_TEST_FILES"
+
+    # Check for envtest import (Kubebuilder controller testing pattern)
+    if [ "$HAS_E2E" = false ]; then
+      if echo "$GO_TEST_FILES" | xargs grep -l 'sigs.k8s.io/controller-runtime/pkg/envtest' 2>/dev/null | head -1 | grep -q .; then
+        HAS_E2E=true
+      fi
+    fi
+
+    # Check for Kind cluster import (kind-based e2e testing)
+    if [ "$HAS_E2E" = false ]; then
+      if echo "$GO_TEST_FILES" | xargs grep -l 'sigs.k8s.io/kind/pkg/cluster' 2>/dev/null | head -1 | grep -q .; then
+        HAS_E2E=true
+      fi
+    fi
+
+  fi
+
+  # Check for tests/integration/ directory with _test.go files (directory convention)
+  if [ "$HAS_INTEGRATION" = false ]; then
+    for int_dir in "$PROJECT_DIR/tests/integration" "$PROJECT_DIR/test/integration"; do
+      if [ -d "$int_dir" ]; then
+        if find "$int_dir" -name "*_test.go" 2>/dev/null | head -1 | grep -q .; then
+          HAS_INTEGRATION=true
+          break
+        fi
+      fi
+    done
+  fi
+
+  # Check for tests/e2e/ or test/e2e/ directory with _test.go files (directory convention)
+  if [ "$HAS_E2E" = false ]; then
+    for e2e_dir in "$PROJECT_DIR/tests/e2e" "$PROJECT_DIR/test/e2e" "$PROJECT_DIR/e2e"; do
+      if [ -d "$e2e_dir" ]; then
+        if find "$e2e_dir" -name "*_test.go" 2>/dev/null | head -1 | grep -q .; then
+          HAS_E2E=true
+          break
+        fi
+      fi
+    done
   fi
 
 fi
