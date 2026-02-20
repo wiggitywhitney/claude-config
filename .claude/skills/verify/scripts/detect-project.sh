@@ -68,10 +68,10 @@ fi
 
 if [ "$HAS_PACKAGE_JSON" = true ]; then
   # Read package.json scripts using python3 (available on macOS)
-  SCRIPTS_JSON=$(python3 -c "
-import json, sys
+  SCRIPTS_JSON=$(DETECT_PKG_PATH="$PROJECT_DIR/package.json" python3 -c "
+import json, sys, os
 try:
-    with open('$PROJECT_DIR/package.json') as f:
+    with open(os.environ['DETECT_PKG_PATH']) as f:
         pkg = json.load(f)
     scripts = pkg.get('scripts', {})
     print(json.dumps(scripts))
@@ -108,7 +108,7 @@ except Exception:
   # Detect lint command
   if echo "$SCRIPTS_JSON" | python3 -c "import json,sys; sys.exit(0 if 'lint' in json.load(sys.stdin) else 1)" 2>/dev/null; then
     CMD_LINT="$PKG_MANAGER run lint"
-  elif [ -f "$PROJECT_DIR/.eslintrc.json" ] || [ -f "$PROJECT_DIR/.eslintrc.js" ] || [ -f "$PROJECT_DIR/.eslintrc.yml" ] || [ -f "$PROJECT_DIR/eslint.config.js" ] || [ -f "$PROJECT_DIR/eslint.config.mjs" ]; then
+  elif [ -f "$PROJECT_DIR/.eslintrc.json" ] || [ -f "$PROJECT_DIR/.eslintrc.js" ] || [ -f "$PROJECT_DIR/.eslintrc.yml" ] || [ -f "$PROJECT_DIR/.eslintrc.yaml" ] || [ -f "$PROJECT_DIR/eslint.config.js" ] || [ -f "$PROJECT_DIR/eslint.config.mjs" ] || [ -f "$PROJECT_DIR/eslint.config.ts" ]; then
     CMD_LINT="npx eslint ."
   fi
 
@@ -124,25 +124,37 @@ fi
 
 # --- Output JSON ---
 
+DETECT_PROJECT_DIR="$PROJECT_DIR" \
+DETECT_PROJECT_TYPE="$PROJECT_TYPE" \
+DETECT_HAS_PKG_JSON="$HAS_PACKAGE_JSON" \
+DETECT_HAS_TSCONFIG="$HAS_TSCONFIG" \
+DETECT_HAS_PYPROJECT="$HAS_PYPROJECT" \
+DETECT_HAS_GOMOD="$HAS_GOMOD" \
+DETECT_HAS_CARGO="$HAS_CARGO" \
+DETECT_CMD_BUILD="$CMD_BUILD" \
+DETECT_CMD_TYPECHECK="$CMD_TYPECHECK" \
+DETECT_CMD_LINT="$CMD_LINT" \
+DETECT_CMD_TEST="$CMD_TEST" \
+DETECT_PKG_MANAGER="$( [ "$HAS_PACKAGE_JSON" = true ] && echo "$PKG_MANAGER" || echo "" )" \
 python3 -c "
-import json
+import json, os
 result = {
-    'project_dir': '$PROJECT_DIR',
-    'project_type': '$PROJECT_TYPE',
+    'project_dir': os.environ['DETECT_PROJECT_DIR'],
+    'project_type': os.environ['DETECT_PROJECT_TYPE'],
     'config_files': {
-        'package_json': $( [ "$HAS_PACKAGE_JSON" = true ] && echo 'True' || echo 'False' ),
-        'tsconfig': $( [ "$HAS_TSCONFIG" = true ] && echo 'True' || echo 'False' ),
-        'pyproject': $( [ "$HAS_PYPROJECT" = true ] && echo 'True' || echo 'False' ),
-        'go_mod': $( [ "$HAS_GOMOD" = true ] && echo 'True' || echo 'False' ),
-        'cargo': $( [ "$HAS_CARGO" = true ] && echo 'True' || echo 'False' )
+        'package_json': os.environ['DETECT_HAS_PKG_JSON'] == 'true',
+        'tsconfig': os.environ['DETECT_HAS_TSCONFIG'] == 'true',
+        'pyproject': os.environ['DETECT_HAS_PYPROJECT'] == 'true',
+        'go_mod': os.environ['DETECT_HAS_GOMOD'] == 'true',
+        'cargo': os.environ['DETECT_HAS_CARGO'] == 'true'
     },
     'commands': {
-        'build': '$CMD_BUILD' or None,
-        'typecheck': '$CMD_TYPECHECK' or None,
-        'lint': '$CMD_LINT' or None,
-        'test': '$CMD_TEST' or None
+        'build': os.environ['DETECT_CMD_BUILD'] or None,
+        'typecheck': os.environ['DETECT_CMD_TYPECHECK'] or None,
+        'lint': os.environ['DETECT_CMD_LINT'] or None,
+        'test': os.environ['DETECT_CMD_TEST'] or None
     },
-    'package_manager': '$( [ "$HAS_PACKAGE_JSON" = true ] && echo "$PKG_MANAGER" || echo "" )' or None
+    'package_manager': os.environ['DETECT_PKG_MANAGER'] or None
 }
 print(json.dumps(result, indent=2))
 "

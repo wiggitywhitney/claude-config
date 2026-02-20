@@ -4,7 +4,7 @@
 **Priority**: Medium
 **Created**: 2026-02-18
 **GitHub Issue**: [#5](https://github.com/wiggitywhitney/claude-config/issues/5)
-**Context**: PR merge cycles currently include ~5 minute idle waits for CodeRabbit's GitHub-based review after PR creation. The CodeRabbit MCP server works but adds token overhead to every session. CodeRabbit recently launched a CLI tool that runs reviews locally. OpenAI's Codex is an alternative worth evaluating.
+**Context**: PR merge cycles currently include ~5-minute idle waits for CodeRabbit's GitHub-based review after PR creation. The CodeRabbit MCP server works but adds token overhead to every session. CodeRabbit recently launched a CLI tool that runs reviews locally. OpenAI's Codex is an alternative worth evaluating.
 
 ---
 
@@ -12,7 +12,7 @@
 
 The current code review workflow has two pain points:
 
-1. **Merge cycle latency**: After creating a PR, there's a ~5 minute wait for CodeRabbit's GitHub-based review before the PR can be merged. During YOLO mode, this creates idle cycles where Claude Code is waiting instead of working.
+1. **Merge cycle latency**: After creating a PR, there's a ~5-minute wait for CodeRabbit's GitHub-based review before the PR can be merged. During YOLO mode, this creates idle cycles where Claude Code is waiting instead of working.
 
 2. **MCP server overhead**: The CodeRabbit MCP server loads tool schemas into Claude's context on every session, consuming tokens even when code review isn't needed. A CLI-based approach (like the dot-ai pattern) could reduce this overhead.
 

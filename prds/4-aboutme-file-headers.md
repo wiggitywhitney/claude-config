@@ -14,7 +14,7 @@ Code files lack consistent self-documentation. Understanding what a file does re
 
 ## Solution
 
-Adopt an ABOUTME header convention where every code file starts with a brief 2-line comment describing what the file does. Enforce gradually via a PostToolUse hook on Write|Edit that warns (but does not block) when files are missing the header. The convention is language-agnostic — the hook understands comment syntax for multiple languages.
+Adopt an ABOUTME header convention where every code file starts with a brief 2-line comment describing what the file does. Enforce via a PreToolUse hook on Write|Edit that blocks (exit 2) when files are missing the header, triggering a fix-and-retry cycle. The convention is language-agnostic — the hook understands comment syntax for multiple languages.
 
 ### Convention Format
 
@@ -66,9 +66,8 @@ Add the ABOUTME convention to the global CLAUDE.md so Claude knows to include he
 
 ## Success Criteria
 
-- [ ] Hook warns on missing ABOUTME headers for supported file types
+- [ ] Hook blocks on missing ABOUTME headers for supported file types (exit 2, fix-and-retry)
 - [ ] Multiple languages supported (Python, TypeScript/JavaScript, Bash, at minimum)
-- [ ] Hook never blocks — warn only
 - [ ] Existing files gain headers organically as they're modified (no backfill required)
 - [ ] Convention documented in global CLAUDE.md
 
@@ -93,7 +92,7 @@ Document the convention and verify it works in practice across projects.
 ## Out of Scope
 
 - Retroactive backfill of existing files (headers are added organically as files are touched)
-- Warn-only mode (full block ensures 100% adoption)
+- Warn-only mode (Decision 1 chose full block for 100% adoption)
 - Markdown files (they have their own heading conventions)
 - JSON/YAML/config files (no comment syntax or not meaningful)
 

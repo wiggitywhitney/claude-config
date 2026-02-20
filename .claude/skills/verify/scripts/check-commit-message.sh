@@ -86,7 +86,6 @@ patterns = [
     (r"co-authored-by.*anthropic", "Co-Authored-By Anthropic"),
     (r"\bai\s+assistant\b", "AI assistant"),
     (r"\bai[- ]generated\b", "AI-generated"),
-    (r"\bllm\b", "LLM"),
     (r"language\s+model", "language model"),
 ]
 

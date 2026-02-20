@@ -34,13 +34,13 @@ The cluster-whisperer project on this machine already sends OTLP data to Datadog
 - **Datadog Agent**: Local agent with OTLP ingestion on port 4318 (HTTP)
 - **Secrets**: DD_API_KEY and DD_APP_KEY managed via `vals` (GCP Secrets Manager)
 - **Tagging**: Uses `service:cluster-whisperer` and GenAI semantic conventions
-- **Documentation**: `~/Documents/Repositories/cluster-whisperer/docs/opentelemetry.md`
-- **PRD Reference**: `~/Documents/Repositories/cluster-whisperer/prds/done/8-datadog-observability.md`
+- **Documentation**: `cluster-whisperer/docs/opentelemetry.md` (local reference — see cluster-whisperer repo)
+- **PRD Reference**: `cluster-whisperer/prds/done/8-datadog-observability.md` (local reference — see cluster-whisperer repo)
 
 ## Deliverables
 
 ### 1. Research: Claude Code OTEL Emissions
-Investigate what telemetry data Claude Code actually emits when OTEL is enabled. Document the available metrics, traces, and attributes.
+Investigate what telemetry data Claude Code actually emits when OTEL is enabled. Document the available metrics, log/event types, and attributes.
 
 ### 2. Settings.json Configuration
 Add OTEL environment variables to `~/.claude/settings.json` that route telemetry to the local Datadog Agent with proper service tagging.
@@ -61,10 +61,10 @@ Build a dashboard showing Claude Code usage insights: token usage, session patte
 ## Milestones
 
 ### Milestone 1: Research — What Does Claude Code Emit?
-Investigate Claude Code's OTEL telemetry output. Enable the env vars, inspect what data arrives at the collector, and document available metrics/traces/attributes.
+Investigate Claude Code's OTEL telemetry output. Enable the env vars, inspect what data arrives at the collector, and document available metrics/events/attributes.
 
 - [ ] Enable `CLAUDE_CODE_ENABLE_TELEMETRY` and `OTEL_METRICS_EXPORTER` in settings.json
-- [ ] Capture and document what telemetry data Claude Code sends (metrics, traces, attributes)
+- [ ] Capture and document what telemetry data Claude Code sends (metrics, log/event types, attributes)
 - [ ] Determine if additional OTEL env vars are needed (endpoint, protocol, service name)
 - [ ] Document findings in `research/claude-code-otel-emissions.md`
 

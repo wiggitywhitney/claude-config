@@ -17,9 +17,10 @@ You are helping analyze an existing Product Requirements Document (PRD) to sugge
 3. **Analyze Current Implementation** - Understand what's implemented vs what's missing (skip if recent context available)
 4. **Identify the Single Best Next Task** - Find the one task that should be worked on next
 5. **Present Recommendation** - Give clear rationale and wait for confirmation
-6. **Design Discussion** - If confirmed, dive into implementation design details
-7. **Implementation** - User implements the task
-8. **Update Progress** - Prompt user to run /prd-update-progress
+6. **Create Milestone Task List** - After confirmation, create tasks for the current milestone
+7. **Design Discussion** - If confirmed, dive into implementation design details
+8. **Implementation** - User implements the task
+9. **Update Progress** - Prompt user to run /prd-update-progress
 
 ## Step 0: Context Awareness Check
 

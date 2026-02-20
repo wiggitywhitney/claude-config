@@ -37,8 +37,8 @@ PROJECT_DIR="${2:-.}"
 DIFF_BASE="${3:-}"
 
 # Resolve to absolute path
-PROJECT_DIR="$(cd "$PROJECT_DIR" && pwd)"
-cd "$PROJECT_DIR"
+PROJECT_DIR="$(cd "$PROJECT_DIR" && pwd)" || { echo "ERROR: Cannot resolve project directory: ${2:-.}"; exit 2; }
+cd "$PROJECT_DIR" || exit 2
 
 ISSUES_FOUND=0
 FINDINGS=""
@@ -142,6 +142,7 @@ diff_grep() {
       }
       off++
     }
+    /^\+$/ { off++ }
   ' || true)
 
   # Apply exclude filter if provided

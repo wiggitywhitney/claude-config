@@ -18,7 +18,7 @@ Build this repo (claude-config) as a shared toolkit containing reusable testing 
 
 ## Research Foundation
 
-Full research at `~/Documents/Repositories/commit-story-v2/docs/research/testing-infrastructure-research.md`. Key sources:
+Full research at `commit-story-v2/docs/research/testing-infrastructure-research.md` (local reference — see commit-story-v2 repo). Key sources:
 
 - **Viktor Farcic (dot-ai)**: Integration-first testing, mandatory CLAUDE.md checklist, 10-layer quality gates
 - **Michael Forrester (claude-dotfiles)**: 8-step `/verify` command, permission profiles (conservative/balanced/autonomous), TDD enforcement rules

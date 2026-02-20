@@ -41,6 +41,17 @@ result = {
 }
 print(json.dumps(result))
 "
+elif [ $CHECK_EXIT -eq 2 ]; then
+  # Checker misconfiguration — surface as feedback so Claude notices
+  VERIFY_CHECK_OUTPUT="$CHECK_OUTPUT" python3 -c "
+import json, os
+output = os.environ['VERIFY_CHECK_OUTPUT']
+result = {
+    'decision': 'block',
+    'reason': 'check-markdown-codeblocks: invalid arguments or configuration error: ' + output
+}
+print(json.dumps(result))
+"
 fi
 
 # Exit 0 regardless — PostToolUse can't undo the write,

@@ -21,7 +21,7 @@ def check_file(filepath):
     inside_code_block = False
     line_number = 0
 
-    with open(filepath, "r") as f:
+    with open(filepath, "r", encoding="utf-8") as f:
         for line in f:
             line_number += 1
             stripped = line.rstrip()

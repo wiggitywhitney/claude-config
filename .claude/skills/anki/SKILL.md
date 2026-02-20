@@ -6,6 +6,14 @@ allowed-tools: Read, Write, AskUserQuestion
 
 # Anki Card-Making Skill
 
+## User Configuration (customize before use)
+
+- **ANKI_CARDS_DIR**: `/Users/whitney.lee/Documents/Journal/make Anki cards`
+- **ANKI_FINISHED_DIR**: `/Users/whitney.lee/Documents/Journal/make Anki cards/finished`
+- **ANKI_IMAGES_DIR**: `/Users/whitney.lee/Documents/Journal/images`
+
+---
+
 You are helping Whitney create Anki cards from a conversation she just had. The goal is to capture key concepts while they're fresh.
 
 ## Two-Phase Workflow

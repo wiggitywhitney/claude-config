@@ -141,15 +141,14 @@ assert_deny "commit on main is blocked" \
 assert_deny "chained commit on main is blocked" \
   "$(make_input 'git add . && git commit -m "fix: chained on main"' "$TEMP_DIR")"
 
-# Test master branch
-TEMP_MASTER=$(mktemp -d)
+# Test master branch (subdirectory of TEMP_DIR so it's covered by the EXIT trap)
+TEMP_MASTER="$TEMP_DIR/master-repo"
+mkdir -p "$TEMP_MASTER"
 git -C "$TEMP_MASTER" init -b master --quiet 2>/dev/null
 git -C "$TEMP_MASTER" commit --allow-empty -m "initial" --quiet 2>/dev/null
 
 assert_deny "commit on master is blocked" \
   "$(make_input 'git commit -m "fix: direct to master"' "$TEMP_MASTER")"
-
-rm -rf "$TEMP_MASTER"
 
 # ─────────────────────────────────────────────
 # Section 4: .skip-branching opt-out (should passthrough)

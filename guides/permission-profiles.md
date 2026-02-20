@@ -59,7 +59,7 @@ All tiers share the same deny list. These are always blocked regardless of trust
 
 ## Reference Implementation
 
-Whitney's `~/.claude/settings.json` is the autonomous tier in production. To tier down from autonomous:
+The autonomous tier is the starting point in production. To tier down:
 
 1. **Autonomous → Balanced:** Move `git commit`, `git push`, `Write`, `Edit`, `rm` from `allow` to `ask`.
 2. **Balanced → Conservative:** Move npm/pnpm scripts, git status/log/diff from `allow` to `ask`. Remove auto-allow for most bash commands.

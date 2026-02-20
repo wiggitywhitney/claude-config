@@ -107,7 +107,7 @@ Hooks run automatically as PreToolUse gates — no manual invocation needed. Eac
 | `check-branch-protection.sh` | `git commit` | Blocks direct commits to main/master |
 | `check-coderabbit-required.sh` | `gh pr merge` | Blocks PR merge without CodeRabbit review |
 | `check-test-tiers.sh` | `git push`, `gh pr create` | Warns when unit/integration/e2e tests are missing |
-| `post-write-codeblock-check.sh` | Write/Edit | Warns about markdown code blocks missing language specifiers |
+| `post-write-codeblock-check.sh` | Write/Edit | Warns about Markdown code blocks missing language specifiers |
 
 ### Dotfile opt-outs
 

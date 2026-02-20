@@ -25,7 +25,10 @@ if [ -z "$PHASE" ] || [ -z "$COMMAND" ]; then
 fi
 
 # Resolve to absolute path
-PROJECT_DIR="$(cd "$PROJECT_DIR" && pwd)"
+PROJECT_DIR="$(cd "$PROJECT_DIR" && pwd)" || {
+  echo "ERROR: Cannot resolve project directory: ${3:-.}"
+  exit 2
+}
 
 echo "=== Phase: $PHASE ==="
 echo "Command: $COMMAND"
@@ -33,7 +36,7 @@ echo "Directory: $PROJECT_DIR"
 echo "---"
 
 # Run the command in the project directory
-cd "$PROJECT_DIR"
+cd "$PROJECT_DIR" || exit 2
 eval "$COMMAND" 2>&1
 EXIT_CODE=$?
 

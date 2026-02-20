@@ -27,8 +27,8 @@ PROJECT_DIR="${2:-.}"
 FALLBACK_CMD="${3:-}"
 
 # Resolve to absolute path
-PROJECT_DIR="$(cd "$PROJECT_DIR" && pwd)"
-cd "$PROJECT_DIR"
+PROJECT_DIR="$(cd "$PROJECT_DIR" && pwd)" || { echo "ERROR: Cannot resolve project directory: ${2:-.}"; exit 1; }
+cd "$PROJECT_DIR" || exit 1
 
 # Get changed files based on scope
 if [ "$SCOPE" = "staged" ]; then
