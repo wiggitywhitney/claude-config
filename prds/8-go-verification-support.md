@@ -33,7 +33,7 @@ Add full Go project support across the verification infrastructure:
 - [x] `detect-test-tiers.sh` correctly identifies Go unit, integration, and e2e test tiers
 - [ ] Pre-commit hook runs `go build`/`go vet`/`golangci-lint` for Go projects
 - [ ] Pre-push hook runs full test suite for Go projects
-- [ ] `rules/languages/go.md` contains actionable Go patterns from real Kubebuilder usage
+- [x] `rules/languages/go.md` contains actionable Go patterns from real Kubebuilder usage
 - [ ] All verification hooks pass cleanly on k8s-vectordb-sync after scaffolding
 
 ## Architecture Decisions
@@ -104,9 +104,9 @@ All changes are within the existing claude-config verification infrastructure:
 - [x] Write tests validating Go test tier detection
 
 ### Milestone 4: Go Security Checks and Language Rules
-- [ ] Extend `security-check.sh` debug code patterns to Go files (`fmt.Println`, `fmt.Printf` in non-main packages, `log.Print` without structured logger)
-- [ ] Populate `rules/languages/go.md` with patterns from real Kubebuilder usage
-- [ ] Ensure `.verify-skip` and eslint-disable equivalents work for Go (e.g., `//nolint` comments)
+- [x] Extend `security-check.sh` debug code patterns to Go files (`fmt.Println`, `fmt.Printf` in non-main packages, `log.Print` without structured logger)
+- [x] Populate `rules/languages/go.md` with patterns from real Kubebuilder usage
+- [x] Ensure `.verify-skip` and eslint-disable equivalents work for Go (e.g., `//nolint` comments)
 
 ### Milestone 5: Integration Validation Against k8s-vectordb-sync
 - [ ] Run full verification suite against k8s-vectordb-sync after Kubebuilder scaffolding
