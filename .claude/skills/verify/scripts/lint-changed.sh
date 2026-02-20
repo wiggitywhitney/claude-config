@@ -6,15 +6,15 @@
 # Arguments:
 #   scope              — "staged" for commit hook, or a git ref for branch diff (e.g., "origin/main")
 #   project-dir        — Directory to run in
-#   fallback-lint-cmd  — Full lint command to fall back to if ESLint can't be scoped (optional)
+#   fallback-lint-cmd  — Full lint command to fall back to if scoped linting unavailable (optional)
 #
 # Scoping behavior:
 #   - "staged" → git diff --cached (files being committed)
 #   - "<ref>"  → git diff <ref>...HEAD (files changed on branch)
 #
-# Only lints JS/TS files (.js, .ts, .jsx, .tsx, .mjs, .cjs).
+# Supports JS/TS files (.js, .ts, .jsx, .tsx, .mjs, .cjs) via ESLint
+# and Go files (.go) via golangci-lint (falling back to go vet).
 # If no lintable files changed, skips with exit code 0.
-# Uses ESLint directly when config is detected, falls back to full lint command otherwise.
 #
 # Exit codes:
 #   0 — Lint passed (or no lintable files changed)
@@ -37,13 +37,29 @@ else
   CHANGED_FILES=$(git diff "$SCOPE"...HEAD --name-only --diff-filter=ACMR 2>/dev/null || echo "")
 fi
 
-# Filter to lintable file extensions (JS/TS ecosystem)
-LINT_FILES=$(echo "$CHANGED_FILES" | grep -E '\.(js|ts|jsx|tsx|mjs|cjs)$' || echo "")
+# Filter to lintable file extensions by ecosystem
+JS_FILES=$(echo "$CHANGED_FILES" | grep -E '\.(js|ts|jsx|tsx|mjs|cjs)$' || echo "")
+GO_FILES=$(echo "$CHANGED_FILES" | grep -E '\.go$' || echo "")
 
 # Strip empty lines
-LINT_FILES=$(echo "$LINT_FILES" | sed '/^$/d')
+JS_FILES=$(echo "$JS_FILES" | sed '/^$/d')
+GO_FILES=$(echo "$GO_FILES" | sed '/^$/d')
 
-if [ -z "$LINT_FILES" ]; then
+# Combine for reporting
+ALL_LINT_FILES=""
+if [ -n "$JS_FILES" ]; then
+  ALL_LINT_FILES="$JS_FILES"
+fi
+if [ -n "$GO_FILES" ]; then
+  if [ -n "$ALL_LINT_FILES" ]; then
+    ALL_LINT_FILES="$ALL_LINT_FILES
+$GO_FILES"
+  else
+    ALL_LINT_FILES="$GO_FILES"
+  fi
+fi
+
+if [ -z "$ALL_LINT_FILES" ]; then
   echo "=== Phase: lint ==="
   echo "No lintable files changed — skipping"
   echo "---"
@@ -51,42 +67,95 @@ if [ -z "$LINT_FILES" ]; then
   exit 0
 fi
 
-FILE_COUNT=$(echo "$LINT_FILES" | wc -l | tr -d ' ')
+FILE_COUNT=$(echo "$ALL_LINT_FILES" | wc -l | tr -d ' ')
 
 echo "=== Phase: lint ==="
 echo "Linting $FILE_COUNT changed file(s):"
-echo "$LINT_FILES"
+echo "$ALL_LINT_FILES"
 echo "---"
 
-# Convert newlines to space-separated args
-FILE_ARGS=$(echo "$LINT_FILES" | tr '\n' ' ')
+# Track overall exit code (fail if any linter fails)
+OVERALL_EXIT=0
 
-# Detect ESLint config (flat or legacy)
-HAS_ESLINT=false
-if [ -f "eslint.config.js" ] || [ -f "eslint.config.mjs" ] || [ -f "eslint.config.ts" ] || \
-   [ -f ".eslintrc.json" ] || [ -f ".eslintrc.js" ] || [ -f ".eslintrc.yml" ] || [ -f ".eslintrc.yaml" ]; then
-  HAS_ESLINT=true
+# --- JS/TS linting ---
+
+if [ -n "$JS_FILES" ]; then
+  JS_FILE_ARGS=$(echo "$JS_FILES" | tr '\n' ' ')
+
+  # Detect ESLint config (flat or legacy)
+  HAS_ESLINT=false
+  if [ -f "eslint.config.js" ] || [ -f "eslint.config.mjs" ] || [ -f "eslint.config.ts" ] || \
+     [ -f ".eslintrc.json" ] || [ -f ".eslintrc.js" ] || [ -f ".eslintrc.yml" ] || [ -f ".eslintrc.yaml" ]; then
+    HAS_ESLINT=true
+  fi
+
+  if [ "$HAS_ESLINT" = true ]; then
+    eval "npx eslint $JS_FILE_ARGS" 2>&1
+    JS_EXIT=$?
+  elif [ -n "$FALLBACK_CMD" ] && [ -z "$GO_FILES" ]; then
+    # Only use fallback for JS if there are no Go files
+    # (fallback is project-specific — avoid running a Go fallback for JS files)
+    echo "(Cannot scope JS/TS to changed files — running full lint)"
+    eval "$FALLBACK_CMD" 2>&1
+    JS_EXIT=$?
+  else
+    echo "No JS/TS linter detected — skipping JS/TS files"
+    JS_EXIT=0
+  fi
+
+  if [ "$JS_EXIT" -ne 0 ]; then
+    OVERALL_EXIT=$JS_EXIT
+  fi
 fi
 
-if [ "$HAS_ESLINT" = true ]; then
-  # Run ESLint on just the changed files
-  eval "npx eslint $FILE_ARGS" 2>&1
-  EXIT_CODE=$?
-elif [ -n "$FALLBACK_CMD" ]; then
-  # No ESLint config detected — fall back to the full lint command
-  echo "(Cannot scope to changed files — running full lint)"
-  eval "$FALLBACK_CMD" 2>&1
-  EXIT_CODE=$?
-else
-  echo "No linter detected — skipping"
-  EXIT_CODE=0
+# --- Go linting ---
+
+if [ -n "$GO_FILES" ]; then
+  GO_FILE_ARGS=$(echo "$GO_FILES" | tr '\n' ' ')
+
+  # Detect golangci-lint availability
+  HAS_GOLANGCI_LINT=false
+  if command -v golangci-lint &>/dev/null; then
+    HAS_GOLANGCI_LINT=true
+  fi
+
+  # Detect golangci-lint config
+  HAS_GOLANGCI_CONFIG=false
+  if [ -f ".golangci.yml" ] || [ -f ".golangci.yaml" ] || [ -f ".golangci.toml" ] || [ -f ".golangci.json" ]; then
+    HAS_GOLANGCI_CONFIG=true
+  fi
+
+  if [ "$HAS_GOLANGCI_LINT" = true ]; then
+    if [ "$SCOPE" = "staged" ]; then
+      # Staged scope: lint specific changed files
+      golangci-lint run $GO_FILE_ARGS 2>&1
+      GO_EXIT=$?
+    else
+      # Branch scope: use --new-from-rev for diff-scoped linting
+      golangci-lint run --new-from-rev="$SCOPE" ./... 2>&1
+      GO_EXIT=$?
+    fi
+  elif [ -n "$FALLBACK_CMD" ]; then
+    echo "(Cannot scope Go to changed files — running full lint)"
+    eval "$FALLBACK_CMD" 2>&1
+    GO_EXIT=$?
+  else
+    echo "No linter detected — skipping"
+    GO_EXIT=0
+  fi
+
+  if [ "$GO_EXIT" -ne 0 ]; then
+    OVERALL_EXIT=$GO_EXIT
+  fi
 fi
+
+# --- Final result ---
 
 echo "---"
-if [ $EXIT_CODE -eq 0 ]; then
+if [ $OVERALL_EXIT -eq 0 ]; then
   echo "RESULT: lint PASSED"
 else
-  echo "RESULT: lint FAILED (exit code $EXIT_CODE)"
+  echo "RESULT: lint FAILED (exit code $OVERALL_EXIT)"
 fi
 
-exit $EXIT_CODE
+exit $OVERALL_EXIT

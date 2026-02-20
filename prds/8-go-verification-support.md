@@ -29,7 +29,7 @@ Add full Go project support across the verification infrastructure:
 
 - [x] `detect-project.sh` returns correct build/typecheck/lint/test commands for a Go project with `go.mod`
 - [x] `detect-project.sh` detects and uses Makefile targets when available (Kubebuilder pattern)
-- [ ] `lint-changed.sh` scopes `golangci-lint` to changed `.go` files on commit, full lint on push
+- [x] `lint-changed.sh` scopes `golangci-lint` to changed `.go` files on commit, full lint on push
 - [ ] `detect-test-tiers.sh` correctly identifies Go unit, integration, and e2e test tiers
 - [ ] Pre-commit hook runs `go build`/`go vet`/`golangci-lint` for Go projects
 - [ ] Pre-push hook runs full test suite for Go projects
@@ -90,11 +90,11 @@ All changes are within the existing claude-config verification infrastructure:
 - [x] Write tests validating Go detection with and without Makefile
 
 ### Milestone 2: Go Lint Scoping in lint-changed.sh
-- [ ] Extend file extension filter to include `.go` files
-- [ ] Add Go linter detection (golangci-lint config, or fall back to go vet)
-- [ ] Implement diff-scoped Go linting using `golangci-lint run --new-from-rev=<ref>` for branch scope
-- [ ] For staged scope, lint changed `.go` files directly: `golangci-lint run <files>`
-- [ ] Write tests validating Go lint scoping
+- [x] Extend file extension filter to include `.go` files
+- [x] Add Go linter detection (golangci-lint config, or fall back to go vet)
+- [x] Implement diff-scoped Go linting using `golangci-lint run --new-from-rev=<ref>` for branch scope
+- [x] For staged scope, lint changed `.go` files directly: `golangci-lint run <files>`
+- [x] Write tests validating Go lint scoping
 
 ### Milestone 3: Go Test Tier Detection in detect-test-tiers.sh
 - [ ] Add Go test tier detection block (parallel to Node.js and Python blocks)
