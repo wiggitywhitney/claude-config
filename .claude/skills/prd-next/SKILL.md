@@ -16,10 +16,11 @@ You are helping analyze an existing Product Requirements Document (PRD) to sugge
 2. **Auto-Detect Target PRD** - If context unclear, intelligently determine which PRD to analyze
 3. **Analyze Current Implementation** - Understand what's implemented vs what's missing (skip if recent context available)
 4. **Identify the Single Best Next Task** - Find the one task that should be worked on next
-5. **Present Recommendation** - Give clear rationale and wait for confirmation
-6. **Design Discussion** - If confirmed, dive into implementation design details
-7. **Implementation** - User implements the task
-8. **Update Progress** - Prompt user to run /prd-update-progress
+5. **Single Task Recommendation** - Present the highest-priority task with rationale and wait for confirmation
+6. **Create Milestone Task List** - After confirmation, create tasks for the current milestone
+7. **Design Discussion** - Dive into implementation design details
+8. **Implementation** - User implements the task (user-driven, no LLM action)
+9. **Update Progress** - Prompt user to run `/prd-update-progress`
 
 ## Step 0: Context Awareness Check
 
@@ -209,6 +210,40 @@ Present findings in this focused format:
 If yes, I'll help you design the implementation approach. If no, let me know what you'd prefer to work on instead.
 ```
 
+## Step 6b: Create Milestone Task List (After Confirmation)
+
+When the user confirms they want to work on the recommended task, create tasks for the **current milestone only** using TaskCreate. This provides progress tracking scoped to the active milestone.
+
+### Process
+
+1. **Identify the current milestone** from the PRD (the one containing the recommended task)
+2. **Create a task for each unchecked item** in that milestone using TaskCreate:
+   - `subject`: The milestone checkbox item text (imperative form)
+   - `description`: Include the PRD number, milestone name, and any relevant context
+   - `activeForm`: Present continuous form of the task (e.g., "Researching claude-config directory")
+3. **Set the recommended task to `in_progress`** using TaskUpdate
+4. **Set dependencies** if milestone items have a natural ordering (use TaskUpdate with `addBlockedBy`)
+
+### Key Rules
+
+- **Only create tasks for the current milestone** — do not create tasks for future milestones
+- **One task per unchecked milestone item** — map 1:1 with PRD checkboxes
+- **Skip already-checked items** — only create tasks for `[ ]` items, not `[x]` items
+- **Keep task subjects concise** — use the PRD checkbox text, don't embellish
+- When the milestone completes and `/prd-next` runs again for the next milestone, mark all prior milestone tasks as `completed` (or `deleted` if no longer relevant), then create a fresh set of tasks for the new milestone
+
+### Example
+
+For a milestone with these items:
+```text
+- [x] Research reference implementation
+- [ ] Audit global CLAUDE.md
+- [ ] Audit project-level CLAUDE.md files
+- [ ] Create CLAUDE.md templates
+```
+
+Create 3 tasks (skipping the checked item), set "Audit global CLAUDE.md" to `in_progress`.
+
 ## Step 7: Design Discussion (If Confirmed)
 
 If the user confirms they want to work on the recommended task, then dive into:
@@ -246,7 +281,11 @@ This command should:
 - ✅ Keep teams focused on the most important work rather than overwhelming them with options
 - ✅ Enable immediate action by transitioning from recommendation to design discussion
 
-## Step 8: Update Progress After Completion
+## Step 8: Implementation
+
+The user implements the task. This step is user-driven — no LLM action required. Provide guidance if asked, but do not proceed to Step 9 until the user signals implementation is complete.
+
+## Step 9: Update Progress After Completion
 
 **CRITICAL: Do NOT update the PRD yourself. Do NOT edit PRD files directly. Your job is to prompt the user to run the update command.**
 

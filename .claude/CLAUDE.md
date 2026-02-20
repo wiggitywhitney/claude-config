@@ -4,15 +4,11 @@ Shared Claude Code testing infrastructure, safety config, and developer tooling 
 
 ## YOLO Workflow Mode
 
-When running PRD workflows, continue through the full cycle without stopping for confirmation:
-- `/prd-start` → automatically invoke `/prd-next`
-- After task completion → automatically invoke `/prd-update-progress`
-- After progress update → automatically invoke `/prd-next` for the next task
-- Continue until PRD is complete, then invoke `/prd-done`
+Proceed without trivial confirmations. Never ask "Shall I continue?", "Do you want to proceed?", or "Ready to start?" — just do the work. The user will interrupt if needed.
 
-**NEVER ask "Shall I continue?" or "Do you want to proceed?" or "Ready to start?"** - just proceed. The user will interrupt if needed.
+**Do ask** when something is ambiguous, when a decision has major implications, or when you need to deviate from what the PRD explicitly defines. This follows the same principle as Getting Help: ask for clarification rather than making assumptions.
 
-**EXCEPTION: CodeRabbit reviews are REQUIRED before merging any PR.** Create the PR, wait for CodeRabbit to complete its review, then process ALL CodeRabbit feedback with the user before merging. This is non-negotiable.
+**CodeRabbit reviews are REQUIRED before merging any PR.** Create the PR, wait for CodeRabbit to complete its review, then process ALL CodeRabbit feedback with the user before merging. This is non-negotiable.
 
 ## CodeRabbit Reviews (MANDATORY)
 
@@ -29,12 +25,6 @@ Every PR must go through CodeRabbit review before merge. This is a hard requirem
 6. Only stop for user input if something is truly ambiguous or has major architectural implications
 7. After ALL comments are addressed, merge the PR
 
-## Code Style Guidelines
-
-**Code Block Language Identifiers:**
-- Always use `text` (not empty) for plain text code blocks in markdown
-- Use appropriate language identifiers: `bash` for shell commands, `javascript` for JS code, `json` for JSON examples, `text` for plain text or generic examples
-
 ## Git Conventions
 
 - Don't squash git commits
@@ -42,6 +32,14 @@ Every PR must go through CodeRabbit review before merge. This is a hard requirem
 - Never reference task management systems in code files or documentation
 - Create a new PR to merge to main anytime there are codebase additions
 - Make sure CodeRabbit review has been examined and is approved by human before merging PR
+
+## Hook & Rule Authoring Conventions
+
+**Hook severity:** Use exit 2 (blocking deny) only for zero-tolerance rules that must never be violated (e.g., commit message policy, verification failures). Use exit 0 with advisory `additionalContext` for style and quality guidance where violations are informational, not blocking.
+
+**Rule file frontmatter:** All rule files in `rules/` must include `paths:` frontmatter so Claude Code only loads them in relevant file contexts. Example: `paths: ["**/*.ts", "**/*.tsx"]` for TypeScript rules. This reduces token cost by avoiding irrelevant rules in every conversation.
+
+**Placeholder rule files:** When creating a new rule file for a domain that doesn't have established patterns yet, create a stub with correct `paths:` frontmatter and a single line: "Add rules as patterns emerge from real usage." Do not fill rule files with speculative rules — let real usage drive content.
 
 ## Secrets Management (vals)
 

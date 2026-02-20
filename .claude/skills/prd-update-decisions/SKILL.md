@@ -74,6 +74,7 @@ Update the appropriate PRD sections:
 - Add new resolved decisions with date and rationale
 - Mark open questions as resolved if decisions were made
 - Update decision impact on requirements and scope
+- **Add corresponding milestone items** when a decision creates new work. Milestone items should reference the decision (e.g., "Implement X (Decision 16)") so future AI has full context on why the item exists
 
 ### Requirements Updates
 - Modify functional requirements based on design changes
