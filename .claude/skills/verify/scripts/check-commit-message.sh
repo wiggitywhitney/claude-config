@@ -59,17 +59,17 @@ heredoc_match = re.search(r"<<'?\"?EOF'?\"?\s*\n(.*?)\n\s*EOF", command, re.DOTA
 if heredoc_match:
     msg = heredoc_match.group(1)
 
-# Format 2: -m "message" or -m 'message'
+# Format 2: -m "message" or -m 'message' (backreference ensures matching quotes)
 if not msg:
-    m_match = re.search(r"""-m\s+["'](.+?)["']""", command, re.DOTALL)
+    m_match = re.search(r"""-m\s+(["'])(.+?)\1""", command, re.DOTALL)
     if m_match:
-        msg = m_match.group(1)
+        msg = m_match.group(2)
 
 # Format 3: --message="message" or --message='message'
 if not msg:
-    msg_match = re.search(r"""--message=["'](.+?)["']""", command, re.DOTALL)
+    msg_match = re.search(r"""--message=(["'])(.+?)\1""", command, re.DOTALL)
     if msg_match:
-        msg = msg_match.group(1)
+        msg = msg_match.group(2)
 
 # No message extracted — allow silently rather than false-positive block
 if not msg:

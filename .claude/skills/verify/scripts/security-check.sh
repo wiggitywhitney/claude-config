@@ -229,7 +229,7 @@ if [ "$MODE" = "pre-pr" ]; then
     # Check for hardcoded secrets/API keys in branch diff (added lines only)
     BRANCH_DIFF=$(git diff "$DIFF_BASE"...HEAD 2>/dev/null || true)
     if [ -n "$BRANCH_DIFF" ]; then
-      SECRET_PATTERNS='(api[_-]?key|api[_-]?secret|access[_-]?token|auth[_-]?token|secret[_-]?key|private[_-]?key|password)\s*[=:]\s*["\x27][^\s"'\'']{8,}'
+      SECRET_PATTERNS='(api[_-]?key|api[_-]?secret|access[_-]?token|auth[_-]?token|secret[_-]?key|private[_-]?key|password)\s*[=:]\s*["'"'"'][^\s"'"'"']{8,}'
       SECRETS_FOUND=$(echo "$BRANCH_DIFF" | grep -E '^\+' | grep -iE "$SECRET_PATTERNS" || true)
       if [ -n "$SECRETS_FOUND" ]; then
         add_finding "Possible hardcoded secrets in branch changes:"
@@ -254,7 +254,7 @@ if [ "$MODE" = "pre-pr" ]; then
     STAGED_DIFF=$(git diff --cached 2>/dev/null || true)
     if [ -n "$STAGED_DIFF" ]; then
       # Look for common secret patterns in added lines only
-      SECRET_PATTERNS='(api[_-]?key|api[_-]?secret|access[_-]?token|auth[_-]?token|secret[_-]?key|private[_-]?key|password)\s*[=:]\s*["\x27][^\s"'\'']{8,}'
+      SECRET_PATTERNS='(api[_-]?key|api[_-]?secret|access[_-]?token|auth[_-]?token|secret[_-]?key|private[_-]?key|password)\s*[=:]\s*["'"'"'][^\s"'"'"']{8,}'
       SECRETS_FOUND=$(echo "$STAGED_DIFF" | grep -E '^\+' | grep -iE "$SECRET_PATTERNS" || true)
       if [ -n "$SECRETS_FOUND" ]; then
         add_finding "Possible hardcoded secrets in staged changes:"
@@ -274,6 +274,7 @@ if [ "$MODE" = "pre-pr" ]; then
       if [ -n "$DEP_FILES_CHANGED" ]; then
         echo "Running npm audit (dependency files changed — comparing against base)..."
         AUDIT_TMPDIR=$(mktemp -d)
+        trap 'rm -rf "$AUDIT_TMPDIR"' EXIT
 
         # Audit current branch
         npm audit --json > "$AUDIT_TMPDIR/branch.json" 2>/dev/null || true

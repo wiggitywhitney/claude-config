@@ -16,9 +16,8 @@ You are helping analyze an existing Product Requirements Document (PRD) to sugge
 2. **Auto-Detect Target PRD** - If context unclear, intelligently determine which PRD to analyze
 3. **Analyze Current Implementation** - Understand what's implemented vs what's missing (skip if recent context available)
 4. **Identify the Single Best Next Task** - Find the one task that should be worked on next
-5. **Present Recommendation** - Give clear rationale and wait for confirmation
-6. **Single Task Recommendation** - Present the highest-priority task and wait for confirmation
-6b. **Create Milestone Task List** - After confirmation, create tasks for the current milestone
+5. **Single Task Recommendation** - Present the highest-priority task with rationale and wait for confirmation
+6. **Create Milestone Task List** - After confirmation, create tasks for the current milestone
 7. **Design Discussion** - Dive into implementation design details
 8. **Implementation** - User implements the task
 9. **Update Progress** - Prompt user to run /prd-update-progress

@@ -6,11 +6,14 @@ allowed-tools: Read, Write, AskUserQuestion
 
 # Anki Card-Making Skill
 
-## User Configuration (customize before use)
+## User Configuration
+
+Update these paths before using this skill. All save locations and style references below use these values.
 
 - **ANKI_CARDS_DIR**: `/Users/whitney.lee/Documents/Journal/make Anki cards`
 - **ANKI_FINISHED_DIR**: `/Users/whitney.lee/Documents/Journal/make Anki cards/finished`
 - **ANKI_IMAGES_DIR**: `/Users/whitney.lee/Documents/Journal/images`
+- **DEFAULT_DECK**: `AWSAIPractitionerCert`
 
 ---
 
@@ -328,10 +331,10 @@ Rules:
 
 ## Style Examples
 
-For reference, you may read these files to see Whitney's card-making style:
+For reference, read these files (under ANKI_FINISHED_DIR / ANKI_CARDS_DIR) to see card-making style:
 
-- **Conversational style**: `/Users/whitney.lee/Documents/Journal/make Anki cards/finished/CARDS MADE - GitHub & ArgoCD auto sync webhook.md`
-- **Glossary style**: `/Users/whitney.lee/Documents/Journal/make Anki cards/AWS AI Practitioner Certification/final_study_materials/master_glossary.md` (first 200 lines)
+- **Conversational style**: `ANKI_FINISHED_DIR/CARDS MADE - GitHub & ArgoCD auto sync webhook.md`
+- **Glossary style**: `ANKI_CARDS_DIR/AWS AI Practitioner Certification/final_study_materials/master_glossary.md` (first 200 lines)
 
 ---
 
