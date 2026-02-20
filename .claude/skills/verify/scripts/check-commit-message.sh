@@ -18,7 +18,7 @@
 #     3. --message="message" or --message='message'
 #   If no message extracted, the hook allows silently (no false-positive blocking).
 #
-# Reference: peopleforrester/llm-coding-workflow claude-config/hooks/check-commit-message.sh
+# Reference: inspired by llm-coding-workflow hook patterns
 #
 # Input: JSON on stdin from Claude Code (PreToolUse event)
 # Output: JSON on stdout with permissionDecision (deny only; silent passthrough on allow)
@@ -82,8 +82,8 @@ patterns = [
     (r"\bclaude\b", "Claude"),
     (r"\banthropic\b", "Anthropic"),
     (r"generated\s+with\s+(ai|claude|anthropic|llm|gpt|copilot)", "Generated with AI"),
-    (r"co-authored-by.*claude", "Co-Authored-By Claude"),
-    (r"co-authored-by.*anthropic", "Co-Authored-By Anthropic"),
+    (r"co-authored-by[^\n]*claude", "Co-Authored-By Claude"),
+    (r"co-authored-by[^\n]*anthropic", "Co-Authored-By Anthropic"),
     (r"\bai\s+assistant\b", "AI assistant"),
     (r"\bai[- ]generated\b", "AI-generated"),
     (r"language\s+model", "language model"),

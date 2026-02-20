@@ -230,7 +230,7 @@ if [ "$MODE" = "pre-pr" ]; then
     BRANCH_DIFF=$(git diff "$DIFF_BASE"...HEAD 2>/dev/null || true)
     if [ -n "$BRANCH_DIFF" ]; then
       SECRET_PATTERNS='(api[_-]?key|api[_-]?secret|access[_-]?token|auth[_-]?token|secret[_-]?key|private[_-]?key|password)\s*[=:]\s*["'"'"'][^\s"'"'"']{8,}'
-      SECRETS_FOUND=$(echo "$BRANCH_DIFF" | grep -E '^\+' | grep -iE "$SECRET_PATTERNS" || true)
+      SECRETS_FOUND=$(echo "$BRANCH_DIFF" | grep -E '^\+[^+]' | grep -iE "$SECRET_PATTERNS" || true)
       if [ -n "$SECRETS_FOUND" ]; then
         add_finding "Possible hardcoded secrets in branch changes:"
         while IFS= read -r line; do
@@ -255,7 +255,7 @@ if [ "$MODE" = "pre-pr" ]; then
     if [ -n "$STAGED_DIFF" ]; then
       # Look for common secret patterns in added lines only
       SECRET_PATTERNS='(api[_-]?key|api[_-]?secret|access[_-]?token|auth[_-]?token|secret[_-]?key|private[_-]?key|password)\s*[=:]\s*["'"'"'][^\s"'"'"']{8,}'
-      SECRETS_FOUND=$(echo "$STAGED_DIFF" | grep -E '^\+' | grep -iE "$SECRET_PATTERNS" || true)
+      SECRETS_FOUND=$(echo "$STAGED_DIFF" | grep -E '^\+[^+]' | grep -iE "$SECRET_PATTERNS" || true)
       if [ -n "$SECRETS_FOUND" ]; then
         add_finding "Possible hardcoded secrets in staged changes:"
         while IFS= read -r line; do
@@ -290,8 +290,11 @@ import sys, json
 print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))
 " 2>/dev/null || echo "[]")
 
-        NEW_VULN_COUNT=$(python3 -c "
-import json
+        NEW_VULN_COUNT=$(AUDIT_KNOWN_VULNS_JSON="$KNOWN_VULNS_JSON" \
+          AUDIT_BRANCH_JSON="$AUDIT_TMPDIR/branch.json" \
+          AUDIT_BASE_JSON="$AUDIT_TMPDIR/base.json" \
+          python3 -c "
+import json, os
 
 def load_vuln_keys(path):
     try:
@@ -301,13 +304,11 @@ def load_vuln_keys(path):
     except Exception:
         return set()
 
-known = set(json.loads('$KNOWN_VULNS_JSON'))
-branch = load_vuln_keys('$AUDIT_TMPDIR/branch.json')
-base = load_vuln_keys('$AUDIT_TMPDIR/base.json')
+known = set(json.loads(os.environ['AUDIT_KNOWN_VULNS_JSON']))
+branch = load_vuln_keys(os.environ['AUDIT_BRANCH_JSON'])
+base = load_vuln_keys(os.environ['AUDIT_BASE_JSON'])
 print(len(branch - base - known))
 " 2>/dev/null || echo "0")
-
-        rm -rf "$AUDIT_TMPDIR"
 
         if [ "$NEW_VULN_COUNT" -gt 0 ] 2>/dev/null; then
           add_finding "npm audit found $NEW_VULN_COUNT NEW vulnerability(ies) introduced by this branch. Run 'npm audit' for details."
@@ -321,11 +322,11 @@ import sys, json
 print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))
 " 2>/dev/null || echo "[]")
 
-      VULN_COUNT=$(npm audit --json 2>/dev/null | python3 -c "
-import json, sys
+      VULN_COUNT=$(npm audit --json 2>/dev/null | AUDIT_KNOWN_VULNS_JSON="$KNOWN_VULNS_JSON" python3 -c "
+import json, sys, os
 try:
     data = json.load(sys.stdin)
-    known = set(json.loads('$KNOWN_VULNS_JSON'))
+    known = set(json.loads(os.environ['AUDIT_KNOWN_VULNS_JSON']))
     if 'vulnerabilities' in data:
         unknown = set(data['vulnerabilities'].keys()) - known
         total = len(unknown)

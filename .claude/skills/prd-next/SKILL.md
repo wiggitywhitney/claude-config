@@ -19,8 +19,8 @@ You are helping analyze an existing Product Requirements Document (PRD) to sugge
 5. **Single Task Recommendation** - Present the highest-priority task with rationale and wait for confirmation
 6. **Create Milestone Task List** - After confirmation, create tasks for the current milestone
 7. **Design Discussion** - Dive into implementation design details
-8. **Implementation** - User implements the task
-9. **Update Progress** - Prompt user to run /prd-update-progress
+8. **Implementation** - User implements the task (user-driven, no LLM action)
+9. **Update Progress** - Prompt user to run `/prd-update-progress`
 
 ## Step 0: Context Awareness Check
 
@@ -230,7 +230,7 @@ When the user confirms they want to work on the recommended task, create tasks f
 - **One task per unchecked milestone item** — map 1:1 with PRD checkboxes
 - **Skip already-checked items** — only create tasks for `[ ]` items, not `[x]` items
 - **Keep task subjects concise** — use the PRD checkbox text, don't embellish
-- When the milestone completes and `/prd-next` runs again for the next milestone, create a fresh set of tasks
+- When the milestone completes and `/prd-next` runs again for the next milestone, mark all prior milestone tasks as `completed` (or `deleted` if no longer relevant), then create a fresh set of tasks for the new milestone
 
 ### Example
 
@@ -281,7 +281,11 @@ This command should:
 - ✅ Keep teams focused on the most important work rather than overwhelming them with options
 - ✅ Enable immediate action by transitioning from recommendation to design discussion
 
-## Step 8: Update Progress After Completion
+## Step 8: Implementation
+
+The user implements the task. This step is user-driven — no LLM action required. Provide guidance if asked, but do not proceed to Step 9 until the user signals implementation is complete.
+
+## Step 9: Update Progress After Completion
 
 **CRITICAL: Do NOT update the PRD yourself. Do NOT edit PRD files directly. Your job is to prompt the user to run the update command.**
 
