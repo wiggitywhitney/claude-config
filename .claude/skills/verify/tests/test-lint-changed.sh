@@ -135,8 +135,12 @@ chmod +x "$FAKE_BIN/npx"
 # PATH with fake golangci-lint
 PATH_WITH_LINT="$FAKE_BIN:$PATH"
 
-# PATH without golangci-lint (strip fake bin and any real golangci-lint)
-PATH_WITHOUT_LINT=$(echo "$PATH" | tr ':' '\n' | grep -v "$FAKE_BIN" | grep -v golangci-lint | tr '\n' ':' | sed 's/:$//')
+# PATH without golangci-lint (strip fake bin and the real binary's directory if present)
+REAL_LINT_DIR=""
+if command -v golangci-lint &>/dev/null; then
+  REAL_LINT_DIR=$(dirname "$(command -v golangci-lint)")
+fi
+PATH_WITHOUT_LINT=$(echo "$PATH" | tr ':' '\n' | grep -v "$FAKE_BIN" | { if [ -n "$REAL_LINT_DIR" ]; then grep -v "^${REAL_LINT_DIR}$"; else cat; fi; } | tr '\n' ':' | sed 's/:$//')
 
 # ─────────────────────────────────────────────
 echo ""

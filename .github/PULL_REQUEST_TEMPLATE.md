@@ -8,8 +8,9 @@
 ## Related Issues
 <!-- Link to related issues using keywords for automatic closure -->
 <!-- Examples: "Closes #123", "Fixes #456", "Resolves #789" -->
+<!-- Use "Related to: #" for issues that should NOT be automatically closed -->
 
-- Related to: #
+- Closes #
 
 ## Type of Change
 <!-- Check all that apply -->
