@@ -170,9 +170,9 @@ Add a shared utility that checks whether all changed files are documentation-onl
 - [x] Deny responses unchanged — still show `permissionDecisionReason` for user feedback
 
 ### Milestone 5: Update Documentation and Verify
-- [ ] Update CLAUDE.md hook tier comments in both project and global CLAUDE.md
-- [ ] Run existing verification tests to confirm no regressions
-- [ ] Manual smoke test: commit (should build/typecheck/lint), push (should security only), PR readiness (should security+test only)
+- [x] Update CLAUDE.md hook tier comments in both project and global CLAUDE.md
+- [x] Run existing verification tests to confirm no regressions
+- [x] Manual smoke test: commit (should build/typecheck/lint), push (should security only), PR readiness (should security+test only)
 
 ### Milestone 6: Docs-Only Early Exit (Decision 4)
 - [ ] Create `is-docs-only.sh` shared utility that checks if all changed files are documentation-only
