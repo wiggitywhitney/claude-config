@@ -124,6 +124,8 @@ result = {
 print(json.dumps(result))
 "
 else
-  # All phases passed — additionalContext is visible to Claude, permissionDecisionReason is visible to the user
-  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"verify: commit quick+lint passed ✓","additionalContext":"verify: commit quick+lint passed (build, typecheck, lint) ✓"}}'
+  # All phases passed — use additionalContext only (Claude-visible, not shown in UI).
+  # permissionDecisionReason is omitted on allow to prevent confusing "Error: ... passed"
+  # messages when another hook denies the same action (Decision 3, PRD 11).
+  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","additionalContext":"verify: commit quick+lint passed (build, typecheck, lint) ✓"}}'
 fi

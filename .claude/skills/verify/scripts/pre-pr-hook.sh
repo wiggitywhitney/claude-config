@@ -132,6 +132,8 @@ result = {
 print(json.dumps(result))
 "
 else
-  # All phases passed
-  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"verify: PR security+tests check passed ✓","additionalContext":"verify: PR security+tests check passed (expanded security, tests) ✓"}}'
+  # All phases passed — use additionalContext only (Claude-visible, not shown in UI).
+  # permissionDecisionReason is omitted on allow to prevent confusing "Error: ... passed"
+  # messages when another hook denies the same action (Decision 3, PRD 11).
+  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","additionalContext":"verify: PR security+tests check passed (expanded security, tests) ✓"}}'
 fi

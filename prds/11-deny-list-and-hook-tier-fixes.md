@@ -160,14 +160,14 @@ Add a shared utility that checks whether all changed files are documentation-onl
 - [x] Update success message from "pre-pr verification" to "security+tests check"
 
 ### Milestone 4: Silent Allow Responses for All Hooks
-- [ ] Update `pre-commit-hook.sh` allow response: remove `permissionDecisionReason`, keep `additionalContext`
-- [ ] Update `pre-push-hook.sh` allow response: same pattern
-- [ ] Update `pre-pr-hook.sh` allow response: same pattern
-- [ ] Update `check-branch-protection.sh` allow response (if it has one)
-- [ ] Update `check-commit-message.sh` allow response (if it has one)
-- [ ] Update `check-coderabbit-required.sh` allow response (if it has one)
-- [ ] Update `check-test-tiers.sh` allow response (if it has one)
-- [ ] Deny responses unchanged — still show `permissionDecisionReason` for user feedback
+- [x] Update `pre-commit-hook.sh` allow response: remove `permissionDecisionReason`, keep `additionalContext`
+- [x] Update `pre-push-hook.sh` allow response: same pattern
+- [x] Update `pre-pr-hook.sh` allow response: same pattern
+- [x] Update `check-branch-protection.sh` allow response (if it has one)
+- [x] Update `check-commit-message.sh` allow response (if it has one)
+- [x] Update `check-coderabbit-required.sh` allow response (if it has one)
+- [x] Update `check-test-tiers.sh` allow response (if it has one)
+- [x] Deny responses unchanged — still show `permissionDecisionReason` for user feedback
 
 ### Milestone 5: Update Documentation and Verify
 - [ ] Update CLAUDE.md hook tier comments in both project and global CLAUDE.md

@@ -94,6 +94,8 @@ result = {
 print(json.dumps(result))
 "
 else
-  # Security check passed
-  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"verify: push security check passed ✓","additionalContext":"verify: push security check passed (standard security) ✓"}}'
+  # Security check passed — use additionalContext only (Claude-visible, not shown in UI).
+  # permissionDecisionReason is omitted on allow to prevent confusing "Error: ... passed"
+  # messages when another hook denies the same action (Decision 3, PRD 11).
+  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","additionalContext":"verify: push security check passed (standard security) ✓"}}'
 fi

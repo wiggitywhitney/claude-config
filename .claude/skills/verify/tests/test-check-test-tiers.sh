@@ -156,6 +156,30 @@ assert_no_deny() {
   fi
 }
 
+assert_allow_silent_reason() {
+  # Verify allow responses use additionalContext only (no permissionDecisionReason).
+  # Decision 3 (PRD 11): allow hooks must not set permissionDecisionReason to
+  # avoid confusing "Error: ... passed" messages when another hook denies.
+  local description="$1"
+  local json="$2"
+  local expected_tier="$3"
+  TOTAL=$((TOTAL + 1))
+
+  local output
+  output=$(run_hook "$json")
+  local exit_code=$?
+
+  if [ $exit_code -eq 0 ] && echo "$output" | grep -q '"allow"' && echo "$output" | grep -qi "$expected_tier" && ! echo "$output" | grep -q 'permissionDecisionReason'; then
+    PASS=$((PASS + 1))
+    printf "${GREEN}  PASS${NC} %s\n" "$description"
+  else
+    FAIL=$((FAIL + 1))
+    printf "${RED}  FAIL${NC} %s\n" "$description"
+    printf "       Expected: allow with warning in additionalContext only (no permissionDecisionReason)\n"
+    printf "       Got exit=%d, output=%s\n" "$exit_code" "$output"
+  fi
+}
+
 make_input() {
   local command="$1"
   local cwd="$2"
@@ -225,6 +249,17 @@ assert_allow_with_warning "PR with unit-only warns about e2e" \
 
 assert_allow_with_warning "push missing e2e warns about e2e" \
   "$(make_input 'git push' "$PROJ_NO_E2E")" "e2e"
+
+# ─────────────────────────────────────────────
+# Section 3b: Silent allow — no permissionDecisionReason (Decision 3, PRD 11)
+# ─────────────────────────────────────────────
+printf "\n${YELLOW}--- Silent allow — warning in additionalContext only ---${NC}\n"
+
+assert_allow_silent_reason "push warning uses additionalContext only (no permissionDecisionReason)" \
+  "$(make_input 'git push' "$PROJ_NONE")" "unit"
+
+assert_allow_silent_reason "PR warning uses additionalContext only (no permissionDecisionReason)" \
+  "$(make_input 'gh pr create --title \"test\"' "$PROJ_UNIT")" "integration"
 
 # ─────────────────────────────────────────────
 # Section 4: Never blocks (always allow)
