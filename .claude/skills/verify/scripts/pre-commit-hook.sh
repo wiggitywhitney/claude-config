@@ -7,8 +7,8 @@
 #
 # This is the lightest tier of verification (Decision 10):
 #   git commit  → quick+lint (this hook)
-#   git push    → full verification (pre-push-hook.sh)
-#   gh pr create → pre-pr verification (pre-pr-hook.sh)
+#   git push    → standard security (pre-push-hook.sh)
+#   gh pr create → expanded security, tests (pre-pr-hook.sh)
 #
 # Input: JSON on stdin from Claude Code (PreToolUse event)
 # Output: JSON on stdout with permissionDecision
@@ -40,6 +40,14 @@ fi
 
 # Resolve script directory (same directory as this script)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Docs-only early exit: skip verification if all staged files are documentation-only.
+# Build, typecheck, and lint are code-oriented checks — irrelevant for docs (Decision 4, PRD 11).
+STAGED_FILES=$(git -C "$PROJECT_DIR" diff --cached --name-only 2>/dev/null || echo "")
+if [ -n "$STAGED_FILES" ] && echo "$STAGED_FILES" | "$SCRIPT_DIR/is-docs-only.sh"; then
+  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","additionalContext":"verify: commit skipped — docs-only changes detected (no code files staged)"}}'
+  exit 0
+fi
 
 # Run project detection
 DETECTION=$("$SCRIPT_DIR/detect-project.sh" "$PROJECT_DIR" 2>/dev/null || echo '{"project_type":"unknown"}')
@@ -124,6 +132,8 @@ result = {
 print(json.dumps(result))
 "
 else
-  # All phases passed — additionalContext is visible to Claude, permissionDecisionReason is visible to the user
-  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"verify: commit quick+lint passed ✓","additionalContext":"verify: commit quick+lint passed (build, typecheck, lint) ✓"}}'
+  # All phases passed — use additionalContext only (Claude-visible, not shown in UI).
+  # permissionDecisionReason is omitted on allow to prevent confusing "Error: ... passed"
+  # messages when another hook denies the same action (Decision 3, PRD 11).
+  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","additionalContext":"verify: commit quick+lint passed (build, typecheck, lint) ✓"}}'
 fi

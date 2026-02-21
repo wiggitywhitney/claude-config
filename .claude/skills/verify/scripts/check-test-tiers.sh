@@ -107,20 +107,20 @@ if [ -z "$MISSING_TIERS" ]; then
 fi
 
 # Warn about missing tiers (always allow — Decision 18)
+# Uses additionalContext only (Claude-visible, not shown in UI).
+# permissionDecisionReason is omitted on allow to prevent confusing "Error: ... passed"
+# messages when another hook denies the same action (Decision 3, PRD 11).
 WARN_MISSING="$MISSING_TIERS" WARN_PROJECT_TYPE="$PROJECT_TYPE" python3 -c "
 import json, os
 
 missing = os.environ['WARN_MISSING']
 project_type = os.environ['WARN_PROJECT_TYPE']
 
-reason = f'Warning: missing test tiers: {missing}. Project type: {project_type}. Consider adding test coverage. Use .skip-integration or .skip-e2e dotfiles to opt out of specific tiers.'
-
 result = {
     'hookSpecificOutput': {
         'hookEventName': 'PreToolUse',
         'permissionDecision': 'allow',
-        'permissionDecisionReason': f'test-tiers: {reason}',
-        'additionalContext': f'test-tier-warning: missing test tiers ({missing}) for {project_type} project. This is advisory only — not blocking.'
+        'additionalContext': f'test-tier-warning: missing test tiers ({missing}) for {project_type} project. Consider adding test coverage. Use .skip-integration or .skip-e2e dotfiles to opt out. This is advisory only — not blocking.'
     }
 }
 print(json.dumps(result))

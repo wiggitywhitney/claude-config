@@ -1,6 +1,6 @@
 # PRD #11: Deny List Glob Gap & Incremental Hook Tiers
 
-**Status**: Open
+**Status**: Complete
 **Priority**: High (Urgent)
 **Created**: 2026-02-21
 **Issue**: [#11](https://github.com/wiggitywhitney/claude-config/issues/11)
@@ -39,6 +39,10 @@ Error: verify: commit quick+lint passed ✓
 
 The message says "passed" but appears as a red error. This happens because allow hooks set `permissionDecisionReason` (user-visible text) even on success. When the overall action is denied by another hook, all hook outputs are shown in error styling — making passing hooks look like failures.
 
+### 4. Docs-Only Changes Run Full Verification (Performance)
+
+All three verification hooks trigger on every git operation regardless of what files changed. A commit that only edits `.md` files still runs build, typecheck, and lint. A push with only documentation changes still runs security checks. This wastes time and adds friction to documentation workflows, where none of the code-oriented checks are relevant.
+
 ## Solution
 
 ### 1. Deny List Fix
@@ -72,17 +76,25 @@ The PR tier includes expanded security (npm audit, hardcoded secrets, .env valid
 
 Hooks should only set `permissionDecisionReason` (user-visible) when **denying**. For allow responses, use only `additionalContext` (Claude-visible, not shown in UI). This prevents passing hooks from showing confusing "Error: ... passed" messages when another hook denies the action.
 
+### 4. Docs-Only Early Exit
+
+Add a shared utility that checks whether all changed files are documentation-only (`.md`, `.mdx`, `.txt`, images). Each verification hook calls it early and skips verification if no code files changed. Conservative allowlist — only file types that can never affect build, lint, security, or tests.
+
 ## Success Criteria
 
-- [ ] `Read(.npmrc)` is denied at root level (verified by checking deny list)
-- [ ] `Read(credentials*)` is denied at root level
-- [ ] `Read(secrets/**)` is denied at root level
-- [ ] Pre-push hook runs ONLY security (no build/typecheck/lint)
-- [ ] Pre-PR hook runs ONLY expanded security + tests (no build/typecheck/lint)
-- [ ] Pre-commit hook unchanged (build/typecheck/lint)
-- [ ] All existing verification tests still pass
-- [ ] Hook comments and success messages updated to reflect new tier responsibilities
-- [ ] Allow hooks use `additionalContext` only (no `permissionDecisionReason`) — no confusing red "passed" messages
+- [x] `Read(.npmrc)` is denied at root level (verified by checking deny list)
+- [x] `Read(credentials*)` is denied at root level
+- [x] `Read(secrets/**)` is denied at root level
+- [x] Pre-push hook runs ONLY security (no build/typecheck/lint)
+- [x] Pre-PR hook runs ONLY expanded security + tests (no build/typecheck/lint)
+- [x] Pre-commit hook unchanged (build/typecheck/lint)
+- [x] All existing verification tests still pass
+- [x] Hook comments and success messages updated to reflect new tier responsibilities
+- [x] Allow hooks use `additionalContext` only (no `permissionDecisionReason`) — no confusing red "passed" messages
+- [x] Docs-only commits skip build/typecheck/lint verification
+- [x] Docs-only pushes skip security verification
+- [x] Docs-only PRs skip security+tests verification
+- [x] Mixed changes (docs + code) still trigger full verification
 
 ## Architecture Decisions
 
@@ -107,6 +119,13 @@ Hooks should only set `permissionDecisionReason` (user-visible) when **denying**
 **Rationale**: Claude Code renders all hook outputs in error styling when any hook denies. `permissionDecisionReason` is user-visible text — showing "passed ✓" in red as an "Error:" is actively misleading. `additionalContext` is Claude-visible only and won't appear in the UI, so Claude still gets the context it needs without confusing the user.
 **Impact**: All three verification hooks (pre-commit, pre-push, pre-pr) and supplementary hooks need their allow responses updated.
 
+### Decision 4: Docs-Only Early Exit with Conservative Allowlist
+
+**Date**: 2026-02-21
+**Decision**: Add a shared `is-docs-only.sh` utility that all three verification hooks call early. If all changed files match a conservative allowlist of documentation-only extensions, skip verification entirely.
+**Rationale**: Build, typecheck, lint, security, and tests are all code-oriented checks. Running them on documentation-only changes wastes time without catching anything. A conservative allowlist (`.md`, `.mdx`, `.txt`, images) ensures we never skip verification for files that could affect code behavior — config files (`.yml`, `.json`, `.toml`) are excluded from the allowlist because they can affect builds and tests.
+**Impact**: New shared utility script. Each hook adds an early-exit call (~5 lines). Docs-only commits/pushes/PRs become near-instant.
+
 ## Content Location Map
 
 | Component | File | Change Type |
@@ -116,43 +135,51 @@ Hooks should only set `permissionDecisionReason` (user-visible) when **denying**
 | PR hook | `.claude/skills/verify/scripts/pre-pr-hook.sh` | Remove build/typecheck/lint phases, silent allow |
 | Commit hook | `.claude/skills/verify/scripts/pre-commit-hook.sh` | Silent allow |
 | Supplementary hooks | `.claude/skills/verify/scripts/check-*.sh` | Silent allow |
+| Docs-only utility | `.claude/skills/verify/scripts/is-docs-only.sh` | New shared utility |
 | CLAUDE.md | `.claude/CLAUDE.md` | Update hook tier documentation comments |
 | Global CLAUDE.md | `~/.claude/CLAUDE.md` | Update hook tier documentation comments |
 
 ## Implementation Milestones
 
 ### Milestone 1: Fix Deny List Glob Gap in settings.json
-- [ ] Add `Read(.npmrc)` to deny list
-- [ ] Add `Read(credentials*)` to deny list
-- [ ] Add `Read(secrets/**)` to deny list
-- [ ] Verify the three new patterns are positioned near their `**/` counterparts for readability
+- [x] Add `Read(.npmrc)` to deny list
+- [x] Add `Read(credentials*)` to deny list
+- [x] Add `Read(secrets/**)` to deny list
+- [x] Verify the three new patterns are positioned near their `**/` counterparts for readability
 
 ### Milestone 2: Make Pre-Push Hook Incremental (Security Only)
-- [ ] Remove build, typecheck, and lint phases from `pre-push-hook.sh`
-- [ ] Keep standard security check as the only verification phase
-- [ ] Update header comments to reflect new tier responsibility
-- [ ] Update success message from "full verification" to "security check"
+- [x] Remove build, typecheck, and lint phases from `pre-push-hook.sh`
+- [x] Keep standard security check as the only verification phase
+- [x] Update header comments to reflect new tier responsibility
+- [x] Update success message from "full verification" to "security check"
 
 ### Milestone 3: Make Pre-PR Hook Incremental (Expanded Security + Tests)
-- [ ] Remove build, typecheck, and lint phases from `pre-pr-hook.sh`
-- [ ] Keep expanded security and tests as the only verification phases
-- [ ] Update header comments to reflect new tier responsibility
-- [ ] Update success message from "pre-pr verification" to "security+tests check"
+- [x] Remove build, typecheck, and lint phases from `pre-pr-hook.sh`
+- [x] Keep expanded security and tests as the only verification phases
+- [x] Update header comments to reflect new tier responsibility
+- [x] Update success message from "pre-pr verification" to "security+tests check"
 
 ### Milestone 4: Silent Allow Responses for All Hooks
-- [ ] Update `pre-commit-hook.sh` allow response: remove `permissionDecisionReason`, keep `additionalContext`
-- [ ] Update `pre-push-hook.sh` allow response: same pattern
-- [ ] Update `pre-pr-hook.sh` allow response: same pattern
-- [ ] Update `check-branch-protection.sh` allow response (if it has one)
-- [ ] Update `check-commit-message.sh` allow response (if it has one)
-- [ ] Update `check-coderabbit-required.sh` allow response (if it has one)
-- [ ] Update `check-test-tiers.sh` allow response (if it has one)
-- [ ] Deny responses unchanged — still show `permissionDecisionReason` for user feedback
+- [x] Update `pre-commit-hook.sh` allow response: remove `permissionDecisionReason`, keep `additionalContext`
+- [x] Update `pre-push-hook.sh` allow response: same pattern
+- [x] Update `pre-pr-hook.sh` allow response: same pattern
+- [x] Update `check-branch-protection.sh` allow response (if it has one)
+- [x] Update `check-commit-message.sh` allow response (if it has one)
+- [x] Update `check-coderabbit-required.sh` allow response (if it has one)
+- [x] Update `check-test-tiers.sh` allow response (if it has one)
+- [x] Deny responses unchanged — still show `permissionDecisionReason` for user feedback
 
 ### Milestone 5: Update Documentation and Verify
-- [ ] Update CLAUDE.md hook tier comments in both project and global CLAUDE.md
-- [ ] Run existing verification tests to confirm no regressions
-- [ ] Manual smoke test: commit (should build/typecheck/lint), push (should security only), PR readiness (should security+test only)
+- [x] Update CLAUDE.md hook tier comments in both project and global CLAUDE.md
+- [x] Run existing verification tests to confirm no regressions
+- [x] Manual smoke test: commit (should build/typecheck/lint), push (should security only), PR readiness (should security+test only)
+
+### Milestone 6: Docs-Only Early Exit (Decision 4)
+- [x] Create `is-docs-only.sh` shared utility that checks if all changed files are documentation-only
+- [x] Add early-exit call to `pre-commit-hook.sh` (check staged files)
+- [x] Add early-exit call to `pre-push-hook.sh` (check branch diff)
+- [x] Add early-exit call to `pre-pr-hook.sh` (check branch diff)
+- [x] Verify mixed changes (docs + code) still trigger full verification
 
 ## Dependencies
 
@@ -170,5 +197,4 @@ None — all changes are within the existing claude-config infrastructure.
 
 - Restructuring the deny list format or organization beyond the glob fix
 - Adding new file types to the deny list
-- Changing the pre-commit hook behavior (it's already correct)
 - CI/CD pipeline changes (hooks are local development tooling)

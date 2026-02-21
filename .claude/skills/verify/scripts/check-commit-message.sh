@@ -77,15 +77,18 @@ if not msg:
     sys.exit(0)
 
 # Check for AI/Claude references in the commit message (case-insensitive)
+# Path-aware: exclude "claude" when adjacent to path characters (/, ., -)
+# e.g., ~/.claude/, CLAUDE.md, claude-config are file paths, not AI attribution
 patterns = [
-    (r"claude\s*code", "Claude Code"),
-    (r"\bclaude\b", "Claude"),
+    (r"(?<![/.])\bclaude\s*code\b", "Claude Code"),
+    (r"(?<![/.\-])\bclaude\b(?![/.\-])", "Claude"),
     (r"\banthropic\b", "Anthropic"),
     (r"generated\s+with\s+(ai|claude|anthropic|llm|gpt|copilot)", "Generated with AI"),
     (r"co-authored-by[^\n]*claude", "Co-Authored-By Claude"),
     (r"co-authored-by[^\n]*anthropic", "Co-Authored-By Anthropic"),
     (r"\bai\s+assistant\b", "AI assistant"),
     (r"\bai[- ]generated\b", "AI-generated"),
+    (r"\bllm\b", "LLM"),
     (r"language\s+model", "language model"),
 ]
 
