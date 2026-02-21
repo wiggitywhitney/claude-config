@@ -122,10 +122,10 @@ Hooks should only set `permissionDecisionReason` (user-visible) when **denying**
 ## Implementation Milestones
 
 ### Milestone 1: Fix Deny List Glob Gap in settings.json
-- [ ] Add `Read(.npmrc)` to deny list
-- [ ] Add `Read(credentials*)` to deny list
-- [ ] Add `Read(secrets/**)` to deny list
-- [ ] Verify the three new patterns are positioned near their `**/` counterparts for readability
+- [x] Add `Read(.npmrc)` to deny list
+- [x] Add `Read(credentials*)` to deny list
+- [x] Add `Read(secrets/**)` to deny list
+- [x] Verify the three new patterns are positioned near their `**/` counterparts for readability
 
 ### Milestone 2: Make Pre-Push Hook Incremental (Security Only)
 - [ ] Remove build, typecheck, and lint phases from `pre-push-hook.sh`
