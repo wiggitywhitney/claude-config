@@ -1,6 +1,6 @@
 # PRD #11: Deny List Glob Gap & Incremental Hook Tiers
 
-**Status**: Open
+**Status**: Complete
 **Priority**: High (Urgent)
 **Created**: 2026-02-21
 **Issue**: [#11](https://github.com/wiggitywhitney/claude-config/issues/11)
@@ -82,19 +82,19 @@ Add a shared utility that checks whether all changed files are documentation-onl
 
 ## Success Criteria
 
-- [ ] `Read(.npmrc)` is denied at root level (verified by checking deny list)
-- [ ] `Read(credentials*)` is denied at root level
-- [ ] `Read(secrets/**)` is denied at root level
-- [ ] Pre-push hook runs ONLY security (no build/typecheck/lint)
-- [ ] Pre-PR hook runs ONLY expanded security + tests (no build/typecheck/lint)
-- [ ] Pre-commit hook unchanged (build/typecheck/lint)
-- [ ] All existing verification tests still pass
-- [ ] Hook comments and success messages updated to reflect new tier responsibilities
-- [ ] Allow hooks use `additionalContext` only (no `permissionDecisionReason`) — no confusing red "passed" messages
-- [ ] Docs-only commits skip build/typecheck/lint verification
-- [ ] Docs-only pushes skip security verification
-- [ ] Docs-only PRs skip security+tests verification
-- [ ] Mixed changes (docs + code) still trigger full verification
+- [x] `Read(.npmrc)` is denied at root level (verified by checking deny list)
+- [x] `Read(credentials*)` is denied at root level
+- [x] `Read(secrets/**)` is denied at root level
+- [x] Pre-push hook runs ONLY security (no build/typecheck/lint)
+- [x] Pre-PR hook runs ONLY expanded security + tests (no build/typecheck/lint)
+- [x] Pre-commit hook unchanged (build/typecheck/lint)
+- [x] All existing verification tests still pass
+- [x] Hook comments and success messages updated to reflect new tier responsibilities
+- [x] Allow hooks use `additionalContext` only (no `permissionDecisionReason`) — no confusing red "passed" messages
+- [x] Docs-only commits skip build/typecheck/lint verification
+- [x] Docs-only pushes skip security verification
+- [x] Docs-only PRs skip security+tests verification
+- [x] Mixed changes (docs + code) still trigger full verification
 
 ## Architecture Decisions
 
@@ -175,11 +175,11 @@ Add a shared utility that checks whether all changed files are documentation-onl
 - [x] Manual smoke test: commit (should build/typecheck/lint), push (should security only), PR readiness (should security+test only)
 
 ### Milestone 6: Docs-Only Early Exit (Decision 4)
-- [ ] Create `is-docs-only.sh` shared utility that checks if all changed files are documentation-only
-- [ ] Add early-exit call to `pre-commit-hook.sh` (check staged files)
-- [ ] Add early-exit call to `pre-push-hook.sh` (check branch diff)
-- [ ] Add early-exit call to `pre-pr-hook.sh` (check branch diff)
-- [ ] Verify mixed changes (docs + code) still trigger full verification
+- [x] Create `is-docs-only.sh` shared utility that checks if all changed files are documentation-only
+- [x] Add early-exit call to `pre-commit-hook.sh` (check staged files)
+- [x] Add early-exit call to `pre-push-hook.sh` (check branch diff)
+- [x] Add early-exit call to `pre-pr-hook.sh` (check branch diff)
+- [x] Verify mixed changes (docs + code) still trigger full verification
 
 ## Dependencies
 

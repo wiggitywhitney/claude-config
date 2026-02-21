@@ -41,6 +41,14 @@ fi
 # Resolve script directory (same directory as this script)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# Docs-only early exit: skip verification if all staged files are documentation-only.
+# Build, typecheck, and lint are code-oriented checks — irrelevant for docs (Decision 4, PRD 11).
+STAGED_FILES=$(git -C "$PROJECT_DIR" diff --cached --name-only 2>/dev/null || echo "")
+if [ -n "$STAGED_FILES" ] && echo "$STAGED_FILES" | "$SCRIPT_DIR/is-docs-only.sh"; then
+  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","additionalContext":"verify: commit skipped — docs-only changes detected (no code files staged)"}}'
+  exit 0
+fi
+
 # Run project detection
 DETECTION=$("$SCRIPT_DIR/detect-project.sh" "$PROJECT_DIR" 2>/dev/null || echo '{"project_type":"unknown"}')
 

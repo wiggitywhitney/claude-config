@@ -63,6 +63,16 @@ if [ -z "$DIFF_BASE" ]; then
   fi
 fi
 
+# Docs-only early exit: skip verification if all branch changes are documentation-only.
+# Security and test checks are code-oriented — irrelevant for docs (Decision 4, PRD 11).
+if [ -n "$DIFF_BASE" ]; then
+  BRANCH_FILES=$(git -C "$PROJECT_DIR" diff --name-only "$DIFF_BASE"...HEAD 2>/dev/null || echo "")
+  if [ -n "$BRANCH_FILES" ] && echo "$BRANCH_FILES" | "$SCRIPT_DIR/is-docs-only.sh"; then
+    echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","additionalContext":"verify: PR skipped — docs-only changes detected (no code files in branch diff)"}}'
+    exit 0
+  fi
+fi
+
 # Run verification phases in order, stop on first failure
 FAILED_PHASE=""
 FAILURE_OUTPUT=""
