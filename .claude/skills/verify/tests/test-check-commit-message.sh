@@ -208,6 +208,22 @@ assert_allow "file path with 'claude' in git add does not trigger" \
 assert_allow "file path with 'claude' in -C flag does not trigger" \
   "$(make_input 'git -C /path/to/claude-config commit -m "fix: update hook"')"
 
+# File paths containing "claude" inside the commit message text itself
+assert_allow "~/.claude/ path in commit message does not trigger" \
+  "$(make_input 'git commit -m "feat: symlink config from ~/.claude/ directory"')"
+
+assert_allow "CLAUDE.md filename in commit message does not trigger" \
+  "$(make_input 'git commit -m "docs: update CLAUDE.md with new rules"')"
+
+assert_allow ".claude/settings.json path in commit message does not trigger" \
+  "$(make_input 'git commit -m "fix: update .claude/settings.json deny list"')"
+
+assert_allow "claude-config repo name in commit message does not trigger" \
+  "$(make_input 'git commit -m "feat: track global config in claude-config repo"')"
+
+assert_allow "multiple path references with claude do not trigger" \
+  "$(make_input 'git commit -m "feat: symlink ~/.claude/CLAUDE.md to claude-config/global/"')"
+
 # ─────────────────────────────────────────────
 # Section 6: Edge cases
 # ─────────────────────────────────────────────
