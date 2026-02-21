@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# pre-push-hook.sh — PreToolUse hook that gates git push on full verification
+# pre-push-hook.sh — PreToolUse hook that gates git push on standard security check
 #
 # Installed as a Claude Code PreToolUse hook on Bash.
-# Detects git push commands, runs full verification (Build, Type Check,
-# Lint, Security, Tests) and blocks the push if any phase fails.
+# Detects git push commands, runs standard security checks (debug code,
+# .only leaks) and blocks the push if any check fails.
 #
-# This is the middle tier of verification (Decision 10):
-#   git commit   → quick+lint (pre-commit-hook.sh)
-#   git push     → full verification (this hook)
-#   gh pr create → pre-pr verification (pre-pr-hook.sh)
+# This is the incremental middle tier of verification:
+#   git commit   → build, typecheck, lint (pre-commit-hook.sh)
+#   git push     → standard security (this hook)
+#   gh pr create → expanded security, tests (pre-pr-hook.sh)
 #
-# Phase ordering per Decision 12: Security before Tests (fail-fast).
+# Each tier runs only checks not covered by earlier tiers.
 #
 # Input: JSON on stdin from Claude Code (PreToolUse event)
 # Output: JSON on stdout with permissionDecision
@@ -43,16 +43,7 @@ fi
 # Resolve script directory (same directory as this script)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Run project detection
-DETECTION=$("$SCRIPT_DIR/detect-project.sh" "$PROJECT_DIR" 2>/dev/null || echo '{"project_type":"unknown"}')
-
-# Extract available commands for full verification mode
-CMD_BUILD=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('build') or '')" 2>/dev/null || echo "")
-CMD_TYPECHECK=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('typecheck') or '')" 2>/dev/null || echo "")
-CMD_LINT=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('lint') or '')" 2>/dev/null || echo "")
-CMD_TEST=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('test') or '')" 2>/dev/null || echo "")
-
-# Compute diff base for scoping lint and security checks (Decision 7)
+# Compute diff base for scoping security checks (Decision 7)
 # Hooks scope checks to branch changes, not the whole repo.
 DIFF_BASE=$(git -C "$PROJECT_DIR" rev-parse --abbrev-ref '@{upstream}' 2>/dev/null || echo "")
 if [ -z "$DIFF_BASE" ]; then
@@ -63,67 +54,21 @@ if [ -z "$DIFF_BASE" ]; then
   fi
 fi
 
-# Run verification phases in order, stop on first failure
+# Run standard security check (the only phase at push tier)
+# Build, typecheck, and lint already passed at commit time.
+# Expanded security and tests are deferred to the PR tier.
 FAILED_PHASE=""
 FAILURE_OUTPUT=""
 
-run_phase() {
-  local phase_name="$1"
-  local phase_cmd="$2"
-
-  if [ -z "$phase_cmd" ]; then
-    return 0  # Skip phases with no command
-  fi
-
-  local output
-  output=$("$SCRIPT_DIR/verify-phase.sh" "$phase_name" "$phase_cmd" "$PROJECT_DIR" 2>&1)
-  local exit_code=$?
-
-  if [ $exit_code -ne 0 ]; then
-    FAILED_PHASE="$phase_name"
-    FAILURE_OUTPUT="$output"
-    return 1
-  fi
-  return 0
-}
-
-# Full verification: Build → Type Check → Lint → Security → Tests (Decision 12)
-
-# Phase 1: Build
-run_phase "build" "$CMD_BUILD" || true
-
-# Phase 2: Type Check
-if [ -z "$FAILED_PHASE" ]; then
-  run_phase "typecheck" "$CMD_TYPECHECK" || true
-fi
-
-# Phase 3: Lint — scoped to branch diff (Decision 7)
-if [ -z "$FAILED_PHASE" ]; then
-  LINT_SCOPE="${DIFF_BASE:-staged}"
-  lint_output=$("$SCRIPT_DIR/lint-changed.sh" "$LINT_SCOPE" "$PROJECT_DIR" "$CMD_LINT" 2>&1)
-  if [ $? -ne 0 ]; then
-    FAILED_PHASE="lint"
-    FAILURE_OUTPUT="$lint_output"
-  fi
-fi
-
-# Phase 4: Security (standard mode, before tests per Decision 12)
-if [ -z "$FAILED_PHASE" ]; then
-  security_output=$("$SCRIPT_DIR/security-check.sh" "standard" "$PROJECT_DIR" "$DIFF_BASE" 2>&1)
-  if [ $? -ne 0 ]; then
-    FAILED_PHASE="security"
-    FAILURE_OUTPUT="$security_output"
-  fi
-fi
-
-# Phase 5: Tests (last — most expensive phase)
-if [ -z "$FAILED_PHASE" ]; then
-  run_phase "test" "$CMD_TEST" || true
+security_output=$("$SCRIPT_DIR/security-check.sh" "standard" "$PROJECT_DIR" "$DIFF_BASE" 2>&1)
+if [ $? -ne 0 ]; then
+  FAILED_PHASE="security"
+  FAILURE_OUTPUT="$security_output"
 fi
 
 # Return decision
 if [ -n "$FAILED_PHASE" ]; then
-  # Verification failed — deny the push
+  # Security check failed — deny the push
   VERIFY_FAILED_PHASE="$FAILED_PHASE" VERIFY_FAILURE_OUTPUT="$FAILURE_OUTPUT" python3 -c "
 import json, os
 
@@ -138,7 +83,7 @@ MAX_OUTPUT = 4000
 if len(output) > MAX_OUTPUT:
     output = output[:MAX_OUTPUT] + '\n\n... (output truncated)'
 
-reason = f'Push blocked — full verification failed at phase: {phase}. Fix the underlying code to resolve the error. NEVER add suppression annotations (@ts-ignore, type:ignore, lint-disable) to bypass the check — fix the actual problem. The ONE exception: eslint-disable-line no-console is allowed for intentional CLI output (the security check already accepts it).\n\n{output}'
+reason = f'Push blocked — security check failed at phase: {phase}. Fix the underlying code to resolve the error. NEVER add suppression annotations (@ts-ignore, type:ignore, lint-disable) to bypass the check — fix the actual problem. The ONE exception: eslint-disable-line no-console is allowed for intentional CLI output (the security check already accepts it).\n\n{output}'
 result = {
     'hookSpecificOutput': {
         'hookEventName': 'PreToolUse',
@@ -149,6 +94,6 @@ result = {
 print(json.dumps(result))
 "
 else
-  # All phases passed
-  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"verify: push full check passed ✓","additionalContext":"verify: push full verification passed (build, typecheck, lint, security, tests) ✓"}}'
+  # Security check passed
+  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"verify: push security check passed ✓","additionalContext":"verify: push security check passed (standard security) ✓"}}'
 fi
