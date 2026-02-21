@@ -17,6 +17,12 @@ The first two are entirely eliminable by running the test harness in Python. The
 
 **Impact**: The commit message tests alone (33 cases) take ~20 seconds. The full suite across all 8 test files adds significant friction to every push and PR from this repo. This discourages running tests locally and slows the development feedback loop.
 
+### Test Discovery Gap
+
+`detect-project.sh` finds test commands by reading standard config files (`package.json`, `go.mod`, `Makefile`, etc.). Projects without these files — including `claude-config` itself — return `test: null`, causing the PR hook to **silently skip the test phase entirely**. This means repos with non-standard test setups (shell test suites, custom runners, Python scripts without `pyproject.toml`) get no test coverage at the PR gate despite having tests.
+
+This gap affects any project where tests exist but aren't discoverable through conventional package manager config. The Python test harness migration must also solve test discovery so the PR hook can find and run the tests.
+
 ## Solution
 
 Rewrite the test harness in Python (stdlib only, no external dependencies), keeping all hooks as bash scripts. JSON generation and parsing become in-memory Python operations. Only hook/script invocations remain as subprocesses.
@@ -64,7 +70,9 @@ Provides:
 - [ ] Combined runner works (`python3 run_tests.py`)
 - [ ] No external Python dependencies required (stdlib only)
 - [ ] Bash test files removed after Python equivalents confirmed
-- [ ] Verification hooks updated to invoke Python tests
+- [ ] `detect-project.sh` discovers test commands for non-standard projects (including this repo)
+- [ ] PR hook successfully runs tests for `claude-config` (no more silent skip)
+- [ ] Any project can declare its test command via `.claude/verify.json` override
 
 ## Architecture Decisions
 
@@ -133,9 +141,16 @@ Provides:
 - [ ] Port `test-security-check.sh` to `test_security_check.py`
 - [ ] Validate: all 8 Python test files pass, matching bash results
 
-### Milestone 4: Cleanup and Verification
+### Milestone 4: Test Discovery and Hook Integration
+- [ ] Add test discovery to `detect-project.sh` for non-standard projects:
+  - Check for `run_tests.py` (this repo's Python test runner)
+  - Check for executable `test-*.sh` files in common locations
+  - Support a `.claude/verify.json` override file where any project can declare its test command explicitly
+- [ ] Wire the Python test runner as the detected test command for `claude-config`
+- [ ] Verify the PR hook (`pre-pr-hook.sh`) now discovers and runs tests for this repo
+
+### Milestone 5: Cleanup
 - [ ] Remove all 8 bash test files (`test-*.sh`)
-- [ ] Update verification hook test invocation to use Python runner
 - [ ] Update any references to `.sh` test files in settings or documentation
 - [ ] Measure and document before/after performance (target: 50%+ improvement)
 
