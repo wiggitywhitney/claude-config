@@ -39,6 +39,20 @@ Complete the PRD implementation workflow including branch management, pull reque
 
 **Note**: Tests will run automatically in the CI/CD pipeline when the PR is created. Do not run tests locally during the completion workflow.
 
+### 1.5. Knowledge Capture (Anki Cards)
+
+Before starting the PR workflow, capture what was built so the human user can learn and retain the concepts.
+
+- [ ] **Scan for existing cards**: Read files in the Anki finished directory (defined as `ANKI_FINISHED_DIR` in the `/anki` skill) to check for cards already covering this PRD's topics. Do not create duplicates of concepts already captured.
+- [ ] **Read the PRD document**: Review milestones, decision log, architecture choices, and requirements
+- [ ] **Read key source files**: Scan the main files created or modified during implementation (use git diff against main to identify them)
+- [ ] **Invoke the `/anki` skill**: Create flashcards sourced from the PRD and the code — not from conversation context. Focus on:
+  - Architectural decisions and why they were made
+  - New concepts, patterns, or technologies introduced
+  - How components fit together at a high level
+  - Surprising or non-obvious design choices from the decision log
+  - Do NOT create cards for implementation minutiae, boilerplate, or things the user already knows
+
 ### 2. Branch and Commit Management
 
 **For Documentation-Only Completions:**

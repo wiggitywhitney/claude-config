@@ -1,6 +1,6 @@
 # PRD #8: Go Language Verification Support
 
-**Status**: Not Started
+**Status**: Complete
 **Priority**: High
 **Created**: 2026-02-20
 **Issue**: [#8](https://github.com/wiggitywhitney/claude-config/issues/8)
@@ -27,14 +27,14 @@ Add full Go project support across the verification infrastructure:
 
 ## Success Criteria
 
-- [ ] `detect-project.sh` returns correct build/typecheck/lint/test commands for a Go project with `go.mod`
-- [ ] `detect-project.sh` detects and uses Makefile targets when available (Kubebuilder pattern)
-- [ ] `lint-changed.sh` scopes `golangci-lint` to changed `.go` files on commit, full lint on push
-- [ ] `detect-test-tiers.sh` correctly identifies Go unit, integration, and e2e test tiers
-- [ ] Pre-commit hook runs `go build`/`go vet`/`golangci-lint` for Go projects
-- [ ] Pre-push hook runs full test suite for Go projects
-- [ ] `rules/languages/go.md` contains actionable Go patterns from real Kubebuilder usage
-- [ ] All verification hooks pass cleanly on k8s-vectordb-sync after scaffolding
+- [x] `detect-project.sh` returns correct build/typecheck/lint/test commands for a Go project with `go.mod`
+- [x] `detect-project.sh` detects and uses Makefile targets when available (Kubebuilder pattern)
+- [x] `lint-changed.sh` scopes `golangci-lint` to changed `.go` files on commit, full lint on push
+- [x] `detect-test-tiers.sh` correctly identifies Go unit, integration, and e2e test tiers
+- [x] Pre-commit hook runs `go build`/`go vet`/`golangci-lint` for Go projects
+- [x] Pre-push hook runs full test suite for Go projects
+- [x] `rules/languages/go.md` contains actionable Go patterns from real Kubebuilder usage
+- [x] All verification hooks pass cleanly against a real Go project (Decision 5: validated against minimal compilable Go project)
 
 ## Architecture Decisions
 
@@ -66,6 +66,13 @@ Add full Go project support across the verification infrastructure:
 **Rationale**: Go's build tag system is the idiomatic way to separate test tiers. `go test ./...` runs unit tests by default; `go test -tags=integration ./...` adds integration tests. This is the convention used by Kubebuilder controller-runtime projects.
 **Impact**: `detect-test-tiers.sh` greps for build tags and envtest imports.
 
+### Decision 5: Validate Against Minimal Go Project Instead of k8s-vectordb-sync
+
+**Date**: 2026-02-21
+**Decision**: Validate Milestone 5 against a purpose-built minimal Go project instead of k8s-vectordb-sync.
+**Rationale**: k8s-vectordb-sync lacks Go scaffolding (no `go.mod`, no Go source files). Blocking PRD 8 on an external project's scaffolding creates an unnecessary dependency. A minimal compilable Go project with Makefile, build-tagged tests, and multi-package structure exercises the same code paths. k8s-vectordb-sync-specific validation will happen naturally when that project is scaffolded.
+**Impact**: Milestone 5 title updated from "Against k8s-vectordb-sync" to "Against Real Go Project". All hooks validated end-to-end with real Go 1.24 tooling.
+
 ## Content Location Map
 
 All changes are within the existing claude-config verification infrastructure:
@@ -82,38 +89,38 @@ All changes are within the existing claude-config verification infrastructure:
 ## Implementation Milestones
 
 ### Milestone 1: Go Command Detection in detect-project.sh
-- [ ] Add Go command detection block (parallel to the Node.js block at lines 69-123)
-- [ ] Detect Makefile targets: `make build`, `make lint`, `make test`, `make vet`
-- [ ] Fall back to Go CLI: `go build ./...`, `go vet ./...`, `go test ./...`
-- [ ] Detect `golangci-lint` availability and prefer it over `go vet` for lint command
-- [ ] Leave `CMD_TYPECHECK` empty (Decision 3: go build implies typecheck)
-- [ ] Write tests validating Go detection with and without Makefile
+- [x] Add Go command detection block (parallel to the Node.js block at lines 69-123)
+- [x] Detect Makefile targets: `make build`, `make lint`, `make test`, `make vet`
+- [x] Fall back to Go CLI: `go build ./...`, `go vet ./...`, `go test ./...`
+- [x] Detect `golangci-lint` availability and prefer it over `go vet` for lint command
+- [x] Leave `CMD_TYPECHECK` empty (Decision 3: go build implies typecheck)
+- [x] Write tests validating Go detection with and without Makefile
 
 ### Milestone 2: Go Lint Scoping in lint-changed.sh
-- [ ] Extend file extension filter to include `.go` files
-- [ ] Add Go linter detection (golangci-lint config, or fall back to go vet)
-- [ ] Implement diff-scoped Go linting using `golangci-lint run --new-from-rev=<ref>` for branch scope
-- [ ] For staged scope, lint changed `.go` files directly: `golangci-lint run <files>`
-- [ ] Write tests validating Go lint scoping
+- [x] Extend file extension filter to include `.go` files
+- [x] Add Go linter detection (golangci-lint config, or fall back to go vet)
+- [x] Implement diff-scoped Go linting using `golangci-lint run --new-from-rev=<ref>` for branch scope
+- [x] For staged scope, lint changed `.go` files directly: `golangci-lint run <files>`
+- [x] Write tests validating Go lint scoping
 
 ### Milestone 3: Go Test Tier Detection in detect-test-tiers.sh
-- [ ] Add Go test tier detection block (parallel to Node.js and Python blocks)
-- [ ] Unit: detect `_test.go` files without integration/e2e build tags
-- [ ] Integration: detect `//go:build integration` tags or `tests/integration/` directory
-- [ ] E2E: detect `//go:build e2e` tags, envtest usage, or Kind cluster setup
-- [ ] Write tests validating Go test tier detection
+- [x] Add Go test tier detection block (parallel to Node.js and Python blocks)
+- [x] Unit: detect `_test.go` files without integration/e2e build tags
+- [x] Integration: detect `//go:build integration` tags or `tests/integration/` directory
+- [x] E2E: detect `//go:build e2e` tags, envtest usage, or Kind cluster setup
+- [x] Write tests validating Go test tier detection
 
 ### Milestone 4: Go Security Checks and Language Rules
-- [ ] Extend `security-check.sh` debug code patterns to Go files (`fmt.Println`, `fmt.Printf` in non-main packages, `log.Print` without structured logger)
-- [ ] Populate `rules/languages/go.md` with patterns from real Kubebuilder usage
-- [ ] Ensure `.verify-skip` and eslint-disable equivalents work for Go (e.g., `//nolint` comments)
+- [x] Extend `security-check.sh` debug code patterns to Go files (`fmt.Println`, `fmt.Printf` in non-main packages, `log.Print` without structured logger)
+- [x] Populate `rules/languages/go.md` with patterns from real Kubebuilder usage
+- [x] Ensure `.verify-skip` and eslint-disable equivalents work for Go (e.g., `//nolint` comments)
 
-### Milestone 5: Integration Validation Against k8s-vectordb-sync
-- [ ] Run full verification suite against k8s-vectordb-sync after Kubebuilder scaffolding
-- [ ] Verify pre-commit hook detects and runs Go build + lint
-- [ ] Verify pre-push hook runs Go tests
-- [ ] Verify test tier warnings are accurate
-- [ ] Fix any edge cases discovered during real-project validation
+### Milestone 5: Integration Validation Against Real Go Project
+- [x] Run full verification suite against a compilable Go project (Decision 5: used minimal Go project instead of k8s-vectordb-sync)
+- [x] Verify pre-commit hook detects and runs Go build + lint
+- [x] Verify pre-push hook runs Go tests
+- [x] Verify test tier warnings are accurate
+- [x] Fix any edge cases discovered during real-project validation (none found)
 
 ## Dependencies
 

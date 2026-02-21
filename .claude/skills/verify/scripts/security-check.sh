@@ -4,7 +4,7 @@
 # Usage: security-check.sh [mode] [project-directory] [diff-base]
 #
 # Modes:
-#   standard — Check for debug code and .only (default)
+#   standard — Check for debug code and .only (JS/TS + Go) (default)
 #   pre-pr   — Standard checks + npm audit + secrets + .env check
 #
 # Diff scoping (Decision 7):
@@ -17,8 +17,9 @@
 #   path patterns to .verify-skip in the project root (one pattern per line).
 #   Example: .obsidian/plugins/ to skip Obsidian plugin vendor code.
 #
-#   For inline suppression of individual lines, add an eslint-disable comment
-#   (e.g., // eslint-disable-line no-console).
+#   For inline suppression of individual lines:
+#     JS/TS: add // eslint-disable-line no-console
+#     Go:    add //nolint on the line
 #
 # Known vulnerabilities:
 #   npm audit findings for packages with no available fix can be acknowledged in
@@ -159,7 +160,34 @@ diff_grep() {
   fi
 }
 
+# --- Helper: filter Go matches to non-main packages only ---
+# Input: matches in file:line:content format (one per line) via stdin
+# Output: only matches from files that don't declare "package main"
+# Caches per-file lookups; assumes git grep output is sorted by file.
+filter_go_non_main() {
+  local last_file=""
+  local last_is_main=""
+  while IFS= read -r match_line; do
+    [ -z "$match_line" ] && continue
+    local file="${match_line%%:*}"
+    if [ "$file" != "$last_file" ]; then
+      last_file="$file"
+      if head -5 "$file" 2>/dev/null | grep -q '^package main'; then
+        last_is_main="yes"
+      else
+        last_is_main="no"
+      fi
+    fi
+    if [ "$last_is_main" = "no" ]; then
+      echo "$match_line"
+    fi
+  done
+}
+
 # --- Standard checks (run in all modes) ---
+
+GO_FMT_PRINTS=""
+GO_LOG_PRINTS=""
 
 if [ -n "$DIFF_BASE" ]; then
   # Diff-scoped: only check added lines in branch changes (Decision 7)
@@ -172,6 +200,19 @@ if [ -n "$DIFF_BASE" ]; then
 
   ONLY_TESTS=$(diff_grep '\.only[[:space:]]*\(' '' "$DIFF_BASE" \
     '*.test.*' '*.spec.*' '*__tests__*' "${BASE_SKIP[@]}")
+
+  # Go debug code: fmt.Print* and log.Print* in non-main packages
+  GO_FMT_RAW=$(diff_grep 'fmt\.Print' 'nolint' "$DIFF_BASE" \
+    '*.go' ':!*_test.go' ':!vendor' "${BASE_SKIP[@]}")
+  if [ -n "$GO_FMT_RAW" ]; then
+    GO_FMT_PRINTS=$(echo "$GO_FMT_RAW" | filter_go_non_main)
+  fi
+
+  GO_LOG_RAW=$(diff_grep 'log\.Print' 'nolint' "$DIFF_BASE" \
+    '*.go' ':!*_test.go' ':!vendor' "${BASE_SKIP[@]}")
+  if [ -n "$GO_LOG_RAW" ]; then
+    GO_LOG_PRINTS=$(echo "$GO_LOG_RAW" | filter_go_non_main)
+  fi
 else
   # Repo-scoped: check all tracked files (for /verify skill ad-hoc use)
 
@@ -182,6 +223,17 @@ else
 
   # .only uses BASE_SKIP (not SOURCE_SKIP) so test file includes aren't cancelled out
   ONLY_TESTS=$(git grep -n '\.only[[:space:]]*(' -- '*.test.*' '*.spec.*' '*__tests__*' "${BASE_SKIP[@]}" 2>/dev/null || true)
+
+  # Go debug code: fmt.Print* and log.Print* in non-main packages
+  GO_FMT_RAW=$(git grep -n 'fmt\.Print' -- '*.go' ':!*_test.go' ':!vendor' "${BASE_SKIP[@]}" 2>/dev/null | grep -v 'nolint' || true)
+  if [ -n "$GO_FMT_RAW" ]; then
+    GO_FMT_PRINTS=$(echo "$GO_FMT_RAW" | filter_go_non_main)
+  fi
+
+  GO_LOG_RAW=$(git grep -n 'log\.Print' -- '*.go' ':!*_test.go' ':!vendor' "${BASE_SKIP[@]}" 2>/dev/null | grep -v 'nolint' || true)
+  if [ -n "$GO_LOG_RAW" ]; then
+    GO_LOG_PRINTS=$(echo "$GO_LOG_RAW" | filter_go_non_main)
+  fi
 fi
 
 # Process findings (same for both scopes)
@@ -214,6 +266,26 @@ if [ -n "$ONLY_TESTS" ]; then
     fi
     FINDINGS="${FINDINGS}    $line\n"
   done <<< "$ONLY_TESTS"
+fi
+
+if [ -n "$GO_FMT_PRINTS" ]; then
+  add_finding "Found fmt.Print statements in Go source files (non-main packages):"
+  while IFS= read -r line; do
+    if [ ${#line} -gt 200 ]; then
+      line="${line:0:200}..."
+    fi
+    FINDINGS="${FINDINGS}    $line\n"
+  done <<< "$GO_FMT_PRINTS"
+fi
+
+if [ -n "$GO_LOG_PRINTS" ]; then
+  add_finding "Found log.Print statements in Go source files (non-main packages):"
+  while IFS= read -r line; do
+    if [ ${#line} -gt 200 ]; then
+      line="${line:0:200}..."
+    fi
+    FINDINGS="${FINDINGS}    $line\n"
+  done <<< "$GO_LOG_PRINTS"
 fi
 
 # --- Pre-PR additional checks ---
@@ -366,10 +438,13 @@ else
   echo "  If this is THIRD-PARTY/VENDOR code you don't control:"
   echo "    Add the file or directory path to .verify-skip in the project root."
   echo "    Example: echo '.obsidian/plugins/' >> .verify-skip"
-  echo "    This skips the path for ALL security checks (console.log, debugger, .only)."
+  echo "    This skips the path for ALL security checks."
   echo ""
-  echo "  For INTENTIONAL console.log in your own code (CLI output, logging):"
+  echo "  For INTENTIONAL console.log in your own JS/TS code (CLI output, logging):"
   echo "    Add // eslint-disable-line no-console on the line."
+  echo ""
+  echo "  For INTENTIONAL fmt.Print/log.Print in your own Go code:"
+  echo "    Add //nolint on the line. Main packages are already excluded."
   echo ""
   echo "  For npm audit vulnerabilities with NO AVAILABLE FIX:"
   echo "    Add the package name to .audit-known-vulns in the project root (one per line)."
