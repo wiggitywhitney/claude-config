@@ -154,10 +154,10 @@ Add a shared utility that checks whether all changed files are documentation-onl
 - [x] Update success message from "full verification" to "security check"
 
 ### Milestone 3: Make Pre-PR Hook Incremental (Expanded Security + Tests)
-- [ ] Remove build, typecheck, and lint phases from `pre-pr-hook.sh`
-- [ ] Keep expanded security and tests as the only verification phases
-- [ ] Update header comments to reflect new tier responsibility
-- [ ] Update success message from "pre-pr verification" to "security+tests check"
+- [x] Remove build, typecheck, and lint phases from `pre-pr-hook.sh`
+- [x] Keep expanded security and tests as the only verification phases
+- [x] Update header comments to reflect new tier responsibility
+- [x] Update success message from "pre-pr verification" to "security+tests check"
 
 ### Milestone 4: Silent Allow Responses for All Hooks
 - [ ] Update `pre-commit-hook.sh` allow response: remove `permissionDecisionReason`, keep `additionalContext`

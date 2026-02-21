@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
-# pre-pr-hook.sh — PreToolUse hook that gates PR creation on pre-pr verification
+# pre-pr-hook.sh — PreToolUse hook that gates PR creation on expanded security + tests
 #
 # Installed as a Claude Code PreToolUse hook on Bash.
-# Detects gh pr create commands, runs pre-pr verification (Build, Type Check,
-# Lint, Security with expanded checks, Tests) and blocks PR creation if any
-# phase fails.
+# Detects gh pr create commands, runs expanded security checks and tests,
+# and blocks PR creation if any phase fails.
 #
-# This is the heaviest tier of verification (Decision 10):
-#   git commit   → quick+lint (pre-commit-hook.sh)
-#   git push     → full verification (pre-push-hook.sh)
-#   gh pr create → pre-pr verification (this hook)
+# This is the incremental final tier of verification:
+#   git commit   → build, typecheck, lint (pre-commit-hook.sh)
+#   git push     → standard security (pre-push-hook.sh)
+#   gh pr create → expanded security, tests (this hook)
 #
-# Pre-pr security checks include everything in standard mode plus:
+# Each tier runs only checks not covered by earlier tiers.
+#
+# Expanded security checks include everything beyond standard mode:
 #   - npm audit for dependency vulnerabilities
 #   - Grep for hardcoded secrets/API keys in staged diff
 #   - Check that no .env files are staged
@@ -45,18 +46,13 @@ PROJECT_DIR=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.s
 # Resolve script directory (same directory as this script)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Run project detection
+# Run project detection (needed for test command)
 DETECTION=$("$SCRIPT_DIR/detect-project.sh" "$PROJECT_DIR" 2>/dev/null || echo '{"project_type":"unknown"}')
 
-PROJECT_TYPE=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('project_type','unknown'))" 2>/dev/null || echo "unknown")
-
-# Extract available commands for pre-pr verification mode
-CMD_BUILD=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('build') or '')" 2>/dev/null || echo "")
-CMD_TYPECHECK=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('typecheck') or '')" 2>/dev/null || echo "")
-CMD_LINT=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('lint') or '')" 2>/dev/null || echo "")
+# Extract test command — build, typecheck, and lint already passed at commit time
 CMD_TEST=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('test') or '')" 2>/dev/null || echo "")
 
-# Compute diff base for scoping lint and security checks (Decision 7)
+# Compute diff base for scoping security checks (Decision 7)
 # Hooks scope checks to branch changes, not the whole repo.
 DIFF_BASE=$(git -C "$PROJECT_DIR" rev-parse --abbrev-ref '@{upstream}' 2>/dev/null || echo "")
 if [ -z "$DIFF_BASE" ]; then
@@ -91,36 +87,19 @@ run_phase() {
   return 0
 }
 
-# Pre-PR verification: Build → Type Check → Lint → Security (expanded) → Tests (Decision 12)
+# Pre-PR verification: Security (expanded) → Tests
+# Build, typecheck, and lint already passed at commit time.
+# Standard security already passed at push time.
+# This tier adds expanded security and tests only.
 
-# Phase 1: Build
-run_phase "build" "$CMD_BUILD" || true
-
-# Phase 2: Type Check
-if [ -z "$FAILED_PHASE" ]; then
-  run_phase "typecheck" "$CMD_TYPECHECK" || true
+# Phase 1: Security (pre-pr expanded mode, before tests per Decision 12)
+security_output=$("$SCRIPT_DIR/security-check.sh" "pre-pr" "$PROJECT_DIR" "$DIFF_BASE" 2>&1)
+if [ $? -ne 0 ]; then
+  FAILED_PHASE="security"
+  FAILURE_OUTPUT="$security_output"
 fi
 
-# Phase 3: Lint — scoped to branch diff (Decision 7)
-if [ -z "$FAILED_PHASE" ]; then
-  LINT_SCOPE="${DIFF_BASE:-staged}"
-  lint_output=$("$SCRIPT_DIR/lint-changed.sh" "$LINT_SCOPE" "$PROJECT_DIR" "$CMD_LINT" 2>&1)
-  if [ $? -ne 0 ]; then
-    FAILED_PHASE="lint"
-    FAILURE_OUTPUT="$lint_output"
-  fi
-fi
-
-# Phase 4: Security (pre-pr expanded mode, before tests per Decision 12)
-if [ -z "$FAILED_PHASE" ]; then
-  security_output=$("$SCRIPT_DIR/security-check.sh" "pre-pr" "$PROJECT_DIR" "$DIFF_BASE" 2>&1)
-  if [ $? -ne 0 ]; then
-    FAILED_PHASE="security"
-    FAILURE_OUTPUT="$security_output"
-  fi
-fi
-
-# Phase 5: Tests (last — most expensive phase)
+# Phase 2: Tests (last — most expensive phase)
 if [ -z "$FAILED_PHASE" ]; then
   run_phase "test" "$CMD_TEST" || true
 fi
@@ -142,7 +121,7 @@ MAX_OUTPUT = 4000
 if len(output) > MAX_OUTPUT:
     output = output[:MAX_OUTPUT] + '\n\n... (output truncated)'
 
-reason = f'PR creation blocked — pre-pr verification failed at phase: {phase}. Fix the underlying code to resolve the error. NEVER add suppression annotations (@ts-ignore, type:ignore, lint-disable) to bypass the check — fix the actual problem. The ONE exception: eslint-disable-line no-console is allowed for intentional CLI output (the security check already accepts it).\n\n{output}'
+reason = f'PR creation blocked — security+tests check failed at phase: {phase}. Fix the underlying code to resolve the error. NEVER add suppression annotations (@ts-ignore, type:ignore, lint-disable) to bypass the check — fix the actual problem. The ONE exception: eslint-disable-line no-console is allowed for intentional CLI output (the security check already accepts it).\n\n{output}'
 result = {
     'hookSpecificOutput': {
         'hookEventName': 'PreToolUse',
@@ -154,5 +133,5 @@ print(json.dumps(result))
 "
 else
   # All phases passed
-  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"verify: pre-pr check passed ✓","additionalContext":"verify: pre-pr verification passed (build, typecheck, lint, security+audit, tests) ✓"}}'
+  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"verify: PR security+tests check passed ✓","additionalContext":"verify: PR security+tests check passed (expanded security, tests) ✓"}}'
 fi
