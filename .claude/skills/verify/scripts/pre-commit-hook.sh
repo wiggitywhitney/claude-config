@@ -7,8 +7,8 @@
 #
 # This is the lightest tier of verification (Decision 10):
 #   git commit  → quick+lint (this hook)
-#   git push    → full verification (pre-push-hook.sh)
-#   gh pr create → pre-pr verification (pre-pr-hook.sh)
+#   git push    → standard security (pre-push-hook.sh)
+#   gh pr create → expanded security, tests (pre-pr-hook.sh)
 #
 # Input: JSON on stdin from Claude Code (PreToolUse event)
 # Output: JSON on stdout with permissionDecision
