@@ -1,7 +1,3 @@
-<!--
-Thank you for contributing to DevOps AI Toolkit! Please fill out this template to help us review your changes.
--->
-
 ## Description
 <!-- Provide a clear and concise description of your changes -->
 
@@ -85,7 +81,6 @@ See MIGRATION.md for upgrade guide.
 - [ ] Documentation updated (if applicable)
 - [ ] Code comments added for complex logic
 - [ ] API documentation updated (if API changes)
-- [ ] [CONTRIBUTING.md](CONTRIBUTING.md) guidelines followed
 
 ## Security Checklist
 <!-- Complete if your changes affect security -->

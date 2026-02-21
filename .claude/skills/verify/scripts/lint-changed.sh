@@ -119,15 +119,10 @@ if [ -n "$GO_FILES" ]; then
     HAS_GOLANGCI_LINT=true
   fi
 
-  # Detect golangci-lint config
-  HAS_GOLANGCI_CONFIG=false
-  if [ -f ".golangci.yml" ] || [ -f ".golangci.yaml" ] || [ -f ".golangci.toml" ] || [ -f ".golangci.json" ]; then
-    HAS_GOLANGCI_CONFIG=true
-  fi
-
   if [ "$HAS_GOLANGCI_LINT" = true ]; then
     if [ "$SCOPE" = "staged" ]; then
       # Staged scope: lint specific changed files
+      # shellcheck disable=SC2086  # Word splitting is intentional — GO_FILE_ARGS is space-separated file list
       golangci-lint run $GO_FILE_ARGS 2>&1
       GO_EXIT=$?
     else

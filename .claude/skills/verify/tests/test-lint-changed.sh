@@ -197,7 +197,7 @@ echo 'package util' > util.go
 git add main.go util.go
 
 GOLANGCI_LOG="$TEMP_BASE/golangci-staged.log"
-> "$GOLANGCI_LOG"
+: > "$GOLANGCI_LOG"
 
 OUTPUT=$(GOLANGCI_LOG="$GOLANGCI_LOG" PATH="$PATH_WITH_LINT" "$LINT_CHANGED" "staged" "$REPO_GO_STAGED" "go vet ./..." 2>&1)
 EXIT=$?
@@ -228,7 +228,7 @@ git add main.go
 git commit -q -m "add main.go"
 
 GOLANGCI_LOG="$TEMP_BASE/golangci-branch.log"
-> "$GOLANGCI_LOG"
+: > "$GOLANGCI_LOG"
 
 # Use HEAD~1 as the diff base (simulating branch diff)
 OUTPUT=$(GOLANGCI_LOG="$GOLANGCI_LOG" PATH="$PATH_WITH_LINT" "$LINT_CHANGED" "HEAD~1" "$REPO_GO_BRANCH" "go vet ./..." 2>&1)
@@ -357,7 +357,7 @@ echo 'package main' > main.go
 git add main.go
 
 GOLANGCI_LOG="$TEMP_BASE/golangci-config.log"
-> "$GOLANGCI_LOG"
+: > "$GOLANGCI_LOG"
 
 OUTPUT=$(GOLANGCI_LOG="$GOLANGCI_LOG" PATH="$PATH_WITH_LINT" "$LINT_CHANGED" "staged" "$REPO_GO_CONFIG" "go vet ./..." 2>&1)
 EXIT=$?

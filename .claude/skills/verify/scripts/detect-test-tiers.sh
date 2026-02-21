@@ -232,7 +232,7 @@ if [ "$PROJECT_TYPE" = "go" ]; then
     # --- Unit tests ---
     # A _test.go file is a unit test if it does NOT have integration or e2e build tags
     while IFS= read -r testfile; do
-      if ! head -5 "$testfile" 2>/dev/null | grep -qE '//go:build\s+(integration|e2e)'; then
+      if ! grep -m1 -qE '^//go:build\s+(integration|e2e)' "$testfile" 2>/dev/null; then
         HAS_UNIT=true
         break
       fi
@@ -241,7 +241,7 @@ if [ "$PROJECT_TYPE" = "go" ]; then
     # --- Integration tests ---
     # Check for //go:build integration tag in any _test.go file
     while IFS= read -r testfile; do
-      if head -5 "$testfile" 2>/dev/null | grep -qE '//go:build\s+integration'; then
+      if grep -m1 -qE '^//go:build\s+integration' "$testfile" 2>/dev/null; then
         HAS_INTEGRATION=true
         break
       fi
@@ -250,7 +250,7 @@ if [ "$PROJECT_TYPE" = "go" ]; then
     # --- E2E tests ---
     # Check for //go:build e2e tag in any _test.go file
     while IFS= read -r testfile; do
-      if head -5 "$testfile" 2>/dev/null | grep -qE '//go:build\s+e2e'; then
+      if grep -m1 -qE '^//go:build\s+e2e' "$testfile" 2>/dev/null; then
         HAS_E2E=true
         break
       fi

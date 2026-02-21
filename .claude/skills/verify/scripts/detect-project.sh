@@ -52,14 +52,14 @@ fi
 
 # --- Determine project type ---
 
-if [ "$HAS_TSCONFIG" = true ] && [ "$HAS_PACKAGE_JSON" = true ]; then
+if [ "$HAS_GOMOD" = true ]; then
+  PROJECT_TYPE="go"
+elif [ "$HAS_TSCONFIG" = true ] && [ "$HAS_PACKAGE_JSON" = true ]; then
   PROJECT_TYPE="node-typescript"
 elif [ "$HAS_PACKAGE_JSON" = true ]; then
   PROJECT_TYPE="node-javascript"
 elif [ "$HAS_PYPROJECT" = true ]; then
   PROJECT_TYPE="python"
-elif [ "$HAS_GOMOD" = true ]; then
-  PROJECT_TYPE="go"
 elif [ "$HAS_CARGO" = true ]; then
   PROJECT_TYPE="rust"
 fi
