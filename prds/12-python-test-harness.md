@@ -66,9 +66,9 @@ Provides:
 - [ ] All 8 bash test files have equivalent Python replacements
 - [ ] Python test suite produces identical pass/fail results as bash suite
 - [ ] Full suite runtime reduced by at least 50% compared to bash version
-- [ ] Each test file is independently runnable (`python3 test_check_commit_message.py`)
-- [ ] Combined runner works (`python3 run_tests.py`)
-- [ ] No external Python dependencies required (stdlib only)
+- [x] Each test file is independently runnable (`python3 test_check_commit_message.py`)
+- [x] Combined runner works (`python3 run_tests.py`)
+- [x] No external Python dependencies required (stdlib only)
 - [ ] Bash test files removed after Python equivalents confirmed
 - [ ] `detect-project.sh` discovers test commands for non-standard projects (including this repo)
 - [ ] PR hook successfully runs tests for `claude-config` (no more silent skip)
@@ -123,12 +123,12 @@ Provides:
 ## Implementation Milestones
 
 ### Milestone 1: Shared Framework + 3 Highest-Impact Tests
-- [ ] Create `test_harness.py` with JSON builders, hook/script runner, assertions, reporter
-- [ ] Create `run_tests.py` test discovery and combined runner
-- [ ] Port `test-check-commit-message.sh` to `test_check_commit_message.py`
-- [ ] Port `test-detect-project.sh` to `test_detect_project.py`
-- [ ] Port `test-detect-test-tiers.sh` to `test_detect_test_tiers.py`
-- [ ] Validate: Python tests produce identical pass/fail results as bash equivalents
+- [x] Create `test_harness.py` with JSON builders, hook/script runner, assertions, reporter
+- [x] Create `run_tests.py` test discovery and combined runner
+- [x] Port `test-check-commit-message.sh` to `test_check_commit_message.py`
+- [x] Port `test-detect-project.sh` to `test_detect_project.py`
+- [x] Port `test-detect-test-tiers.sh` to `test_detect_test_tiers.py`
+- [x] Validate: Python tests produce identical pass/fail results as bash equivalents
 
 ### Milestone 2: Remaining PreToolUse Hook Tests
 - [ ] Port `test-check-branch-protection.sh` to `test_check_branch_protection.py`
