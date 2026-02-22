@@ -131,10 +131,10 @@ Provides:
 - [x] Validate: Python tests produce identical pass/fail results as bash equivalents
 
 ### Milestone 2: Remaining PreToolUse Hook Tests
-- [ ] Port `test-check-branch-protection.sh` to `test_check_branch_protection.py`
-- [ ] Port `test-check-coderabbit-required.sh` to `test_check_coderabbit_required.py`
-- [ ] Port `test-check-test-tiers.sh` to `test_check_test_tiers.py`
-- [ ] Validate: all 6 Python test files pass, matching bash results
+- [x] Port `test-check-branch-protection.sh` to `test_check_branch_protection.py`
+- [x] Port `test-check-coderabbit-required.sh` to `test_check_coderabbit_required.py`
+- [x] Port `test-check-test-tiers.sh` to `test_check_test_tiers.py`
+- [x] Validate: all 6 Python test files pass, matching bash results
 
 ### Milestone 3: Filesystem-Heavy Tests
 - [ ] Port `test-lint-changed.sh` to `test_lint_changed.py`

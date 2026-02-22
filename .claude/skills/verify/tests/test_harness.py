@@ -242,6 +242,45 @@ class TestResults:
                 f"Got exit={exit_code}, output={output}"
             ))
 
+    def assert_silent(self, description, hook, json_input):
+        """Assert hook exits 0 with no output (silent passthrough)."""
+        exit_code, output = run_hook(hook, json_input)
+        if exit_code == 0 and output.strip() == "":
+            self._pass(description)
+        else:
+            self._fail(description, (
+                "Expected: silent passthrough (no output)\n"
+                f"Got exit={exit_code}, output={output}"
+            ))
+
+    def assert_allow_with_warning(self, description, hook, json_input, fragment):
+        """Assert hook allows with 'allow' in output and fragment present (case-insensitive)."""
+        exit_code, output = run_hook(hook, json_input)
+        if (exit_code == 0
+                and '"allow"' in output
+                and fragment.lower() in output.lower()):
+            self._pass(description)
+        else:
+            self._fail(description, (
+                f"Expected: allow with warning containing '{fragment}'\n"
+                f"Got exit={exit_code}, output={output}"
+            ))
+
+    def assert_allow_no_reason(self, description, hook, json_input, fragment):
+        """Assert hook allows with fragment in output but no permissionDecisionReason."""
+        exit_code, output = run_hook(hook, json_input)
+        if (exit_code == 0
+                and '"allow"' in output
+                and fragment.lower() in output.lower()
+                and "permissionDecisionReason" not in output):
+            self._pass(description)
+        else:
+            self._fail(description, (
+                f"Expected: allow with warning in additionalContext only "
+                f"(no permissionDecisionReason)\n"
+                f"Got exit={exit_code}, output={output}"
+            ))
+
     # ── Field assertions (for script JSON output) ──
 
     def assert_field(self, description, json_str, field, expected):
