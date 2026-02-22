@@ -59,6 +59,11 @@ You are helping Whitney create Anki cards from a conversation she just had. The 
 - Reference specific projects, conversations, or moments of discovery
 - Example: Instead of "This causes orphaned spans," write "This is why your tool spans in cluster-whisperer were showing up in separate traces"
 
+**Three required elements for project-based cards:**
+1. **Name the repo/project explicitly** on the card front. Whitney makes cards across many projects — "your test suite" is ambiguous, but "in claude-config" is not. Say the repo name.
+2. **State the overall objective** — what was she trying to accomplish when she hit this? Not just "you were working on X" but the plain-English goal (e.g., "you were trying to speed up the verify test suite because it took minutes to run locally").
+3. **Explain the problem in plain English** — describe why she ran into the issue in concrete, human terms. Not "there was a subprocess bottleneck" but "every single test was shelling out to Python just to build a JSON string, which is why the suite took minutes for 33 tests."
+
 ### Card Back
 - **Short answer: 30 words or fewer**
 - Followed by: **CONTEXT:** section (1-3 sentences explaining why)
