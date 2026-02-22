@@ -28,6 +28,39 @@ CMD_TYPECHECK=""
 CMD_LINT=""
 CMD_TEST=""
 
+# --- Check for .claude/verify.json override ---
+# Any project can declare verification commands explicitly via this file.
+# Specified commands override auto-detection; unspecified ones fall through.
+
+VERIFY_BUILD=""
+VERIFY_TYPECHECK=""
+VERIFY_LINT=""
+VERIFY_TEST=""
+HAS_VERIFY_JSON=false
+
+if [ -f "$PROJECT_DIR/.claude/verify.json" ]; then
+  VERIFY_JSON=$(cat "$PROJECT_DIR/.claude/verify.json" 2>/dev/null || echo "")
+  PARSED=$(echo "$VERIFY_JSON" | python3 -c "
+import json, sys
+try:
+    d = json.load(sys.stdin)
+    c = d.get('commands', {})
+    print(c.get('build') or '')
+    print(c.get('typecheck') or '')
+    print(c.get('lint') or '')
+    print(c.get('test') or '')
+except Exception:
+    sys.exit(1)
+" 2>/dev/null)
+  if [ $? -eq 0 ]; then
+    HAS_VERIFY_JSON=true
+    VERIFY_BUILD=$(echo "$PARSED" | sed -n '1p')
+    VERIFY_TYPECHECK=$(echo "$PARSED" | sed -n '2p')
+    VERIFY_LINT=$(echo "$PARSED" | sed -n '3p')
+    VERIFY_TEST=$(echo "$PARSED" | sed -n '4p')
+  fi
+fi
+
 # --- Detect config files ---
 
 if [ -f "$PROJECT_DIR/package.json" ]; then
@@ -156,6 +189,21 @@ except Exception:
   elif [ -f "$PROJECT_DIR/vitest.config.js" ] || [ -f "$PROJECT_DIR/vitest.config.ts" ] || [ -f "$PROJECT_DIR/vitest.config.mjs" ]; then
     CMD_TEST="npx vitest run"
   fi
+fi
+
+# --- Fallback: detect run_tests.py for non-standard projects ---
+# If no test command was found by standard detection, check for run_tests.py
+if [ -z "$CMD_TEST" ] && [ -f "$PROJECT_DIR/run_tests.py" ]; then
+  CMD_TEST="python3 run_tests.py"
+fi
+
+# --- Apply verify.json overrides ---
+# verify.json commands take priority over auto-detected commands
+if [ "$HAS_VERIFY_JSON" = true ]; then
+  [ -n "$VERIFY_BUILD" ] && CMD_BUILD="$VERIFY_BUILD"
+  [ -n "$VERIFY_TYPECHECK" ] && CMD_TYPECHECK="$VERIFY_TYPECHECK"
+  [ -n "$VERIFY_LINT" ] && CMD_LINT="$VERIFY_LINT"
+  [ -n "$VERIFY_TEST" ] && CMD_TEST="$VERIFY_TEST"
 fi
 
 # --- Output JSON ---

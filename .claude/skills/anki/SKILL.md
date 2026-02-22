@@ -27,15 +27,8 @@ You are helping Whitney create Anki cards from a conversation she just had. The 
 2. Extract the key concepts that are worth remembering
 3. Structure them in a card-ready format (organized by theme, with clear concepts)
 4. Present the document to the user
-5. Ask: **"Save to make Anki cards directory?"** OR **"Make cards now?"**
 
-### Phase 2a: Save Document (if user chooses "save")
-
-Save to: `/Users/whitney.lee/Documents/Journal/make Anki cards/[topic].md`
-
-The user can manually make cards later from this document.
-
-### Phase 2b: Make Cards (if user chooses "make cards now")
+### Phase 2: Make Cards
 
 1. Generate actual START/END block cards following the rules below
 2. Present cards for user approval
@@ -60,10 +53,16 @@ The user can manually make cards later from this document.
 - Avoid assuming prior knowledge of the specific domain
 
 ### Personal Memory Anchors
-- When possible, tie concepts to Whitney's actual experience: "Whitney, when you implemented X in project Y, you hit this problem"
+- Personal anchors are **required** when the concept was learned through hands-on work. If Whitney built it, debugged it, or discovered it during a project, the card front **must** reference that specific experience.
+- Generic "What is X?" framing is fine for new technologies or definitions encountered for the first time.
 - Personal context makes concepts stickier and easier to recall
 - Reference specific projects, conversations, or moments of discovery
 - Example: Instead of "This causes orphaned spans," write "This is why your tool spans in cluster-whisperer were showing up in separate traces"
+
+**Three required elements for project-based cards:**
+1. **Name the repo/project explicitly** on the card front. Whitney makes cards across many projects — "your test suite" is ambiguous, but "in claude-config" is not. Say the repo name.
+2. **State the overall objective** — what was she trying to accomplish when she hit this? Not just "you were working on X" but the plain-English goal (e.g., "you were trying to speed up the verify test suite because it took minutes to run locally").
+3. **Explain the problem in plain English** — describe why she ran into the issue in concrete, human terms. Not "there was a subprocess bottleneck" but "every single test was shelling out to Python just to build a JSON string, which is why the suite took minutes for 33 tests."
 
 ### Card Back
 - **Short answer: 30 words or fewer**
