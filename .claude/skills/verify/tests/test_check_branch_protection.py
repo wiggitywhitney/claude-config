@@ -29,12 +29,12 @@ def run_tests():
         setup_git_repo(temp_dir, branch="main")
         subprocess.run(
             ["git", "checkout", "-b", "feature/test-branch", "--quiet"],
-            cwd=temp_dir, capture_output=True,
+            cwd=temp_dir, capture_output=True, check=True,
         )
         # Switch back to main for initial tests
         subprocess.run(
             ["git", "checkout", "main", "--quiet"],
-            cwd=temp_dir, capture_output=True,
+            cwd=temp_dir, capture_output=True, check=True,
         )
 
         # ─── Section 1: Non-commit commands (silent passthrough) ───
@@ -54,7 +54,7 @@ def run_tests():
 
         subprocess.run(
             ["git", "checkout", "feature/test-branch", "--quiet"],
-            cwd=temp_dir, capture_output=True,
+            cwd=temp_dir, capture_output=True, check=True,
         )
 
         t.assert_allow("commit on feature branch passes through",
@@ -68,7 +68,7 @@ def run_tests():
 
         subprocess.run(
             ["git", "checkout", "main", "--quiet"],
-            cwd=temp_dir, capture_output=True,
+            cwd=temp_dir, capture_output=True, check=True,
         )
 
         t.assert_deny("commit on main is blocked",
@@ -108,7 +108,7 @@ def run_tests():
         # Switch to feature branch for -C tests
         subprocess.run(
             ["git", "checkout", "feature/test-branch", "--quiet"],
-            cwd=temp_dir, capture_output=True,
+            cwd=temp_dir, capture_output=True, check=True,
         )
 
         t.assert_allow("commit with -C to feature branch passes through",
@@ -118,7 +118,7 @@ def run_tests():
         # Switch back to main for -C deny test
         subprocess.run(
             ["git", "checkout", "main", "--quiet"],
-            cwd=temp_dir, capture_output=True,
+            cwd=temp_dir, capture_output=True, check=True,
         )
 
         t.assert_deny("commit with -C to main is blocked",

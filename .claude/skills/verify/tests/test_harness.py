@@ -97,7 +97,7 @@ def run_script(script, *args, env=None, cwd=None):
 
     Returns (exit_code, stdout).
     """
-    cmd = [script] + list(args)
+    cmd = [script, *args]
     result = subprocess.run(
         cmd,
         capture_output=True,
@@ -113,7 +113,7 @@ def run_script_combined(script, *args, env=None, cwd=None):
 
     Equivalent to bash's 2>&1 redirection. Returns (exit_code, output).
     """
-    cmd = [script] + list(args)
+    cmd = [script, *args]
     result = subprocess.run(
         cmd,
         stdout=subprocess.PIPE,
@@ -146,7 +146,9 @@ class TempDir:
 def write_file(base_dir, relative_path, content=""):
     """Write a file at base_dir/relative_path, creating parent dirs as needed."""
     full_path = os.path.join(base_dir, relative_path)
-    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+    parent = os.path.dirname(full_path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
     with open(full_path, "w") as f:
         f.write(content)
     return full_path
