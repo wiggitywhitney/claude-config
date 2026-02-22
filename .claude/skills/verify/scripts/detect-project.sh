@@ -40,12 +40,24 @@ HAS_VERIFY_JSON=false
 
 if [ -f "$PROJECT_DIR/.claude/verify.json" ]; then
   VERIFY_JSON=$(cat "$PROJECT_DIR/.claude/verify.json" 2>/dev/null || echo "")
-  if echo "$VERIFY_JSON" | python3 -c "import json,sys; json.load(sys.stdin)" 2>/dev/null; then
+  PARSED=$(echo "$VERIFY_JSON" | python3 -c "
+import json, sys
+try:
+    d = json.load(sys.stdin)
+    c = d.get('commands', {})
+    print(c.get('build') or '')
+    print(c.get('typecheck') or '')
+    print(c.get('lint') or '')
+    print(c.get('test') or '')
+except Exception:
+    sys.exit(1)
+" 2>/dev/null)
+  if [ $? -eq 0 ]; then
     HAS_VERIFY_JSON=true
-    VERIFY_BUILD=$(echo "$VERIFY_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('build') or '')" 2>/dev/null || echo "")
-    VERIFY_TYPECHECK=$(echo "$VERIFY_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('typecheck') or '')" 2>/dev/null || echo "")
-    VERIFY_LINT=$(echo "$VERIFY_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('lint') or '')" 2>/dev/null || echo "")
-    VERIFY_TEST=$(echo "$VERIFY_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('test') or '')" 2>/dev/null || echo "")
+    VERIFY_BUILD=$(echo "$PARSED" | sed -n '1p')
+    VERIFY_TYPECHECK=$(echo "$PARSED" | sed -n '2p')
+    VERIFY_LINT=$(echo "$PARSED" | sed -n '3p')
+    VERIFY_TEST=$(echo "$PARSED" | sed -n '4p')
   fi
 fi
 

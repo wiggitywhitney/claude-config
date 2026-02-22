@@ -24,7 +24,7 @@ def _run_detect(project_dir, extra_path=None):
     env = os.environ.copy()
     if extra_path:
         env["PATH"] = extra_path + ":" + env.get("PATH", "")
-    exit_code, stdout = run_script(DETECT, project_dir, env=env)
+    _, stdout = run_script(DETECT, project_dir, env=env)
     return stdout.strip()
 
 
@@ -326,7 +326,7 @@ def run_tests():
         t.assert_field_empty("test still empty without run_tests.py",
                              output, "commands.test")
 
-    exit_code = t.summary()
+    t.summary()
     return t.passed, t.failed, t.total
 
 

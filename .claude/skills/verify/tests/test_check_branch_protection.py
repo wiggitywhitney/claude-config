@@ -125,7 +125,7 @@ def run_tests():
                       HOOK, make_hook_input(
                           f'git -C {temp_dir} commit -m "test"', "/tmp"))
 
-    exit_code = t.summary()
+    t.summary()
     return t.passed, t.failed, t.total
 
 

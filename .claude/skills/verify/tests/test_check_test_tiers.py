@@ -228,7 +228,7 @@ def run_tests():
                                         f"git -C {proj['none']} push", "/tmp"),
                                     "unit")
 
-    exit_code = t.summary()
+    t.summary()
     return t.passed, t.failed, t.total
 
 

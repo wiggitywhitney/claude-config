@@ -21,7 +21,7 @@ DETECT = script_path("detect-test-tiers.sh")
 
 def _run_detect(project_dir):
     """Run detect-test-tiers.sh against a directory."""
-    exit_code, stdout = run_script(DETECT, project_dir)
+    _, stdout = run_script(DETECT, project_dir)
     return stdout.strip()
 
 
@@ -252,7 +252,7 @@ def run_tests():
         t.assert_tier("Node.js integration still works", output, "integration", "True")
         t.assert_tier("Node.js e2e still correctly absent", output, "e2e", "False")
 
-    exit_code = t.summary()
+    t.summary()
     return t.passed, t.failed, t.total
 
 

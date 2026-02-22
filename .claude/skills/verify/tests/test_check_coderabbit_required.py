@@ -81,7 +81,7 @@ def run_tests():
         t.assert_allow("malformed JSON handled gracefully",
                        HOOK, '{"broken": true}')
 
-    exit_code = t.summary()
+    t.summary()
     return t.passed, t.failed, t.total
 
 

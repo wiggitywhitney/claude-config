@@ -162,21 +162,25 @@ def setup_git_repo(path, branch="main"):
         ["git", "init", "-b", branch, "--quiet"],
         cwd=path,
         capture_output=True,
+        check=True,
     )
     subprocess.run(
         ["git", "config", "user.email", "test@test.com"],
         cwd=path,
         capture_output=True,
+        check=True,
     )
     subprocess.run(
         ["git", "config", "user.name", "Test"],
         cwd=path,
         capture_output=True,
+        check=True,
     )
     subprocess.run(
         ["git", "commit", "--allow-empty", "-m", "initial", "--quiet"],
         cwd=path,
         capture_output=True,
+        check=True,
     )
     return path
 

@@ -158,7 +158,7 @@ def run_tests():
     t.assert_deny("commit with -a flag and AI reference",
                   HOOK, make_hook_input('git commit -a -m "fix: claude found race condition"'))
 
-    exit_code = t.summary()
+    t.summary()
     return t.passed, t.failed, t.total
 
 
