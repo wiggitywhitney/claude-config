@@ -198,7 +198,7 @@ if [ -n "$DIFF_BASE" ]; then
   DEBUGGERS=$(diff_grep 'debugger' 'eslint-disable' "$DIFF_BASE" \
     '*.js' '*.ts' '*.jsx' '*.tsx' "${SOURCE_SKIP[@]}")
 
-  ONLY_TESTS=$(diff_grep '\.only[[:space:]]*\(' '' "$DIFF_BASE" \
+  ONLY_TESTS=$(diff_grep '\.only[[:space:]]*[(]' '' "$DIFF_BASE" \
     '*.test.*' '*.spec.*' '*__tests__*' "${BASE_SKIP[@]}")
 
   # Go debug code: fmt.Print* and log.Print* in non-main packages
