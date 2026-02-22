@@ -205,6 +205,127 @@ def run_tests():
         t.assert_field("lint uses make vet when no lint target and no golangci-lint",
                        output, "commands.lint", "make vet")
 
+        # ── Section 7: verify.json override — test command ──
+        t.section("verify.json override — test command only")
+
+        verify_test_only = os.path.join(tmp, "verify-test-only")
+        os.makedirs(os.path.join(verify_test_only, ".claude"))
+        write_file(verify_test_only, "README.md", "readme\n")
+        write_file(verify_test_only, ".claude/verify.json",
+                   '{"commands": {"test": "python3 run_tests.py"}}')
+
+        output = _run_detect(verify_test_only)
+
+        t.assert_field("project type is unknown (no standard config)",
+                       output, "project_type", "unknown")
+        t.assert_field("test command from verify.json",
+                       output, "commands.test", "python3 run_tests.py")
+        t.assert_field_empty("build still empty (not in verify.json)",
+                             output, "commands.build")
+        t.assert_field_empty("lint still empty (not in verify.json)",
+                             output, "commands.lint")
+
+        # ── Section 8: verify.json override — all commands ──
+        t.section("verify.json override — all commands")
+
+        verify_all = os.path.join(tmp, "verify-all-cmds")
+        os.makedirs(os.path.join(verify_all, ".claude"))
+        write_file(verify_all, "README.md", "readme\n")
+        write_file(verify_all, ".claude/verify.json",
+                   '{"commands": {"build": "make build", "lint": "make lint",'
+                   ' "test": "make test", "typecheck": "make typecheck"}}')
+
+        output = _run_detect(verify_all)
+
+        t.assert_field("build from verify.json",
+                       output, "commands.build", "make build")
+        t.assert_field("typecheck from verify.json",
+                       output, "commands.typecheck", "make typecheck")
+        t.assert_field("lint from verify.json",
+                       output, "commands.lint", "make lint")
+        t.assert_field("test from verify.json",
+                       output, "commands.test", "make test")
+
+        # ── Section 9: verify.json overrides auto-detected commands ──
+        t.section("verify.json overrides auto-detected commands")
+
+        verify_override = os.path.join(tmp, "verify-override")
+        os.makedirs(os.path.join(verify_override, ".claude"))
+        write_file(verify_override, "package.json",
+                   '{"scripts":{"build":"tsc","test":"vitest"}}')
+        write_file(verify_override, ".claude/verify.json",
+                   '{"commands": {"test": "python3 custom_tests.py"}}')
+
+        output = _run_detect(verify_override)
+
+        t.assert_field("project type still detected from package.json",
+                       output, "project_type", "node-javascript")
+        t.assert_field("test overridden by verify.json",
+                       output, "commands.test", "python3 custom_tests.py")
+        t.assert_field("build still auto-detected from package.json",
+                       output, "commands.build", "npm run build")
+
+        # ── Section 10: verify.json partial override preserves auto-detect ──
+        t.section("verify.json partial override preserves auto-detect")
+
+        verify_partial = os.path.join(tmp, "verify-partial")
+        os.makedirs(os.path.join(verify_partial, ".claude"))
+        write_file(verify_partial, "go.mod", "module example.com/test\n")
+        write_file(verify_partial, ".claude/verify.json",
+                   '{"commands": {"test": "python3 run_tests.py"}}')
+
+        output = _run_detect(verify_partial)
+
+        t.assert_field("project type still go",
+                       output, "project_type", "go")
+        t.assert_field("test overridden by verify.json",
+                       output, "commands.test", "python3 run_tests.py")
+        t.assert_field("build still auto-detected for go",
+                       output, "commands.build", "go build ./...")
+
+        # ── Section 11: invalid verify.json is ignored ──
+        t.section("invalid verify.json is gracefully ignored")
+
+        verify_invalid = os.path.join(tmp, "verify-invalid")
+        os.makedirs(os.path.join(verify_invalid, ".claude"))
+        write_file(verify_invalid, "go.mod", "module example.com/test\n")
+        write_file(verify_invalid, ".claude/verify.json", "not valid json{{{")
+
+        output = _run_detect(verify_invalid)
+
+        t.assert_field("project type still go despite bad verify.json",
+                       output, "project_type", "go")
+        t.assert_field("test falls through to auto-detect",
+                       output, "commands.test", "go test ./...")
+
+        # ── Section 12: run_tests.py fallback detection ──
+        t.section("run_tests.py fallback detection")
+
+        fallback_project = os.path.join(tmp, "fallback-runner")
+        os.makedirs(fallback_project)
+        write_file(fallback_project, "README.md", "readme\n")
+        write_file(fallback_project, "run_tests.py",
+                   "#!/usr/bin/env python3\nprint('tests')\n")
+
+        output = _run_detect(fallback_project)
+
+        t.assert_field("project type is unknown",
+                       output, "project_type", "unknown")
+        t.assert_field("test detected from run_tests.py in root",
+                       output, "commands.test", "python3 run_tests.py")
+
+        # ── Section 13: no fallback when no run_tests.py ──
+        t.section("no fallback without run_tests.py")
+
+        no_runner = os.path.join(tmp, "no-runner")
+        os.makedirs(no_runner)
+        write_file(no_runner, "README.md", "readme\n")
+
+        output = _run_detect(no_runner)
+
+        t.assert_field_empty("test still empty without run_tests.py",
+                             output, "commands.test")
+
     exit_code = t.summary()
     return t.passed, t.failed, t.total
 

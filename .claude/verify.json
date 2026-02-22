@@ -1,0 +1,5 @@
+{
+  "commands": {
+    "test": "python3 .claude/skills/verify/tests/run_tests.py"
+  }
+}

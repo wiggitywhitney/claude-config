@@ -28,6 +28,27 @@ CMD_TYPECHECK=""
 CMD_LINT=""
 CMD_TEST=""
 
+# --- Check for .claude/verify.json override ---
+# Any project can declare verification commands explicitly via this file.
+# Specified commands override auto-detection; unspecified ones fall through.
+
+VERIFY_BUILD=""
+VERIFY_TYPECHECK=""
+VERIFY_LINT=""
+VERIFY_TEST=""
+HAS_VERIFY_JSON=false
+
+if [ -f "$PROJECT_DIR/.claude/verify.json" ]; then
+  VERIFY_JSON=$(cat "$PROJECT_DIR/.claude/verify.json" 2>/dev/null || echo "")
+  if echo "$VERIFY_JSON" | python3 -c "import json,sys; json.load(sys.stdin)" 2>/dev/null; then
+    HAS_VERIFY_JSON=true
+    VERIFY_BUILD=$(echo "$VERIFY_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('build') or '')" 2>/dev/null || echo "")
+    VERIFY_TYPECHECK=$(echo "$VERIFY_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('typecheck') or '')" 2>/dev/null || echo "")
+    VERIFY_LINT=$(echo "$VERIFY_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('lint') or '')" 2>/dev/null || echo "")
+    VERIFY_TEST=$(echo "$VERIFY_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('test') or '')" 2>/dev/null || echo "")
+  fi
+fi
+
 # --- Detect config files ---
 
 if [ -f "$PROJECT_DIR/package.json" ]; then
@@ -156,6 +177,21 @@ except Exception:
   elif [ -f "$PROJECT_DIR/vitest.config.js" ] || [ -f "$PROJECT_DIR/vitest.config.ts" ] || [ -f "$PROJECT_DIR/vitest.config.mjs" ]; then
     CMD_TEST="npx vitest run"
   fi
+fi
+
+# --- Fallback: detect run_tests.py for non-standard projects ---
+# If no test command was found by standard detection, check for run_tests.py
+if [ -z "$CMD_TEST" ] && [ -f "$PROJECT_DIR/run_tests.py" ]; then
+  CMD_TEST="python3 run_tests.py"
+fi
+
+# --- Apply verify.json overrides ---
+# verify.json commands take priority over auto-detected commands
+if [ "$HAS_VERIFY_JSON" = true ]; then
+  [ -n "$VERIFY_BUILD" ] && CMD_BUILD="$VERIFY_BUILD"
+  [ -n "$VERIFY_TYPECHECK" ] && CMD_TYPECHECK="$VERIFY_TYPECHECK"
+  [ -n "$VERIFY_LINT" ] && CMD_LINT="$VERIFY_LINT"
+  [ -n "$VERIFY_TEST" ] && CMD_TEST="$VERIFY_TEST"
 fi
 
 # --- Output JSON ---

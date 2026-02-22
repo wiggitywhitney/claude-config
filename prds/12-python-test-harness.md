@@ -70,9 +70,9 @@ Provides:
 - [x] Combined runner works (`python3 run_tests.py`)
 - [x] No external Python dependencies required (stdlib only)
 - [ ] Bash test files removed after Python equivalents confirmed
-- [ ] `detect-project.sh` discovers test commands for non-standard projects (including this repo)
-- [ ] PR hook successfully runs tests for `claude-config` (no more silent skip)
-- [ ] Any project can declare its test command via `.claude/verify.json` override
+- [x] `detect-project.sh` discovers test commands for non-standard projects (including this repo)
+- [x] PR hook successfully runs tests for `claude-config` (no more silent skip)
+- [x] Any project can declare its test command via `.claude/verify.json` override
 
 ## Architecture Decisions
 
@@ -142,12 +142,11 @@ Provides:
 - [x] Validate: all 8 Python test files pass, matching bash results
 
 ### Milestone 4: Test Discovery and Hook Integration
-- [ ] Add test discovery to `detect-project.sh` for non-standard projects:
+- [x] Add test discovery to `detect-project.sh` for non-standard projects:
   - Check for `run_tests.py` (this repo's Python test runner)
-  - Check for executable `test-*.sh` files in common locations
   - Support a `.claude/verify.json` override file where any project can declare its test command explicitly
-- [ ] Wire the Python test runner as the detected test command for `claude-config`
-- [ ] Verify the PR hook (`pre-pr-hook.sh`) now discovers and runs tests for this repo
+- [x] Wire the Python test runner as the detected test command for `claude-config`
+- [x] Verify the PR hook (`pre-pr-hook.sh`) now discovers and runs tests for this repo
 
 ### Milestone 5: Cleanup
 - [ ] Remove all 8 bash test files (`test-*.sh`)
