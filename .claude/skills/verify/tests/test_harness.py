@@ -108,6 +108,23 @@ def run_script(script, *args, env=None, cwd=None):
     return result.returncode, result.stdout
 
 
+def run_script_combined(script, *args, env=None, cwd=None):
+    """Run a utility script with positional args, combining stdout and stderr.
+
+    Equivalent to bash's 2>&1 redirection. Returns (exit_code, output).
+    """
+    cmd = [script] + list(args)
+    result = subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        env=env,
+        cwd=cwd,
+    )
+    return result.returncode, result.stdout
+
+
 # ── Fixture Helpers ─────────────────────────────────────────────────
 
 class TempDir:
@@ -138,10 +155,21 @@ def write_file(base_dir, relative_path, content=""):
 def setup_git_repo(path, branch="main"):
     """Initialize a git repo at path with an initial commit.
 
+    Sets local git config for test isolation (no reliance on global config).
     Returns the repo path.
     """
     subprocess.run(
         ["git", "init", "-b", branch, "--quiet"],
+        cwd=path,
+        capture_output=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.email", "test@test.com"],
+        cwd=path,
+        capture_output=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.name", "Test"],
         cwd=path,
         capture_output=True,
     )
@@ -334,6 +362,16 @@ class TestResults:
         else:
             self._fail(description, (
                 f"Expected to contain: {needle!r}\n"
+                f"In: {haystack!r}"
+            ))
+
+    def assert_not_contains(self, description, haystack, needle):
+        """Assert haystack does NOT contain needle."""
+        if needle not in haystack:
+            self._pass(description)
+        else:
+            self._fail(description, (
+                f"Expected NOT to contain: {needle!r}\n"
                 f"In: {haystack!r}"
             ))
 

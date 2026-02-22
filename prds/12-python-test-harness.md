@@ -137,9 +137,9 @@ Provides:
 - [x] Validate: all 6 Python test files pass, matching bash results
 
 ### Milestone 3: Filesystem-Heavy Tests
-- [ ] Port `test-lint-changed.sh` to `test_lint_changed.py`
-- [ ] Port `test-security-check.sh` to `test_security_check.py`
-- [ ] Validate: all 8 Python test files pass, matching bash results
+- [x] Port `test-lint-changed.sh` to `test_lint_changed.py`
+- [x] Port `test-security-check.sh` to `test_security_check.py`
+- [x] Validate: all 8 Python test files pass, matching bash results
 
 ### Milestone 4: Test Discovery and Hook Integration
 - [ ] Add test discovery to `detect-project.sh` for non-standard projects:
