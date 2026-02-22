@@ -43,8 +43,10 @@ Complete the PRD implementation workflow including branch management, pull reque
 
 Before starting the PR workflow, capture what was built so the human user can learn and retain the concepts.
 
+**Scope: Cover the ENTIRE PRD, not just recent work.** Cards should be sourced from all milestones, the full decision log, and the complete git diff — not limited to the current conversation or the most recent milestone.
+
 - [ ] **Scan for existing cards**: Read files in the Anki finished directory (defined as `ANKI_FINISHED_DIR` in the `/anki` skill) to check for cards already covering this PRD's topics. Do not create duplicates of concepts already captured.
-- [ ] **Read the PRD document**: Review milestones, decision log, architecture choices, and requirements
+- [ ] **Read the PRD document**: Review ALL milestones, the full decision log, architecture choices, and requirements — not just the most recent milestone
 - [ ] **Read key source files**: Scan the main files created or modified during implementation (use git diff against main to identify them)
 - [ ] **Invoke the `/anki` skill**: Create flashcards sourced from the PRD and the code — not from conversation context. Focus on:
   - Architectural decisions and why they were made

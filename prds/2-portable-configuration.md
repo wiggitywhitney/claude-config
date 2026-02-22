@@ -1,6 +1,6 @@
 # PRD #2: Portable Claude Code Configuration Across Machines
 
-**Status**: Not Started
+**Status**: In Progress
 **Priority**: High
 **Created**: 2026-02-18
 **GitHub Issue**: [#2](https://github.com/wiggitywhitney/claude-config/issues/2)
@@ -129,9 +129,9 @@ Clear instructions in the repo README covering:
 ### Milestone 1: Settings Template + Path Resolution
 Create the settings template with placeholder paths and a script that resolves them to the current machine's repo location.
 
-- [ ] `settings.template.json` created with `$CLAUDE_CONFIG_DIR` placeholders
-- [ ] Script resolves placeholders to actual paths and generates valid settings.json
-- [ ] Generated settings.json passes validation (valid JSON, paths exist)
+- [x] `settings.template.json` created with `$CLAUDE_CONFIG_DIR` placeholders
+- [x] Script resolves placeholders to actual paths and generates valid settings.json
+- [x] Generated settings.json passes validation (valid JSON, paths exist)
 
 ### Milestone 2: Safe Merge Into Existing Settings
 Implement the merge strategy so setup never overwrites existing configuration.
@@ -184,7 +184,13 @@ Combine all pieces into a single `setup.sh` with documentation.
 - **Rationale**: Claude Code settings.json requires absolute paths for hook commands. A template with placeholders is simple, transparent, and produces a standard settings.json that Claude Code reads natively. No runtime indirection needed.
 - **Impact**: Install script does string substitution; the generated file is a normal settings.json
 
-### Decision 3: Separate PRD from PRD #1
+### Decision 3: Move External Safety Hooks Into Repo
+- **Date**: 2026-02-22
+- **Decision**: Copy `google-mcp-safety-hook.py` and `gogcli-safety-hook.py` from `~/.claude/scripts/` into `scripts/` in the repo, so the settings template uses a single `$CLAUDE_CONFIG_DIR` placeholder for all hook paths
+- **Rationale**: Two external scripts lived outside the repo in `~/.claude/scripts/`. Using a second placeholder (`$CLAUDE_USER_DIR`) would complicate the template. Moving them into the repo keeps all hook scripts version-controlled and the template uses one placeholder pattern for all 10 paths.
+- **Impact**: Template is self-contained; no external script dependencies. The `~/.claude/scripts/` directory is no longer needed for these hooks.
+
+### Decision 4: Separate PRD from PRD #1
 - **Date**: 2026-02-18
 - **Decision**: Configuration portability is a separate PRD (#2) rather than part of PRD #1 (shared testing infrastructure)
 - **Rationale**: PRD #1 builds the toolkit (verify skill, testing rules, permission profiles). This PRD makes all configuration portable across machines. They're complementary but distinct problem spaces. This PRD depends on PRD #1's deliverables existing but solves a different problem.
