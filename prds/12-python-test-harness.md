@@ -1,6 +1,6 @@
 # PRD #12: Python Test Harness for Verify Suite
 
-**Status**: Open
+**Status**: Complete
 **Priority**: Medium
 **Created**: 2026-02-21
 **Issue**: [#12](https://github.com/wiggitywhitney/claude-config/issues/12)
@@ -63,13 +63,13 @@ Provides:
 
 ## Success Criteria
 
-- [ ] All 8 bash test files have equivalent Python replacements
-- [ ] Python test suite produces identical pass/fail results as bash suite
-- [ ] Full suite runtime reduced by at least 50% compared to bash version
+- [x] All 8 bash test files have equivalent Python replacements
+- [x] Python test suite produces identical pass/fail results as bash suite
+- [x] Full suite runtime reduced by at least 50% compared to bash version
 - [x] Each test file is independently runnable (`python3 test_check_commit_message.py`)
 - [x] Combined runner works (`python3 run_tests.py`)
 - [x] No external Python dependencies required (stdlib only)
-- [ ] Bash test files removed after Python equivalents confirmed
+- [x] Bash test files removed after Python equivalents confirmed
 - [x] `detect-project.sh` discovers test commands for non-standard projects (including this repo)
 - [x] PR hook successfully runs tests for `claude-config` (no more silent skip)
 - [x] Any project can declare its test command via `.claude/verify.json` override
@@ -149,9 +149,9 @@ Provides:
 - [x] Verify the PR hook (`pre-pr-hook.sh`) now discovers and runs tests for this repo
 
 ### Milestone 5: Cleanup
-- [ ] Remove all 8 bash test files (`test-*.sh`)
-- [ ] Update any references to `.sh` test files in settings or documentation
-- [ ] Measure and document before/after performance (target: 50%+ improvement)
+- [x] Remove all 8 bash test files (`test-*.sh`)
+- [x] Update any references to `.sh` test files in settings or documentation
+- [x] Measure and document before/after performance (target: 50%+ improvement)
 
 ## Dependencies
 

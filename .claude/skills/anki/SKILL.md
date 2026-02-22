@@ -27,15 +27,8 @@ You are helping Whitney create Anki cards from a conversation she just had. The 
 2. Extract the key concepts that are worth remembering
 3. Structure them in a card-ready format (organized by theme, with clear concepts)
 4. Present the document to the user
-5. Ask: **"Save to make Anki cards directory?"** OR **"Make cards now?"**
 
-### Phase 2a: Save Document (if user chooses "save")
-
-Save to: `/Users/whitney.lee/Documents/Journal/make Anki cards/[topic].md`
-
-The user can manually make cards later from this document.
-
-### Phase 2b: Make Cards (if user chooses "make cards now")
+### Phase 2: Make Cards
 
 1. Generate actual START/END block cards following the rules below
 2. Present cards for user approval
@@ -60,7 +53,8 @@ The user can manually make cards later from this document.
 - Avoid assuming prior knowledge of the specific domain
 
 ### Personal Memory Anchors
-- When possible, tie concepts to Whitney's actual experience: "Whitney, when you implemented X in project Y, you hit this problem"
+- Personal anchors are **required** when the concept was learned through hands-on work. If Whitney built it, debugged it, or discovered it during a project, the card front **must** reference that specific experience.
+- Generic "What is X?" framing is fine for new technologies or definitions encountered for the first time.
 - Personal context makes concepts stickier and easier to recall
 - Reference specific projects, conversations, or moments of discovery
 - Example: Instead of "This causes orphaned spans," write "This is why your tool spans in cluster-whisperer were showing up in separate traces"

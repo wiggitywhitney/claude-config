@@ -86,9 +86,6 @@ def run_tests():
     t.assert_deny("blocks 'AI-generated' reference",
                   HOOK, make_hook_input('git commit -m "docs: AI-generated documentation"'))
 
-    t.assert_deny("blocks 'LLM' reference",
-                  HOOK, make_hook_input('git commit -m "feat: output from LLM processing"'))
-
     t.assert_deny("blocks 'language model' reference",
                   HOOK, make_hook_input('git commit -m "feat: language model integration"'))
 
@@ -141,6 +138,10 @@ def run_tests():
     t.assert_allow("multiple path references with claude do not trigger",
                    HOOK, make_hook_input(
                        'git commit -m "feat: symlink ~/.claude/CLAUDE.md to claude-config/global/"'))
+
+    t.assert_allow("LLM in technical context does not trigger",
+                   HOOK, make_hook_input(
+                       'git commit -m "feat: add LLM token counting for API calls"'))
 
     # ─── Section 6: Edge cases ───
     t.section("Edge cases")
