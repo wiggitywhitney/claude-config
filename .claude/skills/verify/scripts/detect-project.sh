@@ -40,7 +40,7 @@ HAS_VERIFY_JSON=false
 
 if [ -f "$PROJECT_DIR/.claude/verify.json" ]; then
   VERIFY_JSON=$(cat "$PROJECT_DIR/.claude/verify.json" 2>/dev/null || echo "")
-  PARSED=$(echo "$VERIFY_JSON" | python3 -c "
+  if PARSED=$(echo "$VERIFY_JSON" | python3 -c "
 import json, sys
 try:
     d = json.load(sys.stdin)
@@ -51,8 +51,7 @@ try:
     print(c.get('test') or '')
 except Exception:
     sys.exit(1)
-" 2>/dev/null)
-  if [ $? -eq 0 ]; then
+" 2>/dev/null); then
     HAS_VERIFY_JSON=true
     VERIFY_BUILD=$(echo "$PARSED" | sed -n '1p')
     VERIFY_TYPECHECK=$(echo "$PARSED" | sed -n '2p')
