@@ -712,8 +712,252 @@ def test_merge_output_is_valid_json(t):
             t.assert_equal("merged output is valid JSON", False, True)
 
 
+# ── Milestone 3: Symlink Tests ─────────────────────────────────────
+
+def test_symlinks_creates_claude_md_symlink(t):
+    """--symlinks should create CLAUDE.md symlink in claude dir."""
+    t.section("Symlinks: CLAUDE.md")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+        os.makedirs(claude_dir)
+
+        exit_code, stdout, stderr = run_setup("--symlinks", "--claude-dir", claude_dir)
+
+        t.assert_equal("exits 0", exit_code, 0)
+        if exit_code != 0:
+            t.assert_equal(f"stderr: {stderr}", False, True)
+            return
+
+        link_path = os.path.join(claude_dir, "CLAUDE.md")
+        t.assert_equal("CLAUDE.md symlink created", os.path.islink(link_path), True)
+        if os.path.islink(link_path):
+            target = os.path.realpath(link_path)
+            expected = os.path.realpath(os.path.join(REPO_DIR, "global", "CLAUDE.md"))
+            t.assert_equal("CLAUDE.md points to repo global/CLAUDE.md", target, expected)
+
+
+def test_symlinks_creates_rules_symlink(t):
+    """--symlinks should create rules/ symlink in claude dir."""
+    t.section("Symlinks: rules/")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+        os.makedirs(claude_dir)
+
+        exit_code, stdout, stderr = run_setup("--symlinks", "--claude-dir", claude_dir)
+
+        t.assert_equal("exits 0", exit_code, 0)
+        if exit_code != 0:
+            t.assert_equal(f"stderr: {stderr}", False, True)
+            return
+
+        link_path = os.path.join(claude_dir, "rules")
+        t.assert_equal("rules symlink created", os.path.islink(link_path), True)
+        if os.path.islink(link_path):
+            target = os.path.realpath(link_path)
+            expected = os.path.realpath(os.path.join(REPO_DIR, "rules"))
+            t.assert_equal("rules points to repo rules/", target, expected)
+
+
+def test_symlinks_creates_skills_verify_symlink(t):
+    """--symlinks should create skills/verify symlink in claude dir."""
+    t.section("Symlinks: skills/verify")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+        os.makedirs(os.path.join(claude_dir, "skills"))
+
+        exit_code, stdout, stderr = run_setup("--symlinks", "--claude-dir", claude_dir)
+
+        t.assert_equal("exits 0", exit_code, 0)
+        if exit_code != 0:
+            t.assert_equal(f"stderr: {stderr}", False, True)
+            return
+
+        link_path = os.path.join(claude_dir, "skills", "verify")
+        t.assert_equal("skills/verify symlink created", os.path.islink(link_path), True)
+        if os.path.islink(link_path):
+            target = os.path.realpath(link_path)
+            expected = os.path.realpath(os.path.join(REPO_DIR, ".claude", "skills", "verify"))
+            t.assert_equal("skills/verify points to repo", target, expected)
+
+
+def test_symlinks_creates_skills_dir_if_missing(t):
+    """--symlinks should create skills/ parent directory if it doesn't exist."""
+    t.section("Symlinks: creates skills/ parent dir")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+        os.makedirs(claude_dir)
+        # Don't create skills/ — let setup.sh create it
+
+        exit_code, stdout, stderr = run_setup("--symlinks", "--claude-dir", claude_dir)
+
+        t.assert_equal("exits 0", exit_code, 0)
+        if exit_code != 0:
+            t.assert_equal(f"stderr: {stderr}", False, True)
+            return
+
+        skills_dir = os.path.join(claude_dir, "skills")
+        t.assert_equal("skills/ directory created", os.path.isdir(skills_dir), True)
+
+        link_path = os.path.join(skills_dir, "verify")
+        t.assert_equal("skills/verify symlink created", os.path.islink(link_path), True)
+
+
+def test_symlinks_idempotent(t):
+    """Running --symlinks twice should produce same result without errors."""
+    t.section("Symlinks: idempotent")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+        os.makedirs(claude_dir)
+
+        # First run
+        exit_code1, _, stderr1 = run_setup("--symlinks", "--claude-dir", claude_dir)
+        t.assert_equal("first run exits 0", exit_code1, 0)
+        if exit_code1 != 0:
+            t.assert_equal(f"stderr: {stderr1}", False, True)
+            return
+
+        # Capture symlink targets after first run
+        targets_1 = {}
+        for name in ["CLAUDE.md", "rules"]:
+            path = os.path.join(claude_dir, name)
+            if os.path.islink(path):
+                targets_1[name] = os.readlink(path)
+        verify_path = os.path.join(claude_dir, "skills", "verify")
+        if os.path.islink(verify_path):
+            targets_1["skills/verify"] = os.readlink(verify_path)
+
+        # Second run
+        exit_code2, _, stderr2 = run_setup("--symlinks", "--claude-dir", claude_dir)
+        t.assert_equal("second run exits 0", exit_code2, 0)
+
+        # Verify same targets
+        for name in ["CLAUDE.md", "rules"]:
+            path = os.path.join(claude_dir, name)
+            if os.path.islink(path):
+                t.assert_equal(
+                    f"{name} target unchanged",
+                    os.readlink(path), targets_1[name]
+                )
+        if os.path.islink(verify_path):
+            t.assert_equal(
+                "skills/verify target unchanged",
+                os.readlink(verify_path), targets_1["skills/verify"]
+            )
+
+
+def test_symlinks_skips_correct_existing(t):
+    """--symlinks should skip creation if correct symlink already exists."""
+    t.section("Symlinks: skip correct existing")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+        os.makedirs(claude_dir)
+
+        # Pre-create correct symlink
+        expected_target = os.path.join(REPO_DIR, "global", "CLAUDE.md")
+        os.symlink(expected_target, os.path.join(claude_dir, "CLAUDE.md"))
+
+        exit_code, stdout, stderr = run_setup("--symlinks", "--claude-dir", claude_dir)
+
+        t.assert_equal("exits 0", exit_code, 0)
+        # Symlink should still point to same target
+        link_path = os.path.join(claude_dir, "CLAUDE.md")
+        t.assert_equal("symlink still correct", os.readlink(link_path), expected_target)
+
+
+def test_symlinks_updates_wrong_symlink(t):
+    """--symlinks should update a symlink that points to the wrong target."""
+    t.section("Symlinks: update wrong symlink")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+        os.makedirs(claude_dir)
+
+        # Pre-create wrong symlink
+        wrong_target = os.path.join(tmp, "wrong-claude.md")
+        with open(wrong_target, "w") as f:
+            f.write("wrong")
+        os.symlink(wrong_target, os.path.join(claude_dir, "CLAUDE.md"))
+
+        exit_code, stdout, stderr = run_setup("--symlinks", "--claude-dir", claude_dir)
+
+        t.assert_equal("exits 0", exit_code, 0)
+        if exit_code != 0:
+            t.assert_equal(f"stderr: {stderr}", False, True)
+            return
+
+        link_path = os.path.join(claude_dir, "CLAUDE.md")
+        t.assert_equal("symlink is still a link", os.path.islink(link_path), True)
+        expected_target = os.path.join(REPO_DIR, "global", "CLAUDE.md")
+        t.assert_equal("symlink updated to correct target", os.readlink(link_path), expected_target)
+
+
+def test_symlinks_errors_on_regular_file(t):
+    """--symlinks should error if a regular file exists at symlink target."""
+    t.section("Symlinks: error on regular file")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+        os.makedirs(claude_dir)
+
+        # Pre-create regular file where symlink should go
+        regular_file = os.path.join(claude_dir, "CLAUDE.md")
+        with open(regular_file, "w") as f:
+            f.write("existing content")
+
+        exit_code, stdout, stderr = run_setup("--symlinks", "--claude-dir", claude_dir)
+
+        t.assert_equal("exits non-zero", exit_code != 0, True)
+        t.assert_contains("error mentions CLAUDE.md", stderr, "CLAUDE.md")
+
+
+def test_symlinks_errors_on_regular_directory(t):
+    """--symlinks should error if a regular directory exists at symlink target."""
+    t.section("Symlinks: error on regular directory")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+        os.makedirs(os.path.join(claude_dir, "rules"))
+
+        exit_code, stdout, stderr = run_setup("--symlinks", "--claude-dir", claude_dir)
+
+        t.assert_equal("exits non-zero", exit_code != 0, True)
+        t.assert_contains("error mentions rules", stderr, "rules")
+
+
+def test_symlinks_standalone_scripts_in_repo(t):
+    """Standalone scripts (safety hooks) should exist in repo scripts/ directory."""
+    t.section("Symlinks: standalone scripts in repo")
+    scripts_dir = os.path.join(REPO_DIR, "scripts")
+    for script_name in ["google-mcp-safety-hook.py", "gogcli-safety-hook.py"]:
+        path = os.path.join(scripts_dir, script_name)
+        t.assert_equal(f"{script_name} exists in repo", os.path.isfile(path), True)
+        if os.path.isfile(path):
+            t.assert_equal(
+                f"{script_name} is executable",
+                os.access(path, os.X_OK), True
+            )
+
+
+def test_symlinks_creates_claude_dir_if_missing(t):
+    """--symlinks should create the claude dir if it doesn't exist."""
+    t.section("Symlinks: creates claude dir")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+        # Don't create it — let setup.sh handle it
+
+        exit_code, stdout, stderr = run_setup("--symlinks", "--claude-dir", claude_dir)
+
+        t.assert_equal("exits 0", exit_code, 0)
+        if exit_code != 0:
+            t.assert_equal(f"stderr: {stderr}", False, True)
+            return
+
+        t.assert_equal("claude dir created", os.path.isdir(claude_dir), True)
+        t.assert_equal(
+            "CLAUDE.md symlink created",
+            os.path.islink(os.path.join(claude_dir, "CLAUDE.md")), True
+        )
+
+
 def run_tests():
-    t = TestResults("setup.sh — template resolution and merge")
+    t = TestResults("setup.sh — template resolution, merge, and symlinks")
     t.header()
 
     # Milestone 1: template resolution
@@ -740,6 +984,19 @@ def run_tests():
     test_merge_empty_existing(t)
     test_merge_idempotent(t)
     test_merge_output_is_valid_json(t)
+
+    # Milestone 3: symlinks
+    test_symlinks_creates_claude_md_symlink(t)
+    test_symlinks_creates_rules_symlink(t)
+    test_symlinks_creates_skills_verify_symlink(t)
+    test_symlinks_creates_skills_dir_if_missing(t)
+    test_symlinks_idempotent(t)
+    test_symlinks_skips_correct_existing(t)
+    test_symlinks_updates_wrong_symlink(t)
+    test_symlinks_errors_on_regular_file(t)
+    test_symlinks_errors_on_regular_directory(t)
+    test_symlinks_standalone_scripts_in_repo(t)
+    test_symlinks_creates_claude_dir_if_missing(t)
 
     exit_code = t.summary()
     return t.passed, t.failed, t.total

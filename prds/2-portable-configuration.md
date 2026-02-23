@@ -144,12 +144,12 @@ Implement the merge strategy so setup never overwrites existing configuration.
 ### Milestone 3: Global CLAUDE.md + User Rules + Skills + Scripts
 Track global CLAUDE.md and user rules in the repo, handle symlinks for all global-scope files.
 
-- [ ] Global CLAUDE.md content moved into repo
-- [ ] User rules (`~/.claude/rules/`) tracked in repo
-- [ ] Install script creates `~/.claude/skills/verify` symlink
-- [ ] Install script symlinks `~/.claude/CLAUDE.md` and `~/.claude/rules/`
-- [ ] Install script handles standalone scripts (Google MCP safety hook, etc.)
-- [ ] All symlinks are idempotent (safe to re-run)
+- [x] Global CLAUDE.md content moved into repo
+- [x] User rules (`~/.claude/rules/`) tracked in repo
+- [x] Install script creates `~/.claude/skills/verify` symlink
+- [x] Install script symlinks `~/.claude/CLAUDE.md` and `~/.claude/rules/`
+- [x] Install script handles standalone scripts (Google MCP safety hook, etc.)
+- [x] All symlinks are idempotent (safe to re-run)
 
 ### Milestone 4: Full Install Script + Documentation
 Combine all pieces into a single `setup.sh` with documentation.

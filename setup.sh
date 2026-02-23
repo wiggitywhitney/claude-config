@@ -3,6 +3,7 @@
 #
 # Resolves settings.template.json with machine-specific paths.
 # Optionally merges resolved settings into an existing settings.json.
+# Optionally creates symlinks for global CLAUDE.md, rules, and skills.
 #
 # Usage:
 #   ./setup.sh                        Print resolved settings to stdout
@@ -10,6 +11,8 @@
 #   ./setup.sh --merge FILE           Merge resolved settings into existing FILE
 #   ./setup.sh --validate             Resolve and validate paths (no file output)
 #   ./setup.sh --template FILE        Use a custom template (default: settings.template.json)
+#   ./setup.sh --symlinks             Create symlinks for CLAUDE.md, rules/, skills/verify
+#   ./setup.sh --claude-dir DIR       Override ~/.claude target directory (for testing)
 
 set -euo pipefail
 
@@ -21,6 +24,8 @@ TEMPLATE="$CLAUDE_CONFIG_DIR/settings.template.json"
 OUTPUT=""
 MERGE_TARGET=""
 VALIDATE_ONLY=false
+CREATE_SYMLINKS=false
+CLAUDE_DIR="$HOME/.claude"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -41,13 +46,71 @@ while [[ $# -gt 0 ]]; do
             TEMPLATE="$2"
             shift 2
             ;;
+        --symlinks)
+            CREATE_SYMLINKS=true
+            shift
+            ;;
+        --claude-dir)
+            CLAUDE_DIR="$2"
+            shift 2
+            ;;
         *)
             echo "Unknown option: $1" >&2
-            echo "Usage: setup.sh [--output FILE] [--merge FILE] [--validate] [--template FILE]" >&2
+            echo "Usage: setup.sh [--output FILE] [--merge FILE] [--validate] [--template FILE] [--symlinks] [--claude-dir DIR]" >&2
             exit 1
             ;;
     esac
 done
+
+# ── Symlinks mode ──────────────────────────────────────────────────
+if [[ "$CREATE_SYMLINKS" == true ]]; then
+    # Create claude dir if it doesn't exist
+    mkdir -p "$CLAUDE_DIR"
+
+    # Helper: create or verify a symlink
+    # Usage: ensure_symlink TARGET LINK_PATH LABEL
+    ensure_symlink() {
+        local target="$1"
+        local link_path="$2"
+        local label="$3"
+
+        if [[ -L "$link_path" ]]; then
+            local current_target
+            current_target=$(readlink "$link_path")
+            if [[ "$current_target" == "$target" ]]; then
+                echo "  $label: already linked" >&2
+                return 0
+            else
+                echo "  $label: updating symlink" >&2
+                rm "$link_path"
+                ln -s "$target" "$link_path"
+                return 0
+            fi
+        elif [[ -e "$link_path" ]]; then
+            echo "Error: $link_path exists and is not a symlink. Remove it manually to proceed." >&2
+            return 1
+        else
+            ln -s "$target" "$link_path"
+            echo "  $label: created" >&2
+            return 0
+        fi
+    }
+
+    echo "Creating symlinks in $CLAUDE_DIR..." >&2
+
+    # CLAUDE.md → repo global/CLAUDE.md
+    ensure_symlink "$CLAUDE_CONFIG_DIR/global/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md" "CLAUDE.md"
+
+    # rules/ → repo rules/
+    ensure_symlink "$CLAUDE_CONFIG_DIR/rules" "$CLAUDE_DIR/rules" "rules"
+
+    # skills/verify → repo .claude/skills/verify
+    mkdir -p "$CLAUDE_DIR/skills"
+    ensure_symlink "$CLAUDE_CONFIG_DIR/.claude/skills/verify" "$CLAUDE_DIR/skills/verify" "skills/verify"
+
+    echo "Symlinks complete." >&2
+    exit 0
+fi
 
 # Verify template exists
 if [[ ! -f "$TEMPLATE" ]]; then
