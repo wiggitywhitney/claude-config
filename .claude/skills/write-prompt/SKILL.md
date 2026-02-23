@@ -98,13 +98,13 @@ These produce worse benchmark scores than baseline prompts. Format design choice
 **Model-version-dependent anti-patterns (flag based on target model):**
 
 For Claude 4.6 models only:
-- Anti-laziness directives ("be thorough", "think carefully", "do not be lazy") — these amplify already-proactive behavior and cause runaway thinking or write-then-rewrite loops. Replace with format specifications: "Output format: complete source file. Files containing placeholder comments will fail validation."
-- Explicit think-tool instructions ("use the think tool to plan your approach") — these cause over-planning. The model thinks effectively without being told to. Use the `effort` API parameter instead.
+- Vague anti-laziness directives ("do not be lazy", "try harder") — these are motivational language that amplifies already-proactive behavior, causing runaway thinking or write-then-rewrite loops. Instead, use explicit depth instructions ("comprehensive", "include edge cases") or format specifications ("Output format: complete source file. Files containing placeholder comments will fail validation."). (Sources: [Anthropic best practices](https://claude.com/blog/best-practices-for-prompt-engineering), [platform release notes](https://platform.claude.com/docs/en/release-notes/overview))
+- Explicit think-tool instructions ("use the think tool to plan your approach") — these cause over-planning. The model thinks effectively without being told to. Use the `effort` API parameter (`output_config.effort`: low/medium/high/max) to control thinking depth instead of `budget_tokens`, which is deprecated for 4.6 models.
 - Aggressive tool-use language ("You MUST use [tool]", "If in doubt, use [tool]") — replace with "Use [tool] when it would enhance your understanding of the problem." Claude 4.x models overtrigger on aggressive language.
-- Prefilled responses on the last assistant turn — deprecated starting with Claude 4.6. Use structured outputs, XML tags, or direct instructions instead.
+- Prefilled responses on the last assistant turn — Opus 4.6 does not support prefilling assistant messages, and prefilling is incompatible with extended thinking. Use structured outputs (`output_config.format`), XML tags, or direct instructions instead. (Source: [Feb 5, 2026 release notes](https://platform.claude.com/docs/en/release-notes/overview))
 
 For Claude 4.5 and earlier:
-- The word "think" when extended thinking is disabled — Claude Opus 4.5 is particularly sensitive to this word. Replace with "consider", "evaluate", or "assess".
+- The word "think" in Claude Code contexts when extended thinking is off — Claude Code treats "think" as a request for deeper extended thinking. In the raw API, extended thinking is controlled via the `thinking` parameter, not prompt wording. For Claude Code skills, replace with "consider", "evaluate", or "assess" unless you intend to trigger deeper thinking.
 
 **Structural anti-patterns (always flag):**
 - Single "golden" example instead of 3-5 diverse examples — risks overfitting to that example's details
