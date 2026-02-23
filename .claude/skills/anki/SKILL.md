@@ -83,12 +83,29 @@ You are helping Whitney create Anki cards from a conversation she just had. The 
 - Complex concepts may get more cards
 - "Why" cards only when clearly supported by the source (no speculation)
 
+### Story-First Framing (CRITICAL)
+Before writing ANY cards, outline the narrative arc of the topic:
+1. **Why does this exist?** What problem was being solved? What was missing before?
+2. **What is it?** High-level explanation a colleague would understand.
+3. **How does it connect?** How does it fit into the larger system or project?
+4. **What was surprising?** Any gotchas or non-obvious decisions discovered along the way.
+
+Only THEN decide which cards to make. Every card should fit into this narrative. If a card doesn't connect back to the story (why it exists, what it does, how it fits), it's too granular.
+
+**The anti-pattern**: Jumping straight to implementation details — config flags, middleware patterns, code structure, response codes — without first establishing why the thing exists and how the pieces relate. Implementation details are only card-worthy when they teach a concept you'd explain at a conference.
+
+**Test**: Would you explain this to a colleague over coffee? If not, it's too granular for a card.
+
 ### Concepts Over Details
 - Focus on the "why" and the concept, not nitty-gritty implementation details
 - Don't ask humans to recall specific schemas, JSON structures, or exact syntax
 - Good: "Why does Datadog need a structured format for message content?"
 - Bad: "What does the parts array JSON structure look like?"
 - If a detail is only useful when copy-pasting into code, it doesn't belong on a card
+- **Good**: "What is Hono, and what does it have to do with a vector database?" (connects concepts, tells a story)
+- **Bad**: "What does `strict: false` do in Hono?" (isolated config trivia)
+- **Good**: "Why does cluster-whisperer need an HTTP endpoint when it already has a CLI sync command?" (motivates a design decision)
+- **Bad**: "What HTTP status code does the sync endpoint return for validation errors?" (implementation minutiae)
 
 ### No Trivia
 - Focus on technology and concepts, not historical facts
