@@ -13,7 +13,7 @@
 #   ./setup.sh --merge FILE           Merge resolved settings into existing FILE
 #   ./setup.sh --validate             Resolve and validate paths (no file output)
 #   ./setup.sh --template FILE        Use a custom template (default: settings.template.json)
-#   ./setup.sh --symlinks             Create symlinks for CLAUDE.md, rules/, skills/verify
+#   ./setup.sh --symlinks             Create symlinks for CLAUDE.md, rules/, and all skills/
 #   ./setup.sh --claude-dir DIR       Override ~/.claude target directory (for testing)
 
 set -euo pipefail

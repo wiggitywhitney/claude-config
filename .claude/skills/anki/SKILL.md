@@ -96,7 +96,7 @@ Only THEN decide which cards to make. Every card should fit into this narrative.
 
 **Test**: Would you explain this to a colleague over coffee? If not, it's too granular for a card.
 
-### Concepts Over Details
+### Card Granularity Guidelines
 - Focus on the "why" and the concept, not nitty-gritty implementation details
 - Don't ask humans to recall specific schemas, JSON structures, or exact syntax
 - Good: "Why does Datadog need a structured format for message content?"
