@@ -1,6 +1,7 @@
 ---
 name: write-docs
 description: Write validated documentation by executing real commands and capturing actual output. Use this skill whenever documentation writing is needed — from PRD milestones, CLAUDE.md instructions, or user requests.
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion
 ---
 
 # /write-docs — Validated Documentation Workflow
