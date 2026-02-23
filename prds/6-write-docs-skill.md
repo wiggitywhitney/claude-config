@@ -1,6 +1,6 @@
 # PRD #6: /write-docs Skill for Validated Documentation
 
-**Status**: In Progress
+**Status**: Complete
 **Priority**: Medium
 **Created**: 2026-02-18
 **GitHub Issue**: [#6](https://github.com/wiggitywhitney/claude-config/issues/6)
@@ -68,7 +68,7 @@ The skill should respect each project's existing documentation structure. If no 
 ## Success Criteria
 
 - [x] Skill installed globally at `~/.claude/skills/write-docs/`
-- [ ] Skill works across at least two different project types (Node.js and shell/config)
+- [x] Skill works across at least two different project types (Node.js and shell/config)
 - [x] All examples in documentation produced by the skill come from real execution
 - [x] Skill validates existing setup docs as part of its workflow
 - [x] Chunk-by-chunk confirmation gates work as designed
@@ -87,10 +87,10 @@ Create the skill prompt file with the validated documentation workflow. Test aga
 ### Milestone 2: Cross-Project Validation
 Test the skill across different project types to ensure it's truly project-agnostic.
 
-- [ ] Tested on a Node.js/TypeScript project
+- [x] Tested on a Node.js/TypeScript project
 - [x] Tested on a shell/config project (e.g., claude-config itself)
-- [ ] Skill adapts environment setup to project type
-- [ ] File location conventions work across project structures
+- [x] Skill adapts environment setup to project type
+- [x] File location conventions work across project structures
 - [x] Existing docs validation catches real issues
 
 ## Out of Scope
