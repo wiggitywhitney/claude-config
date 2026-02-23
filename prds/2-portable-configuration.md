@@ -136,10 +136,10 @@ Create the settings template with placeholder paths and a script that resolves t
 ### Milestone 2: Safe Merge Into Existing Settings
 Implement the merge strategy so setup never overwrites existing configuration.
 
-- [ ] Merge logic for hooks (add new, preserve existing)
-- [ ] Merge logic for permissions (union of allow/deny/ask lists)
-- [ ] Backup of existing settings.json before any modification
-- [ ] Tested: running setup with existing settings preserves all prior config
+- [x] Merge logic for hooks (add new, preserve existing)
+- [x] Merge logic for permissions (union of allow/deny/ask lists)
+- [x] Backup of existing settings.json before any modification
+- [x] Tested: running setup with existing settings preserves all prior config
 
 ### Milestone 3: Global CLAUDE.md + User Rules + Skills + Scripts
 Track global CLAUDE.md and user rules in the repo, handle symlinks for all global-scope files.
