@@ -119,6 +119,9 @@ create_symlinks() {
     mkdir -p "$CLAUDE_DIR/skills"
     ensure_symlink "$CLAUDE_CONFIG_DIR/.claude/skills/verify" "$CLAUDE_DIR/skills/verify" "skills/verify"
 
+    # skills/research → repo .claude/skills/research
+    ensure_symlink "$CLAUDE_CONFIG_DIR/.claude/skills/research" "$CLAUDE_DIR/skills/research" "skills/research"
+
     echo "Symlinks complete." >&2
 }
 
@@ -136,6 +139,7 @@ if [[ "$UNINSTALL_MODE" == true ]]; then
         "$CLAUDE_DIR/CLAUDE.md"
         "$CLAUDE_DIR/rules"
         "$CLAUDE_DIR/skills/verify"
+        "$CLAUDE_DIR/skills/research"
     )
 
     for link_path in "${SYMLINKS_TO_CHECK[@]}"; do
