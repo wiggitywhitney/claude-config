@@ -164,7 +164,7 @@ def test_resolve_to_stdout(t):
 
     # stdout should be valid JSON
     try:
-        data = json.loads(stdout)
+        json.loads(stdout)
         t.assert_equal("stdout is valid JSON", True, True)
     except json.JSONDecodeError:
         t.assert_equal("stdout is valid JSON", False, True)
@@ -197,7 +197,7 @@ def test_resolve_to_file(t):
             content = f.read()
 
         try:
-            data = json.loads(content)
+            json.loads(content)
             t.assert_equal("output file is valid JSON", True, True)
         except json.JSONDecodeError:
             t.assert_equal("output file is valid JSON", False, True)

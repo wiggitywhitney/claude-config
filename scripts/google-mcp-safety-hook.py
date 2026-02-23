@@ -41,8 +41,8 @@ DEBUG_LOG = Path(
 def log(message: str):
     """Write debug message to log file."""
     if DEBUG:
-        DEBUG_LOG.parent.mkdir(parents=True, exist_ok=True)
         try:
+            DEBUG_LOG.parent.mkdir(parents=True, exist_ok=True)
             with open(DEBUG_LOG, "a", encoding="utf-8") as f:
                 f.write(f"{message}\n")
         except OSError:
@@ -83,7 +83,7 @@ def check_calendar(tool_name: str, tool_input: dict) -> dict | None:
     # Allow all other operations (delete handled by permissions.ask)
     return None
 
-def check_youtube(tool_name: str, tool_input: dict) -> dict | None:
+def check_youtube(tool_name: str, _tool_input: dict) -> dict | None:
     """
     Safety checks for YouTube MCP tools.
 
@@ -107,7 +107,7 @@ def check_youtube(tool_name: str, tool_input: dict) -> dict | None:
     # Allow all other operations (edit handled by permissions.ask when configured)
     return None
 
-def check_drive(tool_name: str, tool_input: dict) -> dict | None:
+def check_drive(tool_name: str, _tool_input: dict) -> dict | None:
     """
     Safety checks for Google Drive MCP tools.
 

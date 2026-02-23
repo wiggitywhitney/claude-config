@@ -149,8 +149,8 @@ if [[ "$UNINSTALL_MODE" == true ]]; then
     for link_path in "${SYMLINKS_TO_CHECK[@]}"; do
         if [[ -L "$link_path" ]]; then
             link_target=$(readlink "$link_path")
-            # Check if the symlink points to something in our repo
-            if [[ "$link_target" == "$CLAUDE_CONFIG_DIR"* ]]; then
+            # Check if the symlink points to something in our repo (trailing slash prevents false prefix matches)
+            if [[ "$link_target" == "$CLAUDE_CONFIG_DIR/"* || "$link_target" == "$CLAUDE_CONFIG_DIR" ]]; then
                 rm "$link_path"
                 echo "  Removed: $link_path" >&2
             else
@@ -242,7 +242,7 @@ if [[ -n "$MERGE_TARGET" ]]; then
         fi
     else
     # Validate existing file is valid JSON
-    if ! python3 -c "import json; json.load(open('$MERGE_TARGET'))" 2>/dev/null; then
+    if ! MERGE_TARGET="$MERGE_TARGET" python3 -c "import json, os; json.load(open(os.environ['MERGE_TARGET']))" 2>/dev/null; then
         echo "Error: Existing settings file is not valid JSON: $MERGE_TARGET" >&2
         exit 1
     fi
@@ -252,12 +252,13 @@ if [[ -n "$MERGE_TARGET" ]]; then
     cp "$MERGE_TARGET" "$BACKUP"
 
     # Merge using Python
-    python3 -c "
-import json, sys
+    MERGE_TARGET="$MERGE_TARGET" python3 -c "
+import json, os, sys
 
+merge_target = os.environ['MERGE_TARGET']
 resolved = json.loads(sys.stdin.read())
 
-with open('$MERGE_TARGET') as f:
+with open(merge_target) as f:
     existing = json.load(f)
 
 # Merge hooks: for each event type, merge matchers by pattern
@@ -323,7 +324,7 @@ for key, value in resolved.items():
     if key not in existing:
         existing[key] = value
 
-with open('$MERGE_TARGET', 'w') as f:
+with open(merge_target, 'w') as f:
     json.dump(existing, f, indent=2)
     f.write('\n')
 " <<< "$RESOLVED"
