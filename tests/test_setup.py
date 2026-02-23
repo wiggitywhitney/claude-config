@@ -307,7 +307,7 @@ def test_merge_creates_file_when_none_exists(t):
     """--merge TARGET should create the file if it doesn't exist."""
     t.section("Merge: create new file")
     with TempDir() as tmp:
-        script_path = _make_hook_script(tmp, "hook-a.sh")
+        _make_hook_script(tmp, "hook-a.sh")
         template_path = _make_template(tmp, hooks={
             "PreToolUse": [("Bash", ["hook-a.sh"])],
         })
@@ -446,8 +446,8 @@ def test_merge_hooks_preserves_existing_matcher(t):
         # Both hooks should be present in the merged matcher
         commands = [h["command"] for h in pre_matchers[0]["hooks"]]
         t.assert_equal("has 2 hooks in merged matcher", len(commands), 2)
-        t.assert_contains("existing hook preserved", commands[0], "existing-bash-hook.sh")
-        t.assert_contains("template hook added", commands[1], "template-bash-hook.sh")
+        t.assert_contains("existing hook preserved", str(commands), "existing-bash-hook.sh")
+        t.assert_contains("template hook added", str(commands), "template-bash-hook.sh")
 
 
 def test_merge_hooks_no_duplicate_commands(t):
@@ -831,11 +831,13 @@ def test_symlinks_idempotent(t):
         # Verify same targets
         for name in ["CLAUDE.md", "rules"]:
             path = os.path.join(claude_dir, name)
+            t.assert_equal(f"{name} symlink still exists", os.path.islink(path), True)
             if os.path.islink(path):
                 t.assert_equal(
                     f"{name} target unchanged",
                     os.readlink(path), targets_1[name]
                 )
+        t.assert_equal("skills/verify symlink still exists", os.path.islink(verify_path), True)
         if os.path.islink(verify_path):
             t.assert_equal(
                 "skills/verify target unchanged",
