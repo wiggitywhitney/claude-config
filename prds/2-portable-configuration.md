@@ -1,6 +1,6 @@
 # PRD #2: Portable Claude Code Configuration Across Machines
 
-**Status**: In Progress
+**Status**: Complete
 **Priority**: High
 **Created**: 2026-02-18
 **GitHub Issue**: [#2](https://github.com/wiggitywhitney/claude-config/issues/2)
@@ -117,12 +117,12 @@ Clear instructions in the repo README covering:
 
 ## Success Criteria
 
-- [ ] Running `setup.sh` on a fresh machine with a clone of claude-config produces a fully working Claude Code environment
-- [ ] Running `setup.sh` on a machine with existing settings.json preserves all existing configuration while adding new hooks/permissions
-- [ ] Global CLAUDE.md and user rules are version-controlled and applied during setup
-- [ ] All hook script paths resolve correctly on the new machine
-- [ ] Skills and rules symlinks are created and functional
-- [ ] Running setup.sh multiple times is safe (idempotent)
+- [x] Running `setup.sh` on a fresh machine with a clone of claude-config produces a fully working Claude Code environment
+- [x] Running `setup.sh` on a machine with existing settings.json preserves all existing configuration while adding new hooks/permissions
+- [x] Global CLAUDE.md and user rules are version-controlled and applied during setup
+- [x] All hook script paths resolve correctly on the new machine
+- [x] Skills and rules symlinks are created and functional
+- [x] Running setup.sh multiple times is safe (idempotent)
 
 ## Milestones
 
@@ -154,10 +154,10 @@ Track global CLAUDE.md and user rules in the repo, handle symlinks for all globa
 ### Milestone 4: Full Install Script + Documentation
 Combine all pieces into a single `setup.sh` with documentation.
 
-- [ ] Single `setup.sh` handles full installation
-- [ ] Uninstall option removes installed configuration
-- [ ] README documents setup process, merge strategy, and customization
-- [ ] Tested end-to-end on a clean environment
+- [x] Single `setup.sh` handles full installation
+- [x] Uninstall option removes installed configuration
+- [x] README documents setup process, merge strategy, and customization
+- [x] Tested end-to-end on a clean environment
 
 ## Out of Scope
 

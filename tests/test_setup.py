@@ -956,6 +956,326 @@ def test_symlinks_creates_claude_dir_if_missing(t):
         )
 
 
+# ── Milestone 4: Install Tests ─────────────────────────────────────
+
+def test_install_fresh_machine(t):
+    """--install on fresh machine creates settings.json and all symlinks."""
+    t.section("Install: fresh machine")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+        # Don't create claude_dir — let install handle it
+
+        exit_code, stdout, stderr = run_setup(
+            "--install", "--claude-dir", claude_dir,
+        )
+
+        t.assert_equal("exits 0", exit_code, 0)
+        if exit_code != 0:
+            t.assert_equal(f"stderr: {stderr}", False, True)
+            return
+
+        # settings.json should be created
+        settings_path = os.path.join(claude_dir, "settings.json")
+        t.assert_equal("settings.json created", os.path.isfile(settings_path), True)
+        if os.path.isfile(settings_path):
+            with open(settings_path) as f:
+                data = json.load(f)
+            t.assert_equal("has hooks", "hooks" in data, True)
+            t.assert_equal("has permissions", "permissions" in data, True)
+            # Paths should be resolved (no placeholders)
+            content = json.dumps(data)
+            t.assert_not_contains("no placeholders", content, "$CLAUDE_CONFIG_DIR")
+            t.assert_contains("paths resolved", content, REPO_DIR)
+
+        # Symlinks should be created
+        t.assert_equal(
+            "CLAUDE.md symlink created",
+            os.path.islink(os.path.join(claude_dir, "CLAUDE.md")), True,
+        )
+        t.assert_equal(
+            "rules symlink created",
+            os.path.islink(os.path.join(claude_dir, "rules")), True,
+        )
+        t.assert_equal(
+            "skills/verify symlink created",
+            os.path.islink(os.path.join(claude_dir, "skills", "verify")), True,
+        )
+
+
+def test_install_existing_settings(t):
+    """--install with existing settings.json merges and creates symlinks."""
+    t.section("Install: existing settings")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+        os.makedirs(claude_dir)
+
+        # Pre-create settings.json with custom permissions
+        existing = {
+            "model": "sonnet",
+            "permissions": {
+                "allow": ["Bash(my-custom-command)"],
+            },
+        }
+        settings_path = os.path.join(claude_dir, "settings.json")
+        with open(settings_path, "w") as f:
+            json.dump(existing, f, indent=2)
+
+        exit_code, stdout, stderr = run_setup(
+            "--install", "--claude-dir", claude_dir,
+        )
+
+        t.assert_equal("exits 0", exit_code, 0)
+        if exit_code != 0:
+            t.assert_equal(f"stderr: {stderr}", False, True)
+            return
+
+        # Backup should exist
+        backups = _find_backups(claude_dir)
+        t.assert_equal("backup created", len(backups), 1)
+
+        # Merged settings should preserve existing + add template entries
+        with open(settings_path) as f:
+            merged = json.load(f)
+
+        # Existing model preserved (not overwritten by template)
+        t.assert_equal("existing model preserved", merged["model"], "sonnet")
+
+        # Existing custom permission preserved
+        t.assert_contains(
+            "custom permission preserved",
+            str(merged["permissions"]["allow"]),
+            "Bash(my-custom-command)",
+        )
+
+        # Template hooks added
+        t.assert_equal("hooks added from template", "hooks" in merged, True)
+
+        # Symlinks also created
+        t.assert_equal(
+            "CLAUDE.md symlink created",
+            os.path.islink(os.path.join(claude_dir, "CLAUDE.md")), True,
+        )
+        t.assert_equal(
+            "rules symlink created",
+            os.path.islink(os.path.join(claude_dir, "rules")), True,
+        )
+
+
+def test_install_idempotent(t):
+    """Running --install twice produces the same final state."""
+    t.section("Install: idempotent")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+
+        # First install
+        exit_code1, _, stderr1 = run_setup("--install", "--claude-dir", claude_dir)
+        t.assert_equal("first install exits 0", exit_code1, 0)
+        if exit_code1 != 0:
+            t.assert_equal(f"stderr: {stderr1}", False, True)
+            return
+
+        # Capture state after first install
+        settings_path = os.path.join(claude_dir, "settings.json")
+        with open(settings_path) as f:
+            first_result = json.load(f)
+
+        # Remove backup from first run to isolate
+        for b in _find_backups(claude_dir):
+            os.remove(b)
+
+        # Second install
+        exit_code2, _, stderr2 = run_setup("--install", "--claude-dir", claude_dir)
+        t.assert_equal("second install exits 0", exit_code2, 0)
+
+        with open(settings_path) as f:
+            second_result = json.load(f)
+
+        t.assert_equal("idempotent settings", first_result, second_result)
+
+        # Symlinks still correct
+        t.assert_equal(
+            "CLAUDE.md still linked",
+            os.path.islink(os.path.join(claude_dir, "CLAUDE.md")), True,
+        )
+
+
+def test_install_with_custom_template(t):
+    """--install respects --template flag for custom templates."""
+    t.section("Install: custom template")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+
+        # Create minimal custom template with real hook scripts
+        script_path = _make_hook_script(tmp, "custom-hook.sh")
+        custom_template = {
+            "hooks": {
+                "PreToolUse": [{
+                    "matcher": "Bash",
+                    "hooks": [{"type": "command", "command": script_path}],
+                }]
+            },
+            "model": "haiku",
+        }
+        template_path = os.path.join(tmp, "custom.template.json")
+        with open(template_path, "w") as f:
+            json.dump(custom_template, f, indent=2)
+
+        exit_code, _, stderr = run_setup(
+            "--install", "--claude-dir", claude_dir, "--template", template_path,
+        )
+
+        t.assert_equal("exits 0", exit_code, 0)
+        if exit_code != 0:
+            t.assert_equal(f"stderr: {stderr}", False, True)
+            return
+
+        settings_path = os.path.join(claude_dir, "settings.json")
+        with open(settings_path) as f:
+            data = json.load(f)
+
+        t.assert_equal("uses custom template model", data["model"], "haiku")
+        t.assert_contains(
+            "uses custom hook",
+            json.dumps(data), "custom-hook.sh",
+        )
+
+
+# ── Milestone 4: Uninstall Tests ──────────────────────────────────
+
+def test_uninstall_removes_symlinks(t):
+    """--uninstall removes all symlinks created by install."""
+    t.section("Uninstall: removes symlinks")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+
+        # Install first
+        exit_code, _, _ = run_setup("--install", "--claude-dir", claude_dir)
+        t.assert_equal("install exits 0", exit_code, 0)
+        if exit_code != 0:
+            return
+
+        # Verify symlinks exist
+        t.assert_equal(
+            "CLAUDE.md exists before uninstall",
+            os.path.islink(os.path.join(claude_dir, "CLAUDE.md")), True,
+        )
+
+        # Uninstall
+        exit_code, stdout, stderr = run_setup("--uninstall", "--claude-dir", claude_dir)
+        t.assert_equal("uninstall exits 0", exit_code, 0)
+        if exit_code != 0:
+            t.assert_equal(f"stderr: {stderr}", False, True)
+            return
+
+        # Symlinks should be removed
+        t.assert_equal(
+            "CLAUDE.md removed",
+            os.path.exists(os.path.join(claude_dir, "CLAUDE.md")), False,
+        )
+        t.assert_equal(
+            "rules removed",
+            os.path.exists(os.path.join(claude_dir, "rules")), False,
+        )
+        t.assert_equal(
+            "skills/verify removed",
+            os.path.exists(os.path.join(claude_dir, "skills", "verify")), False,
+        )
+
+
+def test_uninstall_preserves_settings(t):
+    """--uninstall does not delete settings.json (only removes symlinks)."""
+    t.section("Uninstall: preserves settings.json")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+
+        # Install first
+        run_setup("--install", "--claude-dir", claude_dir)
+
+        settings_path = os.path.join(claude_dir, "settings.json")
+        t.assert_equal("settings.json exists before uninstall", os.path.isfile(settings_path), True)
+
+        # Uninstall
+        run_setup("--uninstall", "--claude-dir", claude_dir)
+
+        # settings.json should still exist
+        t.assert_equal("settings.json preserved", os.path.isfile(settings_path), True)
+
+
+def test_uninstall_reports_backup(t):
+    """--uninstall reports available backup files for manual restore."""
+    t.section("Uninstall: reports backup")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+        os.makedirs(claude_dir)
+
+        # Create existing settings, then install (which creates a backup)
+        settings_path = os.path.join(claude_dir, "settings.json")
+        with open(settings_path, "w") as f:
+            json.dump({"model": "sonnet"}, f)
+
+        run_setup("--install", "--claude-dir", claude_dir)
+
+        # There should be a backup
+        backups = _find_backups(claude_dir)
+        t.assert_equal("backup exists", len(backups) >= 1, True)
+
+        # Uninstall should mention the backup
+        exit_code, stdout, stderr = run_setup("--uninstall", "--claude-dir", claude_dir)
+        t.assert_equal("exits 0", exit_code, 0)
+
+        # stderr should mention backup availability
+        combined_output = stdout + stderr
+        t.assert_contains("mentions backup", combined_output, "backup")
+
+
+def test_uninstall_skips_nonexistent_symlinks(t):
+    """--uninstall should handle missing symlinks gracefully."""
+    t.section("Uninstall: handles missing symlinks")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+        os.makedirs(claude_dir)
+        # Don't create any symlinks — uninstall should still succeed
+
+        exit_code, stdout, stderr = run_setup("--uninstall", "--claude-dir", claude_dir)
+        t.assert_equal("exits 0 with no symlinks to remove", exit_code, 0)
+
+
+def test_uninstall_only_removes_our_symlinks(t):
+    """--uninstall should only remove symlinks that point to this repo."""
+    t.section("Uninstall: only removes our symlinks")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+        os.makedirs(claude_dir)
+
+        # Create a symlink to something else (not our repo)
+        other_file = os.path.join(tmp, "other-claude.md")
+        with open(other_file, "w") as f:
+            f.write("other content")
+        os.symlink(other_file, os.path.join(claude_dir, "CLAUDE.md"))
+
+        exit_code, stdout, stderr = run_setup("--uninstall", "--claude-dir", claude_dir)
+        t.assert_equal("exits 0", exit_code, 0)
+
+        # The symlink should NOT be removed (it doesn't point to our repo)
+        link_path = os.path.join(claude_dir, "CLAUDE.md")
+        t.assert_equal("foreign symlink preserved", os.path.islink(link_path), True)
+        t.assert_equal(
+            "foreign symlink target unchanged",
+            os.readlink(link_path), other_file,
+        )
+
+
+def test_uninstall_handles_missing_claude_dir(t):
+    """--uninstall should succeed if claude dir doesn't exist."""
+    t.section("Uninstall: missing claude dir")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+        # Don't create it
+
+        exit_code, stdout, stderr = run_setup("--uninstall", "--claude-dir", claude_dir)
+        t.assert_equal("exits 0", exit_code, 0)
+
+
 def run_tests():
     t = TestResults("setup.sh — template resolution, merge, and symlinks")
     t.header()
@@ -997,6 +1317,20 @@ def run_tests():
     test_symlinks_errors_on_regular_directory(t)
     test_symlinks_standalone_scripts_in_repo(t)
     test_symlinks_creates_claude_dir_if_missing(t)
+
+    # Milestone 4: install
+    test_install_fresh_machine(t)
+    test_install_existing_settings(t)
+    test_install_idempotent(t)
+    test_install_with_custom_template(t)
+
+    # Milestone 4: uninstall
+    test_uninstall_removes_symlinks(t)
+    test_uninstall_preserves_settings(t)
+    test_uninstall_reports_backup(t)
+    test_uninstall_skips_nonexistent_symlinks(t)
+    test_uninstall_only_removes_our_symlinks(t)
+    test_uninstall_handles_missing_claude_dir(t)
 
     exit_code = t.summary()
     return t.passed, t.failed, t.total

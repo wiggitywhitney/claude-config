@@ -7,6 +7,8 @@
 #
 # Usage:
 #   ./setup.sh                        Print resolved settings to stdout
+#   ./setup.sh --install              Full install: merge settings + create symlinks
+#   ./setup.sh --uninstall            Remove symlinks, report backup for settings restore
 #   ./setup.sh --output FILE          Write resolved settings to FILE
 #   ./setup.sh --merge FILE           Merge resolved settings into existing FILE
 #   ./setup.sh --validate             Resolve and validate paths (no file output)
@@ -25,11 +27,21 @@ OUTPUT=""
 MERGE_TARGET=""
 VALIDATE_ONLY=false
 CREATE_SYMLINKS=false
+INSTALL_MODE=false
+UNINSTALL_MODE=false
 CLAUDE_DIR="$HOME/.claude"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --install)
+            INSTALL_MODE=true
+            shift
+            ;;
+        --uninstall)
+            UNINSTALL_MODE=true
+            shift
+            ;;
         --output)
             OUTPUT="$2"
             shift 2
@@ -56,45 +68,44 @@ while [[ $# -gt 0 ]]; do
             ;;
         *)
             echo "Unknown option: $1" >&2
-            echo "Usage: setup.sh [--output FILE] [--merge FILE] [--validate] [--template FILE] [--symlinks] [--claude-dir DIR]" >&2
+            echo "Usage: setup.sh [--install] [--uninstall] [--output FILE] [--merge FILE] [--validate] [--template FILE] [--symlinks] [--claude-dir DIR]" >&2
             exit 1
             ;;
     esac
 done
 
-# ── Symlinks mode ──────────────────────────────────────────────────
-if [[ "$CREATE_SYMLINKS" == true ]]; then
-    # Create claude dir if it doesn't exist
-    mkdir -p "$CLAUDE_DIR"
+# ── Helper: create or verify a symlink ─────────────────────────────
+# Usage: ensure_symlink TARGET LINK_PATH LABEL
+ensure_symlink() {
+    local target="$1"
+    local link_path="$2"
+    local label="$3"
 
-    # Helper: create or verify a symlink
-    # Usage: ensure_symlink TARGET LINK_PATH LABEL
-    ensure_symlink() {
-        local target="$1"
-        local link_path="$2"
-        local label="$3"
-
-        if [[ -L "$link_path" ]]; then
-            local current_target
-            current_target=$(readlink "$link_path")
-            if [[ "$current_target" == "$target" ]]; then
-                echo "  $label: already linked" >&2
-                return 0
-            else
-                echo "  $label: updating symlink" >&2
-                rm "$link_path"
-                ln -s "$target" "$link_path"
-                return 0
-            fi
-        elif [[ -e "$link_path" ]]; then
-            echo "Error: $link_path exists and is not a symlink. Remove it manually to proceed." >&2
-            return 1
+    if [[ -L "$link_path" ]]; then
+        local current_target
+        current_target=$(readlink "$link_path")
+        if [[ "$current_target" == "$target" ]]; then
+            echo "  $label: already linked" >&2
+            return 0
         else
+            echo "  $label: updating symlink" >&2
+            rm "$link_path"
             ln -s "$target" "$link_path"
-            echo "  $label: created" >&2
             return 0
         fi
-    }
+    elif [[ -e "$link_path" ]]; then
+        echo "Error: $link_path exists and is not a symlink. Remove it manually to proceed." >&2
+        return 1
+    else
+        ln -s "$target" "$link_path"
+        echo "  $label: created" >&2
+        return 0
+    fi
+}
+
+# ── Helper: create all symlinks ────────────────────────────────────
+create_symlinks() {
+    mkdir -p "$CLAUDE_DIR"
 
     echo "Creating symlinks in $CLAUDE_DIR..." >&2
 
@@ -109,7 +120,62 @@ if [[ "$CREATE_SYMLINKS" == true ]]; then
     ensure_symlink "$CLAUDE_CONFIG_DIR/.claude/skills/verify" "$CLAUDE_DIR/skills/verify" "skills/verify"
 
     echo "Symlinks complete." >&2
+}
+
+# ── Uninstall mode ─────────────────────────────────────────────────
+if [[ "$UNINSTALL_MODE" == true ]]; then
+    echo "Uninstalling claude-config from $CLAUDE_DIR..." >&2
+
+    if [[ ! -d "$CLAUDE_DIR" ]]; then
+        echo "  Nothing to uninstall ($CLAUDE_DIR does not exist)." >&2
+        exit 0
+    fi
+
+    # Remove symlinks only if they point to this repo
+    SYMLINKS_TO_CHECK=(
+        "$CLAUDE_DIR/CLAUDE.md"
+        "$CLAUDE_DIR/rules"
+        "$CLAUDE_DIR/skills/verify"
+    )
+
+    for link_path in "${SYMLINKS_TO_CHECK[@]}"; do
+        if [[ -L "$link_path" ]]; then
+            link_target=$(readlink "$link_path")
+            # Check if the symlink points to something in our repo
+            if [[ "$link_target" == "$CLAUDE_CONFIG_DIR"* ]]; then
+                rm "$link_path"
+                echo "  Removed: $link_path" >&2
+            else
+                echo "  Skipped: $link_path (points to $link_target, not this repo)" >&2
+            fi
+        fi
+    done
+
+    # Report backup files for optional settings restore
+    BACKUPS=$(find "$CLAUDE_DIR" -maxdepth 1 -name "settings.json.backup.*" 2>/dev/null | sort -r)
+    if [[ -n "$BACKUPS" ]]; then
+        echo "" >&2
+        echo "Settings backup(s) available for manual restore:" >&2
+        echo "$BACKUPS" | while read -r b; do
+            echo "  $b" >&2
+        done
+        echo "To restore: cp <backup> $CLAUDE_DIR/settings.json" >&2
+    fi
+
+    echo "Uninstall complete." >&2
     exit 0
+fi
+
+# ── Symlinks-only mode ─────────────────────────────────────────────
+if [[ "$CREATE_SYMLINKS" == true ]]; then
+    create_symlinks
+    exit 0
+fi
+
+# ── Install mode: set merge target to ~/.claude/settings.json ──────
+if [[ "$INSTALL_MODE" == true ]]; then
+    MERGE_TARGET="$CLAUDE_DIR/settings.json"
+    echo "Installing claude-config to $CLAUDE_DIR..." >&2
 fi
 
 # Verify template exists
@@ -160,9 +226,12 @@ if [[ -n "$MERGE_TARGET" ]]; then
     if [[ ! -f "$MERGE_TARGET" ]]; then
         mkdir -p "$(dirname "$MERGE_TARGET")"
         echo "$RESOLVED" > "$MERGE_TARGET"
-        exit 0
-    fi
-
+        if [[ "$INSTALL_MODE" == true ]]; then
+            echo "  Settings: created $MERGE_TARGET" >&2
+        else
+            exit 0
+        fi
+    else
     # Validate existing file is valid JSON
     if ! python3 -c "import json; json.load(open('$MERGE_TARGET'))" 2>/dev/null; then
         echo "Error: Existing settings file is not valid JSON: $MERGE_TARGET" >&2
@@ -249,6 +318,18 @@ with open('$MERGE_TARGET', 'w') as f:
     f.write('\n')
 " <<< "$RESOLVED"
 
+    if [[ "$INSTALL_MODE" == true ]]; then
+        echo "  Settings: merged into $MERGE_TARGET" >&2
+    else
+        exit 0
+    fi
+    fi  # end else (file existed)
+fi
+
+# ── Install mode: create symlinks after settings merge ─────────────
+if [[ "$INSTALL_MODE" == true ]]; then
+    create_symlinks
+    echo "Installation complete." >&2
     exit 0
 fi
 
