@@ -1,6 +1,6 @@
 # PRD #2: Portable Claude Code Configuration Across Machines
 
-**Status**: Not Started
+**Status**: Complete
 **Priority**: High
 **Created**: 2026-02-18
 **GitHub Issue**: [#2](https://github.com/wiggitywhitney/claude-config/issues/2)
@@ -117,47 +117,47 @@ Clear instructions in the repo README covering:
 
 ## Success Criteria
 
-- [ ] Running `setup.sh` on a fresh machine with a clone of claude-config produces a fully working Claude Code environment
-- [ ] Running `setup.sh` on a machine with existing settings.json preserves all existing configuration while adding new hooks/permissions
-- [ ] Global CLAUDE.md and user rules are version-controlled and applied during setup
-- [ ] All hook script paths resolve correctly on the new machine
-- [ ] Skills and rules symlinks are created and functional
-- [ ] Running setup.sh multiple times is safe (idempotent)
+- [x] Running `setup.sh` on a fresh machine with a clone of claude-config produces a fully working Claude Code environment
+- [x] Running `setup.sh` on a machine with existing settings.json preserves all existing configuration while adding new hooks/permissions
+- [x] Global CLAUDE.md and user rules are version-controlled and applied during setup
+- [x] All hook script paths resolve correctly on the new machine
+- [x] Skills and rules symlinks are created and functional
+- [x] Running setup.sh multiple times is safe (idempotent)
 
 ## Milestones
 
 ### Milestone 1: Settings Template + Path Resolution
 Create the settings template with placeholder paths and a script that resolves them to the current machine's repo location.
 
-- [ ] `settings.template.json` created with `$CLAUDE_CONFIG_DIR` placeholders
-- [ ] Script resolves placeholders to actual paths and generates valid settings.json
-- [ ] Generated settings.json passes validation (valid JSON, paths exist)
+- [x] `settings.template.json` created with `$CLAUDE_CONFIG_DIR` placeholders
+- [x] Script resolves placeholders to actual paths and generates valid settings.json
+- [x] Generated settings.json passes validation (valid JSON, paths exist)
 
 ### Milestone 2: Safe Merge Into Existing Settings
 Implement the merge strategy so setup never overwrites existing configuration.
 
-- [ ] Merge logic for hooks (add new, preserve existing)
-- [ ] Merge logic for permissions (union of allow/deny/ask lists)
-- [ ] Backup of existing settings.json before any modification
-- [ ] Tested: running setup with existing settings preserves all prior config
+- [x] Merge logic for hooks (add new, preserve existing)
+- [x] Merge logic for permissions (union of allow/deny/ask lists)
+- [x] Backup of existing settings.json before any modification
+- [x] Tested: running setup with existing settings preserves all prior config
 
 ### Milestone 3: Global CLAUDE.md + User Rules + Skills + Scripts
 Track global CLAUDE.md and user rules in the repo, handle symlinks for all global-scope files.
 
-- [ ] Global CLAUDE.md content moved into repo
-- [ ] User rules (`~/.claude/rules/`) tracked in repo
-- [ ] Install script creates `~/.claude/skills/verify` symlink
-- [ ] Install script symlinks `~/.claude/CLAUDE.md` and `~/.claude/rules/`
-- [ ] Install script handles standalone scripts (Google MCP safety hook, etc.)
-- [ ] All symlinks are idempotent (safe to re-run)
+- [x] Global CLAUDE.md content moved into repo
+- [x] User rules (`~/.claude/rules/`) tracked in repo
+- [x] Install script creates `~/.claude/skills/verify` symlink
+- [x] Install script symlinks `~/.claude/CLAUDE.md` and `~/.claude/rules/`
+- [x] Install script handles standalone scripts (Google MCP safety hook, etc.)
+- [x] All symlinks are idempotent (safe to re-run)
 
 ### Milestone 4: Full Install Script + Documentation
 Combine all pieces into a single `setup.sh` with documentation.
 
-- [ ] Single `setup.sh` handles full installation
-- [ ] Uninstall option removes installed configuration
-- [ ] README documents setup process, merge strategy, and customization
-- [ ] Tested end-to-end on a clean environment
+- [x] Single `setup.sh` handles full installation
+- [x] Uninstall option removes installed configuration
+- [x] README documents setup process, merge strategy, and customization
+- [x] Tested end-to-end on a clean environment
 
 ## Out of Scope
 
@@ -184,7 +184,13 @@ Combine all pieces into a single `setup.sh` with documentation.
 - **Rationale**: Claude Code settings.json requires absolute paths for hook commands. A template with placeholders is simple, transparent, and produces a standard settings.json that Claude Code reads natively. No runtime indirection needed.
 - **Impact**: Install script does string substitution; the generated file is a normal settings.json
 
-### Decision 3: Separate PRD from PRD #1
+### Decision 3: Move External Safety Hooks Into Repo
+- **Date**: 2026-02-22
+- **Decision**: Copy `google-mcp-safety-hook.py` and `gogcli-safety-hook.py` from `~/.claude/scripts/` into `scripts/` in the repo, so the settings template uses a single `$CLAUDE_CONFIG_DIR` placeholder for all hook paths
+- **Rationale**: Two external scripts lived outside the repo in `~/.claude/scripts/`. Using a second placeholder (`$CLAUDE_USER_DIR`) would complicate the template. Moving them into the repo keeps all hook scripts version-controlled and the template uses one placeholder pattern for all 10 paths.
+- **Impact**: Template is self-contained; no external script dependencies. The `~/.claude/scripts/` directory is no longer needed for these hooks.
+
+### Decision 4: Separate PRD from PRD #1
 - **Date**: 2026-02-18
 - **Decision**: Configuration portability is a separate PRD (#2) rather than part of PRD #1 (shared testing infrastructure)
 - **Rationale**: PRD #1 builds the toolkit (verify skill, testing rules, permission profiles). This PRD makes all configuration portable across machines. They're complementary but distinct problem spaces. This PRD depends on PRD #1's deliverables existing but solves a different problem.

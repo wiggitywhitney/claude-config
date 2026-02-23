@@ -6,14 +6,99 @@ Shared Claude Code testing infrastructure, safety config, and developer tooling.
 
 | Deliverable | Path | Purpose |
 |---|---|---|
+| Install Script | [`setup.sh`](setup.sh) | Portable setup: settings, symlinks, merge |
+| Settings Template | [`settings.template.json`](settings.template.json) | Global settings with path placeholders |
+| Global CLAUDE.md | [`global/CLAUDE.md`](global/CLAUDE.md) | Global development standards |
 | Testing Decision Guide | [`guides/testing-decision-guide.md`](guides/testing-decision-guide.md) | Maps project types to testing strategies |
 | `/verify` Skill | [`.claude/skills/verify/`](.claude/skills/verify/) | Pre-PR verification loop (build, typecheck, lint, security, tests) |
 | Tiered Verification Hooks | [`.claude/skills/verify/scripts/`](.claude/skills/verify/scripts/) | Automatic gates on commit, push, and PR creation |
+| Safety Hooks | [`scripts/`](scripts/) | Google MCP and gogcli safety hooks |
 | CLAUDE.md Templates | [`templates/`](templates/) | Starter templates for new projects |
 | CLAUDE.md Authoring Guide | [`guides/claude-md-guide.md`](guides/claude-md-guide.md) | How to write effective CLAUDE.md files |
 | Testing Rules | [`rules/testing-rules.md`](rules/testing-rules.md) | Always/Never testing patterns |
 | Permission Profiles | [`guides/permission-profiles.md`](guides/permission-profiles.md) | Three trust levels for `settings.json` |
 | Per-Language Rules | [`rules/languages/`](rules/languages/) | Path-scoped rules for TypeScript, Shell, Python, Go, JS |
+
+## Setup: Install on a New Machine
+
+Clone this repo and run the install script to set up your Claude Code environment:
+
+```bash
+git clone git@github.com:wiggitywhitney/claude-config.git ~/Documents/Repositories/claude-config
+cd ~/Documents/Repositories/claude-config
+./setup.sh --install
+```
+
+This single command:
+- Generates `~/.claude/settings.json` from the template with resolved absolute paths (or merges into your existing settings.json)
+- Creates symlinks for global CLAUDE.md, rules, and skills
+- Backs up your existing settings.json before making changes
+
+### What Gets Installed
+
+| Target | Source | Method |
+|---|---|---|
+| `~/.claude/settings.json` | `settings.template.json` | Generated (merge if exists) |
+| `~/.claude/CLAUDE.md` | `global/CLAUDE.md` | Symlink |
+| `~/.claude/rules/` | `rules/` | Symlink |
+| `~/.claude/skills/verify/` | `.claude/skills/verify/` | Symlink |
+
+### Merge Strategy
+
+When `~/.claude/settings.json` already exists, setup.sh merges rather than overwrites:
+
+- **Hooks**: Adds new hook matchers from the template. For existing matchers, adds new hook commands without duplicating existing ones.
+- **Permissions** (allow/deny/ask): Unions the lists — adds entries from the template that don't already exist, preserves all existing entries.
+- **Other keys** (model, etc.): Only sets keys that aren't already present. Your existing preferences are never overwritten.
+
+A timestamped backup (`settings.json.backup.YYYYMMDD-HHMMSS`) is created before any modification.
+
+### Updating Configuration
+
+After pulling the latest changes:
+
+```bash
+cd ~/Documents/Repositories/claude-config
+git pull
+./setup.sh --install
+```
+
+Since symlinks point into the repo, changes to CLAUDE.md, rules, and skills take effect immediately after `git pull`. Re-running `--install` is only needed when `settings.template.json` changes (new hooks, permissions, or settings).
+
+### Customization
+
+- **Machine-specific project prefs**: Use `<project>/CLAUDE.local.md` (auto-gitignored by Claude Code)
+- **Machine-specific project settings**: Use `<project>/.claude/settings.local.json` (auto-gitignored)
+- **Personal permissions accumulated over time**: These live in `~/.claude/settings.json` and are preserved by the merge strategy
+- **MCP server configuration**: Lives in `~/.claude.json` — not managed by setup.sh since it may contain secrets/tokens
+
+### Uninstalling
+
+To remove the installed configuration:
+
+```bash
+./setup.sh --uninstall
+```
+
+This removes symlinks created by the installer and reports available backup files. Settings.json is preserved — restore a backup manually if needed:
+
+```bash
+cp ~/.claude/settings.json.backup.YYYYMMDD-HHMMSS ~/.claude/settings.json
+```
+
+### Advanced Usage
+
+Individual setup steps can be run independently:
+
+```bash
+./setup.sh                        # Print resolved settings to stdout
+./setup.sh --validate             # Validate template and hook paths
+./setup.sh --output FILE          # Write resolved settings to a file
+./setup.sh --merge FILE           # Merge resolved settings into existing file
+./setup.sh --symlinks             # Create symlinks only (no settings)
+./setup.sh --template FILE        # Use a custom template
+./setup.sh --claude-dir DIR       # Target a different directory (for testing)
+```
 
 ## Quick Start: Apply to a New Project
 
@@ -251,6 +336,8 @@ Replace `/path/to/claude-config` with the absolute path to your clone of this re
 
 ```text
 claude-config/
+  setup.sh                             # Install script (--install, --uninstall)
+  settings.template.json               # Settings template with $CLAUDE_CONFIG_DIR
   .claude/
     CLAUDE.md                          # Project-level instructions
     skills/
@@ -258,11 +345,13 @@ claude-config/
         SKILL.md                       # /verify skill definition
         scripts/                       # All hook and verification scripts
         tests/                         # Hook tests
+  global/
+    CLAUDE.md                          # Global development standards (→ ~/.claude/CLAUDE.md)
   guides/
     claude-md-guide.md                 # How to write CLAUDE.md files
     permission-profiles.md             # Three permission tiers
     testing-decision-guide.md          # Project type → testing strategy
-  rules/
+  rules/                               # User-level rules (→ ~/.claude/rules/)
     testing-rules.md                   # Always/Never testing patterns
     languages/                         # Per-language rules with paths: activation
       typescript.md
@@ -270,7 +359,12 @@ claude-config/
       javascript.md
       python.md                        # Placeholder
       go.md                            # Placeholder
+  scripts/                             # Standalone safety hooks
+    google-mcp-safety-hook.py          # Google API MCP safety hook
+    gogcli-safety-hook.py              # gogcli MCP safety hook
   templates/
     claude-md-general.md               # General CLAUDE.md template
     claude-md-nodejs.md                # Node.js/TypeScript template
+  tests/
+    test_setup.py                      # Setup script tests (150 tests)
 ```
