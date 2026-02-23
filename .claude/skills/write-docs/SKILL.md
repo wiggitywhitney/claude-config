@@ -62,7 +62,7 @@ After gathering context, confirm the documentation plan with the user before pro
 
 Ensure a clean, reproducible starting state before writing any documentation.
 
-1. **Detect project type**: Run `.claude/skills/verify/scripts/detect-project.sh` (from the `/verify` skill) if available. Otherwise, check for `package.json`, `Makefile`, `go.mod`, `pyproject.toml`, `Cargo.toml`, or other project markers to understand the tech stack.
+1. **Detect project type**: Run `~/.claude/skills/verify/scripts/detect-project.sh` (from the `/verify` skill) if available. Otherwise, check for `package.json`, `Makefile`, `go.mod`, `pyproject.toml`, `Cargo.toml`, or other project markers to understand the tech stack.
 2. **Follow existing setup docs**: If the project has setup documentation (README, CONTRIBUTING.md, setup guide), follow those steps to set up the environment. This validates existing docs as a side effect. If no setup docs exist, use project markers from step 1 to run standard setup commands (e.g., `npm install`, `pip install -e .`, `go mod download`) and note what was needed — this becomes input for the Prerequisites section.
 3. **If existing docs are broken**: STOP immediately. Tell the user: "The existing setup documentation failed at step X. Before writing new docs, we should fix the existing setup docs. Here's what went wrong: [details]." Do not proceed until the user decides how to handle it.
 4. **Verify clean state**: Run build, lint, or test commands as appropriate to confirm the environment is working before documenting anything.
