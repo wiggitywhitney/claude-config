@@ -188,8 +188,9 @@ if [[ ! -f "$TEMPLATE" ]]; then
     exit 1
 fi
 
-# Resolve placeholders — use | as sed delimiter to avoid escaping /
-RESOLVED=$(sed "s|\\\$CLAUDE_CONFIG_DIR|${CLAUDE_CONFIG_DIR}|g" "$TEMPLATE")
+# Resolve placeholders — escape replacement to avoid sed meta chars (&, |, \)
+ESCAPED_CLAUDE_CONFIG_DIR=$(printf '%s' "$CLAUDE_CONFIG_DIR" | sed -e 's/[&|\\]/\\&/g')
+RESOLVED=$(sed "s|\\\$CLAUDE_CONFIG_DIR|${ESCAPED_CLAUDE_CONFIG_DIR}|g" "$TEMPLATE")
 
 # Validate JSON
 if ! echo "$RESOLVED" | python3 -c "import json, sys; json.load(sys.stdin)" 2>/dev/null; then

@@ -18,8 +18,10 @@ Hook receives JSON on stdin, outputs JSON decision to stdout.
 """
 
 import json
+import os
 import sys
 import datetime
+from pathlib import Path
 
 # Sheets allowed for writes (all others blocked)
 ALLOWED_SHEET_IDS = {
@@ -27,15 +29,24 @@ ALLOWED_SHEET_IDS = {
     "14SKb5lOhlOznUTx7gJhH4KHidFOaxNwF5dx4cXNssz4",  # Datadog Illuminated tracker
 }
 
-# Debug logging
-DEBUG = True
-DEBUG_LOG = "/tmp/google-mcp-hook-debug.log"
+# Debug logging — opt-in via CLAUDE_HOOK_DEBUG=1
+DEBUG = os.getenv("CLAUDE_HOOK_DEBUG") == "1"
+DEBUG_LOG = Path(
+    os.getenv(
+        "CLAUDE_HOOK_DEBUG_LOG",
+        str(Path.home() / ".claude" / "logs" / "google-mcp-hook-debug.log"),
+    )
+)
 
 def log(message: str):
     """Write debug message to log file."""
     if DEBUG:
-        with open(DEBUG_LOG, "a") as f:
-            f.write(f"{message}\n")
+        DEBUG_LOG.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            with open(DEBUG_LOG, "a", encoding="utf-8") as f:
+                f.write(f"{message}\n")
+        except OSError:
+            pass
 
 def make_decision(decision: str, reason: str) -> dict:
     """Create a properly formatted PreToolUse hook decision."""

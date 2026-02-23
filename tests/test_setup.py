@@ -219,10 +219,9 @@ def test_all_hook_paths_exist(t):
 
     data = json.loads(stdout)
     hooks = data.get("hooks", {})
-    all_paths_valid = True
     checked = 0
 
-    for event_type, matchers in hooks.items():
+    for _event_type, matchers in hooks.items():
         for matcher in matchers:
             for hook in matcher.get("hooks", []):
                 path = hook.get("command", "")
@@ -233,8 +232,6 @@ def test_all_hook_paths_exist(t):
                         f"hook path exists: {os.path.basename(path)}",
                         exists, True
                     )
-                    if not exists:
-                        all_paths_valid = False
 
     t.assert_equal(f"checked {checked} hook paths (expected 10)", checked, 10)
 
@@ -1332,7 +1329,7 @@ def run_tests():
     test_uninstall_only_removes_our_symlinks(t)
     test_uninstall_handles_missing_claude_dir(t)
 
-    exit_code = t.summary()
+    t.summary()
     return t.passed, t.failed, t.total
 
 
