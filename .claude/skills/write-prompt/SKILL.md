@@ -1,6 +1,12 @@
+---
+name: write-prompt
+description: Write high-quality system prompts for AI agents or Claude Code skills
+argument-hint: "[review|migrate]"
+---
+
 # /write-prompt — Structured Prompt Engineering
 
-Help users write high-quality system prompts for AI agents or Claude Code skills. Guides through building or reviewing prompts using validated research on what actually works.
+Write high-quality system prompts for AI agents or Claude Code skills. Guides through building or reviewing prompts using validated research on what actually works.
 
 ## When to Use /write-prompt
 

@@ -1,3 +1,8 @@
+---
+name: research
+description: Research a topic, technology, or question using web search and documentation
+---
+
 # /research - Structured Technical Research
 
 Research a topic, technology, or question using web search and documentation. Produces a concise synthesis with cited sources — not a raw data dump.
