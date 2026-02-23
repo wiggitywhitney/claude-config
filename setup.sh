@@ -13,7 +13,7 @@
 #   ./setup.sh --merge FILE           Merge resolved settings into existing FILE
 #   ./setup.sh --validate             Resolve and validate paths (no file output)
 #   ./setup.sh --template FILE        Use a custom template (default: settings.template.json)
-#   ./setup.sh --symlinks             Create symlinks for CLAUDE.md, rules/, skills/verify
+#   ./setup.sh --symlinks             Create symlinks for CLAUDE.md, rules/, and all skills/
 #   ./setup.sh --claude-dir DIR       Override ~/.claude target directory (for testing)
 
 set -euo pipefail
@@ -125,6 +125,9 @@ create_symlinks() {
     # skills/write-prompt → repo .claude/skills/write-prompt
     ensure_symlink "$CLAUDE_CONFIG_DIR/.claude/skills/write-prompt" "$CLAUDE_DIR/skills/write-prompt" "skills/write-prompt"
 
+    # skills/write-docs → repo .claude/skills/write-docs
+    ensure_symlink "$CLAUDE_CONFIG_DIR/.claude/skills/write-docs" "$CLAUDE_DIR/skills/write-docs" "skills/write-docs"
+
     echo "Symlinks complete." >&2
 }
 
@@ -144,6 +147,7 @@ if [[ "$UNINSTALL_MODE" == true ]]; then
         "$CLAUDE_DIR/skills/verify"
         "$CLAUDE_DIR/skills/research"
         "$CLAUDE_DIR/skills/write-prompt"
+        "$CLAUDE_DIR/skills/write-docs"
     )
 
     for link_path in "${SYMLINKS_TO_CHECK[@]}"; do

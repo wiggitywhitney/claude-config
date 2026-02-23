@@ -1,6 +1,6 @@
 # PRD #6: /write-docs Skill for Validated Documentation
 
-**Status**: Not Started
+**Status**: Complete
 **Priority**: Medium
 **Created**: 2026-02-18
 **GitHub Issue**: [#6](https://github.com/wiggitywhitney/claude-config/issues/6)
@@ -67,31 +67,31 @@ The skill should respect each project's existing documentation structure. If no 
 
 ## Success Criteria
 
-- [ ] Skill installed globally at `~/.claude/skills/write-docs/`
-- [ ] Skill works across at least two different project types (Node.js and shell/config)
-- [ ] All examples in documentation produced by the skill come from real execution
-- [ ] Skill validates existing setup docs as part of its workflow
-- [ ] Chunk-by-chunk confirmation gates work as designed
+- [x] Skill installed globally at `~/.claude/skills/write-docs/`
+- [x] Skill works across at least two different project types (Node.js and shell/config)
+- [x] All examples in documentation produced by the skill come from real execution
+- [x] Skill validates existing setup docs as part of its workflow
+- [x] Chunk-by-chunk confirmation gates work as designed
 
 ## Milestones
 
 ### Milestone 1: Core Skill Implementation
 Create the skill prompt file with the validated documentation workflow. Test against one real project.
 
-- [ ] Skill prompt created at `~/.claude/skills/write-docs/SKILL.md` with frontmatter
-- [ ] Workflow covers all 6 steps (identify, setup, outline, write, cross-reference, review)
-- [ ] Execute-then-document principle enforced in skill instructions
-- [ ] Chunk-by-chunk confirmation gates defined
-- [ ] Tested by writing real documentation for one project
+- [x] Skill prompt created at `~/.claude/skills/write-docs/SKILL.md` with frontmatter
+- [x] Workflow covers all 6 steps (identify, setup, outline, write, cross-reference, review)
+- [x] Execute-then-document principle enforced in skill instructions
+- [x] Chunk-by-chunk confirmation gates defined
+- [x] Tested by writing real documentation for one project
 
 ### Milestone 2: Cross-Project Validation
 Test the skill across different project types to ensure it's truly project-agnostic.
 
-- [ ] Tested on a Node.js/TypeScript project
-- [ ] Tested on a shell/config project (e.g., claude-config itself)
-- [ ] Skill adapts environment setup to project type
-- [ ] File location conventions work across project structures
-- [ ] Existing docs validation catches real issues
+- [x] Tested on a Node.js/TypeScript project
+- [x] Tested on a shell/config project (e.g., claude-config itself)
+- [x] Skill adapts environment setup to project type
+- [x] File location conventions work across project structures
+- [x] Existing docs validation catches real issues
 
 ## Out of Scope
 

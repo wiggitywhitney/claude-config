@@ -13,6 +13,9 @@ Shared Claude Code testing infrastructure, safety config, and developer tooling.
 | `/verify` Skill | [`.claude/skills/verify/`](.claude/skills/verify/) | Pre-PR verification loop (build, typecheck, lint, security, tests) |
 | Tiered Verification Hooks | [`.claude/skills/verify/scripts/`](.claude/skills/verify/scripts/) | Automatic gates on commit, push, and PR creation |
 | Safety Hooks | [`scripts/`](scripts/) | Google MCP and gogcli safety hooks |
+| `/research` Skill | [`.claude/skills/research/`](.claude/skills/research/) | Structured technical research with cited sources |
+| `/write-prompt` Skill | [`.claude/skills/write-prompt/`](.claude/skills/write-prompt/) | Guided prompt engineering for system prompts and skills |
+| `/write-docs` Skill | [`.claude/skills/write-docs/`](.claude/skills/write-docs/) | Validated documentation with real command output |
 | CLAUDE.md Templates | [`templates/`](templates/) | Starter templates for new projects |
 | CLAUDE.md Authoring Guide | [`guides/claude-md-guide.md`](guides/claude-md-guide.md) | How to write effective CLAUDE.md files |
 | Testing Rules | [`rules/testing-rules.md`](rules/testing-rules.md) | Always/Never testing patterns |
@@ -42,6 +45,9 @@ This single command:
 | `~/.claude/CLAUDE.md` | `global/CLAUDE.md` | Symlink |
 | `~/.claude/rules/` | `rules/` | Symlink |
 | `~/.claude/skills/verify/` | `.claude/skills/verify/` | Symlink |
+| `~/.claude/skills/research/` | `.claude/skills/research/` | Symlink |
+| `~/.claude/skills/write-prompt/` | `.claude/skills/write-prompt/` | Symlink |
+| `~/.claude/skills/write-docs/` | `.claude/skills/write-docs/` | Symlink |
 
 ### Merge Strategy
 
@@ -345,6 +351,12 @@ claude-config/
         SKILL.md                       # /verify skill definition
         scripts/                       # All hook and verification scripts
         tests/                         # Hook tests
+      research/
+        SKILL.md                       # /research skill definition
+      write-prompt/
+        SKILL.md                       # /write-prompt skill definition
+      write-docs/
+        SKILL.md                       # /write-docs skill definition
   global/
     CLAUDE.md                          # Global development standards (→ ~/.claude/CLAUDE.md)
   guides/

@@ -1,3 +1,8 @@
+---
+name: research
+description: Research a topic, technology, or question using web search and documentation. Use this skill before adopting new technologies or when current documentation is needed.
+---
+
 # /research - Structured Technical Research
 
 Research a topic, technology, or question using web search and documentation. Produces a concise synthesis with cited sources — not a raw data dump.
@@ -11,9 +16,21 @@ Research a topic, technology, or question using web search and documentation. Pr
 - Answering "how does X work?" or "what's the best way to do Y?"
 - **Adopting a new technology** into an existing project (see Phase 5 below)
 
+## Proactive Invocation
+
+Claude Code should use this skill — not ad-hoc web searches — whenever structured research is needed. This includes:
+
+- **Adopting new technologies**: Before writing code with a framework, library, or tool that is new to the current project (per global CLAUDE.md "Adopting New Technologies" rules)
+- **Verifying assumptions**: When training data may be outdated for version numbers, API signatures, or configuration defaults
+- **Comparing alternatives**: When a design decision requires evaluating multiple options
+- **Investigating unknowns**: When encountering unfamiliar errors, patterns, or technologies during implementation
+
+The difference matters: ad-hoc web searches produce scattered results. This skill produces a structured synthesis with cited sources, confidence levels, and gotcha documentation.
+
 ## Invocation
 
-User says: `/research <topic or question>`
+- User says: `/research <topic or question>`
+- Claude Code invokes this workflow when research is needed as part of a larger task
 
 ## Research Process
 

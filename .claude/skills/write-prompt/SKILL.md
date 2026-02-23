@@ -1,6 +1,12 @@
+---
+name: write-prompt
+description: Write high-quality system prompts for AI agents or Claude Code skills. Use this skill when creating or reviewing any system prompt or SKILL.md file.
+argument-hint: "[review|migrate]"
+---
+
 # /write-prompt — Structured Prompt Engineering
 
-Help users write high-quality system prompts for AI agents or Claude Code skills. Guides through building or reviewing prompts using validated research on what actually works.
+Write high-quality system prompts for AI agents or Claude Code skills. Guides through building or reviewing prompts using validated research on what actually works.
 
 ## When to Use /write-prompt
 
@@ -9,11 +15,23 @@ Help users write high-quality system prompts for AI agents or Claude Code skills
 - Reviewing an existing prompt or skill for anti-patterns
 - Adapting a prompt from one model generation to another (e.g., Claude 4.5 → 4.6)
 
+## Proactive Invocation
+
+Claude Code should use this skill — not ad-hoc prompt writing — whenever it needs to create or review a system prompt or skill file. This includes:
+
+- **Creating new skills**: When building a SKILL.md file for a Claude Code skill
+- **Writing system prompts**: When building prompts for API calls (Messages API, Bedrock, etc.)
+- **Reviewing existing prompts**: When modifying or debugging an existing prompt or skill
+- **Model migration**: When adapting prompts after a model upgrade
+
+The difference matters: ad-hoc prompt writing misses anti-patterns, skips the five missing information categories, and produces prompts that fail in predictable ways. This skill applies validated research on what actually works.
+
 ## Invocation
 
 - `/write-prompt` — start the guided workflow
 - `/write-prompt review` — review an existing prompt or skill the user provides
 - `/write-prompt migrate` — adapt an existing prompt for a different model
+- Claude Code invokes this workflow when prompt creation or review is part of a larger task
 
 ## Phase 1: Gather Context
 
