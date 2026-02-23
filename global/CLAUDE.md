@@ -92,6 +92,18 @@ When drafting emails or written communication:
 - When generating code, prefer TypeScript unless context indicates otherwise.
 - For configuration, prefer YAML over JSON where the tool supports it.
 
+## Vals Secrets Management
+
+Whitney uses [vals](https://github.com/helmfile/vals) to inject secrets from Google Secret Manager (and other backends). Secrets are never exported to `.zshrc` or committed to repos. Per-repo config lives in `.vals.yaml`.
+
+```bash
+# Run a command with secrets injected
+vals exec -f .vals.yaml -- command arg1 arg2
+
+# Export secrets into the current shell
+eval $(vals eval -f .vals.yaml --output shell)
+```
+
 ## OpenTelemetry Packaging
 
 - Libraries and distributable packages depend on the OTel **API** only — never the SDK, instrumentation packages, or auto-instrumentation bundles.
