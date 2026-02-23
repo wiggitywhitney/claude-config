@@ -125,6 +125,9 @@ create_symlinks() {
     # skills/write-prompt → repo .claude/skills/write-prompt
     ensure_symlink "$CLAUDE_CONFIG_DIR/.claude/skills/write-prompt" "$CLAUDE_DIR/skills/write-prompt" "skills/write-prompt"
 
+    # skills/write-docs → repo .claude/skills/write-docs
+    ensure_symlink "$CLAUDE_CONFIG_DIR/.claude/skills/write-docs" "$CLAUDE_DIR/skills/write-docs" "skills/write-docs"
+
     echo "Symlinks complete." >&2
 }
 
@@ -144,6 +147,7 @@ if [[ "$UNINSTALL_MODE" == true ]]; then
         "$CLAUDE_DIR/skills/verify"
         "$CLAUDE_DIR/skills/research"
         "$CLAUDE_DIR/skills/write-prompt"
+        "$CLAUDE_DIR/skills/write-docs"
     )
 
     for link_path in "${SYMLINKS_TO_CHECK[@]}"; do
