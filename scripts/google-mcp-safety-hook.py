@@ -149,8 +149,11 @@ def check_sheets(tool_name: str, tool_input: dict) -> dict | None:
             if spreadsheet_id in ALLOWED_SHEET_IDS:
                 return None  # Allow writes to approved sheets
             else:
-                return make_decision("deny",
-                    f"Writing to this spreadsheet is blocked. Only approved sheets can be written to. Add the sheet ID to ALLOWED_SHEET_IDS in the safety hook to allow writes.")
+                return make_decision(
+                    "deny",
+                    "Writing to this spreadsheet is blocked. Only approved sheets can be written to. "
+                    "Add the sheet ID to ALLOWED_SHEET_IDS in the safety hook to allow writes.",
+                )
 
     # Allow: Read operations
     return None

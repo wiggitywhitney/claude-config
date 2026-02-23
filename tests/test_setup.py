@@ -147,6 +147,7 @@ def test_template_is_valid_json_structure(t):
         t.assert_equal("template resolves to valid JSON", True, True)
     except json.JSONDecodeError as e:
         t.assert_equal(f"template resolves to valid JSON (error: {e})", False, True)
+        return
 
     # Verify expected top-level keys
     t.assert_equal("has permissions key", "permissions" in data, True)

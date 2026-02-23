@@ -288,6 +288,7 @@ for event_type, template_matchers in template_hooks.items():
             for th in tm.get('hooks', []):
                 if th['command'] not in existing_commands:
                     em['hooks'].append(th)
+                    existing_commands.add(th['command'])
 
     merged_hooks[event_type] = existing_matchers
 
