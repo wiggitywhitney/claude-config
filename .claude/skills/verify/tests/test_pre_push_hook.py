@@ -5,7 +5,6 @@ Exercises the hook with:
 - Push to branch with no open PR (standard security only)
 - Push to branch with open PR (expanded security + tests)
 - gh CLI unavailable (fallback to standard security)
-- Docs-only changes (should skip verification regardless of PR)
 """
 
 import os
@@ -42,30 +41,14 @@ exit 0
     return bin_dir
 
 
-def create_mock_gh_unavailable(temp_dir):
-    """Create a bin directory WITHOUT gh to simulate gh not installed.
-
-    Returns a bin directory with only basic tools, no gh.
-    """
-    bin_dir = os.path.join(temp_dir, "no-gh-bin")
-    os.makedirs(bin_dir, exist_ok=True)
-    return bin_dir
-
-
-def run_hook_with_env(hook, json_input, extra_path=None, strip_gh=False):
+def run_hook_with_env(hook, json_input, extra_path=None):
     """Run a hook with modified PATH for gh mocking.
 
     If extra_path is provided, it's prepended to PATH.
-    If strip_gh is True, PATH is set to exclude real gh.
     """
     env = os.environ.copy()
     if extra_path:
         env["PATH"] = f"{extra_path}:{env['PATH']}"
-    if strip_gh:
-        # Create a minimal PATH that has python3, git, bash but not gh
-        # We prepend a directory with no gh, and the hook uses `command -v gh`
-        # which will find it in the real PATH. Instead, we create a gh that exits 1.
-        pass
 
     result = subprocess.run(
         [hook],

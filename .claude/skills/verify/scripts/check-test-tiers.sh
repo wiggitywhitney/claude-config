@@ -112,6 +112,7 @@ fi
 # messages when another hook denies the same action (Decision 3, PRD 11).
 WARN_MISSING="$MISSING_TIERS" WARN_PROJECT_TYPE="$PROJECT_TYPE" \
   WARN_HAS_UNIT="$HAS_UNIT" WARN_HAS_INTEGRATION="$HAS_INTEGRATION" WARN_HAS_E2E="$HAS_E2E" \
+  WARN_SKIP_INTEGRATION="$SKIP_INTEGRATION" WARN_SKIP_E2E="$SKIP_E2E" \
   python3 -c "
 import json, os
 
@@ -120,13 +121,15 @@ project_type = os.environ['WARN_PROJECT_TYPE']
 has_unit = os.environ['WARN_HAS_UNIT'] == 'True'
 has_integration = os.environ['WARN_HAS_INTEGRATION'] == 'True'
 has_e2e = os.environ['WARN_HAS_E2E'] == 'True'
+skip_integration = os.environ.get('WARN_SKIP_INTEGRATION', 'false') == 'true'
+skip_e2e = os.environ.get('WARN_SKIP_E2E', 'false') == 'true'
 
 parts = [f'test-tier-warning: missing test tiers ({missing}) for {project_type} project.']
 
 if not has_unit:
     parts.append('Unit tests: every project needs unit tests. Write them before proceeding.')
 
-if not has_integration:
+if not has_integration and not skip_integration:
     parts.append(
         'Integration tests: if this project currently has ANY external integrations '
         '(APIs, databases, external services) or two or more internal components that '
@@ -137,7 +140,7 @@ if not has_integration:
         'create a .skip-integration dotfile to permanently skip integration test detection.'
     )
 
-if not has_e2e:
+if not has_e2e and not skip_e2e:
     parts.append(
         'E2e tests: if this project currently has ANY user-facing workflows that span '
         'multiple components or exercise the system from input to output, '
