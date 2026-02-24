@@ -5,6 +5,10 @@
 # Detects git commit commands and blocks them if the current branch is main or
 # master. Repos can opt out by placing a `.skip-branching` file at the project root.
 #
+# Docs-only exemption: commits that only add or modify *.md files are allowed
+# directly on main/master. Deletions, renames, and non-.md files still require
+# a feature branch.
+#
 # Decision 16: Per-repo rule overrides via dotfiles.
 # Global CLAUDE.md rule: "Always work on feature branches. Never commit directly to main."
 # This hook adds deterministic enforcement of that rule.
@@ -50,8 +54,29 @@ if [ -z "$BRANCH" ]; then
   exit 0
 fi
 
-# Block commits to main or master
+# Block commits to main or master — unless all staged files are docs-only
 if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
+  # Check if this is a docs-only commit (all staged files are *.md, no deletions/renames)
+  STAGED=$(git -C "$PROJECT_DIR" diff --cached --name-status 2>/dev/null || echo "")
+  if [ -n "$STAGED" ]; then
+    DOCS_ONLY=true
+    while IFS=$'\t' read -r status filepath _rest; do
+      # Block deletions (D) and renames (R*)
+      if [[ "$status" == D ]] || [[ "$status" == R* ]]; then
+        DOCS_ONLY=false
+        break
+      fi
+      # Block any non-.md file
+      if [[ "$filepath" != *.md ]]; then
+        DOCS_ONLY=false
+        break
+      fi
+    done <<< "$STAGED"
+    if [ "$DOCS_ONLY" = true ]; then
+      exit 0  # Docs-only commit on protected branch — allow
+    fi
+  fi
+
   python3 -c "
 import json
 reason = (

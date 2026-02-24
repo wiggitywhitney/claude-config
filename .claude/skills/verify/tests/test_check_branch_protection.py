@@ -125,6 +125,148 @@ def run_tests():
                       HOOK, make_hook_input(
                           f'git -C {temp_dir} commit -m "test"', "/tmp"))
 
+    # ─── Section 6: Docs-only exemption on main ───
+    # Use a fresh repo for docs-only tests to avoid interference with staged files
+    with TempDir() as docs_dir:
+        setup_git_repo(docs_dir, branch="main")
+
+        t.section("Docs-only exemption on main (should allow)")
+
+        # New .md file — should be allowed
+        write_file(docs_dir, "README.md", "# Hello")
+        subprocess.run(
+            ["git", "add", "README.md"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+        t.assert_allow("new .md file on main is allowed",
+                       HOOK, make_hook_input('git commit -m "docs: add readme"', docs_dir))
+        # Actually commit to clear staging area
+        subprocess.run(
+            ["git", "commit", "-m", "docs: add readme", "--quiet"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+
+        # Modified .md file — should be allowed
+        write_file(docs_dir, "README.md", "# Hello World\nUpdated content.")
+        subprocess.run(
+            ["git", "add", "README.md"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+        t.assert_allow("modified .md file on main is allowed",
+                       HOOK, make_hook_input('git commit -m "docs: update readme"', docs_dir))
+        subprocess.run(
+            ["git", "commit", "-m", "docs: update readme", "--quiet"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+
+        # .md file in subdirectory (e.g. journal/) — should be allowed
+        write_file(docs_dir, "journal/2026-02-24.md", "Journal entry")
+        subprocess.run(
+            ["git", "add", "journal/2026-02-24.md"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+        t.assert_allow("nested .md file on main is allowed",
+                       HOOK, make_hook_input('git commit -m "docs: journal entry"', docs_dir))
+        subprocess.run(
+            ["git", "commit", "-m", "docs: journal entry", "--quiet"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+
+        # Multiple .md files — should be allowed
+        write_file(docs_dir, "CHANGELOG.md", "# Changelog")
+        write_file(docs_dir, "docs/guide.md", "# Guide")
+        subprocess.run(
+            ["git", "add", "CHANGELOG.md", "docs/guide.md"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+        t.assert_allow("multiple .md files on main is allowed",
+                       HOOK, make_hook_input('git commit -m "docs: add docs"', docs_dir))
+        subprocess.run(
+            ["git", "commit", "-m", "docs: add docs", "--quiet"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+
+        t.section("Docs-only exemption on main (should deny)")
+
+        # Mixed commit: .md + .py — should be denied
+        write_file(docs_dir, "notes.md", "Notes")
+        write_file(docs_dir, "script.py", "print('hi')")
+        subprocess.run(
+            ["git", "add", "notes.md", "script.py"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+        t.assert_deny("mixed .md + code on main is blocked",
+                       HOOK, make_hook_input('git commit -m "mixed commit"', docs_dir))
+        subprocess.run(
+            ["git", "commit", "-m", "mixed commit", "--quiet"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+
+        # Non-.md file alone — should be denied
+        write_file(docs_dir, "config.yaml", "key: value")
+        subprocess.run(
+            ["git", "add", "config.yaml"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+        t.assert_deny("non-.md file on main is blocked",
+                       HOOK, make_hook_input('git commit -m "add config"', docs_dir))
+        subprocess.run(
+            ["git", "commit", "-m", "add config", "--quiet"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+
+        # .txt file — should be denied (only .md is exempted)
+        write_file(docs_dir, "notes.txt", "some notes")
+        subprocess.run(
+            ["git", "add", "notes.txt"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+        t.assert_deny(".txt file on main is blocked",
+                       HOOK, make_hook_input('git commit -m "add txt"', docs_dir))
+        subprocess.run(
+            ["git", "commit", "-m", "add txt", "--quiet"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+
+        # Deleted .md file — should be denied
+        subprocess.run(
+            ["git", "rm", "README.md", "--quiet"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+        t.assert_deny("deleted .md file on main is blocked",
+                       HOOK, make_hook_input('git commit -m "remove readme"', docs_dir))
+        subprocess.run(
+            ["git", "commit", "-m", "remove readme", "--quiet"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+
+        # Renamed .md file — should be denied
+        write_file(docs_dir, "old-name.md", "Content for rename test")
+        subprocess.run(
+            ["git", "add", "old-name.md"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+        subprocess.run(
+            ["git", "commit", "-m", "add file for rename", "--quiet"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+        subprocess.run(
+            ["git", "mv", "old-name.md", "new-name.md"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+        t.assert_deny("renamed .md file on main is blocked",
+                       HOOK, make_hook_input('git commit -m "rename doc"', docs_dir))
+        subprocess.run(
+            ["git", "commit", "-m", "rename doc", "--quiet"],
+            cwd=docs_dir, capture_output=True, check=True,
+        )
+
+        # Nothing staged — should deny (no exemption, no files to check)
+        t.section("Docs-only exemption edge cases")
+
+        t.assert_deny("commit with nothing staged on main is blocked",
+                       HOOK, make_hook_input('git commit -m "empty"', docs_dir))
+
     t.summary()
     return t.passed, t.failed, t.total
 
