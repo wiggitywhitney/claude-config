@@ -110,17 +110,54 @@ fi
 # Uses additionalContext only (Claude-visible, not shown in UI).
 # permissionDecisionReason is omitted on allow to prevent confusing "Error: ... passed"
 # messages when another hook denies the same action (Decision 3, PRD 11).
-WARN_MISSING="$MISSING_TIERS" WARN_PROJECT_TYPE="$PROJECT_TYPE" python3 -c "
+WARN_MISSING="$MISSING_TIERS" WARN_PROJECT_TYPE="$PROJECT_TYPE" \
+  WARN_HAS_UNIT="$HAS_UNIT" WARN_HAS_INTEGRATION="$HAS_INTEGRATION" WARN_HAS_E2E="$HAS_E2E" \
+  WARN_SKIP_INTEGRATION="$SKIP_INTEGRATION" WARN_SKIP_E2E="$SKIP_E2E" \
+  python3 -c "
 import json, os
 
 missing = os.environ['WARN_MISSING']
 project_type = os.environ['WARN_PROJECT_TYPE']
+has_unit = os.environ['WARN_HAS_UNIT'] == 'True'
+has_integration = os.environ['WARN_HAS_INTEGRATION'] == 'True'
+has_e2e = os.environ['WARN_HAS_E2E'] == 'True'
+skip_integration = os.environ.get('WARN_SKIP_INTEGRATION', 'false') == 'true'
+skip_e2e = os.environ.get('WARN_SKIP_E2E', 'false') == 'true'
+
+parts = [f'test-tier-warning: missing test tiers ({missing}) for {project_type} project.']
+
+if not has_unit:
+    parts.append('Unit tests: every project needs unit tests. Write them before proceeding.')
+
+if not has_integration and not skip_integration:
+    parts.append(
+        'Integration tests: if this project currently has ANY external integrations '
+        '(APIs, databases, external services) or two or more internal components that '
+        'interact with each other, write integration tests for them before proceeding. '
+        'If the project is early-stage and has no integrations yet, ignore this warning. '
+        'If this project will never have integrations and you are certain of that '
+        '(e.g., a pure utility library with no external dependencies and a single module), '
+        'create a .skip-integration dotfile to permanently skip integration test detection.'
+    )
+
+if not has_e2e and not skip_e2e:
+    parts.append(
+        'E2e tests: if this project currently has ANY user-facing workflows that span '
+        'multiple components or exercise the system from input to output, '
+        'write e2e tests before proceeding. '
+        'E2e tests that require network access or infrastructure belong in a '
+        'CI workflow (GitHub Actions), not local hooks. '
+        'If the project is early-stage and has no e2e scenarios yet, ignore this warning. '
+        'If this project will never have e2e scenarios and you are certain of that '
+        '(e.g., a library with no CLI, API, or user-facing entry point), '
+        'create a .skip-e2e dotfile to permanently skip e2e test detection.'
+    )
 
 result = {
     'hookSpecificOutput': {
         'hookEventName': 'PreToolUse',
         'permissionDecision': 'allow',
-        'additionalContext': f'test-tier-warning: missing test tiers ({missing}) for {project_type} project. Consider adding test coverage. Use .skip-integration or .skip-e2e dotfiles to opt out. This is advisory only — not blocking.'
+        'additionalContext': ' '.join(parts)
     }
 }
 print(json.dumps(result))

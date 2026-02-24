@@ -50,6 +50,7 @@ When drafting emails or written communication:
 - Test output MUST be pristine to pass.
 - Capture and test logs, including expected errors.
 - Do not manually run verification before git operations — hooks enforce this automatically (commit: build+typecheck+lint; push: standard security; PR: expanded security+tests).
+- E2e tests that require network access, external services, or infrastructure (Kind clusters, API keys, databases) MUST have a CI workflow (GitHub Actions).
 - Use real implementations when feasible; mock only at system boundaries.
 - Separate deterministic logic from non-deterministic operations.
 - Full testing rules: @~/Documents/Repositories/claude-config/rules/testing-rules.md
@@ -131,7 +132,7 @@ Do not invent tasks outside the PRD structure. When a PRD exists, follow it.
 <!-- check-branch-protection.sh (PreToolUse: Bash) — blocks commits to main/master; opt out with .skip-branching -->
 <!-- check-coderabbit-required.sh (PreToolUse: Bash) — blocks PR merge without CodeRabbit review; opt out with .skip-coderabbit -->
 <!-- pre-commit-hook.sh (PreToolUse: Bash) — gates git commit on quick+lint verification (build, typecheck, lint) -->
-<!-- pre-push-hook.sh (PreToolUse: Bash) — gates git push on security verification (standard security only; build/typecheck/lint already passed at commit) -->
+<!-- pre-push-hook.sh (PreToolUse: Bash) — gates git push on security verification; escalates to expanded security + tests when an open PR is detected for the branch (uses gh pr list); falls back to standard security when gh is unavailable -->
 <!-- pre-pr-hook.sh (PreToolUse: Bash) — gates PR creation on security+tests verification (expanded security, tests; build/typecheck/lint already passed at commit) -->
 <!-- check-test-tiers.sh (PreToolUse: Bash) — warns (not blocks) on git push/PR create when unit/integration/e2e test tiers are missing; opt out with .skip-integration, .skip-e2e -->
 
