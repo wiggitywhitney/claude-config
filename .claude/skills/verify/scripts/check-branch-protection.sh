@@ -61,11 +61,11 @@ if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
   if [ -n "$STAGED" ]; then
     DOCS_ONLY=true
     while IFS=$'\t' read -r status filepath _rest; do
-      # Block deletions (D) and renames (R*)
-      if [[ "$status" == D ]] || [[ "$status" == R* ]]; then
-        DOCS_ONLY=false
-        break
-      fi
+      # Only allow Added (A) or Modified (M) statuses
+      case "$status" in
+        A|M) ;;
+        *) DOCS_ONLY=false; break ;;
+      esac
       # Block any non-.md file
       if [[ "$filepath" != *.md ]]; then
         DOCS_ONLY=false

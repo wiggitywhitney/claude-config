@@ -296,7 +296,7 @@ After creating the PR and starting the CodeRabbit review timer, use the wait tim
 - [ ] **Invoke the `/anki` skill**: Create flashcards sourced from the PRD and the code — not from conversation context. Focus on:
   - Architectural decisions and why they were made
   - New concepts, patterns, or technologies introduced
-  - How components fit together at a high level
+  - How components fit together at a high-level
   - Surprising or non-obvious design choices from the decision log
   - Do NOT create cards for implementation minutiae, boilerplate, or things the user already knows
 
