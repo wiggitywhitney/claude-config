@@ -56,6 +56,7 @@ def run_hook_with_env(hook, json_input, extra_path=None):
         capture_output=True,
         text=True,
         env=env,
+        timeout=30,
     )
     return result.returncode, result.stdout
 
@@ -199,6 +200,8 @@ def run_tests():
         mock_bin = create_mock_gh(temp_dir, pr_response="[]")
 
         # Chained push command
+        # Any JSON decision (allow or deny) means the hook detected the push
+        # (as opposed to silent passthrough with no output)
         exit_code, output = run_hook_with_env(
             HOOK,
             make_hook_input("git add . && git push origin feature/test", temp_dir),
