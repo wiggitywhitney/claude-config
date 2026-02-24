@@ -129,7 +129,7 @@ Do not invent tasks outside the PRD structure. When a PRD exists, follow it.
 <!-- PreToolUse hooks (fire before tool execution): -->
 <!-- google-mcp-safety-hook.py (PreToolUse: mcp__.*calendar|youtube|drive|sheet|spreadsheet.*) — defense-in-depth safety for Google API MCP servers -->
 <!-- check-commit-message.sh (PreToolUse: Bash) — blocks git commits with AI/Claude/Anthropic/Co-Authored-By references in commit messages -->
-<!-- check-branch-protection.sh (PreToolUse: Bash) — blocks commits to main/master; opt out with .skip-branching; docs-only exemption: commits that only add/modify *.md files are allowed directly on main (no deletions, renames, or non-.md files) -->
+<!-- check-branch-protection.sh (PreToolUse: Bash) — blocks commits to main/master; opt out with .skip-branching; docs-only exemption per @rules/branch-protection.md -->
 <!-- check-coderabbit-required.sh (PreToolUse: Bash) — blocks PR merge without CodeRabbit review; opt out with .skip-coderabbit -->
 <!-- pre-commit-hook.sh (PreToolUse: Bash) — gates git commit on quick+lint verification (build, typecheck, lint) -->
 <!-- pre-push-hook.sh (PreToolUse: Bash) — gates git push on security verification; escalates to expanded security + tests when an open PR is detected for the branch (uses gh pr list); falls back to standard security when gh is unavailable -->
