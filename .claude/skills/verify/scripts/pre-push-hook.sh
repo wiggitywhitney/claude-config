@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
-# pre-push-hook.sh — PreToolUse hook that gates git push on standard security check
+# pre-push-hook.sh — PreToolUse hook that gates git push on security checks
 #
 # Installed as a Claude Code PreToolUse hook on Bash.
-# Detects git push commands, runs standard security checks (debug code,
-# .only leaks) and blocks the push if any check fails.
+# Detects git push commands and runs security checks. If the branch has an
+# open PR, escalates to expanded security + tests (PR-tier verification)
+# to catch regressions from post-review refactors. Otherwise, runs standard
+# security only.
 #
-# This is the incremental middle tier of verification:
+# Verification tiers:
 #   git commit   → build, typecheck, lint (pre-commit-hook.sh)
-#   git push     → standard security (this hook)
+#   git push     → standard security (this hook, no PR)
+#   git push     → expanded security + tests (this hook, open PR detected)
 #   gh pr create → expanded security, tests (pre-pr-hook.sh)
 #
-# Each tier runs only checks not covered by earlier tiers.
+# PR detection uses `gh pr list` when available. If gh is unavailable or
+# the API call fails, falls back to standard security only.
 #
 # Input: JSON on stdin from Claude Code (PreToolUse event)
 # Output: JSON on stdout with permissionDecision
@@ -64,26 +68,71 @@ if [ -n "$DIFF_BASE" ]; then
   fi
 fi
 
-# Run standard security check (the only phase at push tier)
+# Detect if pushing to a branch with an open PR.
+# If so, escalate to PR-tier verification (expanded security + tests).
+# This catches regressions from post-review refactors that would otherwise
+# only be caught by CI after push.
+BRANCH=$(git -C "$PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+HAS_PR=false
+
+if [[ -n "$BRANCH" && "$BRANCH" != "HEAD" ]] && command -v gh &>/dev/null; then
+  PR_JSON=$(gh pr list --head "$BRANCH" --state open --json number --limit 1 2>/dev/null || echo "[]")
+  PR_COUNT=$(echo "$PR_JSON" | python3 -c "import json,sys; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
+  if [[ "$PR_COUNT" != "0" ]]; then
+    HAS_PR=true
+  fi
+fi
+
+# Run verification phases
 # Build, typecheck, and lint already passed at commit time.
-# Expanded security and tests are deferred to the PR tier.
 FAILED_PHASE=""
 FAILURE_OUTPUT=""
 
-security_output=$("$SCRIPT_DIR/security-check.sh" "standard" "$PROJECT_DIR" "$DIFF_BASE" 2>&1)
-if [ $? -ne 0 ]; then
-  FAILED_PHASE="security"
-  FAILURE_OUTPUT="$security_output"
+if [[ "$HAS_PR" == true ]]; then
+  # PR exists — run PR-tier verification (expanded security + tests)
+  # This ensures tests run on every push to a PR branch, not just at PR creation.
+
+  # Phase 1: Expanded security
+  security_output=$("$SCRIPT_DIR/security-check.sh" "pre-pr" "$PROJECT_DIR" "$DIFF_BASE" 2>&1)
+  if [[ $? -ne 0 ]]; then
+    FAILED_PHASE="security"
+    FAILURE_OUTPUT="$security_output"
+  fi
+
+  # Phase 2: Tests (only if security passed)
+  if [[ -z "$FAILED_PHASE" ]]; then
+    DETECTION=$("$SCRIPT_DIR/detect-project.sh" "$PROJECT_DIR" 2>/dev/null || echo '{"project_type":"unknown"}')
+    CMD_TEST=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('test') or '')" 2>/dev/null || echo "")
+    if [[ -n "$CMD_TEST" ]]; then
+      test_output=$("$SCRIPT_DIR/verify-phase.sh" "test" "$CMD_TEST" "$PROJECT_DIR" 2>&1)
+      if [[ $? -ne 0 ]]; then
+        FAILED_PHASE="test"
+        FAILURE_OUTPUT="$test_output"
+      fi
+    fi
+  fi
+
+  VERIFY_TIER="security+tests"
+else
+  # No PR (or gh unavailable) — standard security only
+  security_output=$("$SCRIPT_DIR/security-check.sh" "standard" "$PROJECT_DIR" "$DIFF_BASE" 2>&1)
+  if [[ $? -ne 0 ]]; then
+    FAILED_PHASE="security"
+    FAILURE_OUTPUT="$security_output"
+  fi
+
+  VERIFY_TIER="standard security"
 fi
 
 # Return decision
-if [ -n "$FAILED_PHASE" ]; then
-  # Security check failed — deny the push
-  VERIFY_FAILED_PHASE="$FAILED_PHASE" VERIFY_FAILURE_OUTPUT="$FAILURE_OUTPUT" python3 -c "
+if [[ -n "$FAILED_PHASE" ]]; then
+  # Verification failed — deny the push
+  VERIFY_FAILED_PHASE="$FAILED_PHASE" VERIFY_FAILURE_OUTPUT="$FAILURE_OUTPUT" VERIFY_TIER="$VERIFY_TIER" python3 -c "
 import json, os
 
 phase = os.environ['VERIFY_FAILED_PHASE']
 output = os.environ['VERIFY_FAILURE_OUTPUT']
+tier = os.environ['VERIFY_TIER']
 
 # Sanitize output: remove invalid Unicode surrogates that break JSON serialization
 output = output.encode('utf-8', errors='replace').decode('utf-8')
@@ -93,7 +142,7 @@ MAX_OUTPUT = 4000
 if len(output) > MAX_OUTPUT:
     output = output[:MAX_OUTPUT] + '\n\n... (output truncated)'
 
-reason = f'Push blocked — security check failed at phase: {phase}. Fix the underlying code to resolve the error. NEVER add suppression annotations (@ts-ignore, type:ignore, lint-disable) to bypass the check — fix the actual problem. The ONE exception: eslint-disable-line no-console is allowed for intentional CLI output (the security check already accepts it).\n\n{output}'
+reason = f'Push blocked — {tier} check failed at phase: {phase}. Fix the underlying code to resolve the error. NEVER add suppression annotations (@ts-ignore, type:ignore, lint-disable) to bypass the check — fix the actual problem. The ONE exception: eslint-disable-line no-console is allowed for intentional CLI output (the security check already accepts it).\n\n{output}'
 result = {
     'hookSpecificOutput': {
         'hookEventName': 'PreToolUse',
@@ -104,8 +153,8 @@ result = {
 print(json.dumps(result))
 "
 else
-  # Security check passed — use additionalContext only (Claude-visible, not shown in UI).
+  # All checks passed — use additionalContext only (Claude-visible, not shown in UI).
   # permissionDecisionReason is omitted on allow to prevent confusing "Error: ... passed"
   # messages when another hook denies the same action (Decision 3, PRD 11).
-  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","additionalContext":"verify: push security check passed (standard security) ✓"}}'
+  echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"allow\",\"additionalContext\":\"verify: push check passed ($VERIFY_TIER) ✓\"}}"
 fi
