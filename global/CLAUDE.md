@@ -50,6 +50,7 @@ When drafting emails or written communication:
 - Test output MUST be pristine to pass.
 - Capture and test logs, including expected errors.
 - Do not manually run verification before git operations — hooks enforce this automatically (commit: build+typecheck+lint; push: standard security; PR: expanded security+tests).
+- E2e tests that require network access, external services, or infrastructure (Kind clusters, API keys, databases) MUST have a CI workflow (GitHub Actions).
 - Use real implementations when feasible; mock only at system boundaries.
 - Separate deterministic logic from non-deterministic operations.
 - Full testing rules: @~/Documents/Repositories/claude-config/rules/testing-rules.md
