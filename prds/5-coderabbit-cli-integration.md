@@ -1,6 +1,6 @@
 # PRD #5: CodeRabbit CLI Integration & Code Review Tool Evaluation
 
-**Status**: Not Started
+**Status**: In Progress
 **Priority**: Medium
 **Created**: 2026-02-18
 **GitHub Issue**: [#5](https://github.com/wiggitywhitney/claude-config/issues/5)
@@ -51,7 +51,7 @@ Integrate the chosen tool into the existing workflow — hooks, CLAUDE.md rules,
 
 ## Success Criteria
 
-- [ ] CodeRabbit CLI capabilities fully documented with hands-on testing
+- [x] CodeRabbit CLI capabilities fully documented with hands-on testing
 - [ ] Codex code review capabilities evaluated and documented
 - [ ] Clear recommendation made with rationale
 - [ ] Chosen tool integrated into workflow, reducing merge cycle latency
@@ -63,11 +63,11 @@ Integrate the chosen tool into the existing workflow — hooks, CLAUDE.md rules,
 ### Milestone 1: Research — CodeRabbit CLI
 Hands-on evaluation of CodeRabbit CLI. Install it, run it against real code, document what it can and can't do.
 
-- [ ] Install CodeRabbit CLI and run against a real project
-- [ ] Document capabilities: what it reviews, output format, configuration options
-- [ ] Test as pre-PR local check: can it catch the same issues the GitHub review catches?
-- [ ] Evaluate token/cost implications vs MCP server approach
-- [ ] Document limitations and gaps compared to GitHub-based review
+- [x] Install CodeRabbit CLI and run against a real project
+- [x] Document capabilities: what it reviews, output format, configuration options
+- [x] Test as pre-PR local check: can it catch the same issues the GitHub review catches?
+- [x] Evaluate token/cost implications vs MCP server approach
+- [x] Document limitations and gaps compared to GitHub-based review
 
 ### Milestone 2: Research — Codex & Alternatives
 Evaluate Codex and any other notable code review tools as alternatives.
