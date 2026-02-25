@@ -1,6 +1,6 @@
 # PRD #5: CodeRabbit CLI Integration & Code Review Tool Evaluation
 
-**Status**: In Progress
+**Status**: Complete
 **Priority**: Medium
 **Created**: 2026-02-18
 **GitHub Issue**: [#5](https://github.com/wiggitywhitney/claude-config/issues/5)
@@ -25,7 +25,7 @@ Research-first approach: evaluate CodeRabbit CLI and alternatives (Codex), then 
 ## Current Workflow
 
 ```text
-implement → commit (hook: quick+lint) → push (hook: full verify) → create PR (hook: pre-pr verify)
+implement → commit (hook: quick+lint) → push (hook: security + CodeRabbit CLI review) → create PR (hook: pre-pr verify)
 → wait ~5 min for CodeRabbit GitHub review → address comments → merge
 ```
 
@@ -56,7 +56,7 @@ Integrate the chosen tool into the existing workflow — hooks, CLAUDE.md rules,
 - [x] Clear recommendation made with rationale
 - [x] Chosen tool integrated into workflow, reducing merge cycle latency
 - [~] Token overhead reduced compared to current MCP server approach *(Decision 3: MCP overhead is negligible ~$0.10/mo; not worth removing)*
-- [ ] Review quality maintained or improved
+- [x] Review quality maintained or improved
 
 ## Milestones
 
@@ -91,7 +91,7 @@ Integrate the chosen tool into the existing workflow.
 - [x] Implement integration (hook script, CLAUDE.md updates, settings changes)
 - [x] Update or replace CodeRabbit MCP server configuration if applicable *(Decision 3: keep as-is, no changes needed)*
 - [x] Update YOLO mode workflow if merge cycle changes
-- [ ] Test end-to-end in at least one real project
+- [x] Test end-to-end in at least one real project
 
 ## Out of Scope
 
