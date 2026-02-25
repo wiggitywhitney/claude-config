@@ -9,6 +9,7 @@ Exercises the hook with:
 """
 
 import os
+import shutil
 import subprocess
 import sys
 
@@ -18,6 +19,9 @@ from test_harness import (
 )
 
 HOOK = hook_path("check-branch-protection.sh")
+GIT = shutil.which("git")
+if not GIT:
+    raise RuntimeError("git not found on PATH")
 
 
 def run_tests():
@@ -28,12 +32,12 @@ def run_tests():
         # Set up a git repo on main with a feature branch
         setup_git_repo(temp_dir, branch="main")
         subprocess.run(
-            ["git", "checkout", "-b", "feature/test-branch", "--quiet"],
+            [GIT, "checkout", "-b", "feature/test-branch", "--quiet"],
             cwd=temp_dir, capture_output=True, check=True,
         )
         # Switch back to main for initial tests
         subprocess.run(
-            ["git", "checkout", "main", "--quiet"],
+            [GIT, "checkout", "main", "--quiet"],
             cwd=temp_dir, capture_output=True, check=True,
         )
 
@@ -53,7 +57,7 @@ def run_tests():
         t.section("Commits on feature branches (should passthrough)")
 
         subprocess.run(
-            ["git", "checkout", "feature/test-branch", "--quiet"],
+            [GIT, "checkout", "feature/test-branch", "--quiet"],
             cwd=temp_dir, capture_output=True, check=True,
         )
 
@@ -67,7 +71,7 @@ def run_tests():
         t.section("Commits on main/master (should deny)")
 
         subprocess.run(
-            ["git", "checkout", "main", "--quiet"],
+            [GIT, "checkout", "main", "--quiet"],
             cwd=temp_dir, capture_output=True, check=True,
         )
 
@@ -107,7 +111,7 @@ def run_tests():
 
         # Switch to feature branch for -C tests
         subprocess.run(
-            ["git", "checkout", "feature/test-branch", "--quiet"],
+            [GIT, "checkout", "feature/test-branch", "--quiet"],
             cwd=temp_dir, capture_output=True, check=True,
         )
 
@@ -117,7 +121,7 @@ def run_tests():
 
         # Switch back to main for -C deny test
         subprocess.run(
-            ["git", "checkout", "main", "--quiet"],
+            [GIT, "checkout", "main", "--quiet"],
             cwd=temp_dir, capture_output=True, check=True,
         )
 
@@ -135,40 +139,40 @@ def run_tests():
         # New .md file — should be allowed
         write_file(docs_dir, "README.md", "# Hello")
         subprocess.run(
-            ["git", "add", "README.md"],
+            [GIT, "add", "README.md"],
             cwd=docs_dir, capture_output=True, check=True,
         )
         t.assert_allow("new .md file on main is allowed",
                        HOOK, make_hook_input('git commit -m "docs: add readme"', docs_dir))
         # Actually commit to clear staging area
         subprocess.run(
-            ["git", "commit", "-m", "docs: add readme", "--quiet"],
+            [GIT, "commit", "-m", "docs: add readme", "--quiet"],
             cwd=docs_dir, capture_output=True, check=True,
         )
 
         # Modified .md file — should be allowed
         write_file(docs_dir, "README.md", "# Hello World\nUpdated content.")
         subprocess.run(
-            ["git", "add", "README.md"],
+            [GIT, "add", "README.md"],
             cwd=docs_dir, capture_output=True, check=True,
         )
         t.assert_allow("modified .md file on main is allowed",
                        HOOK, make_hook_input('git commit -m "docs: update readme"', docs_dir))
         subprocess.run(
-            ["git", "commit", "-m", "docs: update readme", "--quiet"],
+            [GIT, "commit", "-m", "docs: update readme", "--quiet"],
             cwd=docs_dir, capture_output=True, check=True,
         )
 
         # .md file in subdirectory (e.g. journal/) — should be allowed
         write_file(docs_dir, "journal/2026-02-24.md", "Journal entry")
         subprocess.run(
-            ["git", "add", "journal/2026-02-24.md"],
+            [GIT, "add", "journal/2026-02-24.md"],
             cwd=docs_dir, capture_output=True, check=True,
         )
         t.assert_allow("nested .md file on main is allowed",
                        HOOK, make_hook_input('git commit -m "docs: journal entry"', docs_dir))
         subprocess.run(
-            ["git", "commit", "-m", "docs: journal entry", "--quiet"],
+            [GIT, "commit", "-m", "docs: journal entry", "--quiet"],
             cwd=docs_dir, capture_output=True, check=True,
         )
 
@@ -176,13 +180,13 @@ def run_tests():
         write_file(docs_dir, "CHANGELOG.md", "# Changelog")
         write_file(docs_dir, "docs/guide.md", "# Guide")
         subprocess.run(
-            ["git", "add", "CHANGELOG.md", "docs/guide.md"],
+            [GIT, "add", "CHANGELOG.md", "docs/guide.md"],
             cwd=docs_dir, capture_output=True, check=True,
         )
         t.assert_allow("multiple .md files on main is allowed",
                        HOOK, make_hook_input('git commit -m "docs: add docs"', docs_dir))
         subprocess.run(
-            ["git", "commit", "-m", "docs: add docs", "--quiet"],
+            [GIT, "commit", "-m", "docs: add docs", "--quiet"],
             cwd=docs_dir, capture_output=True, check=True,
         )
 
@@ -192,72 +196,72 @@ def run_tests():
         write_file(docs_dir, "notes.md", "Notes")
         write_file(docs_dir, "script.py", "print('hi')")
         subprocess.run(
-            ["git", "add", "notes.md", "script.py"],
+            [GIT, "add", "notes.md", "script.py"],
             cwd=docs_dir, capture_output=True, check=True,
         )
         t.assert_deny("mixed .md + code on main is blocked",
                        HOOK, make_hook_input('git commit -m "mixed commit"', docs_dir))
         subprocess.run(
-            ["git", "commit", "-m", "mixed commit", "--quiet"],
+            [GIT, "commit", "-m", "mixed commit", "--quiet"],
             cwd=docs_dir, capture_output=True, check=True,
         )
 
         # Non-.md file alone — should be denied
         write_file(docs_dir, "config.yaml", "key: value")
         subprocess.run(
-            ["git", "add", "config.yaml"],
+            [GIT, "add", "config.yaml"],
             cwd=docs_dir, capture_output=True, check=True,
         )
         t.assert_deny("non-.md file on main is blocked",
                        HOOK, make_hook_input('git commit -m "add config"', docs_dir))
         subprocess.run(
-            ["git", "commit", "-m", "add config", "--quiet"],
+            [GIT, "commit", "-m", "add config", "--quiet"],
             cwd=docs_dir, capture_output=True, check=True,
         )
 
         # .txt file — should be denied (only .md is exempted)
         write_file(docs_dir, "notes.txt", "some notes")
         subprocess.run(
-            ["git", "add", "notes.txt"],
+            [GIT, "add", "notes.txt"],
             cwd=docs_dir, capture_output=True, check=True,
         )
         t.assert_deny(".txt file on main is blocked",
                        HOOK, make_hook_input('git commit -m "add txt"', docs_dir))
         subprocess.run(
-            ["git", "commit", "-m", "add txt", "--quiet"],
+            [GIT, "commit", "-m", "add txt", "--quiet"],
             cwd=docs_dir, capture_output=True, check=True,
         )
 
         # Deleted .md file — should be denied
         subprocess.run(
-            ["git", "rm", "README.md", "--quiet"],
+            [GIT, "rm", "README.md", "--quiet"],
             cwd=docs_dir, capture_output=True, check=True,
         )
         t.assert_deny("deleted .md file on main is blocked",
                        HOOK, make_hook_input('git commit -m "remove readme"', docs_dir))
         subprocess.run(
-            ["git", "commit", "-m", "remove readme", "--quiet"],
+            [GIT, "commit", "-m", "remove readme", "--quiet"],
             cwd=docs_dir, capture_output=True, check=True,
         )
 
         # Renamed .md file — should be denied
         write_file(docs_dir, "old-name.md", "Content for rename test")
         subprocess.run(
-            ["git", "add", "old-name.md"],
+            [GIT, "add", "old-name.md"],
             cwd=docs_dir, capture_output=True, check=True,
         )
         subprocess.run(
-            ["git", "commit", "-m", "add file for rename", "--quiet"],
+            [GIT, "commit", "-m", "add file for rename", "--quiet"],
             cwd=docs_dir, capture_output=True, check=True,
         )
         subprocess.run(
-            ["git", "mv", "old-name.md", "new-name.md"],
+            [GIT, "mv", "old-name.md", "new-name.md"],
             cwd=docs_dir, capture_output=True, check=True,
         )
         t.assert_deny("renamed .md file on main is blocked",
                        HOOK, make_hook_input('git commit -m "rename doc"', docs_dir))
         subprocess.run(
-            ["git", "commit", "-m", "rename doc", "--quiet"],
+            [GIT, "commit", "-m", "rename doc", "--quiet"],
             cwd=docs_dir, capture_output=True, check=True,
         )
 
