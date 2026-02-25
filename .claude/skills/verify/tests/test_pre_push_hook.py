@@ -8,6 +8,7 @@ Exercises the hook with:
 - CodeRabbit CLI review integration (advisory, skip with .skip-coderabbit)
 """
 
+import json
 import os
 import subprocess
 import sys
@@ -45,14 +46,18 @@ exit 0
 def create_mock_coderabbit(bin_dir, output="No issues found.", exit_code=0):
     """Create a mock coderabbit CLI in an existing bin directory.
 
+    Uses a separate file for output to avoid shell-quote injection issues.
     Adds a 'coderabbit' script to bin_dir that returns fixed output for 'review' calls.
     """
+    output_file = os.path.join(bin_dir, "coderabbit-output.txt")
+    with open(output_file, "w") as f:
+        f.write(output)
     cr_script = os.path.join(bin_dir, "coderabbit")
     with open(cr_script, "w") as f:
         f.write(f"""#!/usr/bin/env bash
 # Mock coderabbit CLI for testing
 if echo "$@" | grep -q "review"; then
-    echo '{output}'
+    cat "{output_file}"
     exit {exit_code}
 fi
 exit 0
@@ -283,11 +288,20 @@ def run_tests():
             t._fail("push with CodeRabbit findings still returns allow",
                      f"exit={exit_code}, output={output}")
 
-        if "CodeRabbit CLI review" in output:
-            t._pass("CodeRabbit findings appear in additionalContext")
+        # Parse JSON and verify findings are in the additionalContext field
+        try:
+            data = json.loads(output)
+            context = data["hookSpecificOutput"]["additionalContext"]
+            has_findings = "CodeRabbit CLI review" in context
+        except (json.JSONDecodeError, KeyError):
+            has_findings = False
+            context = ""
+
+        if has_findings:
+            t._pass("CodeRabbit findings appear in additionalContext field")
         else:
-            t._fail("CodeRabbit findings appear in additionalContext",
-                     f"output={output}")
+            t._fail("CodeRabbit findings appear in additionalContext field",
+                     f"additionalContext={context!r}, output={output}")
 
     # ─── Section 7: .skip-coderabbit skips CLI review ───
     t.section("CodeRabbit CLI review skipped with .skip-coderabbit")

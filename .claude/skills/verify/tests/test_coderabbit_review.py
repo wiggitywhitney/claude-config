@@ -24,15 +24,19 @@ SCRIPT = script_path("coderabbit-review.sh")
 def create_mock_coderabbit(temp_dir, output="No issues found.", exit_code=0):
     """Create a mock coderabbit CLI that returns fixed output.
 
+    Uses a separate file for output to avoid shell-quote injection issues.
     Returns the path to a bin directory that should be prepended to PATH.
     """
     bin_dir = os.path.join(temp_dir, "mock-bin")
     os.makedirs(bin_dir, exist_ok=True)
+    output_file = os.path.join(bin_dir, "coderabbit-output.txt")
+    with open(output_file, "w") as f:
+        f.write(output)
     cr_script = os.path.join(bin_dir, "coderabbit")
     write_file(temp_dir, "mock-bin/coderabbit", f"""#!/usr/bin/env bash
 # Mock coderabbit CLI for testing
 if echo "$@" | grep -q "review"; then
-    echo '{output}'
+    cat "{output_file}"
     exit {exit_code}
 fi
 exit 0
@@ -73,11 +77,12 @@ def run_tests():
     with TempDir() as temp_dir:
         repo = setup_git_repo(temp_dir)
 
-        # Use a minimal PATH that excludes coderabbit, and a fake HOME
+        # Use a minimal PATH that excludes coderabbit, and a fake HOME.
+        # os.defpath provides the OS default PATH (portable across platforms).
         fake_home = os.path.join(temp_dir, "fake-home")
         os.makedirs(fake_home, exist_ok=True)
         minimal_env = os.environ.copy()
-        minimal_env["PATH"] = "/usr/bin:/bin"
+        minimal_env["PATH"] = os.defpath
         minimal_env["HOME"] = fake_home
 
         result = subprocess.run(
