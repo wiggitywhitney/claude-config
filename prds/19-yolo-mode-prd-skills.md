@@ -45,11 +45,11 @@ Since all global skills are symlinks pointing into this repo's `.claude/skills/`
 
 ### prd-next
 **Current**: Recommends a task → "Do you want to work on this task?" → waits → design discussion → implementation → "run /prd-update-progress"
-**YOLO**: Recommend the task and immediately proceed into design discussion. Skip the confirmation gate. After presenting the implementation approach, begin implementation. When done, automatically invoke `/prd-update-progress` logic instead of telling the user to run it.
+**YOLO**: Recommend the task and immediately proceed into design discussion. Skip the confirmation gate. After presenting the implementation approach, begin implementation. When done, automatically invoke `/prd-update-progress` logic instead of telling the user to run it. **Termination**: Only chain to `/prd-update-progress` if unchecked milestone tasks remain; when all tasks are done, present a completion summary and halt.
 
 ### prd-update-progress
 **Current**: Full progress report → wait for confirmation → apply changes → "run /prd-next"
-**YOLO**: Analyze progress, apply updates to PRD checkboxes based on evidence, commit, and present a summary of what was updated. Only pause if there's a genuine divergence between implementation and plan that needs a decision. After committing, automatically invoke `/prd-next` logic if tasks remain.
+**YOLO**: Analyze progress, apply updates to PRD checkboxes based on evidence, commit, and present a summary of what was updated. Only pause if there's a genuine divergence between implementation and plan that needs a decision. After committing, automatically invoke `/prd-next` logic only if unchecked milestone tasks remain; otherwise present a completion summary and halt.
 
 ### prd-update-decisions
 **Current**: "Ask the user which PRD to update" → analyze → update
@@ -89,4 +89,5 @@ Since all global skills are symlinks pointing into this repo's `.claude/skills/`
 |------|-----------|--------|------------|
 | YOLO skills make wrong autonomous decisions | Medium | Low | Archived careful versions can be restored. User can interrupt at any time. Skills still explain what they decided. |
 | Skills become too terse/miss context | Low | Medium | "Show your work" principle — skills present summaries of autonomous decisions so user stays informed. |
-| Some projects need careful mode | Low | Low | Copy `SKILL.v1-careful.md` → project-level `.claude/skills/prd-*-careful/SKILL.md` for opt-in careful mode on specific projects. |
+| Some projects need careful mode | Low | Low | Copy `SKILL.v1-careful.md` → project-level `.claude/skills/prd-*-careful/SKILL.md` for opt-in careful mode on specific projects. **Note**: This changes invocation names (e.g., `/prd-create-careful` instead of `/prd-create`). To preserve original names, copy the careful SKILL.md into a directory matching the original skill name at the project level, which overrides the global symlink. |
+| prd-next / prd-update-progress loop runs unbounded | Low | Medium | Skills must check for remaining unchecked milestone tasks before chaining; present a completion summary and halt when all tasks are done. |
