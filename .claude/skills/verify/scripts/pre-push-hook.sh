@@ -7,10 +7,15 @@
 # to catch regressions from post-review refactors. Otherwise, runs standard
 # security only.
 #
+# After blocking checks pass, runs an advisory CodeRabbit CLI review.
+# CLI review findings are surfaced in additionalContext so Claude can
+# address issues before creating a PR. The review never blocks the push.
+#
 # Verification tiers:
 #   git commit   → build, typecheck, lint (pre-commit-hook.sh)
 #   git push     → standard security (this hook, no PR)
 #   git push     → expanded security + tests (this hook, open PR detected)
+#   git push     → CodeRabbit CLI review (advisory, all pushes)
 #   gh pr create → expanded security, tests (pre-pr-hook.sh)
 #
 # PR detection uses `gh pr list` when available. If gh is unavailable or
@@ -124,6 +129,25 @@ else
   VERIFY_TIER="standard security"
 fi
 
+# CodeRabbit CLI review (advisory — does not block push)
+# Runs after blocking checks pass. Findings are surfaced in additionalContext
+# so Claude can address issues before creating a PR (PRD #5, Decision 3).
+CODERABBIT_FINDINGS=""
+if [[ -z "$FAILED_PHASE" ]] && [[ ! -f "$PROJECT_DIR/.skip-coderabbit" ]]; then
+  # Compute base branch for CLI review (always compare against default branch,
+  # not the upstream tracking ref — we want the full feature branch diff)
+  REVIEW_BASE=""
+  if git -C "$PROJECT_DIR" rev-parse --verify origin/main &>/dev/null; then
+    REVIEW_BASE="origin/main"
+  elif git -C "$PROJECT_DIR" rev-parse --verify origin/master &>/dev/null; then
+    REVIEW_BASE="origin/master"
+  fi
+
+  if [[ -n "$REVIEW_BASE" ]]; then
+    CODERABBIT_FINDINGS=$("$SCRIPT_DIR/coderabbit-review.sh" "$PROJECT_DIR" "$REVIEW_BASE" 2>&1 || true)
+  fi
+fi
+
 # Return decision
 if [[ -n "$FAILED_PHASE" ]]; then
   # Verification failed — deny the push
@@ -156,5 +180,33 @@ else
   # All checks passed — use additionalContext only (Claude-visible, not shown in UI).
   # permissionDecisionReason is omitted on allow to prevent confusing "Error: ... passed"
   # messages when another hook denies the same action (Decision 3, PRD 11).
-  echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"allow\",\"additionalContext\":\"verify: push check passed ($VERIFY_TIER) ✓\"}}"
+  if [[ -n "$CODERABBIT_FINDINGS" ]]; then
+    # Use python3 for proper JSON encoding of multiline review output
+    VERIFY_TIER="$VERIFY_TIER" CODERABBIT_FINDINGS="$CODERABBIT_FINDINGS" python3 -c "
+import json, os
+
+tier = os.environ['VERIFY_TIER']
+findings = os.environ['CODERABBIT_FINDINGS']
+
+# Sanitize output: remove invalid Unicode surrogates that break JSON serialization
+findings = findings.encode('utf-8', errors='replace').decode('utf-8')
+
+# Truncate to prevent oversized API payloads
+MAX = 4000
+if len(findings) > MAX:
+    findings = findings[:MAX] + '\n\n... (output truncated)'
+
+context = f'verify: push check passed ({tier}) ✓\n\nCodeRabbit CLI review findings (advisory — address before creating PR):\n{findings}'
+result = {
+    'hookSpecificOutput': {
+        'hookEventName': 'PreToolUse',
+        'permissionDecision': 'allow',
+        'additionalContext': context
+    }
+}
+print(json.dumps(result))
+"
+  else
+    echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"allow\",\"additionalContext\":\"verify: push check passed ($VERIFY_TIER) ✓\"}}"
+  fi
 fi

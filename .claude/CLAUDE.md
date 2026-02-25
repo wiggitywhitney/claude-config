@@ -14,7 +14,18 @@ Proceed without trivial confirmations. Never ask "Shall I continue?", "Do you wa
 
 Every PR must go through CodeRabbit review before merge. This is a hard requirement, not optional.
 
-**Timing:** CodeRabbit reviews take ~5 minutes to complete. After creating a PR, wait at least 5 minutes before checking for the review. Do NOT poll every 30 seconds.
+### Pre-Push CLI Review (Advisory)
+
+The pre-push hook runs CodeRabbit CLI review automatically on every `git push`. This is **advisory** — it never blocks the push, but findings appear in hook output. When the CLI review surfaces issues:
+1. Read the findings in the hook's `additionalContext`
+2. Fix the issues before creating a PR
+3. Push again (the CLI review runs again to confirm the fix)
+
+This catches problems in ~30s locally, reducing review round-trips after PR creation.
+
+### PR Review (Blocking)
+
+**Timing:** CodeRabbit PR reviews take ~5 minutes to complete. After creating a PR, wait at least 5 minutes before checking for the review. Do NOT poll every 30 seconds.
 
 **Process:**
 1. Create the PR and push to remote

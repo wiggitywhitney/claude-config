@@ -54,7 +54,7 @@ Integrate the chosen tool into the existing workflow — hooks, CLAUDE.md rules,
 - [x] CodeRabbit CLI capabilities fully documented with hands-on testing
 - [x] Codex code review capabilities evaluated and documented
 - [x] Clear recommendation made with rationale
-- [ ] Chosen tool integrated into workflow, reducing merge cycle latency
+- [x] Chosen tool integrated into workflow, reducing merge cycle latency
 - [~] Token overhead reduced compared to current MCP server approach *(Decision 3: MCP overhead is negligible ~$0.10/mo; not worth removing)*
 - [ ] Review quality maintained or improved
 
@@ -88,9 +88,9 @@ Compare tools and make a clear recommendation.
 Integrate the chosen tool into the existing workflow.
 
 - [x] Determine integration point: hook (pre-push? pre-PR?), skill, or standalone CLI step *(Decision 3: pre-push hook)*
-- [ ] Implement integration (hook script, CLAUDE.md updates, settings changes)
-- [ ] Update or replace CodeRabbit MCP server configuration if applicable
-- [ ] Update YOLO mode workflow if merge cycle changes
+- [x] Implement integration (hook script, CLAUDE.md updates, settings changes)
+- [x] Update or replace CodeRabbit MCP server configuration if applicable *(Decision 3: keep as-is, no changes needed)*
+- [x] Update YOLO mode workflow if merge cycle changes
 - [ ] Test end-to-end in at least one real project
 
 ## Out of Scope
