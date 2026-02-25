@@ -21,7 +21,7 @@ from test_harness import (
 HOOK = hook_path("check-branch-protection.sh")
 GIT = shutil.which("git")
 if not GIT:
-    raise RuntimeError("git not found on PATH")
+    raise RuntimeError("git not found on PATH")  # noqa: TRY003
 
 
 def run_tests():
