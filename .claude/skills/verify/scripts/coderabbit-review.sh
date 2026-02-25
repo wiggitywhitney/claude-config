@@ -57,11 +57,12 @@ echo "Directory: $PROJECT_DIR"
 echo "Base: $BASE_BRANCH"
 echo "---"
 
-# Run review with timeout (90s max; typical review takes ~30s)
-REVIEW_OUTPUT=$(timeout 90 "$CODERABBIT_BIN" review --plain --type committed --base "$BASE_BRANCH" --no-color --cwd "$PROJECT_DIR" 2>&1) || {
+# Run review with timeout (7 min max; matches PR review wait time, so CLI review
+# is always a net win over waiting for the GitHub-based review cycle)
+REVIEW_OUTPUT=$(timeout 420 "$CODERABBIT_BIN" review --plain --type committed --base "$BASE_BRANCH" --no-color --cwd "$PROJECT_DIR" 2>&1) || {
   EXIT_CODE=$?
   if [[ $EXIT_CODE -eq 124 ]]; then
-    echo "CodeRabbit CLI review timed out (90s) — skipping"
+    echo "CodeRabbit CLI review timed out (7m) — skipping"
   else
     echo "CodeRabbit CLI review failed (exit $EXIT_CODE) — skipping"
   fi
