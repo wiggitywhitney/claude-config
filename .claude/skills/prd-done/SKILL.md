@@ -39,22 +39,6 @@ Complete the PRD implementation workflow including branch management, pull reque
 
 **Note**: Tests will run automatically in the CI/CD pipeline when the PR is created. Do not run tests locally during the completion workflow.
 
-### 1.5. Knowledge Capture (Anki Cards)
-
-Before starting the PR workflow, capture what was built so the human user can learn and retain the concepts.
-
-**Scope: Cover the ENTIRE PRD, not just recent work.** Cards should be sourced from all milestones, the full decision log, and the complete git diff — not limited to the current conversation or the most recent milestone.
-
-- [ ] **Scan for existing cards**: Read files in the Anki finished directory (defined as `ANKI_FINISHED_DIR` in the `/anki` skill) to check for cards already covering this PRD's topics. Do not create duplicates of concepts already captured.
-- [ ] **Read the PRD document**: Review ALL milestones, the full decision log, architecture choices, and requirements — not just the most recent milestone
-- [ ] **Read key source files**: Scan the main files created or modified during implementation (use git diff against main to identify them)
-- [ ] **Invoke the `/anki` skill**: Create flashcards sourced from the PRD and the code — not from conversation context. Focus on:
-  - Architectural decisions and why they were made
-  - New concepts, patterns, or technologies introduced
-  - How components fit together at a high level
-  - Surprising or non-obvious design choices from the decision log
-  - Do NOT create cards for implementation minutiae, boilerplate, or things the user already knows
-
 ### 2. Branch and Commit Management
 
 **For Documentation-Only Completions:**
@@ -299,6 +283,24 @@ Closes #[issue-id]
 ```
 
 ### 4. Review and Merge Process
+
+#### 4.0. Knowledge Capture During Review Wait
+
+After creating the PR and starting the CodeRabbit review timer, use the wait time productively by capturing what was built as Anki cards.
+
+**Scope: Cover the ENTIRE PRD, not just recent work.** Cards should be sourced from all milestones, the full decision log, and the complete git diff — not limited to the current conversation or the most recent milestone.
+
+- [ ] **Scan for existing cards**: Read files in the Anki finished directory (defined as `ANKI_FINISHED_DIR` in the `/anki` skill) to check for cards already covering this PRD's topics. Do not create duplicates of concepts already captured.
+- [ ] **Read the PRD document**: Review ALL milestones, the full decision log, architecture choices, and requirements — not just the most recent milestone
+- [ ] **Read key source files**: Scan the main files created or modified during implementation (use git diff against main to identify them)
+- [ ] **Invoke the `/anki` skill**: Create flashcards sourced from the PRD and the code — not from conversation context. Focus on:
+  - Architectural decisions and why they were made
+  - New concepts, patterns, or technologies introduced
+  - How components fit together at a high-level
+  - Surprising or non-obvious design choices from the decision log
+  - Do NOT create cards for implementation minutiae, boilerplate, or things the user already knows
+
+#### 4.1. Check Review Status
 - [ ] **Check ongoing processes**: Use `gh pr checks [pr-number]` to check for any ongoing CI/CD, security analysis, or automated reviews (CodeRabbit, CodeQL, etc.)
 - [ ] **Check PR details**: Use `gh pr view [pr-number]` to check for human review comments and PR metadata
 - [ ] **Review all automated feedback**: Check PR comments section for automated code review feedback (bots, linters, analyzers)
