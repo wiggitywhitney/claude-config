@@ -301,12 +301,14 @@ def run_tests():
         os.makedirs(os.path.join(node_colocated_spec, "src"))
         write_file(node_colocated_spec, "package.json",
                    '{"scripts":{"test":"jest"}}')
+        write_file(node_colocated_spec, "tsconfig.json", '{"compilerOptions":{}}')
         write_file(node_colocated_spec, "src/service.spec.ts",
                    'describe("service", () => {})')
         write_file(node_colocated_spec, "src/service.integration.spec.ts",
                    'describe("service integration", () => {})')
 
         output = _run_detect(node_colocated_spec)
+        t.assert_project_type("detected as node-typescript", output, "node-typescript")
         t.assert_tier("unit tests detected via .spec", output, "unit", "True")
         t.assert_tier("integration detected via .integration.spec", output, "integration", "True")
 
