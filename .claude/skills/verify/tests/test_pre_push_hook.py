@@ -303,6 +303,40 @@ def run_tests():
             t._fail("CodeRabbit findings appear in additionalContext field",
                      f"additionalContext={context!r}, output={output}")
 
+    # ─── Section 6b: Clean CodeRabbit output (banner only, no findings) ───
+    t.section("CodeRabbit CLI review clean output (no findings in additionalContext)")
+
+    with TempDir() as temp_dir:
+        setup_repo_with_branch(temp_dir, with_remote=True)
+        mock_bin = create_mock_gh(temp_dir, pr_response="[]")
+        # Mock returns only status text, no actual findings
+        create_mock_coderabbit(mock_bin, output="No issues found.")
+
+        exit_code, output = run_hook_with_env(
+            HOOK, make_hook_input("git push origin feature/test", temp_dir),
+            extra_path=mock_bin)
+
+        if exit_code == 0 and '"allow"' in output:
+            t._pass("push with clean CodeRabbit output returns allow")
+        else:
+            t._fail("push with clean CodeRabbit output returns allow",
+                     f"exit={exit_code}, output={output}")
+
+        # Verify banner-only output doesn't trigger CodeRabbit findings context
+        try:
+            data = json.loads(output)
+            context = data["hookSpecificOutput"]["additionalContext"]
+            has_review_block = "CodeRabbit CLI review" in context
+        except (json.JSONDecodeError, KeyError):
+            has_review_block = False
+            context = ""
+
+        if not has_review_block:
+            t._pass("clean output does not trigger CodeRabbit findings in additionalContext")
+        else:
+            t._fail("clean output does not trigger CodeRabbit findings in additionalContext",
+                     f"additionalContext={context!r}")
+
     # ─── Section 7: .skip-coderabbit skips CLI review ───
     t.section("CodeRabbit CLI review skipped with .skip-coderabbit")
 

@@ -34,7 +34,9 @@ This catches problems in ~30s locally, reducing review round-trips after PR crea
 4. For each CodeRabbit comment: explain the issue, give a recommendation, then **follow your own recommendation** (YOLO mode)
 5. After addressing each issue, use `mcp__coderabbitai__resolve_comment` to mark resolved
 6. Only stop for user input if something is truly ambiguous or has major architectural implications
-7. After ALL comments are addressed, merge the PR
+7. After pushing fixes, wait 7 minutes, then check for CodeRabbit re-review
+8. If re-review adds new comments, address and resolve them, then repeat step 7
+9. After re-review is clear and human has approved, merge the PR
 
 ## Git Conventions
 
