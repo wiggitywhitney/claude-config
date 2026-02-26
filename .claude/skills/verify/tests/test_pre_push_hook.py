@@ -5,8 +5,10 @@ Exercises the hook with:
 - Push to branch with no open PR (standard security only)
 - Push to branch with open PR (expanded security + tests)
 - gh CLI unavailable (fallback to standard security)
+- CodeRabbit CLI review integration (advisory, skip with .skip-coderabbit)
 """
 
+import json
 import os
 import subprocess
 import sys
@@ -41,6 +43,28 @@ exit 0
     return bin_dir
 
 
+def create_mock_coderabbit(bin_dir, output="No issues found.", exit_code=0):
+    """Create a mock coderabbit CLI in an existing bin directory.
+
+    Uses a separate file for output to avoid shell-quote injection issues.
+    Adds a 'coderabbit' script to bin_dir that returns fixed output for 'review' calls.
+    """
+    output_file = os.path.join(bin_dir, "coderabbit-output.txt")
+    with open(output_file, "w") as f:
+        f.write(output)
+    cr_script = os.path.join(bin_dir, "coderabbit")
+    with open(cr_script, "w") as f:
+        f.write(f"""#!/usr/bin/env bash
+# Mock coderabbit CLI for testing
+if echo "$@" | grep -q "review"; then
+    cat "{output_file}"
+    exit {exit_code}
+fi
+exit 0
+""")
+    make_executable(cr_script)
+
+
 def run_hook_with_env(hook, json_input, extra_path=None):
     """Run a hook with modified PATH for gh mocking.
 
@@ -61,9 +85,31 @@ def run_hook_with_env(hook, json_input, extra_path=None):
     return result.returncode, result.stdout
 
 
-def setup_repo_with_branch(temp_dir, branch_name="feature/test"):
-    """Set up a git repo on main with a feature branch containing a code change."""
+def setup_repo_with_branch(temp_dir, branch_name="feature/test",
+                           with_remote=False):
+    """Set up a git repo on main with a feature branch containing a code change.
+
+    If with_remote=True, creates a bare repo as a remote so origin/main exists.
+    This is needed for tests that exercise CodeRabbit CLI review (which needs
+    origin/main as a comparison base).
+    """
     setup_git_repo(temp_dir, branch="main")
+
+    if with_remote:
+        # Create a bare repo as the remote
+        bare_dir = os.path.join(temp_dir, ".bare-remote")
+        subprocess.run(
+            ["git", "clone", "--bare", "--quiet", temp_dir, bare_dir],
+            capture_output=True, check=True,
+        )
+        subprocess.run(
+            ["git", "remote", "add", "origin", bare_dir],
+            cwd=temp_dir, capture_output=True, check=True,
+        )
+        subprocess.run(
+            ["git", "fetch", "origin", "--quiet"],
+            cwd=temp_dir, capture_output=True, check=True,
+        )
 
     # Create a feature branch with a code file change
     subprocess.run(
@@ -222,6 +268,137 @@ def run_tests():
         else:
             t._fail("git push -u is detected",
                      f"exit={exit_code}, output={output}")
+
+    # ─── Section 6: CodeRabbit CLI review (advisory findings in additionalContext) ───
+    t.section("CodeRabbit CLI review (advisory)")
+
+    with TempDir() as temp_dir:
+        setup_repo_with_branch(temp_dir, with_remote=True)
+        mock_bin = create_mock_gh(temp_dir, pr_response="[]")
+        create_mock_coderabbit(mock_bin,
+                               output="File: src/app.ts\nLine: 42\nType: potential_issue\n\nComment:\nMissing error handling in src/app.ts:42")
+
+        exit_code, output = run_hook_with_env(
+            HOOK, make_hook_input("git push origin feature/test", temp_dir),
+            extra_path=mock_bin)
+
+        if exit_code == 0 and '"allow"' in output:
+            t._pass("push with CodeRabbit findings still returns allow")
+        else:
+            t._fail("push with CodeRabbit findings still returns allow",
+                     f"exit={exit_code}, output={output}")
+
+        # Parse JSON and verify findings are in the additionalContext field
+        try:
+            data = json.loads(output)
+            context = data["hookSpecificOutput"]["additionalContext"]
+            has_findings = "CodeRabbit CLI review" in context
+        except (json.JSONDecodeError, KeyError):
+            has_findings = False
+            context = ""
+
+        if has_findings:
+            t._pass("CodeRabbit findings appear in additionalContext field")
+        else:
+            t._fail("CodeRabbit findings appear in additionalContext field",
+                     f"additionalContext={context!r}, output={output}")
+
+    # ─── Section 6b: Clean CodeRabbit output (banner only, no findings) ───
+    t.section("CodeRabbit CLI review clean output (no findings in additionalContext)")
+
+    with TempDir() as temp_dir:
+        setup_repo_with_branch(temp_dir, with_remote=True)
+        mock_bin = create_mock_gh(temp_dir, pr_response="[]")
+        # Mock returns only status text, no actual findings
+        create_mock_coderabbit(mock_bin, output="No issues found.")
+
+        exit_code, output = run_hook_with_env(
+            HOOK, make_hook_input("git push origin feature/test", temp_dir),
+            extra_path=mock_bin)
+
+        if exit_code == 0 and '"allow"' in output:
+            t._pass("push with clean CodeRabbit output returns allow")
+        else:
+            t._fail("push with clean CodeRabbit output returns allow",
+                     f"exit={exit_code}, output={output}")
+
+        # Verify banner-only output doesn't trigger CodeRabbit findings context
+        try:
+            data = json.loads(output)
+            context = data["hookSpecificOutput"]["additionalContext"]
+            has_review_block = "CodeRabbit CLI review" in context
+        except (json.JSONDecodeError, KeyError):
+            has_review_block = False
+            context = ""
+
+        if not has_review_block:
+            t._pass("clean output does not trigger CodeRabbit findings in additionalContext")
+        else:
+            t._fail("clean output does not trigger CodeRabbit findings in additionalContext",
+                     f"additionalContext={context!r}")
+
+    # ─── Section 7: .skip-coderabbit skips CLI review ───
+    t.section("CodeRabbit CLI review skipped with .skip-coderabbit")
+
+    with TempDir() as temp_dir:
+        setup_repo_with_branch(temp_dir, with_remote=True)
+        mock_bin = create_mock_gh(temp_dir, pr_response="[]")
+        create_mock_coderabbit(mock_bin,
+                               output="Issue: This should not appear")
+        # Create .skip-coderabbit in the project directory
+        write_file(temp_dir, ".skip-coderabbit", "")
+
+        exit_code, output = run_hook_with_env(
+            HOOK, make_hook_input("git push origin feature/test", temp_dir),
+            extra_path=mock_bin)
+
+        if exit_code == 0 and '"allow"' in output:
+            t._pass("push with .skip-coderabbit returns allow")
+        else:
+            t._fail("push with .skip-coderabbit returns allow",
+                     f"exit={exit_code}, output={output}")
+
+        if "CodeRabbit CLI review" not in output:
+            t._pass(".skip-coderabbit suppresses CLI review output")
+        else:
+            t._fail(".skip-coderabbit suppresses CLI review output",
+                     f"output={output}")
+
+    # ─── Section 8: CodeRabbit review skipped when security fails ───
+    t.section("CodeRabbit CLI review skipped on security failure")
+
+    with TempDir() as temp_dir:
+        setup_repo_with_branch(temp_dir, with_remote=True)
+        mock_bin = create_mock_gh(temp_dir, pr_response="[]")
+        create_mock_coderabbit(mock_bin,
+                               output="Issue: This should not appear")
+
+        # Add a console.log to trigger a security check failure
+        write_file(temp_dir, "src/debug.ts", "console.log('debug');")
+        subprocess.run(
+            ["git", "add", "src/debug.ts"],
+            cwd=temp_dir, capture_output=True, check=True,
+        )
+        subprocess.run(
+            ["git", "commit", "-m", "add debug code", "--quiet"],
+            cwd=temp_dir, capture_output=True, check=True,
+        )
+
+        exit_code, output = run_hook_with_env(
+            HOOK, make_hook_input("git push origin feature/test", temp_dir),
+            extra_path=mock_bin)
+
+        if exit_code == 0 and '"deny"' in output:
+            t._pass("push with security failure returns deny")
+        else:
+            t._fail("push with security failure returns deny",
+                     f"exit={exit_code}, output={output}")
+
+        if "CodeRabbit CLI review" not in output:
+            t._pass("CodeRabbit review not run when security fails")
+        else:
+            t._fail("CodeRabbit review not run when security fails",
+                     f"output={output}")
 
     t.summary()
     return t.passed, t.failed, t.total
