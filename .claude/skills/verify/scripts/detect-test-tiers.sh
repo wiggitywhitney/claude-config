@@ -12,8 +12,10 @@
 #
 #   Node.js/TypeScript:
 #     Unit:        *.test.{js,ts,jsx,tsx} or *.spec.* files, OR tests/unit/ dir
-#     Integration: tests/integration/ dir, OR test:integration script in package.json
-#     E2E:         playwright/cypress config, tests/e2e/ dir, OR test:e2e script
+#     Integration: tests/integration/ dir, test:integration script in package.json,
+#                  OR colocated *.integration.test.* / *.integration.spec.* files
+#     E2E:         playwright/cypress config, tests/e2e/ dir, test:e2e script,
+#                  OR colocated *.e2e.test.* / *.e2e.spec.* files
 #
 #   Python:
 #     Unit:        tests/unit/ dir, OR test_*.py files in tests/
@@ -120,6 +122,18 @@ except Exception:
     fi
   fi
 
+  # Check for colocated integration test files (*.integration.test.* or *.integration.spec.*)
+  if [ "$HAS_INTEGRATION" = false ]; then
+    if find "$PROJECT_DIR" -maxdepth 4 \
+      \( -name "*.integration.test.js" -o -name "*.integration.test.ts" \
+         -o -name "*.integration.test.jsx" -o -name "*.integration.test.tsx" \
+         -o -name "*.integration.spec.js" -o -name "*.integration.spec.ts" \
+         -o -name "*.integration.spec.jsx" -o -name "*.integration.spec.tsx" \) \
+      -not -path "*/node_modules/*" -not -path "*/.git/*" 2>/dev/null | head -1 | grep -q .; then
+      HAS_INTEGRATION=true
+    fi
+  fi
+
   # --- E2E tests ---
   # Check for e2e test directories
   if [ -d "$PROJECT_DIR/tests/e2e" ] || [ -d "$PROJECT_DIR/test/e2e" ] || [ -d "$PROJECT_DIR/e2e" ]; then
@@ -152,6 +166,18 @@ except Exception:
   # Check for e2e script in package.json
   if [ "$HAS_E2E" = false ]; then
     if echo "$SCRIPTS_JSON" | python3 -c "import json,sys; s=json.load(sys.stdin); sys.exit(0 if 'test:e2e' in s or 'test-e2e' in s or 'e2e' in s else 1)" 2>/dev/null; then
+      HAS_E2E=true
+    fi
+  fi
+
+  # Check for colocated e2e test files (*.e2e.test.* or *.e2e.spec.*)
+  if [ "$HAS_E2E" = false ]; then
+    if find "$PROJECT_DIR" -maxdepth 4 \
+      \( -name "*.e2e.test.js" -o -name "*.e2e.test.ts" \
+         -o -name "*.e2e.test.jsx" -o -name "*.e2e.test.tsx" \
+         -o -name "*.e2e.spec.js" -o -name "*.e2e.spec.ts" \
+         -o -name "*.e2e.spec.jsx" -o -name "*.e2e.spec.tsx" \) \
+      -not -path "*/node_modules/*" -not -path "*/.git/*" 2>/dev/null | head -1 | grep -q .; then
       HAS_E2E=true
     fi
   fi
