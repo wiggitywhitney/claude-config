@@ -59,15 +59,31 @@ echo "---"
 
 # Run review with timeout (7 min max; matches PR review wait time, so CLI review
 # is always a net win over waiting for the GitHub-based review cycle)
-REVIEW_OUTPUT=$(timeout 420 "$CODERABBIT_BIN" review --plain --type committed --base "$BASE_BRANCH" --no-color --cwd "$PROJECT_DIR" 2>&1) || {
-  EXIT_CODE=$?
-  if [[ $EXIT_CODE -eq 124 ]]; then
-    echo "CodeRabbit CLI review timed out (7m) — skipping"
-  else
+# Use gtimeout on macOS (GNU coreutils), timeout on Linux, or no timeout as fallback
+TIMEOUT_BIN=""
+if command -v timeout &>/dev/null; then
+  TIMEOUT_BIN="timeout"
+elif command -v gtimeout &>/dev/null; then
+  TIMEOUT_BIN="gtimeout"
+fi
+
+if [[ -n "$TIMEOUT_BIN" ]]; then
+  REVIEW_OUTPUT=$("$TIMEOUT_BIN" 420 "$CODERABBIT_BIN" review --plain --type committed --base "$BASE_BRANCH" --no-color --cwd "$PROJECT_DIR" 2>&1) || {
+    EXIT_CODE=$?
+    if [[ $EXIT_CODE -eq 124 ]]; then
+      echo "CodeRabbit CLI review timed out (7m) — skipping"
+    else
+      echo "CodeRabbit CLI review failed (exit $EXIT_CODE) — skipping"
+    fi
+    exit 0
+  }
+else
+  REVIEW_OUTPUT=$("$CODERABBIT_BIN" review --plain --type committed --base "$BASE_BRANCH" --no-color --cwd "$PROJECT_DIR" 2>&1) || {
+    EXIT_CODE=$?
     echo "CodeRabbit CLI review failed (exit $EXIT_CODE) — skipping"
-  fi
-  exit 0
-}
+    exit 0
+  }
+fi
 
 if [[ -n "$REVIEW_OUTPUT" ]]; then
   echo "$REVIEW_OUTPUT"

@@ -276,7 +276,7 @@ def run_tests():
         setup_repo_with_branch(temp_dir, with_remote=True)
         mock_bin = create_mock_gh(temp_dir, pr_response="[]")
         create_mock_coderabbit(mock_bin,
-                               output="Issue: Missing error handling in src/app.ts:42")
+                               output="File: src/app.ts\nLine: 42\nType: potential_issue\n\nComment:\nMissing error handling in src/app.ts:42")
 
         exit_code, output = run_hook_with_env(
             HOOK, make_hook_input("git push origin feature/test", temp_dir),
@@ -307,7 +307,7 @@ def run_tests():
     t.section("CodeRabbit CLI review skipped with .skip-coderabbit")
 
     with TempDir() as temp_dir:
-        setup_repo_with_branch(temp_dir)
+        setup_repo_with_branch(temp_dir, with_remote=True)
         mock_bin = create_mock_gh(temp_dir, pr_response="[]")
         create_mock_coderabbit(mock_bin,
                                output="Issue: This should not appear")
@@ -334,7 +334,7 @@ def run_tests():
     t.section("CodeRabbit CLI review skipped on security failure")
 
     with TempDir() as temp_dir:
-        setup_repo_with_branch(temp_dir)
+        setup_repo_with_branch(temp_dir, with_remote=True)
         mock_bin = create_mock_gh(temp_dir, pr_response="[]")
         create_mock_coderabbit(mock_bin,
                                output="Issue: This should not appear")

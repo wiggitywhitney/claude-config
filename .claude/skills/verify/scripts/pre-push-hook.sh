@@ -144,7 +144,13 @@ if [[ -z "$FAILED_PHASE" ]] && [[ ! -f "$PROJECT_DIR/.skip-coderabbit" ]]; then
   fi
 
   if [[ -n "$REVIEW_BASE" ]]; then
-    CODERABBIT_FINDINGS=$("$SCRIPT_DIR/coderabbit-review.sh" "$PROJECT_DIR" "$REVIEW_BASE" 2>&1 || true)
+    REVIEW_RAW=$("$SCRIPT_DIR/coderabbit-review.sh" "$PROJECT_DIR" "$REVIEW_BASE" 2>&1 || true)
+    # Only treat output as findings when it contains actual review issue blocks.
+    # The review script emits banners/status lines on clean runs that shouldn't
+    # be surfaced as findings in additionalContext.
+    if echo "$REVIEW_RAW" | grep -qE '^File:|^Type:[[:space:]]*potential_issue|^Comment:'; then
+      CODERABBIT_FINDINGS="$REVIEW_RAW"
+    fi
   fi
 fi
 

@@ -57,7 +57,7 @@ Since all global skills are symlinks pointing into this repo's `.claude/skills/`
 
 ### prd-done
 **Current**: 7 "propose and ask" moments for PR info → "Ready to create PR?" → wait for CodeRabbit → present findings → merge steps
-**YOLO**: Auto-fill all PR information from PRD and git analysis. Create the PR without asking for confirmation on each field. Wait for CodeRabbit, then address all feedback autonomously (following existing CLAUDE.md rules: explain issue, give recommendation, follow recommendation). Only stop for truly ambiguous CodeRabbit feedback or major architectural concerns.
+**YOLO**: Auto-fill all PR information from PRD and git analysis. Create the PR without asking for confirmation on each field. Wait for CodeRabbit, then triage and prepare fixes autonomously (following existing CLAUDE.md rules: explain issue, give recommendation, follow recommendation). Before merge, present CodeRabbit findings and applied changes for explicit human examination and approval. Only stop early for truly ambiguous CodeRabbit feedback or major architectural concerns.
 
 ### prd-close
 **Current**: "Proceed with closure?" confirmation → various verification steps

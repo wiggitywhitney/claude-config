@@ -95,7 +95,7 @@ def run_tests():
 
         t.assert_equal("exits 0 when CLI not installed", result.returncode, 0)
         t.assert_contains("reports CLI not installed",
-                          result.stdout, "not installed")
+                          result.stdout + result.stderr, "not installed")
 
     # ─── Section 2: No base branch ───
     t.section("No base branch determinable")
@@ -139,6 +139,8 @@ def run_tests():
 
         t.assert_equal("exits 0 with clean review", exit_code, 0)
         t.assert_contains("includes clean output", output, "No issues found.")
+        t.assert_contains("reports review complete",
+                          output, "CodeRabbit CLI review complete")
 
     # ─── Section 5: CLI fails ───
     t.section("CLI failure handling")

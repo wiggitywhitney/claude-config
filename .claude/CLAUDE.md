@@ -25,11 +25,11 @@ This catches problems in ~30s locally, reducing review round-trips after PR crea
 
 ### PR Review (Blocking)
 
-**Timing:** CodeRabbit PR reviews take ~5 minutes to complete. After creating a PR, wait at least 5 minutes before checking for the review. Do NOT poll every 30 seconds.
+**Timing:** After creating a PR, start a 7-minute timer before checking for the review. Do NOT poll every 30 seconds.
 
 **Process:**
 1. Create the PR and push to remote
-2. Wait 5 minutes, then check for CodeRabbit review using `mcp__coderabbitai__get_coderabbit_reviews`
+2. Wait 7 minutes, then check for CodeRabbit review using `mcp__coderabbitai__get_coderabbit_reviews`
 3. If review not ready, wait another 2-3 minutes before checking again
 4. For each CodeRabbit comment: explain the issue, give a recommendation, then **follow your own recommendation** (YOLO mode)
 5. After addressing each issue, use `mcp__coderabbitai__resolve_comment` to mark resolved
