@@ -311,6 +311,7 @@ def run_tests():
         t.assert_project_type("detected as node-typescript", output, "node-typescript")
         t.assert_tier("unit tests detected via .spec", output, "unit", "True")
         t.assert_tier("integration detected via .integration.spec", output, "integration", "True")
+        t.assert_tier("no e2e tests", output, "e2e", "False")
 
     t.summary()
     return t.passed, t.failed, t.total
