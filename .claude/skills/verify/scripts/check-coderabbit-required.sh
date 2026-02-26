@@ -6,6 +6,10 @@
 # exists at the project root. When CodeRabbit is required, the hook checks if
 # a CodeRabbit review exists on the PR before allowing the merge.
 #
+# Cross-repo support:
+#   - Parses --repo OWNER/REPO from the merge command for cross-repo merges
+#   - Parses cd /path from chained commands to resolve .skip-coderabbit correctly
+#
 # Decision 16: Per-repo rule overrides via dotfiles.
 # Global CLAUDE.md rule: "PRs require CodeRabbit review examined and approved
 # by human before merge."
@@ -32,8 +36,18 @@ if ! echo "$COMMAND" | grep -qE '(^|\s|&&\s*|;\s*)gh\s+pr\s+merge\b'; then
   exit 0  # Not a PR merge command, silent passthrough
 fi
 
-# Determine project directory from hook input (gh doesn't use -C, rely on cwd)
-PROJECT_DIR=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('cwd','.'))" 2>/dev/null || echo ".")
+# Extract --repo OWNER/REPO from the merge command if present (cross-repo merges)
+EXPLICIT_REPO=$(echo "$COMMAND" | grep -oE '\-\-repo\s+[^ ;&]+' | head -1 | sed 's/^--repo[[:space:]]*//' || true)
+
+# Extract cd path from chained commands (e.g., "cd /path/to/repo && gh pr merge ...")
+CD_PATH=$(echo "$COMMAND" | grep -oE '(^|&&[[:space:]]*|;[[:space:]]*)cd\s+[^ ;&]+' | head -1 | sed 's/.*cd[[:space:]]*//' || true)
+
+# Determine project directory: cd path in command takes priority, then hook cwd
+if [[ -n "$CD_PATH" ]] && [[ -d "$CD_PATH" ]]; then
+  PROJECT_DIR="$CD_PATH"
+else
+  PROJECT_DIR=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('cwd','.'))" 2>/dev/null || echo ".")
+fi
 
 # Check for .skip-coderabbit opt-out
 if [ -f "$PROJECT_DIR/.skip-coderabbit" ]; then
@@ -46,7 +60,11 @@ PR_NUMBER=$(echo "$COMMAND" | grep -oE 'gh\s+pr\s+merge\s+([0-9]+)' | grep -oE '
 
 # If no PR number in command, try to get it from current branch
 if [ -z "$PR_NUMBER" ]; then
-  PR_NUMBER=$(gh pr view --json number --jq '.number' 2>/dev/null || echo "")
+  if [[ -n "$EXPLICIT_REPO" ]]; then
+    PR_NUMBER=$(gh pr view --repo "$EXPLICIT_REPO" --json number --jq '.number' 2>/dev/null || echo "")
+  else
+    PR_NUMBER=$(gh pr view --json number --jq '.number' 2>/dev/null || echo "")
+  fi
 fi
 
 # If we still can't determine the PR, block with advisory
@@ -73,7 +91,12 @@ fi
 
 # Check if CodeRabbit has reviewed this PR
 # Look for reviews from coderabbitai[bot] user
-REPO_INFO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner' 2>/dev/null || echo "")
+# Use explicit --repo if provided, otherwise resolve from cwd
+if [[ -n "$EXPLICIT_REPO" ]]; then
+  REPO_INFO="$EXPLICIT_REPO"
+else
+  REPO_INFO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner' 2>/dev/null || echo "")
+fi
 if [ -z "$REPO_INFO" ]; then
   # Can't determine repo — block with advisory
   python3 -c "

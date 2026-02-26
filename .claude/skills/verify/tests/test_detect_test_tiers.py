@@ -1,6 +1,6 @@
-"""Tests for detect-test-tiers.sh Go test tier detection.
+"""Tests for detect-test-tiers.sh test tier detection.
 
-Exercises detect-test-tiers.sh with Go project configurations:
+Exercises detect-test-tiers.sh with Go and Node.js project configurations:
 - Go project with no tests
 - Go project with unit tests only (_test.go without build tags)
 - Go project with integration tests (build tags and directory conventions)
@@ -8,6 +8,8 @@ Exercises detect-test-tiers.sh with Go project configurations:
 - Go project with all tiers
 - Edge cases (mixed build tags, nested directories)
 - Node.js regression tests
+- Node.js colocated integration tests (*.integration.test.ts)
+- Node.js colocated e2e tests (*.e2e.test.ts)
 """
 
 import os
@@ -251,6 +253,65 @@ def run_tests():
         t.assert_tier("Node.js unit still works", output, "unit", "True")
         t.assert_tier("Node.js integration still works", output, "integration", "True")
         t.assert_tier("Node.js e2e still correctly absent", output, "e2e", "False")
+
+        # ═══ Section 12: Node.js colocated integration tests ═══
+        t.section("Node.js colocated integration tests (*.integration.test.ts)")
+
+        node_colocated_int = os.path.join(tmp, "node-colocated-integration")
+        os.makedirs(os.path.join(node_colocated_int, "src", "pipeline"))
+        write_file(node_colocated_int, "package.json",
+                   '{"scripts":{"test":"vitest"}}')
+        write_file(node_colocated_int, "tsconfig.json", '{"compilerOptions":{}}')
+        write_file(node_colocated_int, "src/pipeline/runner.test.ts",
+                   'describe("runner", () => {})')
+        write_file(node_colocated_int, "src/pipeline/runner.integration.test.ts",
+                   'describe("runner integration", () => {})')
+        write_file(node_colocated_int, "src/pipeline/storage.integration.test.ts",
+                   'describe("storage integration", () => {})')
+
+        output = _run_detect(node_colocated_int)
+        t.assert_project_type("detected as node-typescript", output, "node-typescript")
+        t.assert_tier("unit tests detected", output, "unit", "True")
+        t.assert_tier("integration detected via colocated files", output, "integration", "True")
+        t.assert_tier("no e2e tests", output, "e2e", "False")
+
+        # ═══ Section 13: Node.js colocated e2e tests ═══
+        t.section("Node.js colocated e2e tests (*.e2e.test.ts)")
+
+        node_colocated_e2e = os.path.join(tmp, "node-colocated-e2e")
+        os.makedirs(os.path.join(node_colocated_e2e, "src", "api"))
+        write_file(node_colocated_e2e, "package.json",
+                   '{"scripts":{"test":"vitest"}}')
+        write_file(node_colocated_e2e, "tsconfig.json", '{"compilerOptions":{}}')
+        write_file(node_colocated_e2e, "src/api/routes.test.ts",
+                   'describe("routes", () => {})')
+        write_file(node_colocated_e2e, "src/api/routes.e2e.test.ts",
+                   'describe("routes e2e", () => {})')
+
+        output = _run_detect(node_colocated_e2e)
+        t.assert_project_type("detected as node-typescript", output, "node-typescript")
+        t.assert_tier("unit tests detected", output, "unit", "True")
+        t.assert_tier("no integration tests", output, "integration", "False")
+        t.assert_tier("e2e detected via colocated files", output, "e2e", "True")
+
+        # ═══ Section 14: Node.js colocated integration with .spec convention ═══
+        t.section("Node.js colocated integration tests (.spec convention)")
+
+        node_colocated_spec = os.path.join(tmp, "node-colocated-spec")
+        os.makedirs(os.path.join(node_colocated_spec, "src"))
+        write_file(node_colocated_spec, "package.json",
+                   '{"scripts":{"test":"jest"}}')
+        write_file(node_colocated_spec, "tsconfig.json", '{"compilerOptions":{}}')
+        write_file(node_colocated_spec, "src/service.spec.ts",
+                   'describe("service", () => {})')
+        write_file(node_colocated_spec, "src/service.integration.spec.ts",
+                   'describe("service integration", () => {})')
+
+        output = _run_detect(node_colocated_spec)
+        t.assert_project_type("detected as node-typescript", output, "node-typescript")
+        t.assert_tier("unit tests detected via .spec", output, "unit", "True")
+        t.assert_tier("integration detected via .integration.spec", output, "integration", "True")
+        t.assert_tier("no e2e tests", output, "e2e", "False")
 
     t.summary()
     return t.passed, t.failed, t.total
