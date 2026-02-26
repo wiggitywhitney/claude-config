@@ -4,6 +4,7 @@ Exercises the hook with:
 - Non-merge commands (should passthrough silently)
 - PR merge with .skip-coderabbit (should passthrough)
 - PR merge without .skip-coderabbit (should deny)
+- Cross-repo merges (--repo flag and cd path resolution)
 - Edge cases
 
 Note: Tests that verify actual CodeRabbit review status via GitHub API
@@ -72,7 +73,44 @@ def run_tests():
         t.assert_deny("chained gh pr merge without .skip-coderabbit is blocked",
                       HOOK, make_hook_input('echo "merging" && gh pr merge 456', temp_dir))
 
-        # ─── Section 4: Edge cases ───
+        # ─── Section 4: Cross-repo merges (cd path resolves .skip-coderabbit) ───
+        t.section("Cross-repo merges (cd path)")
+
+        # Create a "remote repo" dir with .skip-coderabbit
+        remote_repo = os.path.join(temp_dir, "remote-repo")
+        os.makedirs(remote_repo)
+        write_file(remote_repo, ".skip-coderabbit")
+
+        # cd to the remote repo in the command — should find .skip-coderabbit there
+        t.assert_allow(
+            "cd /path && gh pr merge finds .skip-coderabbit at cd path",
+            HOOK,
+            make_hook_input(
+                f"cd {remote_repo} && gh pr merge 1 --merge",
+                temp_dir  # cwd is temp_dir (no .skip-coderabbit)
+            ))
+
+        # Without cd, same command from temp_dir should deny
+        t.assert_deny(
+            "gh pr merge without cd denies when cwd lacks .skip-coderabbit",
+            HOOK,
+            make_hook_input(
+                "gh pr merge 1 --repo owner/repo --merge",
+                temp_dir
+            ))
+
+        # Semicolon-chained cd also works
+        t.assert_allow(
+            "cd /path ; gh pr merge finds .skip-coderabbit via semicolon chain",
+            HOOK,
+            make_hook_input(
+                f"cd {remote_repo} ; gh pr merge 1 --merge",
+                temp_dir
+            ))
+
+        os.remove(os.path.join(remote_repo, ".skip-coderabbit"))
+
+        # ─── Section 5: Edge cases ───
         t.section("Edge cases")
 
         t.assert_allow("empty command passes through",
