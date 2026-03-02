@@ -32,7 +32,9 @@ COMMAND=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.stdin
 
 # Only act on gh pr merge commands
 # Must handle: gh pr merge, && gh pr merge, etc.
-if ! echo "$COMMAND" | grep -qE '(^|\s|&&\s*|;\s*)gh\s+pr\s+merge\b'; then
+# Strip quoted strings first so commit messages / PR bodies don't trigger false matches.
+COMMAND_NO_QUOTES=$(echo "$COMMAND" | sed -E "s/\"([^\"]*)\"/\"\"/g; s/'([^']*)'/\\'\\'/g; s/\\$\\(cat <<[^)]*\\)//g")
+if ! echo "$COMMAND_NO_QUOTES" | grep -qE '(^|\s|&&\s*|;\s*)gh\s+pr\s+merge\b'; then
   exit 0  # Not a PR merge command, silent passthrough
 fi
 
@@ -94,6 +96,8 @@ fi
 # Use explicit --repo if provided, otherwise resolve from cwd
 if [[ -n "$EXPLICIT_REPO" ]]; then
   REPO_INFO="$EXPLICIT_REPO"
+elif [[ -n "$CD_PATH" ]] && [[ -d "$CD_PATH" ]]; then
+  REPO_INFO=$(git -C "$CD_PATH" remote get-url origin 2>/dev/null | sed 's/.*github\.com[:/]\(.*\)\.git$/\1/' | sed 's/.*github\.com[:/]\(.*\)$/\1/' || echo "")
 else
   REPO_INFO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner' 2>/dev/null || echo "")
 fi

@@ -68,7 +68,7 @@ Since all global skills are symlinks pointing into this repo's `.claude/skills/`
 - [x] Archive current skill versions as `SKILL.v1-careful.md` in each skill directory (7 files)
 - [x] Rewrite prd-create SKILL.md for YOLO mode
 - [x] Fix branch protection hook for chained git add commands on main (Decision 5)
-- [ ] Rewrite prd-start SKILL.md for YOLO mode
+- [x] Rewrite prd-start SKILL.md for YOLO mode
 - [ ] Rewrite prd-next SKILL.md for YOLO mode
 - [ ] Rewrite prd-update-progress SKILL.md for YOLO mode
 - [ ] Rewrite prd-update-decisions SKILL.md for YOLO mode

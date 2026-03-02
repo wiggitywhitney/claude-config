@@ -114,6 +114,15 @@ Only THEN decide which cards to make. Every card should fit into this narrative.
 - Good: "What problem does the Ralph Wiggum technique solve?"
 - Bad: "Who created the Ralph Wiggum technique?"
 
+### Terminology Provenance (MANDATORY)
+When a card introduces a technical term, Whitney needs to know: **is this an industry-standard term or something we coined for this project?**
+
+- **Industry terms** (e.g., "dynamic informers", "span processors"): State the provenance on the card front or back. Examples: "a standard Kubernetes concept from `client-go`", "an OpenTelemetry SDK component." Include the official package/spec name when one exists.
+- **Project-coined terms** (e.g., "semantic bridge", "capability inference"): Explicitly label as project-specific. Examples: "a pattern coined in the cluster-whisperer project", "a term from Whitney's telemetry agent spec (not an industry standard)."
+- **When unsure**: Research the term before writing the card. WebSearch for the term in official docs. If you can't find it in official sources, treat it as project-coined and say so.
+
+This matters because Whitney reviews cards weeks or months later with no memory of whether a term came from official docs or from a conversation with an AI. Mislabeled project jargon as industry standard is actively harmful — she'd use it in a talk or with colleagues and look uninformed.
+
 ### Time-Sensitive Content
 - Add "(as of [Month Year])" to card fronts when the content is likely to change
 - Examples: ecosystem states, library priorities, "what exists vs doesn't exist yet", roadmap items
