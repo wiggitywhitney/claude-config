@@ -65,8 +65,9 @@ Since all global skills are symlinks pointing into this repo's `.claude/skills/`
 
 ## Milestones
 
-- [ ] Archive current skill versions as `SKILL.v1-careful.md` in each skill directory (7 files)
-- [ ] Rewrite prd-create SKILL.md for YOLO mode
+- [x] Archive current skill versions as `SKILL.v1-careful.md` in each skill directory (7 files)
+- [x] Rewrite prd-create SKILL.md for YOLO mode
+- [x] Fix branch protection hook for chained git add commands on main (Decision 5)
 - [ ] Rewrite prd-start SKILL.md for YOLO mode
 - [ ] Rewrite prd-next SKILL.md for YOLO mode
 - [ ] Rewrite prd-update-progress SKILL.md for YOLO mode
@@ -82,6 +83,8 @@ Since all global skills are symlinks pointing into this repo's `.claude/skills/`
 | 1 | Archive in-place rather than separate directory | 2026-02-25 | Keeps careful version co-located with its skill for easy reference. `SKILL.v1-careful.md` is ignored by Claude Code which only loads `SKILL.md`. |
 | 2 | Rewrite in-place rather than creating separate `-yolo` skills | 2026-02-25 | Avoids skill name collisions (both global and project skills with same name show up as duplicates). Avoids doubling the skill list. All projects benefit automatically via symlinks. |
 | 3 | Preserve workflow steps, remove only pause points | 2026-02-25 | YOLO means fewer pauses, not less rigor. Same logical flow, same quality standards, just autonomous execution. |
+| 4 | Discuss each skill rewrite before making changes | 2026-03-02 | Each skill has unique workflow and pause points. User wants to review proposed changes per skill before they're applied, rather than batch-rewriting all 7 at once. This ensures each rewrite matches the user's intent. |
+| 5 | Fix branch protection hook for chained git add commands | 2026-03-02 | PreToolUse hook fires before command execution, so `git add X && git commit` has empty staging area. Added fallback that parses add targets from the command string. Also fixed macOS sed compatibility (`sed -E` for extended regex). |
 
 ## Risks
 
