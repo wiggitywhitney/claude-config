@@ -1,6 +1,6 @@
 # PRD #19: YOLO Mode PRD Skills
 
-**Status**: Planning
+**Status**: Complete
 **Priority**: High
 **Created**: 2026-02-25
 **GitHub Issue**: [#19](https://github.com/wiggitywhitney/claude-config/issues/19)
@@ -75,7 +75,7 @@ Since all global skills are symlinks pointing into this repo's `.claude/skills/`
 - [x] Rewrite prd-done SKILL.md for YOLO mode
 - [x] Rewrite prd-close SKILL.md for YOLO mode
 - [x] Create SessionStart hook for autonomous PRD loop continuation after `/clear` (prd-next and prd-done should detect if hook is installed and recommend it if missing)
-- [ ] Test YOLO skills end-to-end on a real PRD workflow
+- [~] Test YOLO skills end-to-end on a real PRD workflow (deferred — testing organically via real usage)
 
 ## Decision Log
 
