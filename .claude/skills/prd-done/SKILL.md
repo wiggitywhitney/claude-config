@@ -335,11 +335,19 @@ After creating the PR and starting the CodeRabbit review timer, use the wait tim
 - [ ] **Delete local feature branch**: `git branch -d feature/prd-[issue-id]-[feature-name]`
 - [ ] **Delete remote feature branch**: `git push origin --delete feature/prd-[issue-id]-[feature-name]`
 
+## Hook Detection
+
+Before starting the workflow, check if the `prd-loop-continue` SessionStart hook is installed by reading `~/.claude/settings.json` and looking for a `SessionStart` entry with `matcher: "clear"` that references `prd-loop-continue.sh`. If missing, warn the user:
+
+> The `prd-loop-continue` SessionStart hook is not installed. This hook enables automatic PRD loop continuation after `/clear`. Install it by adding the hook to `~/.claude/settings.json` (see the claude-config repo's `settings.template.json` for the entry).
+
+This is advisory — proceed with the workflow regardless.
+
 ## Success Criteria
-✅ **Feature is live and functional**  
-✅ **All tests passing in production**  
-✅ **Documentation is accurate and complete**  
-✅ **PRD issue is closed with completion summary**  
+✅ **Feature is live and functional**
+✅ **All tests passing in production**
+✅ **Documentation is accurate and complete**
+✅ **PRD issue is closed with completion summary**
 ✅ **Team is notified of feature availability**
 
 The PRD implementation is only considered done when users can successfully use the feature as documented.
