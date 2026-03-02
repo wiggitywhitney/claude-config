@@ -62,7 +62,8 @@ PRD_BASENAME=$(basename "$PRD_FILE")
 
 # Count unchecked items: lines matching "- [ ] " (standard markdown checkbox)
 # Only count actual unchecked [ ] — not [~] deferred or [!] blocked
-UNCHECKED=$(grep -cE '^[[:space:]]*- \[ \] ' "$PRD_FILE" 2>/dev/null || echo "0")
+UNCHECKED=$(grep -cE '^[[:space:]]*- \[ \] ' "$PRD_FILE" 2>/dev/null || true)
+UNCHECKED=${UNCHECKED:-0}
 
 if [[ "$UNCHECKED" -gt 0 ]]; then
     # Items remain — inject /prd-next guidance

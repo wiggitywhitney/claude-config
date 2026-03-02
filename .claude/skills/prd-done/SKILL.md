@@ -190,10 +190,11 @@ Present all auto-filled answers together in a summary format:
   - **Validation checks**: File existence, format compliance, content requirements
   - **Documentation actions**: Required updates, links to add
 
-- [ ] **Execute requirements**:
-  - For each requirement, determine if it can be automated
-  - Execute automatable actions and report results
-  - Handle failures gracefully and surface blockers that need user input
+- [ ] **Execute requirements safely**:
+  - Classify each requirement as read-only, local-mutating, or network/external
+  - Auto-execute only read-only checks (linting, format validation, file existence)
+  - Require explicit user confirmation before any mutating or external command
+  - Report results and surface blockers that need user input
 
 - [ ] **Summary before PR creation**:
   ```markdown
