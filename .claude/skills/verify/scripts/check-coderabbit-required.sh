@@ -32,7 +32,10 @@ COMMAND=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.stdin
 
 # Only act on gh pr merge commands
 # Must handle: gh pr merge, && gh pr merge, etc.
-if ! echo "$COMMAND" | grep -qE '(^|\s|&&\s*|;\s*)gh\s+pr\s+merge\b'; then
+# Strip quoted strings and heredocs first so commit messages and PR bodies
+# don't cause false matches when they contain merge command text.
+COMMAND_NO_QUOTES=$(echo "$COMMAND" | sed -E "s/\"([^\"]*)\"/\"\"/g; s/'([^']*)'/\\'\\'/g; s/\\$\\(cat <<[^)]*\\)//g")
+if ! echo "$COMMAND_NO_QUOTES" | grep -qE '(^|\s|&&\s*|;\s*)gh\s+pr\s+merge\b'; then
   exit 0  # Not a PR merge command, silent passthrough
 fi
 
