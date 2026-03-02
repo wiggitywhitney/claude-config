@@ -70,7 +70,7 @@ Since all global skills are symlinks pointing into this repo's `.claude/skills/`
 - [x] Fix branch protection hook for chained git add commands on main (Decision 5)
 - [x] Rewrite prd-start SKILL.md for YOLO mode
 - [x] Rewrite prd-next SKILL.md for YOLO mode
-- [ ] Rewrite prd-update-progress SKILL.md for YOLO mode
+- [x] Rewrite prd-update-progress SKILL.md for YOLO mode
 - [ ] Rewrite prd-update-decisions SKILL.md for YOLO mode
 - [ ] Rewrite prd-done SKILL.md for YOLO mode
 - [ ] Rewrite prd-close SKILL.md for YOLO mode
