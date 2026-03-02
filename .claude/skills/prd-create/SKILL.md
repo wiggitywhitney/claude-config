@@ -133,7 +133,7 @@ After creating the PRD, check if `docs/ROADMAP.md` exists. If it does, add the n
 
 Format: `- [Brief feature description] (PRD #[issue-id])`
 
-The ROADMAP.md update will be included in the commit at the end of the workflow (Option 2).
+The ROADMAP.md update will be included in the commit at the end of the workflow.
 
 ## After PRD Creation
 
