@@ -1,6 +1,6 @@
 ---
 name: prd-next
-description: Analyze existing PRD to identify and recommend the single highest-priority task to work on next
+description: INVOKE AUTOMATICALLY after /prd-start completes or after /clear on a PRD feature branch. Identifies and starts the next highest-priority PRD task without asking.
 category: project-management
 ---
 

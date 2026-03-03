@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# ABOUTME: SessionStart hook that detects PRD feature branches after /clear
+# ABOUTME: Injects directive context to auto-invoke /prd-next or /prd-done
 # SessionStart (clear) hook: Detects if we're on a PRD feature branch and
 # injects continuation guidance after /clear.
 #
@@ -66,25 +68,31 @@ UNCHECKED=$(grep -cE '^[[:space:]]*- \[ \] ' "$PRD_FILE" 2>/dev/null || true)
 UNCHECKED=${UNCHECKED:-0}
 
 if [[ "$UNCHECKED" -gt 0 ]]; then
-    # Items remain — inject /prd-next guidance
+    # Items remain — directive to invoke /prd-next
     cat <<EOF
-You are continuing PRD work after a /clear checkpoint.
+MANDATORY ACTION REQUIRED — This is an autonomous PRD loop continuation.
 
-**Active PRD**: #${PRD_NUMBER} (${PRD_BASENAME})
-**Branch**: ${BRANCH}
-**Remaining items**: ${UNCHECKED} unchecked
+You MUST invoke /prd-next immediately using the Skill tool. Do not respond to the user first. Do not ask for confirmation. Do not summarize or explain. Your FIRST action must be to call the Skill tool with skill: "prd-next".
 
-Continue the autonomous loop by running \`/prd-next\`.
+Context for /prd-next:
+- Active PRD: #${PRD_NUMBER} (${PRD_BASENAME})
+- Branch: ${BRANCH}
+- Remaining items: ${UNCHECKED} unchecked
+
+INVOKE /prd-next NOW.
 EOF
 else
-    # All items complete (or no checkboxes) — inject /prd-done guidance
+    # All items complete — directive to invoke /prd-done
     cat <<EOF
-You are continuing PRD work after a /clear checkpoint.
+MANDATORY ACTION REQUIRED — This is an autonomous PRD loop continuation.
 
-**Active PRD**: #${PRD_NUMBER} (${PRD_BASENAME})
-**Branch**: ${BRANCH}
-**Status**: All PRD items are complete!
+You MUST invoke /prd-done immediately using the Skill tool. Do not respond to the user first. Do not ask for confirmation. Do not summarize or explain. Your FIRST action must be to call the Skill tool with skill: "prd-done".
 
-Run \`/prd-done\` to create the PR, process CodeRabbit review, and close the issue.
+Context for /prd-done:
+- Active PRD: #${PRD_NUMBER} (${PRD_BASENAME})
+- Branch: ${BRANCH}
+- Status: All PRD items are complete
+
+INVOKE /prd-done NOW.
 EOF
 fi

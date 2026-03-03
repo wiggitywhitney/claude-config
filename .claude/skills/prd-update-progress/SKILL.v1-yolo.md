@@ -1,6 +1,6 @@
 ---
 name: prd-update-progress
-description: Update PRD progress based on git commits and code changes, enhanced by conversation context
+description: INVOKE AUTOMATICALLY after completing a PRD implementation task. Commits work, updates PRD checkboxes, and journals progress without asking.
 category: project-management
 ---
 

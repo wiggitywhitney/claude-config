@@ -17,73 +17,64 @@ The PRD skill suite has two modes — careful (confirmation gates, user approval
 
 ## Solution
 
-Flip the defaults and create per-project toggle skills. Mode switching is driven entirely by CLAUDE.md instructions — not by copying separate skill files — because Claude Code's skill override mechanics are broken (see Decision 4).
+Flip the defaults and create per-project toggle skills. Mode switching uses **symlink-based skill installation** — each project's `.claude/skills/` contains symlinks pointing to either YOLO or careful skill variants in the claude-config repo (see Decision 6). Global PRD skill symlinks are removed entirely (Decision 8).
 
-1. **Make careful the global default**: Rename current `SKILL.v1-careful.md` → `SKILL.md` (global) and current `SKILL.md` → `SKILL.v1-yolo.md` (archived for reference)
-2. **`/make-autonomous` skill**: Per-project opt-in that adds autonomous CLAUDE.md instructions (including proactive skill trigger conditions), installs hooks, and adjusts permissions
-3. **`/make-careful` skill**: Reverts a project to careful mode by removing autonomous CLAUDE.md instructions, hooks, and permissions
-4. **Remove `prd-loop-continue.sh` from global settings**: It becomes a project-level hook installed only by `/make-autonomous`
+1. **Make careful the global default**: Rename current `SKILL.v1-careful.md` → `SKILL.md` and current `SKILL.md` → `SKILL.v1-yolo.md` (with active trigger descriptions per Decision 7)
+2. **Remove global PRD skill symlinks**: PRD skills removed from `~/.claude/skills/` — they become project-level only (Decision 8)
+3. **`/make-autonomous` skill**: Per-project opt-in that creates symlinks to YOLO skill variants, installs SessionStart hooks, and adjusts permissions
+4. **`/make-careful` skill**: Swaps symlinks to careful skill variants, removes hooks and autonomous permissions
+5. **Remove `prd-loop-continue.sh` from global settings**: It becomes a project-level hook installed only by `/make-autonomous`
 
 ## What `/make-autonomous` Does
 
 When invoked in a project directory, this skill:
 
-### 1. Add autonomous CLAUDE.md section
-Append an autonomous mode section to the project's `.claude/CLAUDE.md` (or `CLAUDE.local.md`) that includes:
-- Proceed without trivial confirmations
-- Auto-invoke PRD skills when context is clear
-- Only pause for genuine ambiguity or architectural decisions
-- **Proactive skill trigger conditions** that override the default passive skill descriptions:
-  - `prd-next`: INVOKE AUTOMATICALLY after `/prd-start` completes or after `/clear` on a PRD feature branch
-  - `prd-done`: INVOKE AUTOMATICALLY when all PRD checkboxes are checked after `/clear`
-  - `prd-update-progress`: INVOKE AUTOMATICALLY after completing a PRD implementation task
-
-This is the primary mode-switching mechanism. CLAUDE.md instructions are loaded alongside skills and influence how Claude interprets them — the passive default skill descriptions become active triggers when the autonomous CLAUDE.md section is present.
+### 1. Create symlinks to YOLO skill variants
+For each PRD skill, create a project-level symlink in `.claude/skills/<skill-name>/SKILL.md` pointing to the YOLO variant (`SKILL.v1-yolo.md`) in the claude-config repo. YOLO variants have active trigger descriptions (Decision 7) that drive proactive invocation.
 
 ### 2. Install SessionStart hooks
 Add the `prd-loop-continue.sh` hook to `.claude/settings.local.json` (auto-gitignored by Claude Code). This enables the `/clear` → auto-resume loop that drives continuous PRD work.
 
-### 3. Adjust permissions (optional)
-Add or suggest permission entries in `.claude/settings.local.json` that reduce friction for autonomous operation (e.g., auto-allow common git operations).
+### 3. Adjust permissions
+Add permission entries in `.claude/settings.local.json` that reduce friction for autonomous operation (e.g., auto-allow git operations, skill invocations).
 
 ## What `/make-careful` Does
 
-Reverts a project to careful mode:
+Swaps a project to careful mode:
 
-1. Remove autonomous CLAUDE.md section (behavioral instructions + proactive trigger conditions)
+1. Swap symlinks to point at careful skill variants (`SKILL.md`) instead of YOLO variants
 2. Remove SessionStart hooks from `.claude/settings.local.json`
-3. Revert any permission changes
+3. Remove autonomous permission entries
 
 ## How Skill Descriptions Change Based on Mode
 
-Default SKILL.md descriptions stay passive (careful mode):
+Careful `SKILL.md` descriptions are passive (user-driven invocation):
 ```text
 prd-next: Analyze existing PRD to identify and recommend the single highest-priority task
 prd-done: Complete PRD implementation workflow - create branch, push changes, create PR
 prd-update-progress: Update PRD progress based on git commits and code changes
 ```
 
-When `/make-autonomous` is run, the CLAUDE.md autonomous section adds proactive trigger overrides:
+YOLO `SKILL.v1-yolo.md` descriptions use active trigger language (Decision 7):
 ```text
-## Autonomous PRD Mode
-
-Proactively invoke PRD skills when trigger conditions are met:
-- prd-next: INVOKE AUTOMATICALLY after /prd-start completes or after /clear on a PRD feature branch
-- prd-done: INVOKE AUTOMATICALLY when all PRD checkboxes are checked after /clear
-- prd-update-progress: INVOKE AUTOMATICALLY after completing a PRD implementation task
+prd-next: INVOKE AUTOMATICALLY after /prd-start or /clear on PRD branch. Identifies next task.
+prd-done: INVOKE AUTOMATICALLY when all PRD checkboxes complete. Creates PR, reviews, merges.
+prd-update-progress: INVOKE AUTOMATICALLY after completing a PRD task. Commits, updates PRD.
 ```
 
-The key insight: CLAUDE.md instructions are loaded alongside skills and override how Claude interprets skill descriptions. Passive descriptions become active triggers when the autonomous CLAUDE.md section is present. This avoids depending on skill file overrides (which are broken — see Decision 4).
+The key insight: the `description` field in SKILL.md frontmatter appears in the system prompt's skill list. Active trigger language in descriptions drives Claude to invoke skills proactively without being asked. `/make-autonomous` installs YOLO variants with these active descriptions; `/make-careful` installs careful variants with passive descriptions. No global PRD skills exist to conflict (Decision 8).
 
 ## Success Criteria
 
 - [x] Careful mode is the global default for all PRD skills
-- [ ] `/make-autonomous` installs YOLO mode per-project (CLAUDE.md instructions, hooks, permissions)
-- [ ] `/make-careful` cleanly reverts a project to careful mode
+- [ ] `/make-autonomous` installs YOLO mode per-project (symlinks to YOLO skills, hooks, permissions)
+- [ ] `/make-careful` cleanly swaps a project to careful mode
 - [x] `prd-loop-continue.sh` removed from global `settings.template.json` and `~/.claude/settings.json`
-- [ ] Autonomous CLAUDE.md section triggers proactive skill invocation by Claude Code
+- [ ] Active YOLO skill descriptions trigger proactive invocation by Claude Code
 - [ ] Autonomous loop tested end-to-end: `/prd-start` → implement → `/clear` → auto-resume → complete → `/prd-done`
 - [ ] README updated with autonomous mode documentation
+- [x] All repos touched in last 2 months have careful PRD skill symlinks installed
+- [x] Global PRD skill symlinks removed from `~/.claude/skills/`
 
 ## Milestones
 
@@ -97,24 +88,28 @@ Make careful mode the global default. Reorganize skill files.
 - [x] Verify careful mode works as global default
 
 ### Milestone 2: Create /make-autonomous Skill
-Build the skill that enables YOLO mode per-project via CLAUDE.md instructions (Decision 4).
+Build the skill that enables YOLO mode per-project via symlink-based skill installation (Decision 6).
 
-- [ ] `/make-autonomous` SKILL.md created with clear trigger conditions
-- [ ] Skill adds autonomous CLAUDE.md section with behavioral instructions and proactive skill trigger conditions (Decision 5)
-- [ ] Skill installs SessionStart hook in `.claude/settings.local.json`
-- [ ] Skill adjusts permissions in `.claude/settings.local.json`
-- [ ] Proactive skill triggers tested — Claude Code invokes PRD skills without being asked when autonomous section is present
+- [x] Update YOLO `SKILL.v1-yolo.md` descriptions with active trigger language (Decision 7)
+- [x] `/make-autonomous` SKILL.md created — creates symlinks to YOLO variants, installs hooks, adjusts permissions
+- [x] Skill creates project-level symlinks in `.claude/skills/` pointing to YOLO variants in claude-config
+- [x] Skill installs SessionStart hook in `.claude/settings.local.json`
+- [x] Skill adjusts permissions in `.claude/settings.local.json`
+- [x] Strengthen `prd-loop-continue.sh` hook output language for more directive auto-invocation
+- [x] Remove global PRD skill symlinks from `~/.claude/skills/` (Decision 8)
+- [ ] Proactive skill triggers tested — Claude Code invokes PRD skills without being asked when YOLO variants installed
 - [ ] Autonomous loop verified: `/clear` → hook → auto-invoke `/prd-next` or `/prd-done`
 - [ ] Tested on a real project
 
-### Milestone 3: Create /make-careful Skill
-Build the skill that reverts a project to careful mode.
+### Milestone 3: Create /make-careful Skill and Migrate Repos
+Build the skill that swaps a project to careful mode. Migrate all active repos.
 
 - [ ] `/make-careful` SKILL.md created
-- [ ] Skill removes autonomous CLAUDE.md section (behavioral instructions + proactive triggers)
+- [ ] Skill swaps symlinks to point at careful variants (not removes — skills stay installed)
 - [ ] Skill removes SessionStart hooks from `.claude/settings.local.json`
-- [ ] Skill reverts permission changes
+- [ ] Skill removes autonomous permission entries
 - [ ] Tested: `/make-autonomous` → `/make-careful` round-trip leaves project clean
+- [x] All repos touched in last 2 months have careful PRD skill symlinks installed
 
 ### Milestone 4: Documentation and README
 Document autonomous mode for users.
@@ -149,14 +144,32 @@ Document autonomous mode for users.
 - **Rationale**: Claude Code uses skill descriptions to decide when to proactively invoke skills. Passive descriptions result in Claude asking permission. Active descriptions with explicit trigger conditions result in automatic invocation — which is the entire point of autonomous mode.
 - **Impact**: ~~YOLO `SKILL.md` files get rewritten descriptions.~~ Superseded by Decision 5 — trigger conditions now live in CLAUDE.md, not skill descriptions. Careful variants keep passive descriptions (user-driven invocation is the point).
 
-### Decision 4: CLAUDE.md-Driven Mode Switching (Not Skill File Overrides)
+### Decision 4: ~~CLAUDE.md-Driven Mode Switching~~ → Superseded by Decision 6
 - **Date**: 2026-03-03
-- **Decision**: Mode switching (careful ↔ autonomous) is driven entirely by CLAUDE.md instructions, not by copying separate YOLO skill files to project-level `.claude/skills/` directories.
-- **Rationale**: Claude Code's skill override mechanics are broken. Official docs state precedence is enterprise > personal > project (personal wins), and [Issue #20309](https://github.com/anthropics/claude-code/issues/20309) (labeled `bug`, `has repro`, open) confirms project-level skills don't reliably shadow global ones. [Issue #25209](https://github.com/anthropics/claude-code/issues/25209) shows both skills appear in the picker instead of one winning. Agents implement local > global correctly, but skills don't yet. Building on broken infrastructure would create a fragile system.
-- **Impact**: `/make-autonomous` no longer copies YOLO skill files. Instead, it adds an autonomous section to project CLAUDE.md with behavioral instructions and proactive trigger conditions. `/make-careful` removes that section. YOLO `SKILL.v1-yolo.md` files are archived for reference only, not installed per-project. Milestone 4 (Fix YOLO Skill Descriptions) is absorbed into Milestone 2 since proactive triggers now live in CLAUDE.md.
+- **Decision**: ~~Mode switching driven entirely by CLAUDE.md instructions.~~
+- **Rationale**: Claude Code's skill override mechanics are broken ([Issue #20309](https://github.com/anthropics/claude-code/issues/20309)). Project-level skills don't shadow global ones — both appear in the picker.
+- **Superseded**: Decision 6 solves the override bug differently — by removing global PRD skills entirely and using project-level symlinks only.
 
-### Decision 5: Proactive Skill Invocation via CLAUDE.md Context
+### Decision 5: ~~Proactive Skill Invocation via CLAUDE.md Context~~ → Superseded by Decision 7
 - **Date**: 2026-03-03
-- **Decision**: Proactive skill trigger conditions are embedded in the autonomous CLAUDE.md section rather than rewriting SKILL.md frontmatter descriptions.
-- **Rationale**: SKILL.md `description` fields are static per-file and can't change dynamically per-project. CLAUDE.md instructions are loaded alongside skills and influence how Claude interprets them. Adding trigger conditions like "INVOKE AUTOMATICALLY after `/prd-start`" to the CLAUDE.md autonomous section effectively transforms passive skill descriptions into active triggers — without modifying any skill files. This also means the same skill file works in both modes: passive when autonomous CLAUDE.md section is absent, active when present.
-- **Impact**: Default SKILL.md descriptions stay passive (careful behavior). `/make-autonomous` adds a CLAUDE.md section with proactive trigger overrides for each PRD skill. This replaces the original Milestone 4 plan to rewrite YOLO SKILL.md descriptions.
+- **Decision**: ~~Proactive skill trigger conditions embedded in CLAUDE.md section.~~
+- **Rationale**: SKILL.md descriptions are static per-file. CLAUDE.md was chosen as the dynamic override mechanism.
+- **Superseded**: Decision 7 revives the original approach (active descriptions in SKILL.md frontmatter) now that Decision 6 eliminates the global/project conflict. Each project gets either YOLO or careful skill files via symlinks — no need for CLAUDE.md overrides.
+
+### Decision 6: Symlink-Based Per-Project Skill Installation
+- **Date**: 2026-03-03
+- **Decision**: `/make-autonomous` creates project-level symlinks in `.claude/skills/` pointing to YOLO skill variants (`SKILL.v1-yolo.md`) in the claude-config repo. `/make-careful` swaps symlinks to careful variants (`SKILL.md`). Global PRD skill symlinks are removed entirely (see Decision 8).
+- **Rationale**: The skill override bug (#20309) means project-level skills can't shadow global ones — both appear. The solution is to eliminate the conflict: remove global PRD skills so project-level symlinks are the only source. Symlinks avoid file duplication and ensure all projects reference the canonical skill definitions in claude-config.
+- **Impact**: `/make-autonomous` no longer modifies CLAUDE.md. Instead, it creates symlinks for each PRD skill directory. `/make-careful` swaps those symlinks. Milestones 2 and 3 updated to reflect symlink approach.
+
+### Decision 7: Active YOLO Skill Descriptions in Frontmatter
+- **Date**: 2026-03-03
+- **Decision**: YOLO `SKILL.v1-yolo.md` files get active trigger descriptions in their frontmatter `description` field (e.g., "INVOKE AUTOMATICALLY after /prd-start or /clear on PRD branch"). Careful `SKILL.md` files keep passive descriptions.
+- **Rationale**: The `description` field appears in the system prompt's skill list and directly influences whether Claude proactively invokes skills. With global PRD skills removed (Decision 8), there's no conflict — each project sees exactly one set of descriptions (YOLO or careful) based on which symlinks are installed. Revives Decision 3's original approach, now viable because Decision 6 eliminates the global/project conflict.
+- **Impact**: YOLO `SKILL.v1-yolo.md` frontmatter descriptions rewritten with active trigger language for prd-next, prd-done, and prd-update-progress. Decision 5 (CLAUDE.md triggers) is superseded.
+
+### Decision 8: Remove Global PRD Skill Symlinks
+- **Date**: 2026-03-03
+- **Decision**: PRD skills are removed from `~/.claude/skills/` (global). Each project gets PRD skills only via `/make-autonomous` or `/make-careful`, which create project-level symlinks. Projects without either have no PRD skills in their picker.
+- **Rationale**: Global PRD skills cause the duplicate-in-picker bug (#20309) when project-level skills also exist. Removing them eliminates the conflict entirely. Only projects that explicitly opt in get PRD skills, which is cleaner — non-PRD projects don't see irrelevant skills.
+- **Impact**: Existing repos that use PRD skills need careful symlinks installed (added to Milestone 3 success criteria). Global CLAUDE.md PRD workflow instructions remain as documentation but reference per-project skill installation.
