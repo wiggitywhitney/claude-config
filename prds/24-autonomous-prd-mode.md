@@ -166,7 +166,13 @@ Document autonomous mode for users.
 - **Date**: 2026-03-03
 - **Decision**: YOLO `SKILL.v1-yolo.md` files get active trigger descriptions in their frontmatter `description` field (e.g., "INVOKE AUTOMATICALLY after /prd-start or /clear on PRD branch"). Careful `SKILL.md` files keep passive descriptions.
 - **Rationale**: The `description` field appears in the system prompt's skill list and directly influences whether Claude proactively invokes skills. With global PRD skills removed (Decision 8), there's no conflict — each project sees exactly one set of descriptions (YOLO or careful) based on which symlinks are installed. Revives Decision 3's original approach, now viable because Decision 6 eliminates the global/project conflict.
-- **Impact**: YOLO `SKILL.v1-yolo.md` frontmatter descriptions rewritten with active trigger language for prd-next, prd-done, and prd-update-progress. Decision 5 (CLAUDE.md triggers) is superseded.
+- **Impact**: YOLO `SKILL.v1-yolo.md` frontmatter descriptions rewritten with active trigger language for prd-next and prd-update-progress. prd-done is the exception — it uses passive trigger language to preserve the `/clear` step (see Decision 9). Decision 5 (CLAUDE.md triggers) is superseded.
+
+### Decision 9: prd-done Is Hook-Triggered, Not Auto-Invoked
+- **Date**: 2026-03-03
+- **Decision**: Unlike prd-next and prd-update-progress, prd-done does NOT get an "INVOKE AUTOMATICALLY" description. Its YOLO description says "Triggered by the /clear loop when all PRD items are done" — passive trigger, not proactive.
+- **Rationale**: The autonomous loop flow is: task complete → `/prd-update-progress` → `/clear` → hook detects state → hook says run `/prd-next` or `/prd-done`. If prd-done's description said "INVOKE AUTOMATICALLY when all checkboxes complete," Claude would fire it immediately after `/prd-update-progress` checks the last box — skipping the `/clear` step that resets context. The `/clear` context reset is essential: without it, `/prd-done` runs in a bloated context window full of implementation details instead of starting fresh.
+- **Impact**: Only prd-next and prd-update-progress have "INVOKE AUTOMATICALLY" descriptions. prd-done relies on the SessionStart hook to trigger it after `/clear`. This preserves the flow: implement → checkpoint → clear → fresh context → finalize.
 
 ### Decision 8: Remove Global PRD Skill Symlinks
 - **Date**: 2026-03-03
