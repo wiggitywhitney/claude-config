@@ -77,6 +77,26 @@ if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
     fi
   fi
 
+  # Fallback: when nothing is staged yet, check git add targets in chained commands.
+  # PreToolUse fires before the command runs, so "git add X && git commit" has
+  # nothing in the cache yet. Parse the add targets from the command itself.
+  if [ -z "$STAGED" ]; then
+    ADD_FILES=$(echo "$COMMAND" | grep -oE 'git\s+add\s+[^&;|]+' | sed -E 's/^git[[:space:]]+add[[:space:]]+//' | tr ' ' '\n' | grep -v '^-' | grep -v '^$')
+    if [ -n "$ADD_FILES" ]; then
+      DOCS_ONLY=true
+      while IFS= read -r filepath; do
+        [ -z "$filepath" ] && continue
+        if [[ "$filepath" != *.md ]]; then
+          DOCS_ONLY=false
+          break
+        fi
+      done <<< "$ADD_FILES"
+      if [ "$DOCS_ONLY" = true ]; then
+        exit 0  # Chained git add of .md-only files — allow
+      fi
+    fi
+  fi
+
   python3 -c "
 import json
 reason = (

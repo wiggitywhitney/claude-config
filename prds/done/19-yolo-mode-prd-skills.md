@@ -1,6 +1,6 @@
 # PRD #19: YOLO Mode PRD Skills
 
-**Status**: Planning
+**Status**: Complete
 **Priority**: High
 **Created**: 2026-02-25
 **GitHub Issue**: [#19](https://github.com/wiggitywhitney/claude-config/issues/19)
@@ -65,15 +65,17 @@ Since all global skills are symlinks pointing into this repo's `.claude/skills/`
 
 ## Milestones
 
-- [ ] Archive current skill versions as `SKILL.v1-careful.md` in each skill directory (7 files)
-- [ ] Rewrite prd-create SKILL.md for YOLO mode
-- [ ] Rewrite prd-start SKILL.md for YOLO mode
-- [ ] Rewrite prd-next SKILL.md for YOLO mode
-- [ ] Rewrite prd-update-progress SKILL.md for YOLO mode
-- [ ] Rewrite prd-update-decisions SKILL.md for YOLO mode
-- [ ] Rewrite prd-done SKILL.md for YOLO mode
-- [ ] Rewrite prd-close SKILL.md for YOLO mode
-- [ ] Test YOLO skills end-to-end on a real PRD workflow
+- [x] Archive current skill versions as `SKILL.v1-careful.md` in each skill directory (7 files)
+- [x] Rewrite prd-create SKILL.md for YOLO mode
+- [x] Fix branch protection hook for chained git add commands on main (Decision 5)
+- [x] Rewrite prd-start SKILL.md for YOLO mode
+- [x] Rewrite prd-next SKILL.md for YOLO mode
+- [x] Rewrite prd-update-progress SKILL.md for YOLO mode
+- [x] Rewrite prd-update-decisions SKILL.md for YOLO mode
+- [x] Rewrite prd-done SKILL.md for YOLO mode
+- [x] Rewrite prd-close SKILL.md for YOLO mode
+- [x] Create SessionStart hook for autonomous PRD loop continuation after `/clear` (prd-next and prd-done should detect if hook is installed and recommend it if missing)
+- [~] Test YOLO skills end-to-end on a real PRD workflow (deferred — testing organically via real usage)
 
 ## Decision Log
 
@@ -82,6 +84,11 @@ Since all global skills are symlinks pointing into this repo's `.claude/skills/`
 | 1 | Archive in-place rather than separate directory | 2026-02-25 | Keeps careful version co-located with its skill for easy reference. `SKILL.v1-careful.md` is ignored by Claude Code which only loads `SKILL.md`. |
 | 2 | Rewrite in-place rather than creating separate `-yolo` skills | 2026-02-25 | Avoids skill name collisions (both global and project skills with same name show up as duplicates). Avoids doubling the skill list. All projects benefit automatically via symlinks. |
 | 3 | Preserve workflow steps, remove only pause points | 2026-02-25 | YOLO means fewer pauses, not less rigor. Same logical flow, same quality standards, just autonomous execution. |
+| 4 | Discuss each skill rewrite before making changes | 2026-03-02 | Each skill has unique workflow and pause points. User wants to review proposed changes per skill before they're applied, rather than batch-rewriting all 7 at once. This ensures each rewrite matches the user's intent. |
+| 5 | Fix branch protection hook for chained git add commands | 2026-03-02 | PreToolUse hook fires before command execution, so `git add X && git commit` has empty staging area. Added fallback that parses add targets from the command string. Also fixed macOS sed compatibility (`sed -E` for extended regex). |
+| 6 | Autonomous loop with `/clear` verification checkpoints | 2026-03-02 | After each task completes and progress is committed, `/clear` resets context. The fresh instance re-reads the PRD and verifies actual state against checkboxes before picking the next task. This provides self-verification built into the loop. |
+| 7 | Loop runs across milestone boundaries, not just within | 2026-03-02 | `/clear` already provides the verification checkpoint. The fresh prd-next instance naturally picks up the next milestone. The loop only halts when the entire PRD is complete or a genuine decision point is hit. |
+| 8 | SessionStart hook to bridge `/clear` context gap | 2026-03-02 | `/clear` wipes all context, so the fresh instance needs a signal to continue PRD work. A `SessionStart` hook (matcher: `clear`) checks if on a `feature/prd-*` branch, scans the PRD for unchecked items, and injects either "continue with `/prd-next`" or "PRD complete, run `/prd-done`". Global hook in `~/.claude/settings.json`, no-op when not on a PRD branch. After the hook is implemented, prd-next and prd-done should detect whether it's installed and recommend it if missing. |
 
 ## Risks
 
