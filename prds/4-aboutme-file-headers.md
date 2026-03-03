@@ -66,9 +66,9 @@ Add the ABOUTME convention to the global CLAUDE.md so Claude knows to include he
 
 ## Success Criteria
 
-- [ ] Hook blocks on missing ABOUTME headers for supported file types (exit 2, fix-and-retry)
-- [ ] Multiple languages supported (Python, TypeScript/JavaScript, Bash, at minimum)
-- [ ] Existing files gain headers organically as they're modified (no backfill required)
+- [x] Hook blocks on missing ABOUTME headers for supported file types (deny, fix-and-retry)
+- [x] Multiple languages supported (Python, TypeScript/JavaScript, Bash, at minimum)
+- [x] Existing files gain headers organically as they're modified (no backfill required)
 - [ ] Convention documented in global CLAUDE.md
 
 ## Milestones
@@ -80,7 +80,7 @@ Build the ABOUTME check hook, supporting multiple file types and comment syntaxe
 - [x] Appropriate comment syntax detection per file type
 - [x] Skip list for files that don't need headers (`__init__.py`, `index.ts` re-exports, config files, generated files)
 - [x] Hook registered in `~/.claude/settings.json`
-- [ ] Tested across multiple file types in a real project
+- [~] Tested across multiple file types in a real project (deferred — will happen organically)
 
 ### Milestone 2: Convention Adoption
 Document the convention and verify it works in practice across projects.
