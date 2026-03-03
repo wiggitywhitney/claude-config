@@ -62,8 +62,9 @@ Read the current PRD file from `prds/[number]-*.md`:
 
 **Validation checks:**
 - [ ] PRD file exists and is readable
+- [ ] Confirm with user that this PRD should be closed
 - [ ] Verify closure reason makes sense given PRD content
-- [ ] Gather implementation evidence from conversation context, git history, or linked repos (if "already implemented")
+- [ ] Ask user for implementation evidence (if "already implemented")
 
 **Present PRD summary to user:**
 ```markdown
@@ -75,6 +76,8 @@ Read the current PRD file from `prds/[number]-*.md`:
 
 **Proposed Action**: Close as [reason]
 **Implementation Reference**: [If applicable]
+
+Proceed with closure? (yes/no)
 ```
 
 ### Step 3: Update PRD File

@@ -234,7 +234,7 @@ def test_all_hook_paths_exist(t):
                         exists, True
                     )
 
-    t.assert_equal(f"checked {checked} hook paths (expected 10)", checked, 10)
+    t.assert_equal(f"checked {checked} hook paths (expected 11)", checked, 11)
 
 
 def test_validate_flag(t):

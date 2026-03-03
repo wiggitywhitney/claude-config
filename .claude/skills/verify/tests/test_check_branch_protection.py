@@ -271,6 +271,45 @@ def run_tests():
         t.assert_deny("commit with nothing staged on main is blocked",
                        HOOK, make_hook_input('git commit -m "empty"', docs_dir))
 
+    # ─── Section 7: Chained git add + commit on main (command parsing fallback) ───
+    # PreToolUse fires before execution, so chained "git add X && git commit"
+    # has nothing in the staging area. The hook parses add targets from the command.
+    with TempDir() as chain_dir:
+        setup_git_repo(chain_dir, branch="main")
+
+        t.section("Chained git add + commit on main (command parsing fallback)")
+
+        # Chained add of .md file — should be allowed
+        write_file(chain_dir, "prds/19-feature.md", "# PRD")
+        t.assert_allow("chained git add of .md file on main is allowed",
+                       HOOK, make_hook_input(
+                           'git add prds/19-feature.md && git commit -m "docs: add prd"',
+                           chain_dir))
+
+        # Chained add of multiple .md files — should be allowed
+        t.assert_allow("chained git add of multiple .md files on main is allowed",
+                       HOOK, make_hook_input(
+                           'git add prds/19-feature.md docs/ROADMAP.md && git commit -m "docs: add prd"',
+                           chain_dir))
+
+        # Chained add of non-.md file — should be denied
+        t.assert_deny("chained git add of .py file on main is blocked",
+                      HOOK, make_hook_input(
+                          'git add script.py && git commit -m "feat: add script"',
+                          chain_dir))
+
+        # Chained add of mixed .md + non-.md — should be denied
+        t.assert_deny("chained git add of mixed files on main is blocked",
+                      HOOK, make_hook_input(
+                          'git add README.md script.py && git commit -m "mixed commit"',
+                          chain_dir))
+
+        # Semicolon-chained add of .md — should be allowed
+        t.assert_allow("semicolon-chained git add of .md on main is allowed",
+                       HOOK, make_hook_input(
+                           'git add prds/19-feature.md; git commit -m "docs: add prd"',
+                           chain_dir))
+
     t.summary()
     return t.passed, t.failed, t.total
 

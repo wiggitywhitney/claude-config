@@ -1,14 +1,14 @@
 ---
-name: anki
-description: Create Anki cards from the current conversation. Invoke when learning a concept and want to capture it for spaced repetition.
-allowed-tools: Read, Write, AskUserQuestion
+name: anki-yolo
+description: Create and save Anki cards autonomously without approval. Use when cards should just get made.
+allowed-tools: Read, Write, Glob, Grep, WebSearch, WebFetch
 ---
 
-# Anki Card-Making Skill
+# Anki YOLO — Autonomous Card Making
+
+Make cards and save them immediately. No two-phase workflow, no approval gate.
 
 ## User Configuration
-
-Update these paths before using this skill. All save locations and style references below use these values.
 
 - **ANKI_CARDS_DIR**: `/Users/whitney.lee/Documents/Journal/make Anki cards`
 - **ANKI_FINISHED_DIR**: `/Users/whitney.lee/Documents/Journal/make Anki cards/finished`
@@ -17,22 +17,26 @@ Update these paths before using this skill. All save locations and style referen
 
 ---
 
-You are helping Whitney create Anki cards from a conversation she just had. The goal is to capture key concepts while they're fresh.
+## Process
 
-## Two-Phase Workflow
+1. Check for existing cards in `ANKI_FINISHED_DIR` to avoid duplicating concepts already captured
+2. Review conversation context (or provided args/file)
+3. Outline the narrative arc (why it exists, what it is, how it connects, what was surprising)
+4. Generate cards following all rules below
+5. Save directly to: `ANKI_FINISHED_DIR/CARDS MADE - [topic].md`
+6. Present a brief summary of what was saved (card count and topics covered)
 
-### Phase 1: Create Card-Ready Document
+## Constraints
 
-1. Review the conversation above this skill invocation
-2. Extract the key concepts that are worth remembering
-3. Structure them in a card-ready format (organized by theme, with clear concepts)
-4. Present the document to the user
+- **Default to 5 cards max** unless the caller specifies otherwise
+- **Architectural level only**: How things fit together, key decisions, surprising patterns. No implementation minutiae.
 
-### Phase 2: Make Cards
+## Handling Arguments
 
-1. Generate actual START/END block cards following the rules below
-2. Present cards for user approval
-3. After approval, save to: `/Users/whitney.lee/Documents/Journal/make Anki cards/finished/CARDS MADE - [topic].md`
+- `/anki-yolo` — Make cards from this conversation (infer topic, max 5)
+- `/anki-yolo "specific topic"` — Focus on the specific topic
+- `/anki-yolo 10` — Override the default card limit
+- `/anki-yolo path/to/file.md` — Make cards from a specific file
 
 ---
 
@@ -363,17 +367,9 @@ For reference, read these files (under ANKI_FINISHED_DIR / ANKI_CARDS_DIR) to se
 
 ---
 
-## Handling Arguments
-
-- `/anki` - Make cards from this conversation (infer topic)
-- `/anki "specific topic"` - Focus on the specific topic mentioned
-- `/anki path/to/file.md` - Make cards from a specific file instead of conversation
-
----
-
 ## Quality Checklist
 
-Before presenting cards:
+Before saving cards:
 - [ ] Every card has `TARGET DECK: AWSAIPractitionerCert` before START
 - [ ] Every important concept is covered at least twice
 - [ ] Card fronts don't give away the answer

@@ -152,19 +152,29 @@ For documentation-first PRDs:
 
 **DO NOT proceed to Step 4 until branch setup is confirmed.**
 
-## Step 4: Auto-Invoke prd-next
+## Step 4: Hand Off to prd-next
 
-Once the implementation context is set up, present a brief setup summary:
+Once the implementation context is set up, present this message to the user:
 
 ```markdown
-## Ready for Implementation
+## Ready for Implementation 🚀
 
 **PRD**: [PRD Name] (#[PRD Number])
 **Branch**: `[branch-name]`
 **Status**: Ready for development
+
+---
+
+To identify and start working on your first task, run `/prd-next`.
 ```
 
-Then **immediately invoke `/prd-next`** using the Skill tool to chain into task identification. Do not tell the user to run it manually — just run it.
+**⚠️ STOP HERE - DO NOT:**
+- Identify or recommend tasks to work on
+- Analyze implementation priorities or critical paths
+- Start any implementation work
+- Continue beyond presenting the handoff message
+
+`/prd-next` handles all task identification and implementation guidance.
 
 ## Success Criteria
 
@@ -172,10 +182,10 @@ This command should:
 - ✅ Successfully identify the target PRD for implementation
 - ✅ Validate that the PRD is ready for development work
 - ✅ Set up proper implementation context (branch, environment)
-- ✅ Automatically chain to `/prd-next` for task identification
+- ✅ Hand off to `/prd-next` for task identification
 - ✅ Bridge the gap between PRD planning and development setup
 
 ## Notes
 
 - This command focuses on **setup only** - it validates readiness, creates the branch, and prepares the environment
-- Once setup is complete, `/prd-next` is invoked automatically for task identification, implementation guidance, and progress tracking
+- Once setup is complete, `/prd-next` handles all task identification, implementation guidance, and progress tracking

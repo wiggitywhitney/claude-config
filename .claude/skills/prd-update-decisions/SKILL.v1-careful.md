@@ -21,17 +21,7 @@ You are updating a PRD based on design decisions, strategic changes, and archite
 
 ## Step 1: PRD Analysis
 
-Auto-detect the target PRD using these signals (priority order):
-
-1. **Conversation context**: Recent PRD work discussed, specific PRD mentioned
-2. **Git branch**: `feature/prd-12-*` → PRD 12
-3. **Recent commits**: Commit messages referencing PRD numbers
-4. **Modified PRD files**: Recently changed files in `prds/`
-5. **Available PRDs**: List `prds/*.md` files
-
-If multiple PRDs are possible and context doesn't disambiguate, ask which one.
-
-Then:
+Ask the user which PRD to update, then:
 - Read the PRD file from `prds/[issue-id]-[feature-name].md`
 - Understand current requirements, approach, and constraints
 - Identify areas most likely to be affected by design decisions
