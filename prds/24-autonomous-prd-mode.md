@@ -97,9 +97,9 @@ Build the skill that enables YOLO mode per-project via symlink-based skill insta
 - [x] Skill adjusts permissions in `.claude/settings.local.json`
 - [x] Strengthen `prd-loop-continue.sh` hook output language for more directive auto-invocation
 - [x] Remove global PRD skill symlinks from `~/.claude/skills/` (Decision 8)
-- [ ] Proactive skill triggers tested — Claude Code invokes PRD skills without being asked when YOLO variants installed
-- [ ] Autonomous loop verified: `/clear` → hook → auto-invoke `/prd-next` or `/prd-done`
-- [ ] Tested on a real project
+- [~] Proactive skill triggers tested — deferred to Milestone 3 (test while building /make-careful)
+- [~] Autonomous loop verified — deferred to Milestone 3 (run /make-autonomous on this repo, then build /make-careful using the loop)
+- [~] Tested on a real project — deferred to Milestone 3 (this repo is the real project test)
 
 ### Milestone 3: Create /make-careful Skill and Migrate Repos
 Build the skill that swaps a project to careful mode. Migrate all active repos.
