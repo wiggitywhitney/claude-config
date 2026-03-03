@@ -18,7 +18,7 @@ Shared Claude Code testing infrastructure, safety config, and developer tooling.
 | `/write-docs` Skill | [`.claude/skills/write-docs/`](.claude/skills/write-docs/) | Validated documentation with real command output |
 | `/anki` Skill | [`.claude/skills/anki/`](.claude/skills/anki/) | Create Anki cards from conversation context |
 | `/anki-yolo` Skill | [`.claude/skills/anki-yolo/`](.claude/skills/anki-yolo/) | Create and save Anki cards autonomously |
-| PRD Skills | [`.claude/skills/prd-*/`](.claude/skills/) | Full PRD lifecycle: create, start, next, update, close, done |
+| PRD Skills | [`.claude/skills/`](.claude/skills/) | Full PRD lifecycle: create, start, next, update, close, done |
 | `/prds-get` Skill | [`.claude/skills/prds-get/`](.claude/skills/prds-get/) | Fetch all open PRD issues from GitHub |
 | ABOUTME Hook | [`.claude/skills/verify/scripts/check-aboutme.sh`](.claude/skills/verify/scripts/check-aboutme.sh) | Enforces ABOUTME file headers in code files |
 | CodeRabbit CLI Hook | [`.claude/skills/verify/scripts/coderabbit-review.sh`](.claude/skills/verify/scripts/coderabbit-review.sh) | Advisory CodeRabbit CLI review on push |

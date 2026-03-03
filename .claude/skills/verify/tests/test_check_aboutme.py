@@ -52,43 +52,43 @@ def run_tests():
     t.assert_allow(
         "Python file with ABOUTME header",
         HOOK,
-        make_write_input("/tmp/test/app.py",
+        make_write_input("src/app.py",
                          "# ABOUTME: Main application entry point\n# ABOUTME: Handles CLI argument parsing\nimport sys\n"))
 
     t.assert_allow(
         "TypeScript file with ABOUTME header",
         HOOK,
-        make_write_input("/tmp/test/utils.ts",
+        make_write_input("src/utils.ts",
                          "// ABOUTME: Utility functions for string manipulation\n// ABOUTME: Used across the application\nexport function trim() {}\n"))
 
     t.assert_allow(
         "JavaScript file with ABOUTME header",
         HOOK,
-        make_write_input("/tmp/test/index.js",
+        make_write_input("src/index.js",
                          "// ABOUTME: Express server setup\n// ABOUTME: Configures middleware and routes\nconst express = require('express');\n"))
 
     t.assert_allow(
         "Bash file with ABOUTME after shebang",
         HOOK,
-        make_write_input("/tmp/test/deploy.sh",
+        make_write_input("src/deploy.sh",
                          "#!/usr/bin/env bash\n# ABOUTME: Deployment script for production\n# ABOUTME: Handles rolling updates\nset -euo pipefail\n"))
 
     t.assert_allow(
         "TSX file with ABOUTME header",
         HOOK,
-        make_write_input("/tmp/test/Button.tsx",
+        make_write_input("src/Button.tsx",
                          "// ABOUTME: Reusable button component\n// ABOUTME: Supports primary and secondary variants\nimport React from 'react';\n"))
 
     t.assert_allow(
         "JSX file with ABOUTME header",
         HOOK,
-        make_write_input("/tmp/test/App.jsx",
+        make_write_input("src/App.jsx",
                          "// ABOUTME: Root application component\n// ABOUTME: Sets up routing and global state\nimport React from 'react';\n"))
 
     t.assert_allow(
         "Single ABOUTME line is sufficient",
         HOOK,
-        make_write_input("/tmp/test/simple.py",
+        make_write_input("src/simple.py",
                          "# ABOUTME: Simple utility module\nimport os\n"))
 
     # ─── Section 2: Write without ABOUTME headers (should deny) ───
@@ -97,42 +97,42 @@ def run_tests():
     t.assert_deny_contains(
         "Python file missing ABOUTME",
         HOOK,
-        make_write_input("/tmp/test/app.py",
+        make_write_input("src/app.py",
                          "import sys\n\ndef main():\n    pass\n"),
         "ABOUTME")
 
     t.assert_deny_contains(
         "TypeScript file missing ABOUTME",
         HOOK,
-        make_write_input("/tmp/test/utils.ts",
+        make_write_input("src/utils.ts",
                          "export function trim(s: string): string {\n  return s.trim();\n}\n"),
         "ABOUTME")
 
     t.assert_deny_contains(
         "JavaScript file missing ABOUTME",
         HOOK,
-        make_write_input("/tmp/test/server.js",
+        make_write_input("src/server.js",
                          "const express = require('express');\nconst app = express();\n"),
         "ABOUTME")
 
     t.assert_deny_contains(
         "Bash file missing ABOUTME",
         HOOK,
-        make_write_input("/tmp/test/run.sh",
+        make_write_input("src/run.sh",
                          "#!/usr/bin/env bash\nset -euo pipefail\necho 'hello'\n"),
         "ABOUTME")
 
     t.assert_deny_contains(
         "TSX file missing ABOUTME",
         HOOK,
-        make_write_input("/tmp/test/Card.tsx",
+        make_write_input("src/Card.tsx",
                          "import React from 'react';\nexport const Card = () => <div />;\n"),
         "ABOUTME")
 
     t.assert_deny_contains(
         "JSX file missing ABOUTME",
         HOOK,
-        make_write_input("/tmp/test/List.jsx",
+        make_write_input("src/List.jsx",
                          "import React from 'react';\nexport const List = () => <ul />;\n"),
         "ABOUTME")
 
@@ -218,88 +218,88 @@ def run_tests():
     t.assert_allow(
         "Skip __init__.py",
         HOOK,
-        make_write_input("/tmp/test/pkg/__init__.py",
+        make_write_input("src/pkg/__init__.py",
                          "from .module import something\n"))
 
     # Config files (no comment syntax / not meaningful)
     t.assert_allow(
         "Skip .json files",
         HOOK,
-        make_write_input("/tmp/test/package.json",
+        make_write_input("src/package.json",
                          '{"name": "test"}\n'))
 
     t.assert_allow(
         "Skip .yaml files",
         HOOK,
-        make_write_input("/tmp/test/config.yaml",
+        make_write_input("src/config.yaml",
                          "key: value\n"))
 
     t.assert_allow(
         "Skip .yml files",
         HOOK,
-        make_write_input("/tmp/test/docker-compose.yml",
+        make_write_input("src/docker-compose.yml",
                          "version: '3'\n"))
 
     t.assert_allow(
         "Skip .toml files",
         HOOK,
-        make_write_input("/tmp/test/pyproject.toml",
+        make_write_input("src/pyproject.toml",
                          "[project]\nname = 'test'\n"))
 
     # Markdown files (own heading conventions)
     t.assert_allow(
         "Skip .md files",
         HOOK,
-        make_write_input("/tmp/test/README.md",
+        make_write_input("src/README.md",
                          "# My Project\n\nSome description.\n"))
 
     # CSS files (not in supported list)
     t.assert_allow(
         "Skip .css files (unsupported extension)",
         HOOK,
-        make_write_input("/tmp/test/styles.css",
+        make_write_input("src/styles.css",
                          "body { margin: 0; }\n"))
 
     # HTML files
     t.assert_allow(
         "Skip .html files (unsupported extension)",
         HOOK,
-        make_write_input("/tmp/test/index.html",
+        make_write_input("src/index.html",
                          "<html><body>Hello</body></html>\n"))
 
     # Lock files
     t.assert_allow(
         "Skip package-lock.json",
         HOOK,
-        make_write_input("/tmp/test/package-lock.json",
+        make_write_input("src/package-lock.json",
                          '{"lockfileVersion": 3}\n'))
 
     # Env files
     t.assert_allow(
         "Skip .env files",
         HOOK,
-        make_write_input("/tmp/test/.env",
+        make_write_input("src/.env",
                          "SECRET=value\n"))
 
     # .cfg files
     t.assert_allow(
         "Skip .cfg files",
         HOOK,
-        make_write_input("/tmp/test/setup.cfg",
+        make_write_input("src/setup.cfg",
                          "[metadata]\nname = test\n"))
 
     # .ini files
     t.assert_allow(
         "Skip .ini files",
         HOOK,
-        make_write_input("/tmp/test/config.ini",
+        make_write_input("src/config.ini",
                          "[section]\nkey = value\n"))
 
     # Generated/vendored files
     t.assert_allow(
         "Skip files in node_modules",
         HOOK,
-        make_write_input("/tmp/test/node_modules/pkg/index.js",
+        make_write_input("src/node_modules/pkg/index.js",
                          "module.exports = {};\n"))
 
     t.assert_allow(
@@ -311,19 +311,19 @@ def run_tests():
     t.assert_allow(
         "Skip .min.js files",
         HOOK,
-        make_write_input("/tmp/test/bundle.min.js",
+        make_write_input("src/bundle.min.js",
                          "!function(){}\n"))
 
     t.assert_allow(
         "Skip .d.ts declaration files",
         HOOK,
-        make_write_input("/tmp/test/types.d.ts",
+        make_write_input("src/types.d.ts",
                          "declare module 'test' {}\n"))
 
     t.assert_allow(
         "Skip .map files",
         HOOK,
-        make_write_input("/tmp/test/bundle.js.map",
+        make_write_input("src/bundle.js.map",
                          '{"version":3}\n'))
 
     # ─── Section 7: Edge cases ───
@@ -332,31 +332,31 @@ def run_tests():
     t.assert_allow(
         "Empty content Write (no file path extension)",
         HOOK,
-        make_write_input("/tmp/test/Makefile", "all:\n\techo hello\n"))
+        make_write_input("src/Makefile", "all:\n\techo hello\n"))
 
     t.assert_allow(
         "File with no extension is skipped",
         HOOK,
-        make_write_input("/tmp/test/Dockerfile",
+        make_write_input("src/Dockerfile",
                          "FROM node:18\nRUN npm install\n"))
 
     t.assert_deny_contains(
         "ABOUTME in wrong position (not in first 3 lines) for Python",
         HOOK,
-        make_write_input("/tmp/test/late.py",
+        make_write_input("src/late.py",
                          "import os\nimport sys\nimport json\n# ABOUTME: Too late\ndef main(): pass\n"),
         "ABOUTME")
 
     t.assert_allow(
         "ABOUTME on line 3 (within first 3 lines)",
         HOOK,
-        make_write_input("/tmp/test/third.py",
+        make_write_input("src/third.py",
                          "# Some comment\n# Another comment\n# ABOUTME: This is on line 3\ndef main(): pass\n"))
 
     t.assert_allow(
         "Bash shebang + ABOUTME on line 2 is fine",
         HOOK,
-        make_write_input("/tmp/test/script.sh",
+        make_write_input("src/script.sh",
                          "#!/bin/bash\n# ABOUTME: Script purpose\nset -e\n"))
 
     # ─── Section 8: Edit on non-existent file (should allow gracefully) ───
@@ -365,7 +365,7 @@ def run_tests():
     t.assert_allow(
         "Edit on file that doesn't exist on disk allows gracefully",
         HOOK,
-        make_edit_input("/tmp/nonexistent_file_12345.py",
+        make_edit_input("nonexistent_file_12345.py",
                         "old code", "new code"))
 
     # ─── Section 9: Multiple file types comment syntax ───
@@ -375,21 +375,21 @@ def run_tests():
     t.assert_deny_contains(
         "Python file with // ABOUTME (wrong comment syntax) is denied",
         HOOK,
-        make_write_input("/tmp/test/wrong.py",
+        make_write_input("src/wrong.py",
                          "// ABOUTME: Wrong syntax for Python\n// ABOUTME: Should use hash\ndef main(): pass\n"),
         "ABOUTME")
 
     t.assert_deny_contains(
         "TypeScript file with # ABOUTME (wrong comment syntax) is denied",
         HOOK,
-        make_write_input("/tmp/test/wrong.ts",
+        make_write_input("src/wrong.ts",
                          "# ABOUTME: Wrong syntax for TypeScript\n# ABOUTME: Should use double-slash\nexport const x = 1;\n"),
         "ABOUTME")
 
     t.assert_allow(
         "Bash file with # ABOUTME (correct syntax) is allowed",
         HOOK,
-        make_write_input("/tmp/test/correct.sh",
+        make_write_input("src/correct.sh",
                          "# ABOUTME: Correct bash syntax\n# ABOUTME: Uses hash comment\necho hello\n"))
 
     return t.passed, t.failed, t.total
