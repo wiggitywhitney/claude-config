@@ -1,6 +1,6 @@
 # PRD #4: ABOUTME File Header Convention and Hook
 
-**Status**: Not Started
+**Status**: In Progress
 **Priority**: Low
 **Created**: 2026-02-18
 **GitHub Issue**: [#4](https://github.com/wiggitywhitney/claude-config/issues/4)
@@ -76,10 +76,10 @@ Add the ABOUTME convention to the global CLAUDE.md so Claude knows to include he
 ### Milestone 1: Hook Implementation
 Build the ABOUTME check hook, supporting multiple file types and comment syntaxes.
 
-- [ ] Hook script created, handling `.py`, `.ts`, `.js`, `.sh` files at minimum
-- [ ] Appropriate comment syntax detection per file type
-- [ ] Skip list for files that don't need headers (`__init__.py`, `index.ts` re-exports, config files, generated files)
-- [ ] Hook registered in `~/.claude/settings.json`
+- [x] Hook script created, handling `.py`, `.ts`, `.js`, `.sh` files at minimum
+- [x] Appropriate comment syntax detection per file type
+- [x] Skip list for files that don't need headers (`__init__.py`, `index.ts` re-exports, config files, generated files)
+- [x] Hook registered in `~/.claude/settings.json`
 - [ ] Tested across multiple file types in a real project
 
 ### Milestone 2: Convention Adoption
