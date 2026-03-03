@@ -1,6 +1,6 @@
 # PRD #4: ABOUTME File Header Convention and Hook
 
-**Status**: In Progress
+**Status**: Complete
 **Priority**: Low
 **Created**: 2026-02-18
 **GitHub Issue**: [#4](https://github.com/wiggitywhitney/claude-config/issues/4)
@@ -69,7 +69,7 @@ Add the ABOUTME convention to the global CLAUDE.md so Claude knows to include he
 - [x] Hook blocks on missing ABOUTME headers for supported file types (deny, fix-and-retry)
 - [x] Multiple languages supported (Python, TypeScript/JavaScript, Bash, at minimum)
 - [x] Existing files gain headers organically as they're modified (no backfill required)
-- [ ] Convention documented in global CLAUDE.md
+- [x] Convention documented in global CLAUDE.md
 
 ## Milestones
 
@@ -85,9 +85,9 @@ Build the ABOUTME check hook, supporting multiple file types and comment syntaxe
 ### Milestone 2: Convention Adoption
 Document the convention and verify it works in practice across projects.
 
-- [ ] ABOUTME convention added to global CLAUDE.md
-- [ ] Convention documented in HTML comment in CLAUDE.md once hook is working (hook-enforced rule)
-- [ ] Verified that Claude adds ABOUTME headers to new files and warns on edited files missing them
+- [x] ABOUTME convention added to global CLAUDE.md
+- [x] Convention documented in HTML comment in CLAUDE.md once hook is working (hook-enforced rule)
+- [x] Verified that Claude adds ABOUTME headers to new files and warns on edited files missing them
 
 ## Out of Scope
 
