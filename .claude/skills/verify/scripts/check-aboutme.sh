@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# ABOUTME: PreToolUse hook that enforces ABOUTME file headers on code files
+# ABOUTME: Blocks Write/Edit operations on files missing the header, triggering fix-and-retry
 # check-aboutme.sh — PreToolUse hook that enforces ABOUTME file headers
 #
 # Installed as a Claude Code PreToolUse hook on Write|Edit.
@@ -48,7 +50,7 @@ _, ext = os.path.splitext(basename)
 ext = ext.lower()
 
 # Skip: files in node_modules
-if "/node_modules/" in file_path:
+if "/node_modules/" in file_path or file_path.startswith("node_modules/"):
     print("SKIP")
     sys.exit(0)
 

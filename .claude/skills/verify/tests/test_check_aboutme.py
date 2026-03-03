@@ -1,3 +1,5 @@
+# ABOUTME: Test suite for the check-aboutme.sh PreToolUse hook
+# ABOUTME: Validates ABOUTME header enforcement across file types, skip lists, and edge cases
 """Tests for check-aboutme.sh hook.
 
 Exercises the PreToolUse hook on Write|Edit with:
@@ -298,6 +300,12 @@ def run_tests():
         "Skip files in node_modules",
         HOOK,
         make_write_input("/tmp/test/node_modules/pkg/index.js",
+                         "module.exports = {};\n"))
+
+    t.assert_allow(
+        "Skip files in relative node_modules path",
+        HOOK,
+        make_write_input("node_modules/pkg/index.js",
                          "module.exports = {};\n"))
 
     t.assert_allow(
