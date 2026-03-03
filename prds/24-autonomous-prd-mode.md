@@ -104,11 +104,11 @@ Build the skill that enables YOLO mode per-project via symlink-based skill insta
 ### Milestone 3: Create /make-careful Skill and Migrate Repos
 Build the skill that swaps a project to careful mode. Migrate all active repos.
 
-- [ ] `/make-careful` SKILL.md created
-- [ ] Skill swaps symlinks to point at careful variants (not removes — skills stay installed)
-- [ ] Skill removes SessionStart hooks from `.claude/settings.local.json`
-- [ ] Skill removes autonomous permission entries
-- [ ] Tested: `/make-autonomous` → `/make-careful` round-trip leaves project clean
+- [x] `/make-careful` SKILL.md created
+- [x] Skill swaps symlinks to point at careful variants (not removes — skills stay installed)
+- [x] Skill removes SessionStart hooks from `.claude/settings.local.json`
+- [x] Skill removes autonomous permission entries
+- [x] Tested: `/make-autonomous` → `/make-careful` round-trip leaves project clean
 - [x] All repos touched in last 2 months have careful PRD skill symlinks installed
 
 ### Milestone 4: Documentation and README
