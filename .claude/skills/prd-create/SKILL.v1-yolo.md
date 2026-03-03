@@ -133,44 +133,11 @@ After creating the PRD, check if `docs/ROADMAP.md` exists. If it does, add the n
 
 Format: `- [Brief feature description] (PRD #[issue-id])`
 
-The ROADMAP.md update will be included in the commit at the end of the workflow (Option 2).
+The ROADMAP.md update will be included in the commit at the end of the workflow.
 
-## Next Steps After PRD Creation
+## After PRD Creation
 
-After completing the PRD, present the user with numbered options:
-
-```
-✅ PRD Created Successfully!
-
-**PRD File**: prds/[issue-id]-[feature-name].md
-**GitHub Issue**: #[issue-id]
-
-What would you like to do next?
-
-**1. Start working on this PRD now**
-   Begin implementation immediately (recommended if you're ready to start)
-
-**2. Commit and push PRD for later**
-   Save the PRD and work on it later (will use [skip ci] flag)
-
-Please enter 1 or 2:
-```
-
-### Option 1: Start Working Now
-
-If user chooses option 1, first commit and push the PRD (same as Option 2), then instruct them:
-
----
-
-**PRD committed and pushed.**
-
-To start working on this PRD, run `/prd-start [issue-id]`
-
----
-
-### Option 2: Commit and Push for Later
-
-If user chooses option 2:
+Always commit and push the PRD immediately. PRD-only commits (all `.md` files) are exempt from branch protection and go directly to main.
 
 ```bash
 # Stage the PRD file (and ROADMAP.md if it was updated)
@@ -184,7 +151,6 @@ git commit -m "docs(prd-[issue-id]): create PRD #[issue-id] - [feature-name] [sk
 - Created PRD for [brief feature description]
 - Defined [X] major milestones
 - Documented problem, solution, and success criteria
-- Added to ROADMAP.md ([timeframe] section)
 - Ready for implementation"
 
 # Pull latest and push to main
@@ -192,16 +158,17 @@ git pull --rebase origin main && git push origin main
 ```
 
 **Confirmation Message:**
-```
-✅ PRD committed and pushed to main
+```text
+PRD committed and pushed to main.
 
-The PRD is now available in the repository. To start working on it later, execute:
-prd-start [issue-id]
+**PRD File**: prds/[issue-id]-[feature-name].md
+**GitHub Issue**: #[issue-id]
+
+To start working on it, run `/prd-start [issue-id]`
 ```
 
 ## Important Notes
 
-- **Option 1**: Best when you have time to begin implementation immediately
-- **Option 2**: Best when creating multiple PRDs or planning future work
 - **Skip CI flag**: Always use `[skip ci]` when committing PRD-only changes
 - **Issue reference**: Include issue number in commit message for traceability
+- **Branch exemption**: PRD files are `.md` only, so they bypass branch protection and commit directly to main

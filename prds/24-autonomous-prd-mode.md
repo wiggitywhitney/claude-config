@@ -1,6 +1,6 @@
 # PRD #24: Autonomous PRD Mode — /make-autonomous and /make-careful Skills
 
-**Status**: Not Started
+**Status**: In Progress
 **Priority**: High
 **Created**: 2026-03-03
 **GitHub Issue**: [#24](https://github.com/wiggitywhitney/claude-config/issues/24)
@@ -77,10 +77,10 @@ The key insight: CLAUDE.md instructions are loaded alongside skills and override
 
 ## Success Criteria
 
-- [ ] Careful mode is the global default for all PRD skills
+- [x] Careful mode is the global default for all PRD skills
 - [ ] `/make-autonomous` installs YOLO mode per-project (CLAUDE.md instructions, hooks, permissions)
 - [ ] `/make-careful` cleanly reverts a project to careful mode
-- [ ] `prd-loop-continue.sh` removed from global `settings.template.json` and `~/.claude/settings.json`
+- [x] `prd-loop-continue.sh` removed from global `settings.template.json` and `~/.claude/settings.json`
 - [ ] Autonomous CLAUDE.md section triggers proactive skill invocation by Claude Code
 - [ ] Autonomous loop tested end-to-end: `/prd-start` → implement → `/clear` → auto-resume → complete → `/prd-done`
 - [ ] README updated with autonomous mode documentation
@@ -90,11 +90,11 @@ The key insight: CLAUDE.md instructions are loaded alongside skills and override
 ### Milestone 1: Flip Global Defaults
 Make careful mode the global default. Reorganize skill files.
 
-- [ ] Rename current `SKILL.md` → `SKILL.v1-yolo.md` for all PRD skills (preserve autonomous variants)
-- [ ] Rename current `SKILL.v1-careful.md` → `SKILL.md` for all PRD skills (careful becomes default)
-- [ ] Remove `prd-loop-continue.sh` SessionStart hook from `settings.template.json`
-- [ ] Remove `prd-loop-continue.sh` SessionStart hook from live `~/.claude/settings.json`
-- [ ] Verify careful mode works as global default
+- [x] Rename current `SKILL.md` → `SKILL.v1-yolo.md` for all PRD skills (preserve autonomous variants)
+- [x] Rename current `SKILL.v1-careful.md` → `SKILL.md` for all PRD skills (careful becomes default)
+- [x] Remove `prd-loop-continue.sh` SessionStart hook from `settings.template.json`
+- [x] Remove `prd-loop-continue.sh` SessionStart hook from live `~/.claude/settings.json`
+- [x] Verify careful mode works as global default
 
 ### Milestone 2: Create /make-autonomous Skill
 Build the skill that enables YOLO mode per-project via CLAUDE.md instructions (Decision 4).
