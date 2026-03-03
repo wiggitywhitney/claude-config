@@ -1,6 +1,6 @@
 # PRD #4: ABOUTME File Header Convention and Hook
 
-**Status**: Not Started
+**Status**: Complete
 **Priority**: Low
 **Created**: 2026-02-18
 **GitHub Issue**: [#4](https://github.com/wiggitywhitney/claude-config/issues/4)
@@ -66,28 +66,28 @@ Add the ABOUTME convention to the global CLAUDE.md so Claude knows to include he
 
 ## Success Criteria
 
-- [ ] Hook blocks on missing ABOUTME headers for supported file types (exit 2, fix-and-retry)
-- [ ] Multiple languages supported (Python, TypeScript/JavaScript, Bash, at minimum)
-- [ ] Existing files gain headers organically as they're modified (no backfill required)
-- [ ] Convention documented in global CLAUDE.md
+- [x] Hook blocks on missing ABOUTME headers for supported file types (deny, fix-and-retry)
+- [x] Multiple languages supported (Python, TypeScript/JavaScript, Bash, at minimum)
+- [x] Existing files gain headers organically as they're modified (no backfill required)
+- [x] Convention documented in global CLAUDE.md
 
 ## Milestones
 
 ### Milestone 1: Hook Implementation
 Build the ABOUTME check hook, supporting multiple file types and comment syntaxes.
 
-- [ ] Hook script created, handling `.py`, `.ts`, `.js`, `.sh` files at minimum
-- [ ] Appropriate comment syntax detection per file type
-- [ ] Skip list for files that don't need headers (`__init__.py`, `index.ts` re-exports, config files, generated files)
-- [ ] Hook registered in `~/.claude/settings.json`
-- [ ] Tested across multiple file types in a real project
+- [x] Hook script created, handling `.py`, `.ts`, `.js`, `.sh` files at minimum
+- [x] Appropriate comment syntax detection per file type
+- [x] Skip list for files that don't need headers (`__init__.py`, `index.ts` re-exports, config files, generated files)
+- [x] Hook registered in `~/.claude/settings.json`
+- [~] Tested across multiple file types in a real project (deferred — will happen organically)
 
 ### Milestone 2: Convention Adoption
 Document the convention and verify it works in practice across projects.
 
-- [ ] ABOUTME convention added to global CLAUDE.md
-- [ ] Convention documented in HTML comment in CLAUDE.md once hook is working (hook-enforced rule)
-- [ ] Verified that Claude adds ABOUTME headers to new files and warns on edited files missing them
+- [x] ABOUTME convention added to global CLAUDE.md
+- [x] Convention documented in HTML comment in CLAUDE.md once hook is working (hook-enforced rule)
+- [x] Verified that Claude adds ABOUTME headers to new files and warns on edited files missing them
 
 ## Out of Scope
 
