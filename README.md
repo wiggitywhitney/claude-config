@@ -16,6 +16,14 @@ Shared Claude Code testing infrastructure, safety config, and developer tooling.
 | `/research` Skill | [`.claude/skills/research/`](.claude/skills/research/) | Structured technical research with cited sources |
 | `/write-prompt` Skill | [`.claude/skills/write-prompt/`](.claude/skills/write-prompt/) | Guided prompt engineering for system prompts and skills |
 | `/write-docs` Skill | [`.claude/skills/write-docs/`](.claude/skills/write-docs/) | Validated documentation with real command output |
+| `/anki` Skill | [`.claude/skills/anki/`](.claude/skills/anki/) | Create Anki cards from conversation context |
+| `/anki-yolo` Skill | [`.claude/skills/anki-yolo/`](.claude/skills/anki-yolo/) | Create and save Anki cards autonomously |
+| PRD Skills | [`.claude/skills/prd-*/`](.claude/skills/) | Full PRD lifecycle: create, start, next, update, close, done |
+| `/prds-get` Skill | [`.claude/skills/prds-get/`](.claude/skills/prds-get/) | Fetch all open PRD issues from GitHub |
+| ABOUTME Hook | [`.claude/skills/verify/scripts/check-aboutme.sh`](.claude/skills/verify/scripts/check-aboutme.sh) | Enforces ABOUTME file headers in code files |
+| CodeRabbit CLI Hook | [`.claude/skills/verify/scripts/coderabbit-review.sh`](.claude/skills/verify/scripts/coderabbit-review.sh) | Advisory CodeRabbit CLI review on push |
+| PRD Loop Hook | [`scripts/prd-loop-continue.sh`](scripts/prd-loop-continue.sh) | SessionStart hook for PRD work continuation after `/clear` |
+| Branch Protection Rule | [`rules/branch-protection.md`](rules/branch-protection.md) | Docs-only exemption for main branch commits |
 | CLAUDE.md Templates | [`templates/`](templates/) | Starter templates for new projects |
 | CLAUDE.md Authoring Guide | [`guides/claude-md-guide.md`](guides/claude-md-guide.md) | How to write effective CLAUDE.md files |
 | Testing Rules | [`rules/testing-rules.md`](rules/testing-rules.md) | Always/Never testing patterns |
@@ -48,6 +56,10 @@ This single command:
 | `~/.claude/skills/research/` | `.claude/skills/research/` | Symlink |
 | `~/.claude/skills/write-prompt/` | `.claude/skills/write-prompt/` | Symlink |
 | `~/.claude/skills/write-docs/` | `.claude/skills/write-docs/` | Symlink |
+| `~/.claude/skills/anki/` | `.claude/skills/anki/` | Symlink |
+| `~/.claude/skills/anki-yolo/` | `.claude/skills/anki-yolo/` | Symlink |
+| `~/.claude/skills/prd-*/` | `.claude/skills/prd-*/` | Symlinks (7 skills) |
+| `~/.claude/skills/prds-get/` | `.claude/skills/prds-get/` | Symlink |
 
 ### Merge Strategy
 
@@ -180,6 +192,29 @@ The skill auto-detects your project type by reading config files (package.json, 
 
 The skill lives at `.claude/skills/verify/` in this repo. To make it available in all projects, ensure this repo is cloned and Claude Code's settings reference the scripts. The skill is already installed if you're using this repo's `settings.json` as your base.
 
+## PRD Workflow Skills
+
+A suite of skills for managing feature work through Product Requirements Documents. The global (default) variants run autonomously — they proceed without trivial confirmations and only pause for genuinely ambiguous decisions.
+
+| Skill | Purpose |
+|---|---|
+| `/prd-create` | Create structured PRDs with milestones, requirements, and decision logs |
+| `/prd-start` | Set up implementation context (validate PRD, create branch, chain to `/prd-next`) |
+| `/prd-next` | Autonomous task loop: identify next task, implement with TDD, update progress, repeat |
+| `/prd-update-progress` | Commit work and update PRD checkboxes with evidence |
+| `/prd-update-decisions` | Capture design decisions and scope changes in the PRD decision log |
+| `/prd-done` | Finalize a completed PRD: create PR, process CodeRabbit review, merge, close issue |
+| `/prd-close` | Close a PRD that is already implemented or no longer needed |
+| `/prds-get` | List all open PRD issues from GitHub |
+
+### Careful mode variants
+
+Each PRD skill includes a `SKILL.v1-careful.md` variant with more confirmation gates and user approval steps. To use careful mode in a specific project, copy the careful variant into the project's `.claude/skills/` directory and rename it to `SKILL.md`. This is useful for projects where you want more oversight over the autonomous workflow.
+
+### PRD loop continuation
+
+The `prd-loop-continue.sh` SessionStart hook enables continuous PRD work across `/clear` boundaries. When you run `/clear` during PRD work, the hook detects the feature branch, reads the PRD, and injects continuation guidance so the fresh session picks up where the previous one left off.
+
 ## Tiered Verification Hooks
 
 Hooks run automatically as PreToolUse gates — no manual invocation needed. Each hook fires on the relevant git event and blocks if verification fails.
@@ -187,7 +222,7 @@ Hooks run automatically as PreToolUse gates — no manual invocation needed. Eac
 | Git Event | Hook | Verification Level | What It Checks |
 |---|---|---|---|
 | `git commit` | `pre-commit-hook.sh` | quick + lint | Build, Type Check, Lint (staged files only) |
-| `git push` | `pre-push-hook.sh` | full | Build, Type Check, Lint, Security, Tests |
+| `git push` | `pre-push-hook.sh` | full (escalates to PR-tier when open PR detected) | Build, Type Check, Lint, Security, Tests |
 | `gh pr create` | `pre-pr-hook.sh` | pre-pr | Build, Type Check, Lint, Security (expanded), Tests |
 
 ### Additional enforcement hooks
@@ -198,7 +233,10 @@ Hooks run automatically as PreToolUse gates — no manual invocation needed. Eac
 | `check-branch-protection.sh` | `git commit` | Blocks direct commits to main/master |
 | `check-coderabbit-required.sh` | `gh pr merge` | Blocks PR merge without CodeRabbit review |
 | `check-test-tiers.sh` | `git push`, `gh pr create` | Warns when unit/integration/e2e tests are missing |
-| `post-write-codeblock-check.sh` | Write/Edit | Warns about Markdown code blocks missing language specifiers |
+| `check-aboutme.sh` | Write/Edit | Blocks code files missing ABOUTME headers (PreToolUse) |
+| `coderabbit-review.sh` | `git push` | Advisory CodeRabbit CLI review (runs after blocking checks) |
+| `post-write-codeblock-check.sh` | Write/Edit | Warns about Markdown code blocks missing language specifiers (PostToolUse) |
+| `prd-loop-continue.sh` | `/clear` | SessionStart hook that resumes PRD work on feature branches |
 
 ### Dotfile opt-outs
 
@@ -312,6 +350,12 @@ The full `~/.claude/settings.json` hook configuration used in production:
   "hooks": {
     "PreToolUse": [
       {
+        "matcher": "Write|Edit",
+        "hooks": [
+          { "type": "command", "command": "/path/to/claude-config/.claude/skills/verify/scripts/check-aboutme.sh" }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           { "type": "command", "command": "/path/to/claude-config/.claude/skills/verify/scripts/check-commit-message.sh" },
@@ -329,6 +373,14 @@ The full `~/.claude/settings.json` hook configuration used in production:
         "matcher": "Write|Edit",
         "hooks": [
           { "type": "command", "command": "/path/to/claude-config/.claude/skills/verify/scripts/post-write-codeblock-check.sh" }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "clear",
+        "hooks": [
+          { "type": "command", "command": "/path/to/claude-config/scripts/prd-loop-continue.sh" }
         ]
       }
     ]
@@ -350,33 +402,65 @@ claude-config/
       verify/
         SKILL.md                       # /verify skill definition
         scripts/                       # All hook and verification scripts
-        tests/                         # Hook tests
+        tests/                         # Hook tests (316 tests across 11 modules)
       research/
         SKILL.md                       # /research skill definition
       write-prompt/
         SKILL.md                       # /write-prompt skill definition
       write-docs/
         SKILL.md                       # /write-docs skill definition
+      anki/
+        SKILL.md                       # /anki skill definition
+      anki-yolo/
+        SKILL.md                       # /anki-yolo skill definition (autonomous)
+      prd-create/
+        SKILL.md                       # /prd-create (autonomous mode)
+        SKILL.v1-careful.md            # Careful mode variant (project-specific)
+      prd-start/
+        SKILL.md                       # /prd-start
+        SKILL.v1-careful.md
+      prd-next/
+        SKILL.md                       # /prd-next (autonomous task loop)
+        SKILL.v1-careful.md
+      prd-update-progress/
+        SKILL.md                       # /prd-update-progress
+        SKILL.v1-careful.md
+      prd-update-decisions/
+        SKILL.md                       # /prd-update-decisions
+        SKILL.v1-careful.md
+      prd-done/
+        SKILL.md                       # /prd-done (PR, merge, close)
+        SKILL.v1-careful.md
+      prd-close/
+        SKILL.md                       # /prd-close
+        SKILL.v1-careful.md
+      prds-get/
+        SKILL.md                       # /prds-get (list open PRDs)
   global/
     CLAUDE.md                          # Global development standards (→ ~/.claude/CLAUDE.md)
   guides/
     claude-md-guide.md                 # How to write CLAUDE.md files
     permission-profiles.md             # Three permission tiers
     testing-decision-guide.md          # Project type → testing strategy
+  prds/                                # Active PRDs
+    done/                              # Archived completed PRDs
   rules/                               # User-level rules (→ ~/.claude/rules/)
     testing-rules.md                   # Always/Never testing patterns
+    branch-protection.md               # Docs-only exemption for main branch
     languages/                         # Per-language rules with paths: activation
       typescript.md
       shell.md
       javascript.md
       python.md                        # Placeholder
       go.md                            # Placeholder
-  scripts/                             # Standalone safety hooks
+  scripts/                             # Standalone hooks and utilities
     google-mcp-safety-hook.py          # Google API MCP safety hook
     gogcli-safety-hook.py              # gogcli MCP safety hook
+    prd-loop-continue.sh               # SessionStart hook for PRD work continuation
   templates/
     claude-md-general.md               # General CLAUDE.md template
     claude-md-nodejs.md                # Node.js/TypeScript template
   tests/
-    test_setup.py                      # Setup script tests (150 tests)
+    test_setup.py                      # Setup script tests (155 tests)
+    test_prd_loop_continue.py          # PRD loop continuation hook tests (31 tests)
 ```
