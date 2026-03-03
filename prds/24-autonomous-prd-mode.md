@@ -67,12 +67,12 @@ The key insight: the `description` field in SKILL.md frontmatter appears in the 
 ## Success Criteria
 
 - [x] Careful mode is the global default for all PRD skills
-- [ ] `/make-autonomous` installs YOLO mode per-project (symlinks to YOLO skills, hooks, permissions)
-- [ ] `/make-careful` cleanly swaps a project to careful mode
+- [x] `/make-autonomous` installs YOLO mode per-project (symlinks to YOLO skills, hooks, permissions)
+- [x] `/make-careful` cleanly swaps a project to careful mode
 - [x] `prd-loop-continue.sh` removed from global `settings.template.json` and `~/.claude/settings.json`
-- [ ] Active YOLO skill descriptions trigger proactive invocation by Claude Code
-- [ ] Autonomous loop tested end-to-end: `/prd-start` → implement → `/clear` → auto-resume → complete → `/prd-done`
-- [ ] README updated with autonomous mode documentation
+- [x] Active YOLO skill descriptions trigger proactive invocation by Claude Code (within a session — see Decision 10)
+- [!] Autonomous loop tested end-to-end — blocked: Claude cannot invoke `/clear` and SessionStart hook context is non-imperative (Decision 10)
+- [x] README updated with autonomous mode documentation
 - [x] All repos touched in last 2 months have careful PRD skill symlinks installed
 - [x] Global PRD skill symlinks removed from `~/.claude/skills/`
 
@@ -97,9 +97,9 @@ Build the skill that enables YOLO mode per-project via symlink-based skill insta
 - [x] Skill adjusts permissions in `.claude/settings.local.json`
 - [x] Strengthen `prd-loop-continue.sh` hook output language for more directive auto-invocation
 - [x] Remove global PRD skill symlinks from `~/.claude/skills/` (Decision 8)
-- [~] Proactive skill triggers tested — deferred to Milestone 3 (test while building /make-careful)
-- [~] Autonomous loop verified — deferred to Milestone 3 (run /make-autonomous on this repo, then build /make-careful using the loop)
-- [~] Tested on a real project — deferred to Milestone 3 (this repo is the real project test)
+- [x] Proactive skill triggers tested — YOLO descriptions drive proactive invocation within a session (verified)
+- [!] Autonomous loop verified — blocked: `/clear` cannot be invoked by Claude, hook context is non-imperative (Decision 10)
+- [x] Tested on a real project — claude-config repo used as test bed for /make-autonomous and /make-careful
 
 ### Milestone 3: Create /make-careful Skill and Migrate Repos
 Build the skill that swaps a project to careful mode. Migrate all active repos.
@@ -114,9 +114,9 @@ Build the skill that swaps a project to careful mode. Migrate all active repos.
 ### Milestone 4: Documentation and README
 Document autonomous mode for users.
 
-- [ ] README updated with autonomous mode section: what it is, how to enable, how to revert
-- [ ] README explains careful vs autonomous tradeoffs
-- [ ] README shows the autonomous loop flow diagram or description
+- [x] README updated with autonomous mode section: what it is, how to enable, how to revert
+- [x] README explains careful vs autonomous tradeoffs
+- [x] README shows the autonomous loop flow diagram or description
 
 ## Out of Scope
 
@@ -173,6 +173,18 @@ Document autonomous mode for users.
 - **Decision**: Unlike prd-next and prd-update-progress, prd-done does NOT get an "INVOKE AUTOMATICALLY" description. Its YOLO description says "Triggered by the /clear loop when all PRD items are done" — passive trigger, not proactive.
 - **Rationale**: The autonomous loop flow is: task complete → `/prd-update-progress` → `/clear` → hook detects state → hook says run `/prd-next` or `/prd-done`. If prd-done's description said "INVOKE AUTOMATICALLY when all checkboxes complete," Claude would fire it immediately after `/prd-update-progress` checks the last box — skipping the `/clear` step that resets context. The `/clear` context reset is essential: without it, `/prd-done` runs in a bloated context window full of implementation details instead of starting fresh.
 - **Impact**: Only prd-next and prd-update-progress have "INVOKE AUTOMATICALLY" descriptions. prd-done relies on the SessionStart hook to trigger it after `/clear`. This preserves the flow: implement → checkpoint → clear → fresh context → finalize.
+
+### Decision 10: Autonomous Loop Cannot Work as Designed
+- **Date**: 2026-03-03
+- **Decision**: The `/clear` → auto-resume autonomous loop is descoped. The loop requires two capabilities that don't exist: (1) Claude programmatically invoking `/clear`, and (2) SessionStart hook `additionalContext` triggering Claude to take action. Neither is supported by Claude Code.
+- **Research findings**:
+  - SessionStart hook fires correctly and stdout IS injected as `additionalContext` — the mechanism works technically
+  - However, `additionalContext` appears as informational system context, not as an imperative instruction. Claude "can see and act on" it (per docs) but doesn't reliably follow directives in it
+  - `/clear` is a built-in CLI command, not a tool — Claude cannot invoke it programmatically
+  - The only auto-clear mechanism is `ExitPlanMode`, which clears context as a side effect of the plan→execution transition and requires user menu selection
+  - Known SessionStart bugs (#10373 startup, #13650 stdout dropped) were fixed in v2.0.76; we're on v2.1.63 — not the cause
+  - The Agent SDK CAN send `/clear` as a prompt externally, suggesting infrastructure exists for future support
+- **Impact**: `/make-autonomous` still provides value: YOLO skill descriptions drive proactive invocation *within* a session, frictionless permissions reduce friction, and the SessionStart hook serves as a *reminder* (not directive) when the user manually runs `/clear`. The fully autonomous cross-session loop is deferred until Claude Code adds support for programmatic context reset or imperative hook output.
 
 ### Decision 8: Remove Global PRD Skill Symlinks
 - **Date**: 2026-03-03

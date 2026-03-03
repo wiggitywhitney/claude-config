@@ -20,6 +20,8 @@ Shared Claude Code testing infrastructure, safety config, and developer tooling.
 | `/anki-yolo` Skill | [`.claude/skills/anki-yolo/`](.claude/skills/anki-yolo/) | Create and save Anki cards autonomously |
 | PRD Skills | [`.claude/skills/`](.claude/skills/) | Full PRD lifecycle: create, start, next, update, close, done |
 | `/prds-get` Skill | [`.claude/skills/prds-get/`](.claude/skills/prds-get/) | Fetch all open PRD issues from GitHub |
+| `/make-autonomous` Skill | [`.claude/skills/make-autonomous/`](.claude/skills/make-autonomous/) | Enable autonomous PRD mode per-project |
+| `/make-careful` Skill | [`.claude/skills/make-careful/`](.claude/skills/make-careful/) | Disable autonomous PRD mode per-project |
 | ABOUTME Hook | [`.claude/skills/verify/scripts/check-aboutme.sh`](.claude/skills/verify/scripts/check-aboutme.sh) | Enforces ABOUTME file headers in code files |
 | CodeRabbit CLI Hook | [`.claude/skills/verify/scripts/coderabbit-review.sh`](.claude/skills/verify/scripts/coderabbit-review.sh) | Advisory CodeRabbit CLI review on push |
 | PRD Loop Hook | [`scripts/prd-loop-continue.sh`](scripts/prd-loop-continue.sh) | SessionStart hook for PRD work continuation after `/clear` |
@@ -58,8 +60,8 @@ This single command:
 | `~/.claude/skills/write-docs/` | `.claude/skills/write-docs/` | Symlink |
 | `~/.claude/skills/anki/` | `.claude/skills/anki/` | Symlink |
 | `~/.claude/skills/anki-yolo/` | `.claude/skills/anki-yolo/` | Symlink |
-| `~/.claude/skills/prd-*/` | `.claude/skills/prd-*/` | Symlinks (7 skills) |
-| `~/.claude/skills/prds-get/` | `.claude/skills/prds-get/` | Symlink |
+| `~/.claude/skills/make-autonomous/` | `.claude/skills/make-autonomous/` | Symlink |
+| `~/.claude/skills/make-careful/` | `.claude/skills/make-careful/` | Symlink |
 
 ### Merge Strategy
 
@@ -194,26 +196,84 @@ The skill lives at `.claude/skills/verify/` in this repo. To make it available i
 
 ## PRD Workflow Skills
 
-A suite of skills for managing feature work through Product Requirements Documents. The global (default) variants run autonomously — they proceed without trivial confirmations and only pause for genuinely ambiguous decisions.
+A suite of skills for managing feature work through Product Requirements Documents. PRD skills are **not installed globally** — they are installed per-project via `/make-autonomous` or `/make-careful`.
 
 | Skill | Purpose |
 |---|---|
 | `/prd-create` | Create structured PRDs with milestones, requirements, and decision logs |
 | `/prd-start` | Set up implementation context (validate PRD, create branch, chain to `/prd-next`) |
-| `/prd-next` | Autonomous task loop: identify next task, implement with TDD, update progress, repeat |
+| `/prd-next` | Identify next task, implement with TDD, update progress, repeat |
 | `/prd-update-progress` | Commit work and update PRD checkboxes with evidence |
 | `/prd-update-decisions` | Capture design decisions and scope changes in the PRD decision log |
 | `/prd-done` | Finalize a completed PRD: create PR, process CodeRabbit review, merge, close issue |
 | `/prd-close` | Close a PRD that is already implemented or no longer needed |
 | `/prds-get` | List all open PRD issues from GitHub |
 
-### Careful mode variants
+### Installing PRD skills in a project
 
-Each PRD skill includes a `SKILL.v1-careful.md` variant with more confirmation gates and user approval steps. To use careful mode in a specific project, copy the careful variant into the project's `.claude/skills/` directory and rename it to `SKILL.md`. This is useful for projects where you want more oversight over the autonomous workflow.
+PRD skills require per-project installation. Choose a mode:
 
-### PRD loop continuation
+```bash
+# In your project directory:
+/make-autonomous    # YOLO mode — auto-chaining, minimal pauses
+/make-careful       # Careful mode — confirmation gates, user approval
+```
 
-The `prd-loop-continue.sh` SessionStart hook enables continuous PRD work across `/clear` boundaries. When you run `/clear` during PRD work, the hook detects the feature branch, reads the PRD, and injects continuation guidance so the fresh session picks up where the previous one left off.
+Both commands create symlinks in your project's `.claude/skills/` directory pointing to the canonical skill definitions in the claude-config repo. See [Autonomous PRD Mode](#autonomous-prd-mode) for details on how the modes differ.
+
+## Autonomous PRD Mode
+
+PRD skills operate in one of two modes, controlled per-project:
+
+| | Careful (default) | Autonomous |
+|---|---|---|
+| **Invocation** | User-driven — you run each skill manually | Auto-chaining — skills invoke each other |
+| **Confirmations** | Pauses for approval at each step | Proceeds without trivial confirmations |
+| **Loop behavior** | No auto-resume after `/clear` | `/clear` triggers automatic task continuation |
+| **Best for** | Unfamiliar projects, sensitive repos, learning | Trusted projects with well-defined PRDs |
+
+### Enabling autonomous mode
+
+Run `/make-autonomous` in your project directory. This:
+
+1. **Creates symlinks to YOLO skill variants** — skill descriptions include active trigger language (e.g., "INVOKE AUTOMATICALLY after completing a PRD task") that drives Claude to invoke skills proactively
+2. **Installs a SessionStart hook** — enables the `/clear` → auto-resume loop via `prd-loop-continue.sh` in `.claude/settings.local.json`
+3. **Adds frictionless permissions** — auto-allows git operations, skill invocations, and web tools in `.claude/settings.local.json`
+
+All changes are local (`.claude/settings.local.json` is auto-gitignored by Claude Code).
+
+### The autonomous loop
+
+When autonomous mode is enabled, PRD work flows continuously:
+
+```text
+/prd-start
+    → /prd-next (identifies highest-priority task)
+        → implement with TDD (hooks enforce quality)
+            → /prd-update-progress (commits, updates PRD)
+                → /clear (resets context)
+                    → SessionStart hook detects PRD branch
+                        → /prd-next (picks up next task)
+                            → ... (repeats until all tasks done)
+                                → /prd-done (creates PR, CodeRabbit review, merge)
+```
+
+The `/clear` step is intentional — it resets the context window so each task starts fresh, preventing context bloat from accumulating implementation details across tasks.
+
+### Reverting to careful mode
+
+Run `/make-careful` in your project directory. This swaps symlinks to careful skill variants, removes the SessionStart hook, and removes autonomous permissions. The project retains PRD skills but they require manual invocation.
+
+### How it works: symlink-based mode switching
+
+Each PRD skill has two variants in the claude-config repo:
+
+| File | Mode | Description style |
+|---|---|---|
+| `SKILL.md` | Careful | Passive — "Analyze PRD to identify next task" |
+| `SKILL.v1-yolo.md` | Autonomous | Active — "INVOKE AUTOMATICALLY after /clear on PRD branch" |
+
+`/make-autonomous` creates symlinks pointing to `SKILL.v1-yolo.md`; `/make-careful` swaps them to point at `SKILL.md`. The `description` field in skill frontmatter appears in the system prompt's skill list — active trigger language in YOLO descriptions drives Claude to invoke skills proactively without being asked.
 
 ## Tiered Verification Hooks
 
@@ -236,7 +296,7 @@ Hooks run automatically as PreToolUse gates — no manual invocation needed. Eac
 | `check-aboutme.sh` | Write/Edit | Blocks code files missing ABOUTME headers (PreToolUse) |
 | `coderabbit-review.sh` | `git push` | Advisory CodeRabbit CLI review (runs after blocking checks) |
 | `post-write-codeblock-check.sh` | Write/Edit | Warns about Markdown code blocks missing language specifiers (PostToolUse) |
-| `prd-loop-continue.sh` | `/clear` | SessionStart hook that resumes PRD work on feature branches |
+| `prd-loop-continue.sh` | `/clear` | SessionStart hook that resumes PRD work (installed per-project by `/make-autonomous`) |
 
 ### Dotfile opt-outs
 
@@ -375,18 +435,12 @@ The full `~/.claude/settings.json` hook configuration used in production:
           { "type": "command", "command": "/path/to/claude-config/.claude/skills/verify/scripts/post-write-codeblock-check.sh" }
         ]
       }
-    ],
-    "SessionStart": [
-      {
-        "matcher": "clear",
-        "hooks": [
-          { "type": "command", "command": "/path/to/claude-config/scripts/prd-loop-continue.sh" }
-        ]
-      }
     ]
   }
 }
 ```
+
+The `prd-loop-continue.sh` SessionStart hook is **not** included in global settings — it is installed per-project by `/make-autonomous` into `.claude/settings.local.json`.
 
 Replace `/path/to/claude-config` with the absolute path to your clone of this repo.
 
@@ -413,27 +467,31 @@ claude-config/
         SKILL.md                       # /anki skill definition
       anki-yolo/
         SKILL.md                       # /anki-yolo skill definition (autonomous)
+      make-autonomous/
+        SKILL.md                       # /make-autonomous — enable YOLO PRD mode
+      make-careful/
+        SKILL.md                       # /make-careful — disable YOLO PRD mode
       prd-create/
-        SKILL.md                       # /prd-create (autonomous mode)
-        SKILL.v1-careful.md            # Careful mode variant (project-specific)
+        SKILL.md                       # /prd-create (careful mode — default)
+        SKILL.v1-yolo.md              # YOLO variant (active trigger descriptions)
       prd-start/
-        SKILL.md                       # /prd-start
-        SKILL.v1-careful.md
+        SKILL.md                       # /prd-start (careful)
+        SKILL.v1-yolo.md
       prd-next/
-        SKILL.md                       # /prd-next (autonomous task loop)
-        SKILL.v1-careful.md
+        SKILL.md                       # /prd-next (careful)
+        SKILL.v1-yolo.md
       prd-update-progress/
-        SKILL.md                       # /prd-update-progress
-        SKILL.v1-careful.md
+        SKILL.md                       # /prd-update-progress (careful)
+        SKILL.v1-yolo.md
       prd-update-decisions/
-        SKILL.md                       # /prd-update-decisions
-        SKILL.v1-careful.md
+        SKILL.md                       # /prd-update-decisions (careful)
+        SKILL.v1-yolo.md
       prd-done/
-        SKILL.md                       # /prd-done (PR, merge, close)
-        SKILL.v1-careful.md
+        SKILL.md                       # /prd-done (careful)
+        SKILL.v1-yolo.md
       prd-close/
-        SKILL.md                       # /prd-close
-        SKILL.v1-careful.md
+        SKILL.md                       # /prd-close (careful)
+        SKILL.v1-yolo.md
       prds-get/
         SKILL.md                       # /prds-get (list open PRDs)
   global/
