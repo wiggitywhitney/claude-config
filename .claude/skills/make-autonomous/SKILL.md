@@ -172,6 +172,9 @@ Changes made:
   Hooks        — SessionStart hook installed (.claude/settings.local.json)
   Permissions  — PRD skill and git permissions added (.claude/settings.local.json)
 
+⚠️  Restart Claude Code to pick up the new skill definitions.
+    The symlinks are in place, but the current session has the old skills loaded in memory.
+
 To revert: run /make-careful
 
 The autonomous loop:
