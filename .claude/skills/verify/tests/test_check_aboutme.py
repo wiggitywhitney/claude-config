@@ -362,11 +362,12 @@ def run_tests():
     # ─── Section 8: Edit on non-existent file (should allow gracefully) ───
     t.section("Edit on non-existent file (graceful handling)")
 
-    t.assert_allow(
-        "Edit on file that doesn't exist on disk allows gracefully",
-        HOOK,
-        make_edit_input("nonexistent_file_12345.py",
-                        "old code", "new code"))
+    with TempDir() as tmp:
+        missing_file = os.path.join(tmp, "nonexistent.py")
+        t.assert_allow(
+            "Edit on file that doesn't exist on disk allows gracefully",
+            HOOK,
+            make_edit_input(missing_file, "old code", "new code"))
 
     # ─── Section 9: Multiple file types comment syntax ───
     t.section("Comment syntax per file type")
