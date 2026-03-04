@@ -10,6 +10,10 @@
       "env": {
         "GITHUB_PAT": "${GITHUB_TOKEN}"
       }
+    },
+    "datadog-mcp": {
+      "type": "http",
+      "url": "https://mcp.datadoghq.com/api/unstable/mcp-server/mcp"
     }
   }
 }
