@@ -156,9 +156,9 @@ After `/prd-update-progress` completes:
 
 The loop runs across milestone boundaries. `/clear` provides the verification checkpoint — the fresh instance re-reads the PRD from scratch, so milestone transitions are naturally validated.
 
-**Hook requirement**: The `/clear` loop depends on the `prd-loop-continue` SessionStart hook to inject continuation guidance. Before running `/clear`, check if the hook is installed by reading `~/.claude/settings.json` and looking for a `SessionStart` entry with `matcher: "clear"` that references `prd-loop-continue.sh`. If missing, warn the user:
+**Hook requirement**: The `/clear` loop depends on the `prd-loop-continue` SessionStart hook to inject continuation guidance. Before running `/clear`, check if the hook is installed by reading `.claude/settings.local.json` and looking for a `SessionStart` entry with `matcher: "clear"` that references `prd-loop-continue.sh`. If missing, warn the user:
 
-> The `prd-loop-continue` SessionStart hook is not installed. Without it, `/clear` will not automatically resume PRD work. Install it by adding the hook to `~/.claude/settings.json` (see the claude-config repo's `settings.template.json` for the entry).
+> The `prd-loop-continue` SessionStart hook is not installed. Without it, `/clear` will not automatically resume PRD work. Install it by running `/make-autonomous` in this project directory.
 
 ### If all PRD items are complete:
 Present a completion summary and halt:

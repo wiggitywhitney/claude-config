@@ -237,7 +237,7 @@ PRD skills operate in one of two modes, controlled per-project:
 Run `/make-autonomous` in your project directory. This:
 
 1. **Creates symlinks to YOLO skill variants** — skill descriptions include active trigger language (e.g., "INVOKE AUTOMATICALLY after completing a PRD task") that drives Claude to invoke skills proactively
-2. **Installs a SessionStart hook** — enables the `/clear` → auto-resume loop via `prd-loop-continue.sh` in `.claude/settings.local.json`
+2. **Installs a SessionStart hook** — `prd-loop-continue.sh` in `.claude/settings.local.json` provides a reminder to resume PRD work after `/clear`
 3. **Adds frictionless permissions** — auto-allows git operations, skill invocations, and web tools in `.claude/settings.local.json`
 
 All changes are local (`.claude/settings.local.json` is auto-gitignored by Claude Code).

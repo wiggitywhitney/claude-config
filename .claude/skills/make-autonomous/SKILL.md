@@ -133,6 +133,7 @@ Add permission entries to `.claude/settings.local.json` under `permissions.allow
       "Skill(prd-update-decisions)",
       "Skill(prd-create)",
       "Skill(prd-close)",
+      "Skill(prds-get)",
       "Skill(anki-yolo)",
       "WebFetch",
       "WebSearch"

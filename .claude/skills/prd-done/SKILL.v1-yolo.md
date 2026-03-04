@@ -332,9 +332,9 @@ After creating the PR and starting the CodeRabbit review timer, use the wait tim
 
 ## Hook Detection
 
-Early in the workflow (before Step 1), check if the `prd-loop-continue` SessionStart hook is installed by reading `~/.claude/settings.json` and looking for a `SessionStart` entry with `matcher: "clear"` that references `prd-loop-continue.sh`. If missing, warn the user:
+Early in the workflow (before Step 1), check if the `prd-loop-continue` SessionStart hook is installed by reading `.claude/settings.local.json` and looking for a `SessionStart` entry with `matcher: "clear"` that references `prd-loop-continue.sh`. If missing, warn the user:
 
-> The `prd-loop-continue` SessionStart hook is not installed. This hook enables automatic PRD loop continuation after `/clear`. Install it by adding the hook to `~/.claude/settings.json` (see the claude-config repo's `settings.template.json` for the entry).
+> The `prd-loop-continue` SessionStart hook is not installed. This hook enables PRD loop continuation after `/clear`. Install it by running `/make-autonomous` in this project directory.
 
 This is advisory — proceed with the workflow regardless.
 
