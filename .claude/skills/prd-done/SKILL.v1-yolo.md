@@ -1,6 +1,6 @@
 ---
 name: prd-done
-description: Complete PRD implementation workflow - create branch, push changes, create PR, merge, and close issue
+description: Complete PRD implementation workflow - create PR, handle CodeRabbit review, merge, and close issue. Triggered by the /clear loop when all PRD items are done.
 category: project-management
 ---
 
@@ -123,66 +123,56 @@ Automatically populate what can be deduced from analysis:
   - Flag if authentication/authorization code changed
   - Note any dependency updates
 
-#### 3.4. Prompt User for Information That Cannot Be Deduced
-**IMPORTANT: Don't just ask - analyze and propose answers, then let user confirm or correct**
+#### 3.4. Auto-Fill Remaining PR Information
+**IMPORTANT: Don't just ask - analyze and use best judgment to fill all fields autonomously**
 
-For each item, use available context to propose an answer, then present it to the user for confirmation:
+For each item, use available context to determine the best answer:
 
 - [ ] **Manual testing results**:
   - **Analyze PRD testing strategy section** to understand what testing was planned
   - **Check git commits** for testing-related messages
   - **Propose testing approach** based on change type (e.g., "Documentation reviewed for accuracy and clarity, cross-references validated")
-  - Present proposal and ask: "Is this accurate, or would you like to modify?"
 
 - [ ] **Breaking changes**:
   - **Scan commits and PRD** for breaking change indicators
   - If detected, **propose migration guidance** based on PRD content
-  - If not detected, **confirm**: "No breaking changes detected. Correct?"
+  - If not detected, note "No breaking changes detected"
 
 - [ ] **Performance implications**:
   - **Analyze change type**: Documentation/config changes typically have no performance impact
   - **Propose answer** based on analysis (e.g., "No performance impact - documentation only")
-  - Ask: "Correct, or are there performance considerations?"
 
 - [ ] **Security considerations**:
   - **Check if security-sensitive files** were modified (auth, credentials, API keys)
   - **Scan commits** for security-related keywords
   - **Propose security status** (e.g., "No security implications - documentation changes only")
-  - Ask: "Accurate, or are there security considerations to document?"
 
 - [ ] **Reviewer focus areas**:
   - **Analyze PRD objectives** and **git changes** to identify key areas
   - **Propose specific focus areas** (e.g., "Verify documentation accuracy, check cross-reference links, confirm workflow examples match implementation")
-  - Present list and ask: "Are these the right focus areas, or should I adjust?"
 
 - [ ] **Follow-up work**:
   - **Check PRD for "Future Enhancements" or "Out of Scope" sections**
   - **Analyze other PRDs** in `prds/` directory for related work
   - **Propose follow-up items** if any (e.g., "Future enhancements listed in PRD: template validation, AI-powered descriptions")
-  - Ask: "Should I list these, or is there other follow-up work?"
 
 - [ ] **Additional context**:
   - **Review PRD for special considerations**
   - **Check if this is a dogfooding/testing PR**
   - **Propose any relevant context** (e.g., "This PR itself tests the enhanced workflow it documents")
-  - Ask: "Anything else reviewers should know?"
 
 **Presentation Format:**
-Present all proposed answers together in a summary format:
+Present all auto-filled answers together in a summary format:
 ```markdown
-📋 **Proposed PR Information** (based on analysis)
+📋 **PR Information** (auto-filled from analysis)
 
-**Manual Testing:** [proposed answer]
-**Breaking Changes:** [proposed answer]
-**Performance Impact:** [proposed answer]
-**Security Considerations:** [proposed answer]
-**Reviewer Focus:** [proposed list]
-**Follow-up Work:** [proposed items or "None"]
-**Additional Context:** [proposed context or "None"]
-
-Please review and respond:
-- Type "yes" or "confirm" to accept all
-- Specify corrections for any items that need changes
+**Manual Testing:** [answer]
+**Breaking Changes:** [answer]
+**Performance Impact:** [answer]
+**Security Considerations:** [answer]
+**Reviewer Focus:** [list]
+**Follow-up Work:** [items or "None"]
+**Additional Context:** [context or "None"]
 ```
 
 #### 3.5. Execute Template Requirements
@@ -200,19 +190,16 @@ Please review and respond:
   - **Validation checks**: File existence, format compliance, content requirements
   - **Documentation actions**: Required updates, links to add
 
-- [ ] **Propose and execute requirements**:
-  - Present identified requirements to user: "Template specifies these actions: [list]"
-  - For each requirement, determine if it can be automated
-  - Propose execution: "Should I execute these now?"
-  - Execute confirmed actions and report results
-  - Handle failures gracefully and ask user how to proceed
+- [ ] **Execute requirements safely**:
+  - Classify each requirement as read-only, local-mutating, or network/external
+  - Auto-execute only read-only checks (linting, format validation, file existence)
+  - Require explicit user confirmation before any mutating or external command
+  - Report results and surface blockers that need user input
 
 - [ ] **Summary before PR creation**:
   ```markdown
   ✅ Template Requirements Status:
   [List each requirement with status: executed/validated/skipped/failed]
-
-  Ready to create PR? (yes/no)
   ```
 
 #### 3.6. Detect and Apply PR Label (if release.yml exists)
@@ -286,19 +273,13 @@ Closes #[issue-id]
 
 #### 4.0. Knowledge Capture During Review Wait
 
-After creating the PR and starting the CodeRabbit review timer, use the wait time productively by capturing what was built as Anki cards.
+After creating the PR and starting the CodeRabbit review timer, use the wait time to capture what was built as Anki cards.
 
-**Scope: Cover the ENTIRE PRD, not just recent work.** Cards should be sourced from all milestones, the full decision log, and the complete git diff — not limited to the current conversation or the most recent milestone.
-
-- [ ] **Scan for existing cards**: Read files in the Anki finished directory (defined as `ANKI_FINISHED_DIR` in the `/anki` skill) to check for cards already covering this PRD's topics. Do not create duplicates of concepts already captured.
-- [ ] **Read the PRD document**: Review ALL milestones, the full decision log, architecture choices, and requirements — not just the most recent milestone
-- [ ] **Read key source files**: Scan the main files created or modified during implementation (use git diff against main to identify them)
-- [ ] **Invoke the `/anki` skill**: Create flashcards sourced from the PRD and the code — not from conversation context. Focus on:
-  - Architectural decisions and why they were made
-  - New concepts, patterns, or technologies introduced
-  - How components fit together at a high-level
-  - Surprising or non-obvious design choices from the decision log
-  - Do NOT create cards for implementation minutiae, boilerplate, or things the user already knows
+- [ ] **Invoke `/anki-yolo`** with context from the PRD and git diff. Limit to **5 cards maximum**, focused on architectural-level concepts:
+  - How components fit together and why
+  - Key design decisions and their rationale
+  - Surprising or non-obvious patterns discovered
+  - No implementation minutiae, no boilerplate, no things the user already knows
 
 #### 4.1. Check Review Status
 - [ ] **Check ongoing processes**: Use `gh pr checks [pr-number]` to check for any ongoing CI/CD, security analysis, or automated reviews (CodeRabbit, CodeQL, etc.)
@@ -316,7 +297,7 @@ After creating the PR and starting the CodeRabbit review timer, use the wait tim
   - **Categorize findings**: Critical, Important, Optional/Nitpick based on impact
   - **Provide specific examples**: Quote actual suggestions and their locations
   - **Explain assessment**: Why each category was assigned
-  - **User decision**: Let user decide which improvements to implement before merge (critical items must be addressed, others are user's choice)
+  - **Autonomous triage**: For each finding, explain the issue, give a recommendation, and follow your own recommendation. Critical items must be addressed; use best judgment for others. Only pause for genuinely ambiguous feedback or major architectural concerns.
 - [ ] **Assess feedback priority**: Categorize review feedback
   - **Critical**: Security issues, breaking changes, test failures - MUST address before merge
   - **Important**: Code quality, maintainability, performance - SHOULD address for production readiness
@@ -349,11 +330,19 @@ After creating the PR and starting the CodeRabbit review timer, use the wait tim
 - [ ] **Delete local feature branch**: `git branch -d feature/prd-[issue-id]-[feature-name]`
 - [ ] **Delete remote feature branch**: `git push origin --delete feature/prd-[issue-id]-[feature-name]`
 
+## Hook Detection
+
+Early in the workflow (before Step 1), check if the `prd-loop-continue` SessionStart hook is installed by reading `.claude/settings.local.json` and looking for a `SessionStart` entry with `matcher: "clear"` that references `prd-loop-continue.sh`. If missing, warn the user:
+
+> The `prd-loop-continue` SessionStart hook is not installed. This hook enables PRD loop continuation after `/clear`. Install it by running `/make-autonomous` in this project directory.
+
+This is advisory — proceed with the workflow regardless.
+
 ## Success Criteria
-✅ **Feature is live and functional**  
-✅ **All tests passing in production**  
-✅ **Documentation is accurate and complete**  
-✅ **PRD issue is closed with completion summary**  
+✅ **Feature is live and functional**
+✅ **All CI/CD tests and checks are passing**
+✅ **Documentation is accurate and complete**
+✅ **PRD issue is closed with completion summary**
 ✅ **Team is notified of feature availability**
 
 The PRD implementation is only considered done when users can successfully use the feature as documented.

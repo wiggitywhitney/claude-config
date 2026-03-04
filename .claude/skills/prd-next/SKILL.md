@@ -4,179 +4,299 @@ description: Analyze existing PRD to identify and recommend the single highest-p
 category: project-management
 ---
 
-# PRD Next - Autonomous Task Loop
+# PRD Next - Work On the Next Task
 
 ## Instructions
 
-You drive an autonomous implementation loop: identify the next task from a PRD, design the approach, implement it (TDD, hooks enforce quality), update progress, then loop back for the next task. The loop runs until the milestone is complete or a genuine decision point requires user input.
-
-## Autonomous Decision Protocol
-
-**Proceed without pausing when:**
-- The task is clearly defined in the PRD
-- The implementation approach follows established codebase patterns
-- Design decisions are local (naming, file organization, internal structure)
-- TDD cycle proceeds normally (write test → implement → verify)
-
-**Stop and surface to the user when:**
-- Implementation requires **deviating from what the PRD explicitly specifies**
-- A design decision has **architectural implications** beyond the current task
-- The PRD is **ambiguous** — multiple valid interpretations exist
-- A PRD assumption turns out to be **wrong** or conflicts with existing code
-- The change would **alter behavior outside the current task's scope**
-
-When in doubt about whether something is "on spec," pause. The cost of a quick check is low; the cost of a wrong assumption compounds.
+You are helping analyze an existing Product Requirements Document (PRD) to suggest the single highest-priority task to work on next, then discuss its design if the user confirms they want to work on it.
 
 ## Process Overview
 
-1. **Detect PRD** - Identify target PRD from context or auto-detection
-2. **Analyze State** - Understand what's implemented vs what's remaining
-3. **Recommend Task** - Present the highest-priority next task with rationale
-4. **Create Task List** - Create milestone tasks for progress tracking
-5. **Design Approach** - Plan the implementation
-6. **Implement** - Execute the implementation (TDD, hooks enforce quality)
-7. **Update Progress** - Auto-invoke `/prd-update-progress` to commit and update PRD
-8. **Loop or Halt** - Clear context and loop back, or present completion summary
+1. **Check Context Clarity** - Determine if PRD is obvious from recent conversation
+2. **Auto-Detect Target PRD** - If context unclear, intelligently determine which PRD to analyze
+3. **Analyze Current Implementation** - Understand what's implemented vs what's missing (skip if recent context available)
+4. **Identify the Single Best Next Task** - Find the one task that should be worked on next
+5. **Single Task Recommendation** - Present the highest-priority task with rationale and wait for confirmation
+6. **Create Milestone Task List** - After confirmation, create tasks for the current milestone
+7. **Design Discussion** - Dive into implementation design details
+8. **Implementation** - User implements the task (user-driven, no LLM action)
+9. **Update Progress** - Prompt user to run `/prd-update-progress`
 
-## Step 1: Detect PRD
+## Step 0: Context Awareness Check
 
-### Context Awareness Check
+**FIRST: Check if PRD context is already clear from recent conversation:**
 
 **Skip detection/analysis if recent conversation shows:**
-- Recent PRD work discussed, specific PRD mentioned, PRD-specific commands used, or clear work context for a known PRD
+- **Recent PRD work discussed** - "We just worked on PRD 29", "Just completed PRD update", etc.
+- **Specific PRD mentioned** - "PRD #X", "MCP Prompts PRD", etc.
+- **PRD-specific commands used** - Recent use of `/prd-update-progress`, `/prd-start` with specific PRD
+- **Clear work context** - Discussion of specific features, tasks, or requirements for a known PRD
 
-**If context is clear:** Skip to Step 3 (Recommend Task) using the known PRD and conversation history.
+**If context is clear:**
+- Skip to Step 6 (Single Task Recommendation) using the known PRD 
+- Use conversation history to understand current state and recent progress
+- Proceed directly with task recommendation based on known PRD status
 
-**If context is unclear:** Auto-detect using these signals (priority order):
+**If context is unclear:**
+- Continue to Step 1 (PRD Detection) for full analysis
 
-1. **Git Branch Analysis** - `feature/prd-12-*` → PRD 12
-2. **Recent Git Commits** - Commit messages referencing PRD numbers
-3. **Git Status Analysis** - Modified PRD files
-4. **Available PRDs Discovery** - List `prds/*.md` files
-5. **Fallback** - Ask user to specify (only if all detection fails)
+## Step 1: Smart PRD Detection (Only if Context Unclear)
 
-**Detection Logic:**
-- **High Confidence**: Branch name matches PRD pattern
-- **Medium Confidence**: Modified PRD files or recent commits mention PRD
-- **Low Confidence**: Multiple PRDs, use heuristics
-- **No Context**: Ask user
+**Auto-detect the target PRD using these context clues (in priority order):**
 
-**Once PRD is identified:** Read the PRD file, analyze completion status, identify patterns in completed vs remaining work.
+1. **Git Branch Analysis** - Check current branch name for PRD patterns:
+   - `feature/prd-12-*` → PRD 12
+   - `prd-13-*` → PRD 13
+   - `feature/prd-*` → Extract PRD number
 
-## Step 2: Analyze State (Only if Context Unclear)
+2. **Recent Git Commits** - Look at recent commit messages for PRD references:
+   - "fix: PRD 12 documentation" → PRD 12
+   - "feat: implement prd-13 features" → PRD 13
 
-### Documentation & Implementation Analysis
-- **Read referenced documentation**: Check "Content Location Map" in PRD for feature specs
-- **Code discovery**: Use Grep/Glob to find related files, modules, tests, dependencies
-- **Gap analysis**: Compare documented vs implemented state
-- **Technical feasibility**: Check for dependency conflicts, breaking changes, integration points
+3. **Git Status Analysis** - Check modified/staged files for PRD clues:
+   - Modified `prds/12-*.md` → PRD 12
+   - Changes in feature-specific directories
 
-### Completion Assessment
-Count and categorize all checkboxes: `[x]` completed, `[ ]` pending, `[~]` deferred, `[!]` blocked. Calculate phase completion percentages.
+4. **Available PRDs Discovery** - List all PRDs in `prds/` directory:
+   - `prds/12-documentation-testing.md`
+   - `prds/13-cicd-documentation-testing.md`
 
-### Dependency & Priority Analysis
-Identify critical path items that block other work, enable major capabilities, or resolve current blockers. Prioritize items that unblock the most downstream work and deliver user-visible value.
+5. **Fallback to User Choice** - Only if context detection fails, ask user to specify
 
-## Step 3: Recommend Task
-
-Present the highest-priority task. This is "show your work" — the user sees the reasoning and can interrupt if they disagree.
-
-```markdown
-## Next: [Specific Task Name]
-
-**Why**: [2-3 sentences — why this is highest priority right now]
-
-**Unlocks**: [What becomes possible after this]
-
-**Dependencies met**: [What's already complete that makes this ready]
-
-**Success criteria**: [How you'll know it's done]
+**PRD Detection Implementation:**
+```bash
+# Use these tools to gather context:
+# 1. Check git branch: gitStatus shows current branch
+# 2. Check git status: Look for modified PRD files  
+# 3. List PRDs: Use LS or Glob to find prds/*.md files
+# 4. Recent commits: Use Bash 'git log --oneline -n 5' for recent context
 ```
 
-Proceed directly to Step 4 after presenting. Do not ask for confirmation — the user will interrupt if they disagree with the recommendation.
+**Detection Logic:**
+- **High Confidence**: Branch name matches PRD pattern (e.g., `feature/prd-12-documentation-testing`)
+- **Medium Confidence**: Modified PRD files in git status or recent commits mention PRD
+- **Low Confidence**: Multiple PRDs available, use heuristics (most recent, largest)
+- **No Context**: Present available options to user
 
-## Step 4: Create Milestone Task List
+**Example Detection Outputs:**
+```markdown
+🎯 **Auto-detected PRD 12** (Documentation Testing)
+- Branch: `feature/prd-12-documentation-testing` ✅
+- Modified files: `prds/12-documentation-testing.md` ✅
+- Recent commits mention PRD 12 features ✅
+```
 
-Create tasks for the **current milestone only** using TaskCreate.
+**Once PRD is identified:**
+- Read the PRD file from `prds/[issue-id]-[feature-name].md`
+- Analyze completion status across all sections
+- Identify patterns in completed vs remaining work
+
+## Step 2: Documentation & Implementation Analysis (Only if Context Unclear)
+
+Before assessing task priorities, analyze both the documented specifications and current implementation state:
+
+### Documentation Analysis (Documentation-First PRDs)
+For PRDs using the documentation-first approach:
+- **Read referenced documentation**: Check the "Content Location Map" in PRD to find where feature specs live
+- **Understand target state**: What functionality is documented but not yet implemented
+- **Check documentation completeness**: Are all user workflows and examples fully documented
+- **Validate cross-references**: Do all documentation links and references work correctly
+
+### Code Discovery
+- **Search for related files**: Use Grep/Glob to find files related to the feature
+- **Identify key modules**: Locate main implementation files mentioned in PRD
+- **Find test files**: Discover existing test coverage for the feature
+- **Check dependencies**: Review imports and module relationships
+
+### Implementation vs Documentation Gap Analysis
+- **Compare docs vs code**: What's documented vs actually implemented
+- **Partial implementations**: Identify half-finished features or TODO comments
+- **Documentation validation**: Can documented examples and commands actually work
+- **Architecture alignment**: Does current code match documented behavior and PRD architecture decisions
+- **Quality assessment**: Code style, error handling, test coverage gaps
+
+### Technical Feasibility Analysis
+- **Dependency conflicts**: Are PRD requirements compatible with existing code
+- **Breaking changes**: Will remaining tasks require refactoring existing code
+- **Integration points**: How new work connects with current implementation
+- **Technical debt**: Issues that might block or slow future work
+
+## Step 3: Completion Assessment (Only if Context Unclear)
+
+### Analyze Checkbox States
+Count and categorize all checkboxes:
+- **Completed**: `[x]` items
+- **Pending**: `[ ]` items  
+- **Deferred**: `[~]` items
+- **Blocked**: `[!]` items
+
+### Phase Analysis
+For each implementation phase:
+- Calculate completion percentage
+- Identify bottlenecks or stalled work
+- Assess readiness to move to next phase
+
+### Requirement Coverage
+Review requirement categories:
+- **Functional Requirements**: Core feature completion
+- **Non-Functional Requirements**: Quality and performance aspects
+- **Success Criteria**: Measurable outcomes
+- **Dependencies**: External requirements
+- **Risk Mitigation**: Risk management progress
+
+## Step 4: Dependency Analysis (Only if Context Unclear)
+
+### Identify Critical Path Items
+Look for items that:
+- **Block other work** - Must be completed before others can start
+- **Enable major capabilities** - Unlock significant value when completed
+- **Resolve current blockers** - Remove impediments to progress
+
+### Dependency Patterns
+
+#### PRD-Level Dependencies
+- **Sequential dependencies** - A must be done before B
+- **Parallel opportunities** - Multiple items that can be worked simultaneously  
+- **Foundation requirements** - Core capabilities needed by multiple features
+- **Integration points** - Items that connect different parts of the system
+
+#### Code-Level Dependencies  
+- **Import dependencies** - Modules that depend on others being implemented first
+- **Interface contracts** - APIs/types that must be defined before consumers
+- **Database schema** - Data model changes needed before business logic
+- **Test dependencies** - Tests that require certain infrastructure or mocks
+- **Build/deployment** - Configuration changes that affect multiple components
+
+## Step 5: Strategic Value Assessment (Only if Context Unclear)
+
+### High-Value Next Steps
+Prioritize items that:
+- **Unblock multiple other items** - High leverage impact
+- **Deliver user-visible value** - Direct user benefit
+- **Reduce technical risk** - Address major uncertainties
+- **Enable validation** - Allow testing of key assumptions
+- **Provide learning** - Generate insights for future work
+
+### Low-Priority Items
+Identify items that:
+- **Have many dependencies** - Can't be started yet
+- **Are nice-to-have** - Don't impact core value proposition
+- **Are optimization-focused** - Improve existing working features
+- **Require external dependencies** - Waiting on others
+
+## Step 6: Single Task Recommendation
+
+**Note**: If you arrived here from Step 0 (clear context), use the conversation history and known PRD state to make your recommendation. If you came through the full analysis, use your detailed findings.
+
+Present findings in this focused format:
+
+```markdown
+# Next Task Recommendation: [Feature Name]
+
+## Recommended Task: [Specific Task Name]
+
+**Why this task**: [2-3 sentences explaining why this is the highest priority right now]
+
+**What it unlocks**: [What becomes possible after completing this]
+
+**Dependencies**: [What's already complete that makes this ready to work on]
+
+**Success criteria**: [How you'll know it's done]
+
+---
+
+**Do you want to work on this task?** 
+
+If yes, I'll help you design the implementation approach. If no, let me know what you'd prefer to work on instead.
+```
+
+## Step 6b: Create Milestone Task List (After Confirmation)
+
+When the user confirms they want to work on the recommended task, create tasks for the **current milestone only** using TaskCreate. This provides progress tracking scoped to the active milestone.
 
 ### Process
 
 1. **Identify the current milestone** from the PRD (the one containing the recommended task)
-2. **Create a task for each unchecked item** in that milestone:
+2. **Create a task for each unchecked item** in that milestone using TaskCreate:
    - `subject`: The milestone checkbox item text (imperative form)
-   - `description`: PRD number, milestone name, relevant context
-   - `activeForm`: Present continuous form (e.g., "Implementing retry logic")
-3. **Set the recommended task to `in_progress`**
-4. **Set dependencies** if milestone items have a natural ordering
+   - `description`: Include the PRD number, milestone name, and any relevant context
+   - `activeForm`: Present continuous form of the task (e.g., "Researching claude-config directory")
+3. **Set the recommended task to `in_progress`** using TaskUpdate
+4. **Set dependencies** if milestone items have a natural ordering (use TaskUpdate with `addBlockedBy`)
 
-### Rules
-- Only create tasks for the current milestone
-- One task per unchecked `[ ]` item — skip `[x]` items
-- Keep subjects concise — use PRD checkbox text
-- When a new milestone starts, mark prior milestone tasks as `completed` or `deleted`, then create fresh tasks
+### Key Rules
 
-## Step 5: Design Approach
+- **Only create tasks for the current milestone** — do not create tasks for future milestones
+- **One task per unchecked milestone item** — map 1:1 with PRD checkboxes
+- **Skip already-checked items** — only create tasks for `[ ]` items, not `[x]` items
+- **Keep task subjects concise** — use the PRD checkbox text, don't embellish
+- When the milestone completes and `/prd-next` runs again for the next milestone, mark all prior milestone tasks as `completed` (or `deleted` if no longer relevant), then create a fresh set of tasks for the new milestone
 
-Plan the implementation before writing code:
+### Example
 
-- **Architecture**: How this fits into the existing codebase
-- **Key changes**: What files need to be created/modified
-- **Testing strategy**: What tests to write first (TDD — tests before implementation)
-- **Integration points**: How it connects with existing code
-
-Present the approach as part of the flow. Proceed to implementation unless a design decision triggers the pause criteria from the Autonomous Decision Protocol.
-
-## Step 6: Implement
-
-Execute the implementation following TDD and existing project standards:
-
-1. **Write failing tests** for the task's success criteria
-2. **Implement** minimal code to pass the tests
-3. **Verify** tests pass, refactor as needed
-4. **Quality gates are enforced by hooks** — pre-commit runs build/typecheck/lint, pre-push runs security checks
-
-Continue implementing until the task's success criteria are met. If you hit a blocker that triggers the pause criteria, surface it to the user.
-
-## Step 7: Update Progress
-
-After implementation is complete, invoke `/prd-update-progress` using the Skill tool. Do not tell the user to run it — just run it.
-
-**IMPORTANT**: `/prd-update-progress` handles PRD checkbox updates, commits, and journaling. Do not duplicate this work manually.
-
-## Step 8: Loop or Halt
-
-After `/prd-update-progress` completes:
-
-### If unchecked PRD items remain (any milestone):
-1. Run `/clear` to reset context — this is a **verification checkpoint**
-2. The fresh instance re-reads the PRD, verifies actual state against checkboxes, and picks up the next task (which may be in the next milestone)
-3. The loop continues from Step 1
-
-The loop runs across milestone boundaries. `/clear` provides the verification checkpoint — the fresh instance re-reads the PRD from scratch, so milestone transitions are naturally validated.
-
-**Hook requirement**: The `/clear` loop depends on the `prd-loop-continue` SessionStart hook to inject continuation guidance. Before running `/clear`, check if the hook is installed by reading `~/.claude/settings.json` and looking for a `SessionStart` entry with `matcher: "clear"` that references `prd-loop-continue.sh`. If missing, warn the user:
-
-> The `prd-loop-continue` SessionStart hook is not installed. Without it, `/clear` will not automatically resume PRD work. Install it by adding the hook to `~/.claude/settings.json` (see the claude-config repo's `settings.template.json` for the entry).
-
-### If all PRD items are complete:
-Present a completion summary and halt:
-
-```markdown
-## PRD Complete
-
-**PRD**: [PRD name] (#[number])
-**Milestones completed**: [List of milestones]
-**Total commits**: [Count]
-
-All PRD items are done. Run `/prd-done` to create the PR, process CodeRabbit review, and close the issue.
+For a milestone with these items:
+```text
+- [x] Research reference implementation
+- [ ] Audit global CLAUDE.md
+- [ ] Audit project-level CLAUDE.md files
+- [ ] Create CLAUDE.md templates
 ```
+
+Create 3 tasks (skipping the checked item), set "Audit global CLAUDE.md" to `in_progress`.
+
+## Step 7: Design Discussion (If Confirmed)
+
+If the user confirms they want to work on the recommended task, then dive into:
+
+### Implementation Planning
+- **Architecture approach**: How this fits into existing codebase
+- **Key components**: What needs to be built/modified
+- **Integration points**: How it connects with existing code
+- **Testing strategy**: How to validate the implementation
+
+### Design Decisions
+- **Technical choices**: Framework/library decisions to make
+- **Interface design**: APIs, data structures, user interfaces
+- **Error handling**: How to handle failure cases
+- **Performance considerations**: Scalability and optimization needs
+
+### Implementation Steps
+- **Step-by-step breakdown**: Logical sequence of implementation
+- **Quick wins**: Parts that can be completed first for validation
+- **Risk mitigation**: Addressing the biggest uncertainties first
+- **Testing checkpoints**: When and how to validate progress
+
+### Questions to Resolve
+- **Open decisions**: Design choices that need to be made
+- **Clarifications needed**: Requirements that need more detail
+- **Assumptions to validate**: Things we're assuming that should be confirmed
 
 ## Success Criteria
 
 This command should:
-- Identify the single highest-value task based on current PRD state
-- Provide clear rationale (show your work) so the user can course-correct
-- Drive autonomous implementation with TDD and hook-enforced quality
-- Pause only for genuine ambiguity or PRD deviations
-- Self-verify via `/clear` between task iterations
-- Run continuously across milestones until the PRD is complete
+- ✅ Identify the single highest-value task to work on next based on current PRD state
+- ✅ Provide clear, compelling rationale for why this specific task should be prioritized
+- ✅ Wait for user confirmation before proceeding
+- ✅ If confirmed, provide detailed implementation design guidance
+- ✅ Keep teams focused on the most important work rather than overwhelming them with options
+- ✅ Enable immediate action by transitioning from recommendation to design discussion
+
+## Step 8: Implementation
+
+The user implements the task. This step is user-driven — no LLM action required. Provide guidance if asked, but do not proceed to Step 9 until the user signals implementation is complete.
+
+## Step 9: Update Progress After Completion
+
+**CRITICAL: Do NOT update the PRD yourself. Do NOT edit PRD files directly. Your job is to prompt the user to run the update command.**
+
+After the user completes the task implementation, output ONLY this message:
+
+---
+
+**Task implementation complete.**
+
+To update PRD progress and commit your work, run `/prd-update-progress`.
+
+---
+
+Then STOP. Do not proceed further. The `/prd-update-progress` command handles PRD updates, progress tracking, and commits. This separation ensures proper workflow and avoids duplicate/conflicting updates.

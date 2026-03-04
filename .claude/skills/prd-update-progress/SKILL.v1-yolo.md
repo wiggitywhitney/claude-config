@@ -1,6 +1,6 @@
 ---
 name: prd-update-progress
-description: Update PRD progress based on git commits and code changes, enhanced by conversation context
+description: INVOKE AUTOMATICALLY after completing a PRD implementation task. Commits work, updates PRD checkboxes, and journals progress without asking.
 category: project-management
 ---
 
@@ -15,12 +15,9 @@ You are helping update an existing Product Requirements Document (PRD) based on 
 1. **Identify Target PRD** - Determine which PRD to update
 2. **Context-First Progress Analysis** - Use conversation context first, Git analysis as fallback
 3. **Map Changes to PRD Items** - Intelligently connect work to requirements
-4. **Propose Updates** - Suggest checkbox completions and requirement changes
-5. **User Confirmation** - Verify proposals and handle edge cases
-6. **Update PRD** - Apply changes to checkboxes and status
-7. **Flag Divergences** - Alert when actual work differs from planned work
-8. **Commit Progress Updates** - Preserve progress checkpoint
-9. **Continue to Next Task** - Prompt user to run /prd-next
+4. **Apply Updates** - Update checkboxes with evidence, flag divergences
+5. **Commit Progress Updates** - Preserve progress checkpoint
+6. **Next Steps** - Present summary and signal what comes next (`/clear` → `/prd-next`, or `/prd-done` if complete)
 
 ## Step 1: Smart PRD Identification
 
@@ -213,16 +210,12 @@ Present proposed changes clearly with complete transparency:
 - **Acknowledge validation gaps** when you can't verify functionality works
 - **Separate implementation from validation/rollout**
 
-Wait for user confirmation before making changes, and handle:
-- **Partial acceptance**: User agrees with some but not all suggestions
-- **Additional context**: User provides information not visible in git history
-- **Scope clarification**: User explains work that appears to be out of scope
-- **Future planning**: User wants to adjust upcoming work based on current progress
+Apply updates directly based on evidence. Only pause if a divergence between implementation and plan is genuinely ambiguous and needs a user decision.
 
 ## Step 7: Systematic Update Application
 
 When applying updates:
-1. **Update only confirmed items** - Don't make assumptions
+1. **Update items with direct evidence** - Conservative: only mark complete when evidence is clear
 2. **Update status sections** to reflect current phase
 3. **Preserve unchecked items** that still need work
 4. **Update completion percentages** realistically
@@ -292,28 +285,12 @@ Progress: X% complete - [next major milestone]"
 
 ## Step 9: Next Steps Based on PRD Status
 
-After completing the PRD update and committing changes, guide the user based on completion status:
+After completing the PRD update and committing changes, present a brief summary:
 
 ### If PRD has remaining tasks
 
----
-
-**PRD progress updated and committed.**
-
-To continue working on this PRD:
-1. Clear/reset the conversation context
-2. Run `/prd-next` to get the next task
-
----
+**PRD progress updated and committed.** Next: `/clear` → `/prd-next`
 
 ### If PRD is 100% complete
 
----
-
-**PRD #X is complete!**
-
-To finalize:
-1. Clear/reset the conversation context
-2. Run `/prd-done` to move the PRD to the done folder and close the GitHub issue
-
----
+**PRD #X is complete!** Next: `/clear` → `/prd-done`
