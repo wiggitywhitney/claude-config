@@ -229,7 +229,7 @@ PRD skills operate in one of two modes, controlled per-project:
 |---|---|---|
 | **Invocation** | User-driven — you run each skill manually | Auto-chaining — skills invoke each other |
 | **Confirmations** | Pauses for approval at each step | Proceeds without trivial confirmations |
-| **Loop behavior** | No auto-resume after `/clear` | `/clear` triggers automatic task continuation |
+| **Loop behavior** | No auto-resume after `/clear` | User runs `/clear` then `/prd-next` or `/prd-done` (auto-resume planned) |
 | **Best for** | Unfamiliar projects, sensitive repos, learning | Trusted projects with well-defined PRDs |
 
 ### Enabling autonomous mode
@@ -259,6 +259,8 @@ When autonomous mode is enabled, PRD work flows continuously:
 ```
 
 The `/clear` step is intentional — it resets the context window so each task starts fresh, preventing context bloat from accumulating implementation details across tasks.
+
+**Current limitation**: `/prd-update-progress` ends the autonomous loop. The user must manually run `/clear`, then `/prd-next` (or `/prd-done` when the PRD is complete). Fully automated cross-session looping is not yet possible — `/clear` cannot be invoked programmatically, and the SessionStart hook may not reliably trigger the next skill.
 
 ### Reverting to careful mode
 

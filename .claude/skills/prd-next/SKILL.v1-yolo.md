@@ -8,7 +8,9 @@ category: project-management
 
 ## Instructions
 
-You drive an autonomous implementation loop: identify the next task from a PRD, design the approach, implement it (TDD, hooks enforce quality), update progress, then loop back for the next task. The loop runs until the milestone is complete or a genuine decision point requires user input.
+You drive an autonomous implementation loop: identify the next task from a PRD, design the approach, implement it (TDD, hooks enforce quality), and update progress. The loop repeats for each task in the current milestone. When the milestone is complete, `/prd-update-progress` commits the work and updates the PRD — this ends the loop.
+
+**Current limitation**: The designed continuation is `/prd-update-progress` → `/clear` → `/prd-next` (or `/prd-done` when the PRD is complete). Currently, `/prd-update-progress` cannot programmatically invoke `/clear`, so the user must run `/clear` manually, then invoke `/prd-next` or `/prd-done`.
 
 ## Autonomous Decision Protocol
 
