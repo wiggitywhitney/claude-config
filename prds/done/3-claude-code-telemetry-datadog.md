@@ -1,10 +1,12 @@
 # PRD #3: Claude Code Telemetry to Datadog
 
-**Status**: Not Started
+**Status**: Closed — No Longer Feasible
 **Priority**: Medium
 **Created**: 2026-02-18
+**Closed**: 2026-03-04
 **GitHub Issue**: [#3](https://github.com/wiggitywhitney/claude-config/issues/3)
 **Context**: Claude Code supports OpenTelemetry export via settings.json env vars. The cluster-whisperer project already sends OTLP data to a local Datadog Agent — that infrastructure can be reused with service-level tagging to separate the data.
+**Closure Reason**: Datadog managed settings (MDM-distributed) override all user OTEL env vars with higher precedence, routing telemetry to an internal Datadog endpoint (`ai-devx-api.us1.prod.dog`). User settings.json cannot redirect telemetry to the local Datadog Agent. Research findings documented in `advocacy-skills/docs/claude-code-otel-telemetry.md`.
 
 ---
 
