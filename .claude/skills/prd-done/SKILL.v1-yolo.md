@@ -340,7 +340,7 @@ This is advisory — proceed with the workflow regardless.
 
 ## Success Criteria
 ✅ **Feature is live and functional**
-✅ **All tests passing in production**
+✅ **All CI/CD tests and checks are passing**
 ✅ **Documentation is accurate and complete**
 ✅ **PRD issue is closed with completion summary**
 ✅ **Team is notified of feature availability**
