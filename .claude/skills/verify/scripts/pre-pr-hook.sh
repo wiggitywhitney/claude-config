@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# ABOUTME: PreToolUse hook that gates PR creation on expanded security, tests, and advisory acceptance gate
+# ABOUTME: Runs after commit (build/typecheck/lint) and push (security) tiers; includes optional acceptance tests
 # pre-pr-hook.sh — PreToolUse hook that gates PR creation on expanded security + tests
 #
 # Installed as a Claude Code PreToolUse hook on Bash.
@@ -8,9 +10,12 @@
 # This is the incremental final tier of verification:
 #   git commit   → build, typecheck, lint (pre-commit-hook.sh)
 #   git push     → standard security (pre-push-hook.sh)
-#   gh pr create → expanded security, tests (this hook)
+#   gh pr create → expanded security, tests (this hook, blocking)
+#   gh pr create → acceptance gate tests with live API (this hook, advisory)
 #
 # Each tier runs only checks not covered by earlier tiers.
+# Acceptance gate tests are advisory — they never block PR creation but
+# require human review of results before Claude proceeds.
 #
 # Expanded security checks include everything beyond standard mode:
 #   - npm audit for dependency vulnerabilities
@@ -51,6 +56,17 @@ DETECTION=$("$SCRIPT_DIR/detect-project.sh" "$PROJECT_DIR" 2>/dev/null || echo '
 
 # Extract test command — build, typecheck, and lint already passed at commit time
 CMD_TEST=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('test') or '')" 2>/dev/null || echo "")
+
+# Extract acceptance test command (advisory tier)
+CMD_ACCEPTANCE_TEST=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('acceptance_test') or '')" 2>/dev/null || echo "")
+
+# Fallback detection: acceptance-gate.test.ts files + .vals.yaml (PRD 28, Decision 3)
+if [[ -z "$CMD_ACCEPTANCE_TEST" ]] && [[ -f "$PROJECT_DIR/.vals.yaml" ]]; then
+  ACCEPTANCE_FILES=$(find "$PROJECT_DIR/test" -name "acceptance-gate.test.ts" 2>/dev/null | head -1)
+  if [[ -n "$ACCEPTANCE_FILES" ]]; then
+    CMD_ACCEPTANCE_TEST="vals exec -f .vals.yaml -- npx vitest run test/**/acceptance-gate.test.ts"
+  fi
+fi
 
 # Compute diff base for scoping security checks (Decision 7)
 # Hooks scope checks to branch changes, not the whole repo.
@@ -109,9 +125,27 @@ if [ $? -ne 0 ]; then
   FAILURE_OUTPUT="$security_output"
 fi
 
-# Phase 2: Tests (last — most expensive phase)
+# Phase 2: Tests (most expensive blocking phase)
 if [ -z "$FAILED_PHASE" ]; then
   run_phase "test" "$CMD_TEST" || true
+fi
+
+# Phase 3: Acceptance gate tests (advisory — never blocks PR creation)
+# Only runs after standard phases pass. No point spending API money if PR is blocked anyway.
+ACCEPTANCE_CONTEXT=""
+if [[ -z "$FAILED_PHASE" ]] && [[ -n "$CMD_ACCEPTANCE_TEST" ]]; then
+  acceptance_output=$(cd "$PROJECT_DIR" && eval "$CMD_ACCEPTANCE_TEST" 2>&1)
+
+  # Check if vals/API key was unavailable (command not found or specific error patterns)
+  if echo "$acceptance_output" | grep -qiE '(vals: command not found|vals: not found|secret.*not found|API.key.*not|ANTHROPIC_API_KEY|credential)' 2>/dev/null; then
+    ACCEPTANCE_CONTEXT="Acceptance gate tests skipped — vals or API key not available."
+  else
+    # Sanitize and truncate output
+    acceptance_output=$(echo "$acceptance_output" | head -c 8000)
+    ACCEPTANCE_CONTEXT="MANDATORY: Acceptance gate tests with live API completed. You MUST present these results to the user and get explicit approval before proceeding with PR creation. Do NOT continue automatically.
+
+$acceptance_output"
+  fi
 fi
 
 # Return decision
@@ -145,5 +179,29 @@ else
   # All phases passed — use additionalContext only (Claude-visible, not shown in UI).
   # permissionDecisionReason is omitted on allow to prevent confusing "Error: ... passed"
   # messages when another hook denies the same action (Decision 3, PRD 11).
-  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","additionalContext":"verify: PR security+tests check passed (expanded security, tests) ✓"}}'
+  BASE_CONTEXT="verify: PR security+tests check passed (expanded security, tests) ✓"
+  if [[ -n "$ACCEPTANCE_CONTEXT" ]]; then
+    # Append acceptance gate results — Claude must present these to the user
+    VERIFY_BASE_CONTEXT="$BASE_CONTEXT" VERIFY_ACCEPTANCE_CONTEXT="$ACCEPTANCE_CONTEXT" python3 -c "
+import json, os
+
+base = os.environ['VERIFY_BASE_CONTEXT']
+acceptance = os.environ['VERIFY_ACCEPTANCE_CONTEXT']
+
+# Sanitize: remove invalid Unicode surrogates
+acceptance = acceptance.encode('utf-8', errors='replace').decode('utf-8')
+
+context = base + '\n\n' + acceptance
+result = {
+    'hookSpecificOutput': {
+        'hookEventName': 'PreToolUse',
+        'permissionDecision': 'allow',
+        'additionalContext': context
+    }
+}
+print(json.dumps(result))
+"
+  else
+    echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","additionalContext":"'"$BASE_CONTEXT"'"}}'
+  fi
 fi

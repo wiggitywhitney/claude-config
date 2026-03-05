@@ -102,11 +102,11 @@ Acceptance tests run AFTER standard phases. If security or tests fail, the hook 
 ## Milestones
 
 - [x] 1. detect-project.sh extracts `acceptance_test` command from verify.json
-- [ ] 2. pre-pr-hook.sh runs acceptance gate tests after standard phases pass
-- [ ] 3. Advisory behavior: test failures allow PR creation but mandate human review via additionalContext
-- [ ] 4. Graceful skip when no acceptance tests detected or vals unavailable
-- [ ] 5. Tests for detection logic and hook behavior
-- [ ] 6. Documentation in CLAUDE.md describing the acceptance gate tier
+- [x] 2. pre-pr-hook.sh runs acceptance gate tests after standard phases pass
+- [x] 3. Advisory behavior: test failures allow PR creation but mandate human review via additionalContext
+- [x] 4. Graceful skip when no acceptance tests detected or vals unavailable
+- [x] 5. Tests for detection logic and hook behavior
+- [x] 6. Documentation in CLAUDE.md describing the acceptance gate tier
   - Update global CLAUDE.md hook comments to show the 4-tier verification model:
     - `git commit` → build, typecheck, lint (pre-commit-hook.sh)
     - `git push` → standard security (pre-push-hook.sh)
