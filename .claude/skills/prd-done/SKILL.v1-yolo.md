@@ -298,6 +298,10 @@ After creating the PR and starting the CodeRabbit review timer, use the wait tim
   - **Provide specific examples**: Quote actual suggestions and their locations
   - **Explain assessment**: Why each category was assigned
   - **Autonomous triage**: For each finding, explain the issue, give a recommendation, and follow your own recommendation. Critical items must be addressed; use best judgment for others. Only pause for genuinely ambiguous feedback or major architectural concerns.
+  - **Triage rubric for non-critical findings**:
+    - **Skip** if the suggestion is genuinely not helpful or misunderstands the code
+    - **Skip** if the complexity or maintenance cost of the fix outweighs its benefit
+    - **Fix** if the only reason to skip is that it takes time to write — effort alone is not a reason to skip
 - [ ] **Assess feedback priority**: Categorize review feedback
   - **Critical**: Security issues, breaking changes, test failures - MUST address before merge
   - **Important**: Code quality, maintainability, performance - SHOULD address for production readiness
