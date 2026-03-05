@@ -134,10 +134,15 @@ fi
 # Only runs after standard phases pass. No point spending API money if PR is blocked anyway.
 ACCEPTANCE_CONTEXT=""
 if [[ -z "$FAILED_PHASE" ]] && [[ -n "$CMD_ACCEPTANCE_TEST" ]]; then
-  acceptance_output=$(cd "$PROJECT_DIR" && bash -c "$CMD_ACCEPTANCE_TEST" 2>&1)
+  acceptance_output=$(cd "$PROJECT_DIR" && timeout 300 bash -c "$CMD_ACCEPTANCE_TEST" 2>&1)
+  acceptance_exit=$?
 
-  # Check if vals/API key was unavailable (command not found or specific error patterns)
-  if echo "$acceptance_output" | grep -qiE '(vals: command not found|vals: not found|secret.*not found|API.key.*not|ANTHROPIC_API_KEY|credential)' 2>/dev/null; then
+  # Check for timeout (exit code 124 from timeout command)
+  if [[ $acceptance_exit -eq 124 ]]; then
+    ACCEPTANCE_CONTEXT="Acceptance gate tests timed out after 300 seconds. Results may be incomplete — review with the user before proceeding."
+  # Check if vals/API key was unavailable (exit code 127 = command not found, or specific error patterns)
+  elif [[ $acceptance_exit -eq 127 ]] || \
+     echo "$acceptance_output" | grep -qiE '(vals: command not found|vals: not found|ANTHROPIC_API_KEY.*(missing|not set)|API[_ ]?KEY.*(missing|not set)|secret.*(missing|not found))' 2>/dev/null; then
     ACCEPTANCE_CONTEXT="Acceptance gate tests skipped — vals or API key not available."
   else
     # Sanitize and truncate output

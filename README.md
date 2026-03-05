@@ -406,7 +406,8 @@ $ bash .claude/skills/verify/scripts/detect-project.sh /path/to/project
 }
 ```
 
-The `acceptance_test` field is `null` when no acceptance tests are configured. It is populated from `.claude/verify.json` or fallback file detection.
+The `acceptance_test` field is `null` when no acceptance tests are configured. In `detect-project.sh`, it is populated from `.claude/verify.json`.
+Fallback file-convention detection (`test/**/acceptance-gate.test.ts` + `.vals.yaml`) is performed by `pre-pr-hook.sh` at execution time.
 
 The test tier detection script identifies which test tiers exist:
 
