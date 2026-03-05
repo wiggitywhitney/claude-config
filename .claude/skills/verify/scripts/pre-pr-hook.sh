@@ -134,7 +134,7 @@ fi
 # Only runs after standard phases pass. No point spending API money if PR is blocked anyway.
 ACCEPTANCE_CONTEXT=""
 if [[ -z "$FAILED_PHASE" ]] && [[ -n "$CMD_ACCEPTANCE_TEST" ]]; then
-  acceptance_output=$(cd "$PROJECT_DIR" && eval "$CMD_ACCEPTANCE_TEST" 2>&1)
+  acceptance_output=$(cd "$PROJECT_DIR" && bash -c "$CMD_ACCEPTANCE_TEST" 2>&1)
 
   # Check if vals/API key was unavailable (command not found or specific error patterns)
   if echo "$acceptance_output" | grep -qiE '(vals: command not found|vals: not found|secret.*not found|API.key.*not|ANTHROPIC_API_KEY|credential)' 2>/dev/null; then
