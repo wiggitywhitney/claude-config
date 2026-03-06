@@ -257,6 +257,20 @@ When updating PRDs based on implementation progress:
 
 After successfully updating the PRD, commit all changes to preserve the progress checkpoint:
 
+### Update PROGRESS.md (If Present)
+
+Before staging and committing, check if `PROGRESS.md` exists in the repository root. If it does, append feature-level entries describing the work completed:
+
+1. **Check existence**: Look for `PROGRESS.md` in the repository root
+2. **If present**: Append entries under `## [Unreleased]` using the appropriate category:
+   - `### Added` — new features or capabilities
+   - `### Changed` — modifications to existing behavior
+   - `### Fixed` — bug fixes
+3. **Entry granularity**: Describe at feature level, not file level
+   - Good: "Added contributor-aware PROGRESS.md creation to `/prd-start`"
+   - Bad: "Updated `.claude/skills/prd-start/SKILL.md`"
+4. **Stage PROGRESS.md** with the rest of the commit
+
 ### Commit Implementation Work
 ```bash
 # MANDATORY: Stage ALL files - implementation work AND PRD updates together
