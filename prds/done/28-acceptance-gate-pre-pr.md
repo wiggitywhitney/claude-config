@@ -1,6 +1,6 @@
 # PRD #28: Acceptance Gate Tests in Pre-PR Hook
 
-## Status: Open
+## Status: Complete (2026-03-05)
 
 ## Problem
 
@@ -101,12 +101,20 @@ Acceptance tests run AFTER standard phases. If security or tests fail, the hook 
 
 ## Milestones
 
-- [ ] 1. detect-project.sh extracts `acceptance_test` command from verify.json
-- [ ] 2. pre-pr-hook.sh runs acceptance gate tests after standard phases pass
-- [ ] 3. Advisory behavior: test failures allow PR creation but mandate human review via additionalContext
-- [ ] 4. Graceful skip when no acceptance tests detected or vals unavailable
-- [ ] 5. Tests for detection logic and hook behavior
-- [ ] 6. Documentation in CLAUDE.md describing the acceptance gate tier
+- [x] 1. detect-project.sh extracts `acceptance_test` command from verify.json
+- [x] 2. pre-pr-hook.sh runs acceptance gate tests after standard phases pass
+- [x] 3. Advisory behavior: test failures allow PR creation but mandate human review via additionalContext
+- [x] 4. Graceful skip when no acceptance tests detected or vals unavailable
+- [x] 5. Tests for detection logic and hook behavior
+- [x] 6. Documentation in CLAUDE.md describing the acceptance gate tier
+  - Update global CLAUDE.md hook comments to show the 4-tier verification model:
+    - `git commit` → build, typecheck, lint (pre-commit-hook.sh)
+    - `git push` → standard security (pre-push-hook.sh)
+    - `gh pr create` → expanded security, tests (pre-pr-hook.sh)
+    - `gh pr create` → acceptance gate tests with live API (pre-pr-hook.sh, advisory)
+  - Add to the hook comment block: `<!-- pre-pr-hook.sh also runs advisory acceptance gate tests when .claude/verify.json has an "acceptance_test" command; results require human approval before PR creation continues -->`
+  - Document in the Testing section that repos can opt into acceptance gate tests by adding `"acceptance_test"` to `.claude/verify.json` commands object
+  - Mention vals exec requirement for secret injection
 
 ## Decision Log
 

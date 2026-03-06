@@ -1,3 +1,5 @@
+# ABOUTME: Tests for detect-project.sh project type and command detection
+# ABOUTME: Exercises various project configurations including verify.json overrides
 """Tests for detect-project.sh command detection.
 
 Exercises detect-project.sh with various project configurations:
@@ -324,6 +326,50 @@ def run_tests():
         output = _run_detect(no_runner)
 
         t.assert_field_empty("test still empty without run_tests.py",
+                             output, "commands.test")
+
+        # ── Section 14: verify.json acceptance_test extraction ──
+        t.section("verify.json acceptance_test extraction")
+
+        accept_project = os.path.join(tmp, "accept-test")
+        os.makedirs(os.path.join(accept_project, ".claude"))
+        write_file(accept_project, "package.json",
+                   '{"scripts":{"build":"tsc","test":"vitest"}}')
+        write_file(accept_project, ".claude/verify.json",
+                   '{"commands": {"test": "npm run test",'
+                   ' "acceptance_test": "vals exec -f .vals.yaml -- npx vitest run test/**/acceptance-gate.test.ts"}}')
+
+        output = _run_detect(accept_project)
+
+        t.assert_field("acceptance_test extracted from verify.json",
+                       output, "commands.acceptance_test",
+                       "vals exec -f .vals.yaml -- npx vitest run test/**/acceptance-gate.test.ts")
+        t.assert_field("test still works alongside acceptance_test",
+                       output, "commands.test", "npm run test")
+
+        # ── Section 15: no acceptance_test key → null in output ──
+        t.section("no acceptance_test key produces null")
+
+        output = _run_detect(node_project)
+
+        t.assert_field_empty("acceptance_test is empty when not in verify.json",
+                             output, "commands.acceptance_test")
+
+        # ── Section 16: acceptance_test only in verify.json ──
+        t.section("acceptance_test only (no other overrides)")
+
+        accept_only = os.path.join(tmp, "accept-only")
+        os.makedirs(os.path.join(accept_only, ".claude"))
+        write_file(accept_only, "README.md", "readme\n")
+        write_file(accept_only, ".claude/verify.json",
+                   '{"commands": {"acceptance_test": "python3 run_acceptance.py"}}')
+
+        output = _run_detect(accept_only)
+
+        t.assert_field("acceptance_test extracted when it is the only command",
+                       output, "commands.acceptance_test",
+                       "python3 run_acceptance.py")
+        t.assert_field_empty("test still empty (not specified)",
                              output, "commands.test")
 
     t.summary()

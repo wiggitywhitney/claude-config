@@ -49,7 +49,8 @@ When drafting emails or written communication:
 - NEVER ignore test or system outputs; logs contain critical information.
 - Test output MUST be pristine to pass.
 - Capture and test logs, including expected errors.
-- Do not manually run verification before git operations — hooks enforce this automatically (commit: build+typecheck+lint; push: standard security; PR: expanded security+tests).
+- Do not manually run verification before git operations — hooks enforce this automatically (commit: build+typecheck+lint; push: standard security; PR: expanded security+tests; PR: acceptance gate with live API, advisory).
+- **Acceptance gate tests** are for tests that make real API calls (LLM APIs, external services) and cost real money. Repos opt in by adding `"acceptance_test"` to `.claude/verify.json` commands — e.g., `"acceptance_test": "vals exec -f .vals.yaml -- npx vitest run test/**/acceptance-gate.test.ts"`. These run after standard PR verification passes, are advisory (never block PR creation), and require human review of results before proceeding. Use the `spinybacked-orbweaver/.claude/verify.json` command shape as a reference example.
 - E2e tests that require network access, external services, or infrastructure (Kind clusters, API keys, databases) MUST have a CI workflow (GitHub Actions).
 - Use real implementations when feasible; mock only at system boundaries.
 - Separate deterministic logic from non-deterministic operations.
@@ -120,9 +121,18 @@ Whitney uses [vals](https://github.com/helmfile/vals) to inject secrets from Goo
 ```bash
 # Run a command with secrets injected
 vals exec -f .vals.yaml -- command arg1 arg2
+```
 
-# Export secrets into the current shell
-eval $(vals eval -f .vals.yaml --output shell)
+**Claude Code usage:** When a command needs a secret from `.vals.yaml`, wrap the entire command with `vals exec` so the secret is injected as an environment variable. Never extract, store, or inline the secret value.
+
+```bash
+# CORRECT — wrap with bash -c so the secret expands inside the vals exec environment
+vals exec -f .vals.yaml -- bash -c 'curl -s "https://api.example.com" \
+  -H "Authorization: Bearer ${AIRTABLE_PAT}"'
+
+# WRONG — secret is extracted and inlined as plaintext
+export AIRTABLE_PAT=$(vals eval ...)
+curl -s "https://api.example.com" -H "Authorization: Bearer $AIRTABLE_PAT"
 ```
 
 ## OpenTelemetry Packaging
@@ -153,7 +163,7 @@ Do not invent tasks outside the PRD structure. When a PRD exists, follow it.
 <!-- check-coderabbit-required.sh (PreToolUse: Bash) — blocks PR merge without CodeRabbit review; opt out with .skip-coderabbit -->
 <!-- pre-commit-hook.sh (PreToolUse: Bash) — gates git commit on quick+lint verification (build, typecheck, lint) -->
 <!-- pre-push-hook.sh (PreToolUse: Bash) — gates git push on security verification; escalates to expanded security + tests when an open PR is detected for the branch (uses gh pr list); falls back to standard security when gh is unavailable; runs advisory CodeRabbit CLI review after blocking checks pass (findings in additionalContext; skip with .skip-coderabbit) -->
-<!-- pre-pr-hook.sh (PreToolUse: Bash) — gates PR creation on security+tests verification (expanded security, tests; build/typecheck/lint already passed at commit) -->
+<!-- pre-pr-hook.sh (PreToolUse: Bash) — gates PR creation on security+tests verification (expanded security, tests; build/typecheck/lint already passed at commit); also runs advisory acceptance gate tests when .claude/verify.json has an "acceptance_test" command; results require human approval before PR creation continues -->
 <!-- check-test-tiers.sh (PreToolUse: Bash) — warns (not blocks) on git push/PR create when unit/integration/e2e test tiers are missing; opt out with .skip-integration, .skip-e2e -->
 <!-- check-aboutme.sh (PreToolUse: Write|Edit) — blocks code files missing ABOUTME headers; fix-and-retry adds headers organically; skips config, markdown, generated files -->
 

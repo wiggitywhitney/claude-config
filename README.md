@@ -286,6 +286,23 @@ Hooks run automatically as PreToolUse gates — no manual invocation needed. Eac
 | `git commit` | `pre-commit-hook.sh` | quick + lint | Build, Type Check, Lint (staged files only) |
 | `git push` | `pre-push-hook.sh` | full (escalates to PR-tier when open PR detected) | Build, Type Check, Lint, Security, Tests |
 | `gh pr create` | `pre-pr-hook.sh` | pre-pr | Build, Type Check, Lint, Security (expanded), Tests |
+| `gh pr create` | `pre-pr-hook.sh` | acceptance gate (advisory) | Acceptance tests with live API via `vals exec` |
+
+The acceptance gate tier is **advisory** — it never blocks PR creation, but Claude must present results to the user and get explicit approval before proceeding. This tier only runs after all blocking phases pass (no point spending API money if the PR is blocked anyway).
+
+**Opting in:** Add an `"acceptance_test"` command to `.claude/verify.json`:
+
+```json
+{
+  "commands": {
+    "acceptance_test": "vals exec -f .vals.yaml -- npx vitest run test/**/acceptance-gate.test.ts"
+  }
+}
+```
+
+**Fallback detection:** If no `verify.json` exists but the project has `test/**/acceptance-gate.test.ts` files and a `.vals.yaml`, the hook constructs a default `vals exec` command automatically.
+
+**When vals is unavailable:** The hook produces a brief skip note instead of an error.
 
 ### Additional enforcement hooks
 
@@ -370,23 +387,27 @@ The verification scripts auto-detect project type and available commands. Runnin
 $ bash .claude/skills/verify/scripts/detect-project.sh /path/to/project
 {
   "project_dir": "/path/to/project",
-  "project_type": "node-javascript",
+  "project_type": "node-typescript",
   "config_files": {
     "package_json": true,
-    "tsconfig": false,
+    "tsconfig": true,
     "pyproject": false,
     "go_mod": false,
     "cargo": false
   },
   "commands": {
-    "build": "npm run build",
-    "typecheck": null,
+    "build": "npx tsc --noEmit",
+    "typecheck": "npm run typecheck",
     "lint": "npm run lint",
-    "test": "npm run test"
+    "test": "npm run test",
+    "acceptance_test": "vals exec -f .vals.yaml -- npx vitest run test/**/acceptance-gate.test.ts"
   },
   "package_manager": "npm"
 }
 ```
+
+The `acceptance_test` field is `null` when no acceptance tests are configured. In `detect-project.sh`, it is populated from `.claude/verify.json`.
+Fallback file-convention detection (`test/**/acceptance-gate.test.ts` + `.vals.yaml`) is performed by `pre-pr-hook.sh` at execution time.
 
 The test tier detection script identifies which test tiers exist:
 
@@ -458,7 +479,7 @@ claude-config/
       verify/
         SKILL.md                       # /verify skill definition
         scripts/                       # All hook and verification scripts
-        tests/                         # Hook tests (316 tests across 11 modules)
+        tests/                         # Hook tests (340 tests across 12 modules)
       research/
         SKILL.md                       # /research skill definition
       write-prompt/
