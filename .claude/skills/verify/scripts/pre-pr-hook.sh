@@ -139,7 +139,7 @@ if [[ -z "$FAILED_PHASE" ]] && [[ -n "$CMD_ACCEPTANCE_TEST" ]]; then
 
   # Check for timeout (exit code 124 from timeout command)
   if [[ $acceptance_exit -eq 124 ]]; then
-    ACCEPTANCE_CONTEXT="Acceptance gate tests timed out after 300 seconds. Results may be incomplete — review with the user before proceeding."
+    ACCEPTANCE_CONTEXT="MANDATORY: Acceptance gate tests timed out after 300 seconds. You MUST present this to the user and get explicit approval before proceeding with PR creation without full acceptance results."
   # Check if vals/API key was unavailable (exit code 127 = command not found, or specific error patterns)
   elif [[ $acceptance_exit -eq 127 ]] || \
      echo "$acceptance_output" | grep -qiE '(vals: command not found|vals: not found|ANTHROPIC_API_KEY.*(missing|not set)|API[_ ]?KEY.*(missing|not set)|secret.*(missing|not found))' 2>/dev/null; then
