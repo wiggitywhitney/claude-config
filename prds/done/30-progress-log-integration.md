@@ -24,6 +24,7 @@ Integrate PROGRESS.md into the PRD skill workflow:
 | Contributor detection | `git log` unique authors filtered for bot patterns | Filter out `[bot]`, `dependabot`, `github-actions` — but NOT `noreply` (GitHub default for human users) |
 | Format | Keep a Changelog style with [Unreleased] section | Familiar format, proven to work in spinybacked-orbweaver |
 | No separate milestone | Do not add a "Progress log updated" milestone to PRDs | The update is automatic — a milestone would be redundant ceremony |
+| Contributor detection key | Unique author names (`%aN`), not name+email pairs (`%aN <%aE>`) | Same person may commit with multiple emails (GitHub noreply + work email); counting pairs inflates contributor count |
 
 ## Scope
 
@@ -46,8 +47,8 @@ Integrate PROGRESS.md into the PRD skill workflow:
 ### Contributor Detection (in `/prd-start`)
 
 ```bash
-# Count human-looking contributors (noreply is normal for GitHub users — don't filter it)
-human_count=$(git log --format='%aN <%aE>' | sort -u | grep -v -i -E '\[bot\]|dependabot|github-actions' | wc -l | tr -d ' ')
+# Count human-looking contributors by unique name (not email — same person may use multiple emails)
+human_count=$(git log --format='%aN' | sort -u | grep -v -i -E '\[bot\]|dependabot|github-actions' | wc -l | tr -d ' ')
 
 if [ "$human_count" -gt 1 ]; then
     # Multi-contributor: add to .gitignore
@@ -84,10 +85,10 @@ During Step 8 (Commit), after staging implementation files and PRD updates:
 
 ## Milestones
 
-- [ ] **Milestone 1: `/prd-start` creates PROGRESS.md** — Both SKILL.md and SKILL.v1-yolo.md updated with contributor-aware creation logic
-- [ ] **Milestone 2: `/prd-update-progress` appends to PROGRESS.md** — Both SKILL.md and SKILL.v1-yolo.md updated with automatic progress log entries during commit step
-- [ ] **Milestone 3: PROGRESS.md rolled out to active repos** — Create PROGRESS.md in all active repos (gitignored in kubecon-2026-gitops; public in all others). Rename spinybacked-orbweaver's CHANGELOG.md to PROGRESS.md.
-- [ ] **Milestone 4: Verified end-to-end** — Run `/prd-start` in a repo to confirm PROGRESS.md creation and gitignore logic, then run `/prd-update-progress` to confirm appending works
+- [x] **Milestone 1: `/prd-start` creates PROGRESS.md** — Both SKILL.md and SKILL.v1-yolo.md updated with contributor-aware creation logic
+- [x] **Milestone 2: `/prd-update-progress` appends to PROGRESS.md** — Both SKILL.md and SKILL.v1-yolo.md updated with automatic progress log entries during commit step
+- [x] **Milestone 3: PROGRESS.md rolled out to active repos** — Create PROGRESS.md in all active repos (gitignored in kubecon-2026-gitops; public in all others). Rename spinybacked-orbweaver's CHANGELOG.md to PROGRESS.md.
+- [x] **Milestone 4: Verified end-to-end** — Run `/prd-start` in a repo to confirm PROGRESS.md creation and gitignore logic, then run `/prd-update-progress` to confirm appending works
 
 ## Repo Rollout
 
@@ -119,5 +120,5 @@ Active repos getting PROGRESS.md (repos with commits in the last month, minus ex
 
 ## Status
 
-- **Phase**: Not started
+- **Phase**: Complete (all 4 milestones done)
 - **Created**: 2026-03-06

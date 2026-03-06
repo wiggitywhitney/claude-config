@@ -21,6 +21,7 @@ You are helping initiate active implementation work on a specific Product Requir
 1. **Select Target PRD** - Identify which PRD to implement
 2. **Validate PRD Readiness** - Ensure the PRD is ready for implementation
 3. **Set Up Implementation Context** - Create branch and prepare environment
+3b. **Create PROGRESS.md** - Create progress log if not present, with contributor-aware gitignore
 4. **Hand Off to prd-next** - Delegate task identification to the appropriate prompt
 
 ## Step 0: Check for PRD Argument
@@ -150,7 +151,49 @@ For documentation-first PRDs:
 - **Status**: [Created new branch / Already on correct branch / Staying on main (reason)]
 ```
 
-**DO NOT proceed to Step 4 until branch setup is confirmed.**
+**DO NOT proceed to Step 3b until branch setup is confirmed.**
+
+## Step 3b: Create PROGRESS.md (If Not Present)
+
+After branch setup, create a progress log if the project doesn't already have one.
+
+### Check for Existing PROGRESS.md
+
+Look for `PROGRESS.md` in the repository root. If it already exists, skip this step entirely.
+
+### Contributor Detection
+
+Determine whether the repo has multiple human contributors to decide gitignore behavior:
+
+```bash
+# Count human-looking contributors by unique name (not email — same person may use multiple emails)
+human_count=$(git log --format='%aN' | sort -u | grep -v -i -E '\[bot\]|dependabot|github-actions' | wc -l | tr -d ' ')
+```
+
+- If `human_count > 1`: Add `PROGRESS.md` to `.gitignore` (avoids merge conflicts in multi-contributor repos)
+- If `human_count <= 1`: Leave `PROGRESS.md` tracked (public file for solo contributor)
+
+### Create PROGRESS.md
+
+Create `PROGRESS.md` in the repository root with this template (replace `[project-name]` with the actual project/repo name):
+
+```markdown
+# Progress Log
+
+Development progress log for [project-name]. Tracks implementation milestones across PRD work.
+
+## [Unreleased]
+
+### Added
+```
+
+### Display Confirmation
+
+```markdown
+## Progress Log ✅
+- **PROGRESS.md**: Created in repository root
+- **Gitignore**: [Added to .gitignore (multi-contributor) / Tracked publicly (solo contributor)]
+```
 
 ## Step 4: Hand Off to prd-next
 
