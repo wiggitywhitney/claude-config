@@ -18,7 +18,7 @@ Tests are lightweight integration smoke tests — call the real function, verify
 | Decision | Choice | Rationale |
 |---|---|---|
 | Test granularity | Smoke test the main entry function per repo | Keeps costs low while proving the integration works end-to-end |
-| Test pattern | `describe.skipIf(!API_KEY_AVAILABLE)` | Graceful skip when secrets unavailable (CI without vals, new machine) |
+| Test pattern | `describe.skipIf(!API_KEY_AVAILABLE)` with visible warning | Skip is allowed but must log clearly why tests were skipped — never silent |
 | Timeout | 120s per test | LLM API calls can be slow; avoid false failures |
 | Work location | Each repo gets its own branch + PR | Changes are repo-specific; cross-repo PRs aren't possible |
 | vals.yaml pattern | Same GCP secret ref across all repos | All repos share the same Anthropic key from `demoo-ooclock` project |
@@ -38,7 +38,7 @@ Tests are lightweight integration smoke tests — call the real function, verify
 
 - Repos that don't call the Anthropic API (telemetry-agent-research, k8s-vectordb-sync, claude-compaction-hook, kubecon-2026-gitops, claude-config)
 - Changes to the acceptance gate infrastructure itself (pre-pr-hook.sh, detect-project.sh)
-- CI/CD workflows for acceptance tests (they run locally via hooks only)
+- CI/CD workflows for acceptance tests (known gap — CI lacks vals/GCP Secrets Manager access; local hooks + human review enforce for now; CI enforcement is potential follow-up work requiring GitHub Actions secrets setup)
 - Repos already rolled out (spinybacked-orbweaver, scaling-on-satisfaction)
 
 ## Milestones
@@ -51,7 +51,7 @@ Tests are lightweight integration smoke tests — call the real function, verify
 ## Per-Repo Deliverables
 
 Each milestone produces:
-1. `test/**/acceptance-gate.test.{js,ts}` — test file with `describe.skipIf(!API_KEY_AVAILABLE)` guard
+1. `test/**/acceptance-gate.test.{js,ts}` — test file with `describe.skipIf(!API_KEY_AVAILABLE)` guard that logs a visible warning when skipping
 2. `.claude/verify.json` — `{"commands": {"acceptance_test": "vals exec -f .vals.yaml -- npx vitest run test/**/acceptance-gate.test.*"}}`
 3. `.vals.yaml` (only if missing) — with `ANTHROPIC_API_KEY` ref to GCP Secrets Manager
 
@@ -69,7 +69,7 @@ spinybacked-orbweaver's pattern:
 |---|---|
 | API costs from test runs | Tests are smoke-level (1-2 API calls per repo); only run at PR time |
 | Flaky tests from LLM non-determinism | Assert response shape/structure, not exact content |
-| Missing vals on some machines | `describe.skipIf(!API_KEY_AVAILABLE)` ensures graceful skip |
+| Missing vals on some machines | `describe.skipIf(!API_KEY_AVAILABLE)` skips with visible warning; pre-pr-hook reports skip reason in additionalContext |
 
 ## Status
 
