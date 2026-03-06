@@ -43,10 +43,10 @@ Tests are lightweight integration smoke tests — call the real function, verify
 
 ## Milestones
 
-- [ ] **Milestone 1: commit-story-v2** — acceptance-gate.test.js calling `generateJournalSections()` with real API, verify.json configured
-- [ ] **Milestone 2: cluster-whisperer** — acceptance-gate.test.ts calling `inferCapability()` with real API, verify.json configured
-- [ ] **Milestone 3: telemetry-agent-spec-v3** — acceptance-gate.test.ts calling `callAnthropic()` or `runInstrumentationAgent()` with real API, verify.json and vals.yaml configured
-- [ ] **Milestone 4: commit-story-v2-eval** — acceptance-gate.test.js calling `generateJournalSections()` with real API, verify.json configured
+- [x] **Milestone 1: commit-story-v2** — acceptance-gate.test.js calling `generateJournalSections()` with real API, verify.json configured
+- [x] **Milestone 2: cluster-whisperer** — acceptance-gate.test.ts calling `inferCapability()` with real API, verify.json configured
+- [x] **Milestone 3: telemetry-agent-spec-v3** — acceptance-gate.test.ts calling `callAnthropic()` with real API, verify.json and vals.yaml configured
+- [x] **Milestone 4: commit-story-v2-eval** — acceptance-gate.test.js calling `generateJournalSections()` with real API, verify.json configured
 
 ## Per-Repo Deliverables
 
@@ -73,5 +73,6 @@ spinybacked-orbweaver's pattern:
 
 ## Status
 
-- **Phase**: Ready for implementation
+- **Phase**: Complete
 - **Created**: 2026-03-06
+- **Completed**: 2026-03-06
