@@ -46,7 +46,7 @@ Tests are lightweight integration smoke tests — call the real function, verify
 - [x] **Milestone 1: commit-story-v2** — acceptance-gate.test.js calling `generateJournalSections()` with real API, verify.json configured
 - [x] **Milestone 2: cluster-whisperer** — acceptance-gate.test.ts calling `inferCapability()` with real API, verify.json configured
 - [x] **Milestone 3: telemetry-agent-spec-v3** — acceptance-gate.test.ts calling `callAnthropic()` with real API, verify.json and vals.yaml configured
-- [ ] **Milestone 4: commit-story-v2-eval** — acceptance-gate.test.js calling `generateJournalSections()` with real API, verify.json configured
+- [x] **Milestone 4: commit-story-v2-eval** — acceptance-gate.test.js calling `generateJournalSections()` with real API, verify.json configured
 
 ## Per-Repo Deliverables
 

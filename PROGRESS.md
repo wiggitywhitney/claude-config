@@ -12,6 +12,7 @@ Development progress log for claude-config. Tracks implementation milestones acr
 - Acceptance gate test rolled out to commit-story-v2 (PRD #32, milestone 1)
 - Acceptance gate test rolled out to cluster-whisperer (PRD #32, milestone 2)
 - Acceptance gate test rolled out to telemetry-agent-spec-v3 with vals.yaml (PRD #32, milestone 3)
+- Acceptance gate test rolled out to commit-story-v2-eval (PRD #32, milestone 4)
 
 ### Fixed
 
