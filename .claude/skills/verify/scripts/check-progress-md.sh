@@ -32,6 +32,13 @@ if [ -z "$PROJECT_DIR" ]; then
   PROJECT_DIR=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('cwd','.'))" 2>/dev/null || echo ".")
 fi
 
+# Normalize to repository root so path checks work from any cwd
+REPO_ROOT=$(git -C "$PROJECT_DIR" rev-parse --show-toplevel 2>/dev/null || true)
+if [[ -z "$REPO_ROOT" ]]; then
+  exit 0  # Not inside a git repository
+fi
+PROJECT_DIR="$REPO_ROOT"
+
 # Check if PROGRESS.md exists in the repo
 if [[ ! -f "$PROJECT_DIR/PROGRESS.md" ]]; then
   exit 0  # No PROGRESS.md in this repo, nothing to enforce
@@ -44,7 +51,7 @@ if [[ -z "$STAGED_PRD_FILES" ]]; then
 fi
 
 # Check if staged PRD diffs contain newly checked boxes (lines added with [x])
-if ! git -C "$PROJECT_DIR" diff --cached -- 'prds/*.md' 'prds/**/*.md' 2>/dev/null | grep -qE '^\+.*\[x\]'; then
+if ! git -C "$PROJECT_DIR" diff --cached -- 'prds/*.md' 'prds/**/*.md' 2>/dev/null | grep -qiE '^\+\s*-\s*\[[xX]\]'; then
   exit 0  # No new checkbox completions, skip
 fi
 
