@@ -86,7 +86,7 @@ During Step 8 (Commit), after staging implementation files and PRD updates:
 
 - [x] **Milestone 1: `/prd-start` creates PROGRESS.md** — Both SKILL.md and SKILL.v1-yolo.md updated with contributor-aware creation logic
 - [x] **Milestone 2: `/prd-update-progress` appends to PROGRESS.md** — Both SKILL.md and SKILL.v1-yolo.md updated with automatic progress log entries during commit step
-- [ ] **Milestone 3: PROGRESS.md rolled out to active repos** — Create PROGRESS.md in all active repos (gitignored in kubecon-2026-gitops; public in all others). Rename spinybacked-orbweaver's CHANGELOG.md to PROGRESS.md.
+- [x] **Milestone 3: PROGRESS.md rolled out to active repos** — Create PROGRESS.md in all active repos (gitignored in kubecon-2026-gitops; public in all others). Rename spinybacked-orbweaver's CHANGELOG.md to PROGRESS.md.
 - [ ] **Milestone 4: Verified end-to-end** — Run `/prd-start` in a repo to confirm PROGRESS.md creation and gitignore logic, then run `/prd-update-progress` to confirm appending works
 
 ## Repo Rollout
@@ -119,5 +119,5 @@ Active repos getting PROGRESS.md (repos with commits in the last month, minus ex
 
 ## Status
 
-- **Phase**: In progress (Milestones 1-2 complete, 3-4 remaining)
+- **Phase**: In progress (Milestones 1-3 complete, 4 remaining)
 - **Created**: 2026-03-06
