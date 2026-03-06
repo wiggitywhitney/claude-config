@@ -166,8 +166,8 @@ Look for `PROGRESS.md` in the repository root. If it already exists, skip this s
 Determine whether the repo has multiple human contributors to decide gitignore behavior:
 
 ```bash
-# Count human-looking contributors (noreply is normal for GitHub users — don't filter it)
-human_count=$(git log --format='%aN <%aE>' | sort -u | grep -v -i -E '\[bot\]|dependabot|github-actions' | wc -l | tr -d ' ')
+# Count human-looking contributors by unique name (not email — same person may use multiple emails)
+human_count=$(git log --format='%aN' | sort -u | grep -v -i -E '\[bot\]|dependabot|github-actions' | wc -l | tr -d ' ')
 ```
 
 - If `human_count > 1`: Add `PROGRESS.md` to `.gitignore` (avoids merge conflicts in multi-contributor repos)
