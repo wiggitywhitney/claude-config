@@ -21,6 +21,7 @@ Development progress log for claude-config. Tracks implementation milestones acr
 - Reference GitHub Actions workflow template for acceptance gate CI (`templates/acceptance-gate-ci.yml`) with 45-min timeout, verbose reporter, parallel execution example (PRD #35, M3)
 - Workflow template tests validating YAML structure, triggers, timeouts, secrets, and documentation (PRD #35, M3)
 - Adopted async acceptance gate CI in spinybacked-orbweaver — parallel matrix strategy (core + coordinator), Weaver install, `acceptance_test_ci` key in verify.json (PRD #35, M4)
+- Edge case tests for async CI acceptance gate: standard phase failure skips CI trigger, workflow trigger failure falls back to sync with verbose reporter, CI-only config graceful no-op, context includes workflow name and branch (PRD #35, M5)
 
 ### Fixed
 

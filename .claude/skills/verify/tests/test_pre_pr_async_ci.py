@@ -362,6 +362,169 @@ def run_tests():
             t._fail("gh workflow run uses correct workflow filename",
                      "gh was never called (no log file)")
 
+    # ─── Section 8: Standard phases fail → async CI trigger skipped ───
+    t.section("Standard phases fail: async CI trigger skipped")
+
+    with TempDir() as temp_dir:
+        setup_repo_with_code(temp_dir)
+
+        # Create fake gh that logs calls
+        bin_dir = os.path.join(temp_dir, "fake-bin")
+        os.makedirs(bin_dir)
+        gh_log = os.path.join(temp_dir, "gh-calls.log")
+        write_file(temp_dir, "fake-bin/gh",
+                   f'#!/bin/bash\necho "$@" >> "{gh_log}"\n')
+        make_executable(os.path.join(temp_dir, "fake-bin", "gh"))
+
+        os.makedirs(os.path.join(temp_dir, ".claude"), exist_ok=True)
+        write_file(temp_dir, ".claude/verify.json", json.dumps({
+            "commands": {
+                "test": "echo 'test failure' && exit 1",
+                "acceptance_test": "echo 'should not run sync'",
+                "acceptance_test_ci": "acceptance-gate.yml"
+            }
+        }))
+
+        exit_code, output = run_hook_with_env(
+            HOOK, make_hook_input("gh pr create --title test", temp_dir),
+            extra_path=bin_dir)
+
+        # PR should be denied due to test failure
+        if exit_code == 0 and '"deny"' in output:
+            t._pass("PR denied when test phase fails")
+        else:
+            t._fail("PR denied when test phase fails",
+                     f"exit={exit_code}, output={output}")
+
+        # gh workflow run should NOT have been called
+        if os.path.exists(gh_log):
+            with open(gh_log) as f:
+                gh_calls = f.read()
+            if "workflow" in gh_calls:
+                t._fail("gh workflow run not called when phases fail",
+                         f"gh was called: {gh_calls}")
+            else:
+                t._pass("gh workflow run not called when phases fail")
+        else:
+            t._pass("gh workflow run not called when phases fail")
+
+    # ─── Section 9: Workflow trigger fails → verbose injection on sync fallback ───
+    t.section("Workflow trigger fails: sync fallback gets verbose reporter")
+
+    with TempDir() as temp_dir:
+        setup_repo_with_code(temp_dir)
+
+        # Create fake gh that fails on workflow run
+        bin_dir = os.path.join(temp_dir, "fake-bin")
+        os.makedirs(bin_dir)
+        write_file(temp_dir, "fake-bin/gh",
+                   '#!/bin/bash\nif [[ "$1" == "workflow" ]]; then exit 1; fi\necho "gh: $@"\n')
+        make_executable(os.path.join(temp_dir, "fake-bin", "gh"))
+
+        # Create fake npx that prints its args
+        write_file(temp_dir, "fake-bin/npx",
+                   "#!/bin/bash\necho \"npx-args: $@\"\n")
+        make_executable(os.path.join(temp_dir, "fake-bin", "npx"))
+
+        os.makedirs(os.path.join(temp_dir, ".claude"), exist_ok=True)
+        write_file(temp_dir, ".claude/verify.json", json.dumps({
+            "commands": {
+                "acceptance_test": "npx vitest run test/acceptance-gate.test.ts",
+                "acceptance_test_ci": "acceptance-gate.yml"
+            }
+        }))
+
+        exit_code, output = run_hook_with_env(
+            HOOK, make_hook_input("gh pr create --title test", temp_dir),
+            extra_path=bin_dir)
+
+        context = parse_context(output)
+
+        # Sync fallback should have verbose reporter injected
+        if "--reporter=verbose" in context:
+            t._pass("sync fallback vitest command gets --reporter=verbose")
+        else:
+            t._fail("sync fallback vitest command gets --reporter=verbose",
+                     f"context={context}")
+
+    # ─── Section 10: CI-only config, trigger fails → graceful no-op ───
+    t.section("CI-only (no sync command), trigger fails: graceful handling")
+
+    with TempDir() as temp_dir:
+        setup_repo_with_code(temp_dir)
+
+        # Create fake gh that fails on workflow run
+        bin_dir = os.path.join(temp_dir, "fake-bin")
+        os.makedirs(bin_dir)
+        write_file(temp_dir, "fake-bin/gh",
+                   '#!/bin/bash\nif [[ "$1" == "workflow" ]]; then exit 1; fi\necho "gh: $@"\n')
+        make_executable(os.path.join(temp_dir, "fake-bin", "gh"))
+
+        os.makedirs(os.path.join(temp_dir, ".claude"), exist_ok=True)
+        # Only acceptance_test_ci, no acceptance_test
+        write_file(temp_dir, ".claude/verify.json", json.dumps({
+            "commands": {
+                "acceptance_test_ci": "acceptance-gate.yml"
+            }
+        }))
+
+        exit_code, output = run_hook_with_env(
+            HOOK, make_hook_input("gh pr create --title test", temp_dir),
+            extra_path=bin_dir)
+
+        context = parse_context(output)
+
+        # Should still allow PR (acceptance is advisory)
+        if exit_code == 0 and '"allow"' in output:
+            t._pass("PR creation allowed when CI trigger fails and no sync fallback")
+        else:
+            t._fail("PR creation allowed when CI trigger fails and no sync fallback",
+                     f"exit={exit_code}, output={output}")
+
+        # Should NOT have MANDATORY wording (nothing ran)
+        if "MANDATORY" not in context:
+            t._pass("no MANDATORY wording when no acceptance tests ran")
+        else:
+            t._fail("no MANDATORY wording when no acceptance tests ran",
+                     f"context={context}")
+
+    # ─── Section 11: Async CI context includes workflow name and branch ───
+    t.section("Async CI context includes specific workflow name and branch")
+
+    with TempDir() as temp_dir:
+        setup_repo_with_code(temp_dir)
+
+        bin_dir = os.path.join(temp_dir, "fake-bin")
+        os.makedirs(bin_dir)
+        write_file(temp_dir, "fake-bin/gh",
+                   '#!/bin/bash\necho "ok"\n')
+        make_executable(os.path.join(temp_dir, "fake-bin", "gh"))
+
+        os.makedirs(os.path.join(temp_dir, ".claude"), exist_ok=True)
+        write_file(temp_dir, ".claude/verify.json", json.dumps({
+            "commands": {
+                "acceptance_test_ci": "my-custom-workflow.yml"
+            }
+        }))
+
+        exit_code, output = run_hook_with_env(
+            HOOK, make_hook_input("gh pr create --title test", temp_dir),
+            extra_path=bin_dir)
+
+        context = parse_context(output)
+
+        if "my-custom-workflow.yml" in context:
+            t._pass("context includes specific workflow filename")
+        else:
+            t._fail("context includes specific workflow filename",
+                     f"context={context}")
+
+        if "feature/test" in context:
+            t._pass("context includes branch name")
+        else:
+            t._fail("context includes branch name",
+                     f"context={context}")
+
     t.summary()
     return t.passed, t.failed, t.total
 

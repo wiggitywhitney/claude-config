@@ -31,7 +31,7 @@ Make acceptance gate tests asynchronous by triggering a GitHub Actions CI workfl
 - [x] **M2: Async hook infrastructure** — Update `pre-pr-hook.sh` to support async mode: detect `"acceptance_test_ci"` in verify.json, trigger the workflow via `gh workflow run`, return immediately with advisory context linking to the CI run. Keep sync fallback when `gh` is unavailable.
 - [x] **M3: GitHub Actions workflow template** — Create a reference workflow in claude-config that repos can copy/adapt. Handles: vals secrets injection, vitest with verbose reporter, 45-minute job timeout (Decision 7), status reporting. Document setup steps.
 - [x] **M4: spinybacked-orbweaver adoption** — Add the CI workflow to spinybacked-orbweaver (3 test files, 10 LLM-calling tests, ~28min sequential). Update its verify.json with `"acceptance_test_ci"`, validate end-to-end that PR creation is fast and CI results appear on the PR.
-- [ ] **M5: Tests for hook changes** — Unit/integration tests for the new async path in pre-pr-hook.sh, including fallback behavior when gh is unavailable or workflow trigger fails.
+- [x] **M5: Tests for hook changes** — Unit/integration tests for the new async path in pre-pr-hook.sh, including fallback behavior when gh is unavailable or workflow trigger fails.
 - [ ] **M6: Rollout to remaining repos** — Add CI workflows to other repos with acceptance gates (commit-story-v2-eval, scaling-on-satisfaction, cluster-whisperer, telemetry-agent-spec-v3). Each repo gets its own workflow adapted from the template.
 
 ## Success Criteria
