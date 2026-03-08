@@ -13,6 +13,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 - Acceptance gate test rolled out to cluster-whisperer (PRD #32, milestone 2)
 - Acceptance gate test rolled out to telemetry-agent-spec-v3 with vals.yaml (PRD #32, milestone 3)
 - Acceptance gate test rolled out to commit-story-v2-eval (PRD #32, milestone 4)
+- Verbose reporter injection for vitest acceptance gate commands in pre-pr-hook.sh (PRD #35, M1)
+- Fallback glob command uses `bash -c 'shopt -s globstar && ...'` for proper `**` expansion (PRD #35, M1)
 
 ### Fixed
 

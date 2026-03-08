@@ -64,7 +64,7 @@ CMD_ACCEPTANCE_TEST=$(echo "$DETECTION" | python3 -c "import json,sys; print(jso
 if [[ -z "$CMD_ACCEPTANCE_TEST" ]] && [[ -f "$PROJECT_DIR/.vals.yaml" ]]; then
   ACCEPTANCE_FILES=$(find "$PROJECT_DIR/test" -name "acceptance-gate.test.ts" 2>/dev/null | head -1)
   if [[ -n "$ACCEPTANCE_FILES" ]]; then
-    CMD_ACCEPTANCE_TEST="vals exec -f .vals.yaml -- npx vitest run test/**/acceptance-gate.test.ts"
+    CMD_ACCEPTANCE_TEST="vals exec -f .vals.yaml -- bash -c 'shopt -s globstar && npx vitest run test/**/acceptance-gate.test.ts'"
   fi
 fi
 
@@ -132,6 +132,13 @@ fi
 
 # Phase 3: Acceptance gate tests (advisory — never blocks PR creation)
 # Only runs after standard phases pass. No point spending API money if PR is blocked anyway.
+
+# Inject --reporter=verbose for vitest commands (PRD 35, M1)
+# Verbose output makes failure root cause identifiable without digging through logs.
+if [[ -n "$CMD_ACCEPTANCE_TEST" ]] && echo "$CMD_ACCEPTANCE_TEST" | grep -q 'vitest' && ! echo "$CMD_ACCEPTANCE_TEST" | grep -q '\-\-reporter'; then
+  CMD_ACCEPTANCE_TEST=$(echo "$CMD_ACCEPTANCE_TEST" | sed 's/vitest run/vitest run --reporter=verbose/')
+fi
+
 ACCEPTANCE_CONTEXT=""
 if [[ -z "$FAILED_PHASE" ]] && [[ -n "$CMD_ACCEPTANCE_TEST" ]]; then
   acceptance_output=$(cd "$PROJECT_DIR" && timeout 1800 bash -c "$CMD_ACCEPTANCE_TEST" 2>&1)
