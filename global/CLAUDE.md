@@ -53,6 +53,7 @@ When drafting emails or written communication:
 - **Acceptance gate tests** are for tests that make real API calls (LLM APIs, external services) and cost real money. Repos opt in by adding `"acceptance_test"` to `.claude/verify.json` commands — e.g., `"acceptance_test": "vals exec -f .vals.yaml -- npx vitest run test/**/acceptance-gate.test.ts"`. These run after standard PR verification passes, are advisory (never block PR creation), and require human review of results before proceeding. Use the `spinybacked-orbweaver/.claude/verify.json` command shape as a reference example.
 - E2e tests that require network access, external services, or infrastructure (Kind clusters, API keys, databases) MUST have a CI workflow (GitHub Actions).
 - Use real implementations when feasible; mock only at system boundaries.
+- **Never mock locally installed tools or CLIs.** If a tool is installed on the development machine and runs fast (e.g., linters, compilers, schema validators), test against the real binary. Mocking local tools provides false confidence — the mock can't verify output format assumptions, flag compatibility, or behavioral changes across versions. Reserve mocks for remote APIs, expensive operations, and non-deterministic external services.
 - Separate deterministic logic from non-deterministic operations.
 - Full testing rules: @~/Documents/Repositories/claude-config/rules/testing-rules.md
 - Project-type strategies: @~/Documents/Repositories/claude-config/guides/testing-decision-guide.md
@@ -89,51 +90,27 @@ When drafting emails or written communication:
 - List planned infrastructure commands before executing so the user can review scope.
 - Only apply Kubernetes resource manifests directly. Do not run host-level setup scripts unless explicitly asked.
 
+## Cloud Resource Lifecycle
+
+When provisioning cloud infrastructure (GKE clusters, cloud databases, VM instances, etc.):
+
+- **Teardown plan required before creation.** Before provisioning cloud resources, confirm the active PRD includes a teardown step. Add one if missing. Every `setup-*.sh` must have a corresponding `teardown-*.sh`.
+- **PRD-level exit criterion.** A PRD cannot close (`/prd-done`) until provisioned resources are torn down or handed off to a named owner.
+- **Remind at checkpoints.** When completing tasks with active cloud resources, remind the user what's running and the teardown plan.
+- **Cross-session safety.** If a conversation ends with cloud resources running, write a prominent warning in MEMORY.md (resource, project, teardown command).
+
 ## ABOUTME File Headers
 
-Every code file must start with a 1-2 line ABOUTME header describing its purpose. Use the file's native comment syntax:
-
-```python
-# ABOUTME: Brief description of this file's purpose
-# ABOUTME: What it does or provides
-```
-
-```typescript
-// ABOUTME: Brief description of this file's purpose
-// ABOUTME: What it does or provides
-```
-
-- Supported file types: `.py`, `.sh`, `.ts`, `.tsx`, `.js`, `.jsx`
-- Place after shebang lines (`#!/usr/bin/env ...`) when present
-- Exempt: `__init__.py`, config files (JSON/YAML/TOML), markdown, HTML/CSS, generated files, `node_modules`, `.d.ts`, `.min.js`
-- A PreToolUse hook enforces this on Write and Edit — missing headers block the operation until added
+Every code file (`.py`, `.sh`, `.ts`, `.tsx`, `.js`, `.jsx`) must start with a 1-2 line ABOUTME header using the file's comment syntax (`# ABOUTME: ...` or `// ABOUTME: ...`). Place after shebang lines when present. Exempt: `__init__.py`, config files (JSON/YAML/TOML), markdown, HTML/CSS, generated files, `node_modules`, `.d.ts`, `.min.js`. A PreToolUse hook enforces this. Examples: @~/.claude/rules/aboutme-headers.md
 
 ## Language & Configuration Defaults
 
-- Primary languages: TypeScript, Markdown, YAML, Shell, JSON.
-- When generating code, prefer TypeScript unless context indicates otherwise.
-- For configuration, prefer YAML over JSON where the tool supports it.
+- Primary languages: TypeScript, Markdown, YAML, Shell, JSON. Prefer TypeScript for code, YAML for configuration.
 
 ## Vals Secrets Management
 
-Whitney uses [vals](https://github.com/helmfile/vals) to inject secrets from Google Secret Manager (and other backends). Secrets are never exported to `.zshrc` or committed to repos. Per-repo config lives in `.vals.yaml`.
-
-```bash
-# Run a command with secrets injected
-vals exec -f .vals.yaml -- command arg1 arg2
-```
-
-**Claude Code usage:** When a command needs a secret from `.vals.yaml`, wrap the entire command with `vals exec` so the secret is injected as an environment variable. Never extract, store, or inline the secret value.
-
-```bash
-# CORRECT — wrap with bash -c so the secret expands inside the vals exec environment
-vals exec -f .vals.yaml -- bash -c 'curl -s "https://api.example.com" \
-  -H "Authorization: Bearer ${AIRTABLE_PAT}"'
-
-# WRONG — secret is extracted and inlined as plaintext
-export AIRTABLE_PAT=$(vals eval ...)
-curl -s "https://api.example.com" -H "Authorization: Bearer $AIRTABLE_PAT"
-```
+- Wrap commands with `vals exec -f .vals.yaml --` to inject secrets. Never extract, store, or inline secret values.
+- Details and examples: @~/.claude/rules/vals-secrets.md
 
 ## OpenTelemetry Packaging
 
@@ -165,6 +142,7 @@ Do not invent tasks outside the PRD structure. When a PRD exists, follow it.
 <!-- pre-push-hook.sh (PreToolUse: Bash) — gates git push on security verification; escalates to expanded security + tests when an open PR is detected for the branch (uses gh pr list); falls back to standard security when gh is unavailable; runs advisory CodeRabbit CLI review after blocking checks pass (findings in additionalContext; skip with .skip-coderabbit) -->
 <!-- pre-pr-hook.sh (PreToolUse: Bash) — gates PR creation on security+tests verification (expanded security, tests; build/typecheck/lint already passed at commit); also runs advisory acceptance gate tests when .claude/verify.json has an "acceptance_test" command; results require human approval before PR creation continues -->
 <!-- check-test-tiers.sh (PreToolUse: Bash) — warns (not blocks) on git push/PR create when unit/integration/e2e test tiers are missing; opt out with .skip-integration, .skip-e2e -->
+<!-- check-progress-md.sh (PreToolUse: Bash) — blocks git commit when PRD checkboxes are marked done but PROGRESS.md is not staged; only fires when PROGRESS.md exists in repo -->
 <!-- check-aboutme.sh (PreToolUse: Write|Edit) — blocks code files missing ABOUTME headers; fix-and-retry adds headers organically; skips config, markdown, generated files -->
 
 <!-- PostToolUse hooks (fire after tool execution): -->
