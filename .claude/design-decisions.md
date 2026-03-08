@@ -32,7 +32,7 @@ The useful artifacts from this work (official Datadog MCP server config, make-au
 
 - Managed settings (MDM) have highest precedence in Claude Code — user `settings.json` cannot override them.
 - CodeRabbit review required before any PR merge (non-negotiable per CLAUDE.md).
-- Never commit directly to main — feature branches + PRs required.
+- Never commit directly to main — feature branches + PRs required. (Exception: `/prd-close` for metadata-only PRD closures.)
 - PRD workflow: `/prd-close` for abandoned PRDs, `/prd-done` for implemented ones.
 
 ## EXPLICIT DO-NOTs
