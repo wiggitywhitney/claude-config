@@ -28,7 +28,7 @@ Make acceptance gate tests asynchronous by triggering a GitHub Actions CI workfl
 ## Milestones
 
 - [x] **M1: Verbose test output in hook** — Detect vitest in acceptance test commands and inject `--reporter=verbose`. Fix the fallback glob command (`bash -c 'shopt -s globstar && ...'`). All repos benefit immediately without CI changes.
-- [ ] **M2: Async hook infrastructure** — Update `pre-pr-hook.sh` to support async mode: detect `"acceptance_test_ci"` in verify.json, trigger the workflow via `gh workflow run`, return immediately with advisory context linking to the CI run. Keep sync fallback when `gh` is unavailable.
+- [x] **M2: Async hook infrastructure** — Update `pre-pr-hook.sh` to support async mode: detect `"acceptance_test_ci"` in verify.json, trigger the workflow via `gh workflow run`, return immediately with advisory context linking to the CI run. Keep sync fallback when `gh` is unavailable.
 - [ ] **M3: GitHub Actions workflow template** — Create a reference workflow in claude-config that repos can copy/adapt. Handles: vals secrets injection, vitest with verbose reporter, 45-minute job timeout (Decision 7), status reporting. Document setup steps.
 - [ ] **M4: spinybacked-orbweaver adoption** — Add the CI workflow to spinybacked-orbweaver (3 test files, 10 LLM-calling tests, ~28min sequential). Update its verify.json with `"acceptance_test_ci"`, validate end-to-end that PR creation is fast and CI results appear on the PR.
 - [ ] **M5: Tests for hook changes** — Unit/integration tests for the new async path in pre-pr-hook.sh, including fallback behavior when gh is unavailable or workflow trigger fails.

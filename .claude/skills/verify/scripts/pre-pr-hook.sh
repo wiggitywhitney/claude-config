@@ -60,6 +60,9 @@ CMD_TEST=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.
 # Extract acceptance test command (advisory tier)
 CMD_ACCEPTANCE_TEST=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('acceptance_test') or '')" 2>/dev/null || echo "")
 
+# Extract async CI workflow name (PRD 35, M2)
+CMD_ACCEPTANCE_TEST_CI=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('acceptance_test_ci') or '')" 2>/dev/null || echo "")
+
 # Fallback detection: acceptance-gate.test.ts files + .vals.yaml (PRD 28, Decision 3)
 if [[ -z "$CMD_ACCEPTANCE_TEST" ]] && [[ -f "$PROJECT_DIR/.vals.yaml" ]]; then
   ACCEPTANCE_FILES=$(find "$PROJECT_DIR/test" -name "acceptance-gate.test.ts" 2>/dev/null | head -1)
@@ -140,7 +143,28 @@ if [[ -n "$CMD_ACCEPTANCE_TEST" ]] && echo "$CMD_ACCEPTANCE_TEST" | grep -q 'vit
 fi
 
 ACCEPTANCE_CONTEXT=""
-if [[ -z "$FAILED_PHASE" ]] && [[ -n "$CMD_ACCEPTANCE_TEST" ]]; then
+ASYNC_CI_TRIGGERED=false
+
+# Async CI path (PRD 35, M2): trigger GitHub Actions workflow instead of running locally
+if [[ -z "$FAILED_PHASE" ]] && [[ -n "$CMD_ACCEPTANCE_TEST_CI" ]]; then
+  CURRENT_BRANCH=$(git -C "$PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+
+  if command -v gh &>/dev/null && [[ -n "$CURRENT_BRANCH" ]]; then
+    # Trigger the CI workflow
+    gh_trigger_output=$(cd "$PROJECT_DIR" && gh workflow run "$CMD_ACCEPTANCE_TEST_CI" --ref "$CURRENT_BRANCH" 2>&1)
+    gh_trigger_exit=$?
+
+    if [[ $gh_trigger_exit -eq 0 ]]; then
+      ASYNC_CI_TRIGGERED=true
+      ACCEPTANCE_CONTEXT="Acceptance gate tests triggered as CI workflow ($CMD_ACCEPTANCE_TEST_CI) on branch $CURRENT_BRANCH. Check the GitHub Actions tab for results. CI results will appear as status checks on the PR."
+    fi
+    # If gh workflow run failed, fall through to sync path below
+  fi
+  # If gh unavailable or branch unknown, fall through to sync path below
+fi
+
+# Sync path: run acceptance tests locally (original behavior, also used as fallback)
+if [[ -z "$FAILED_PHASE" ]] && [[ "$ASYNC_CI_TRIGGERED" == "false" ]] && [[ -n "$CMD_ACCEPTANCE_TEST" ]]; then
   acceptance_output=$(cd "$PROJECT_DIR" && timeout 1800 bash -c "$CMD_ACCEPTANCE_TEST" 2>&1)
   acceptance_exit=$?
 

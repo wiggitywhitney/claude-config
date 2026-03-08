@@ -15,6 +15,9 @@ Development progress log for claude-config. Tracks implementation milestones acr
 - Acceptance gate test rolled out to commit-story-v2-eval (PRD #32, milestone 4)
 - Verbose reporter injection for vitest acceptance gate commands in pre-pr-hook.sh (PRD #35, M1)
 - Fallback glob command uses `bash -c 'shopt -s globstar && ...'` for proper `**` expansion (PRD #35, M1)
+- Async CI acceptance gate path in pre-pr-hook.sh — triggers GitHub Actions workflow via `gh workflow run` instead of blocking locally (PRD #35, M2)
+- `acceptance_test_ci` key in verify.json for repos to opt into async CI workflow trigger (PRD #35, M2)
+- Graceful fallback to sync execution when `gh` CLI unavailable or workflow trigger fails (PRD #35, M2)
 
 ### Fixed
 
