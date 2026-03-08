@@ -60,11 +60,14 @@ CMD_TEST=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.
 # Extract acceptance test command (advisory tier)
 CMD_ACCEPTANCE_TEST=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('acceptance_test') or '')" 2>/dev/null || echo "")
 
+# Extract async CI workflow name (PRD 35, M2)
+CMD_ACCEPTANCE_TEST_CI=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('acceptance_test_ci') or '')" 2>/dev/null || echo "")
+
 # Fallback detection: acceptance-gate.test.ts files + .vals.yaml (PRD 28, Decision 3)
 if [[ -z "$CMD_ACCEPTANCE_TEST" ]] && [[ -f "$PROJECT_DIR/.vals.yaml" ]]; then
   ACCEPTANCE_FILES=$(find "$PROJECT_DIR/test" -name "acceptance-gate.test.ts" 2>/dev/null | head -1)
   if [[ -n "$ACCEPTANCE_FILES" ]]; then
-    CMD_ACCEPTANCE_TEST="vals exec -f .vals.yaml -- npx vitest run test/**/acceptance-gate.test.ts"
+    CMD_ACCEPTANCE_TEST="vals exec -f .vals.yaml -- bash -c 'shopt -s globstar && npx vitest run test/**/acceptance-gate.test.ts'"
   fi
 fi
 
@@ -132,8 +135,39 @@ fi
 
 # Phase 3: Acceptance gate tests (advisory — never blocks PR creation)
 # Only runs after standard phases pass. No point spending API money if PR is blocked anyway.
+
+# Inject --reporter=verbose for vitest commands (PRD 35, M1)
+# Verbose output makes failure root cause identifiable without digging through logs.
+if [[ -n "$CMD_ACCEPTANCE_TEST" ]] && echo "$CMD_ACCEPTANCE_TEST" | grep -q 'vitest' && ! echo "$CMD_ACCEPTANCE_TEST" | grep -q '\-\-reporter'; then
+  CMD_ACCEPTANCE_TEST=$(echo "$CMD_ACCEPTANCE_TEST" | sed 's/vitest run/vitest run --reporter=verbose/')
+fi
+
 ACCEPTANCE_CONTEXT=""
-if [[ -z "$FAILED_PHASE" ]] && [[ -n "$CMD_ACCEPTANCE_TEST" ]]; then
+ASYNC_CI_TRIGGERED=false
+
+# Async CI path (PRD 35, M2): trigger GitHub Actions workflow instead of running locally
+if [[ -z "$FAILED_PHASE" ]] && [[ -n "$CMD_ACCEPTANCE_TEST_CI" ]]; then
+  CURRENT_BRANCH=$(git -C "$PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+
+  if command -v gh &>/dev/null && [[ -n "$CURRENT_BRANCH" ]]; then
+    # Trigger the CI workflow
+    gh_trigger_output=$(cd "$PROJECT_DIR" && gh workflow run "$CMD_ACCEPTANCE_TEST_CI" --ref "$CURRENT_BRANCH" 2>&1)
+    gh_trigger_exit=$?
+
+    if [[ $gh_trigger_exit -eq 0 ]]; then
+      ASYNC_CI_TRIGGERED=true
+      ACCEPTANCE_CONTEXT="Acceptance gate tests triggered as CI workflow ($CMD_ACCEPTANCE_TEST_CI) on branch $CURRENT_BRANCH. Check the GitHub Actions tab for results. CI results will appear as status checks on the PR."
+    else
+      # Log trigger failure for debugging
+      echo "DEBUG: gh workflow run failed (exit $gh_trigger_exit): $gh_trigger_output" >&2
+    fi
+    # If gh workflow run failed, fall through to sync path below
+  fi
+  # If gh unavailable or branch unknown, fall through to sync path below
+fi
+
+# Sync path: run acceptance tests locally (original behavior, also used as fallback)
+if [[ -z "$FAILED_PHASE" ]] && [[ "$ASYNC_CI_TRIGGERED" == "false" ]] && [[ -n "$CMD_ACCEPTANCE_TEST" ]]; then
   acceptance_output=$(cd "$PROJECT_DIR" && timeout 1800 bash -c "$CMD_ACCEPTANCE_TEST" 2>&1)
   acceptance_exit=$?
 

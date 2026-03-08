@@ -336,6 +336,94 @@ def run_tests():
             t._fail("acceptance output also present",
                      f"context={context}")
 
+    # ─── Section 8: Verbose reporter injection for vitest commands ───
+    t.section("Verbose reporter injection for vitest commands")
+
+    with TempDir() as temp_dir:
+        setup_repo_with_code(temp_dir)
+
+        # Create a fake npx that prints its arguments so we can verify injection
+        bin_dir = os.path.join(temp_dir, "fake-bin")
+        os.makedirs(bin_dir)
+        write_file(temp_dir, "fake-bin/npx",
+                   "#!/bin/bash\necho \"npx-args: $@\"\n")
+        make_executable(os.path.join(temp_dir, "fake-bin", "npx"))
+
+        os.makedirs(os.path.join(temp_dir, ".claude"), exist_ok=True)
+        write_file(temp_dir, ".claude/verify.json", json.dumps({
+            "commands": {
+                "acceptance_test": "npx vitest run test/acceptance-gate.test.ts"
+            }
+        }))
+
+        exit_code, output = run_hook_with_env(
+            HOOK, make_hook_input("gh pr create --title test", temp_dir),
+            extra_path=bin_dir)
+
+        context = parse_context(output)
+
+        if "--reporter=verbose" in context:
+            t._pass("vitest command gets --reporter=verbose injected")
+        else:
+            t._fail("vitest command gets --reporter=verbose injected",
+                     f"context={context}")
+
+    # ─── Section 9: Non-vitest command not modified ───
+    t.section("Non-vitest command not modified")
+
+    with TempDir() as temp_dir:
+        setup_repo_with_code(temp_dir)
+
+        os.makedirs(os.path.join(temp_dir, ".claude"), exist_ok=True)
+        write_file(temp_dir, ".claude/verify.json", json.dumps({
+            "commands": {
+                "acceptance_test": "echo 'pytest passed all tests'"
+            }
+        }))
+
+        exit_code, output = run_hook_with_env(
+            HOOK, make_hook_input("gh pr create --title test", temp_dir))
+
+        context = parse_context(output)
+
+        if "--reporter=verbose" not in context:
+            t._pass("non-vitest command does not get --reporter injected")
+        else:
+            t._fail("non-vitest command does not get --reporter injected",
+                     f"context={context}")
+
+    # ─── Section 10: Existing --reporter not overridden ───
+    t.section("Existing --reporter not overridden")
+
+    with TempDir() as temp_dir:
+        setup_repo_with_code(temp_dir)
+
+        # Create fake npx to capture args
+        bin_dir = os.path.join(temp_dir, "fake-bin")
+        os.makedirs(bin_dir)
+        write_file(temp_dir, "fake-bin/npx",
+                   "#!/bin/bash\necho \"npx-args: $@\"\n")
+        make_executable(os.path.join(temp_dir, "fake-bin", "npx"))
+
+        os.makedirs(os.path.join(temp_dir, ".claude"), exist_ok=True)
+        write_file(temp_dir, ".claude/verify.json", json.dumps({
+            "commands": {
+                "acceptance_test": "npx vitest run --reporter=json test/foo.test.ts"
+            }
+        }))
+
+        exit_code, output = run_hook_with_env(
+            HOOK, make_hook_input("gh pr create --title test", temp_dir),
+            extra_path=bin_dir)
+
+        context = parse_context(output)
+
+        if "--reporter=verbose" not in context and "--reporter=json" in context:
+            t._pass("existing --reporter not overridden with verbose")
+        else:
+            t._fail("existing --reporter not overridden with verbose",
+                     f"context={context}")
+
     t.summary()
     return t.passed, t.failed, t.total
 

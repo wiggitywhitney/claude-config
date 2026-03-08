@@ -13,6 +13,16 @@ Development progress log for claude-config. Tracks implementation milestones acr
 - Acceptance gate test rolled out to cluster-whisperer (PRD #32, milestone 2)
 - Acceptance gate test rolled out to telemetry-agent-spec-v3 with vals.yaml (PRD #32, milestone 3)
 - Acceptance gate test rolled out to commit-story-v2-eval (PRD #32, milestone 4)
+- Verbose reporter injection for vitest acceptance gate commands in pre-pr-hook.sh (PRD #35, M1)
+- Fallback glob command uses `bash -c 'shopt -s globstar && ...'` for proper `**` expansion (PRD #35, M1)
+- Async CI acceptance gate path in pre-pr-hook.sh — triggers GitHub Actions workflow via `gh workflow run` instead of blocking locally (PRD #35, M2)
+- `acceptance_test_ci` key in verify.json for repos to opt into async CI workflow trigger (PRD #35, M2)
+- Graceful fallback to sync execution when `gh` CLI unavailable or workflow trigger fails (PRD #35, M2)
+- Reference GitHub Actions workflow template for acceptance gate CI (`templates/acceptance-gate-ci.yml`) with 45-min timeout, verbose reporter, parallel execution example (PRD #35, M3)
+- Workflow template tests validating YAML structure, triggers, timeouts, secrets, and documentation (PRD #35, M3)
+- Adopted async acceptance gate CI in spinybacked-orbweaver — parallel matrix strategy (core + coordinator), Weaver install, `acceptance_test_ci` key in verify.json (PRD #35, M4)
+- Edge case tests for async CI acceptance gate: standard phase failure skips CI trigger, workflow trigger failure falls back to sync with verbose reporter, CI-only config graceful no-op, context includes workflow name and branch (PRD #35, M5)
+- Rolled out async acceptance gate CI to commit-story-v2-eval and scaling-on-satisfaction — each repo gets `acceptance-gate.yml` workflow and `acceptance_test_ci` key in verify.json (PRD #35, M6)
 
 ### Fixed
 

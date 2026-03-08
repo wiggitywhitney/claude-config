@@ -30,6 +30,7 @@ CMD_TYPECHECK=""
 CMD_LINT=""
 CMD_TEST=""
 CMD_ACCEPTANCE_TEST=""
+CMD_ACCEPTANCE_TEST_CI=""
 
 # --- Check for .claude/verify.json override ---
 # Any project can declare verification commands explicitly via this file.
@@ -40,6 +41,7 @@ VERIFY_TYPECHECK=""
 VERIFY_LINT=""
 VERIFY_TEST=""
 VERIFY_ACCEPTANCE_TEST=""
+VERIFY_ACCEPTANCE_TEST_CI=""
 HAS_VERIFY_JSON=false
 
 if [ -f "$PROJECT_DIR/.claude/verify.json" ]; then
@@ -54,6 +56,7 @@ try:
     print(c.get('lint') or '')
     print(c.get('test') or '')
     print(c.get('acceptance_test') or '')
+    print(c.get('acceptance_test_ci') or '')
 except Exception:
     sys.exit(1)
 " 2>/dev/null); then
@@ -63,6 +66,7 @@ except Exception:
     VERIFY_LINT=$(echo "$PARSED" | sed -n '3p')
     VERIFY_TEST=$(echo "$PARSED" | sed -n '4p')
     VERIFY_ACCEPTANCE_TEST=$(echo "$PARSED" | sed -n '5p')
+    VERIFY_ACCEPTANCE_TEST_CI=$(echo "$PARSED" | sed -n '6p')
   fi
 fi
 
@@ -210,6 +214,7 @@ if [ "$HAS_VERIFY_JSON" = true ]; then
   [ -n "$VERIFY_LINT" ] && CMD_LINT="$VERIFY_LINT"
   [ -n "$VERIFY_TEST" ] && CMD_TEST="$VERIFY_TEST"
   [ -n "$VERIFY_ACCEPTANCE_TEST" ] && CMD_ACCEPTANCE_TEST="$VERIFY_ACCEPTANCE_TEST"
+  [ -n "$VERIFY_ACCEPTANCE_TEST_CI" ] && CMD_ACCEPTANCE_TEST_CI="$VERIFY_ACCEPTANCE_TEST_CI"
 fi
 
 # --- Output JSON ---
@@ -226,6 +231,7 @@ DETECT_CMD_TYPECHECK="$CMD_TYPECHECK" \
 DETECT_CMD_LINT="$CMD_LINT" \
 DETECT_CMD_TEST="$CMD_TEST" \
 DETECT_CMD_ACCEPTANCE_TEST="$CMD_ACCEPTANCE_TEST" \
+DETECT_CMD_ACCEPTANCE_TEST_CI="$CMD_ACCEPTANCE_TEST_CI" \
 DETECT_PKG_MANAGER="$( [ "$HAS_PACKAGE_JSON" = true ] && echo "$PKG_MANAGER" || echo "" )" \
 python3 -c "
 import json, os
@@ -244,7 +250,8 @@ result = {
         'typecheck': os.environ['DETECT_CMD_TYPECHECK'] or None,
         'lint': os.environ['DETECT_CMD_LINT'] or None,
         'test': os.environ['DETECT_CMD_TEST'] or None,
-        'acceptance_test': os.environ['DETECT_CMD_ACCEPTANCE_TEST'] or None
+        'acceptance_test': os.environ['DETECT_CMD_ACCEPTANCE_TEST'] or None,
+        'acceptance_test_ci': os.environ['DETECT_CMD_ACCEPTANCE_TEST_CI'] or None
     },
     'package_manager': os.environ['DETECT_PKG_MANAGER'] or None
 }
