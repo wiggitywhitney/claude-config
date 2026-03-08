@@ -18,6 +18,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 - Async CI acceptance gate path in pre-pr-hook.sh — triggers GitHub Actions workflow via `gh workflow run` instead of blocking locally (PRD #35, M2)
 - `acceptance_test_ci` key in verify.json for repos to opt into async CI workflow trigger (PRD #35, M2)
 - Graceful fallback to sync execution when `gh` CLI unavailable or workflow trigger fails (PRD #35, M2)
+- Reference GitHub Actions workflow template for acceptance gate CI (`templates/acceptance-gate-ci.yml`) with 45-min timeout, verbose reporter, parallel execution example (PRD #35, M3)
+- Workflow template tests validating YAML structure, triggers, timeouts, secrets, and documentation (PRD #35, M3)
 
 ### Fixed
 

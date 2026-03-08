@@ -1,0 +1,110 @@
+# Acceptance Gate CI — GitHub Actions workflow template
+#
+# Reference workflow for running acceptance gate tests (live API calls) in CI.
+# Repos copy this file to .github/workflows/acceptance-gate.yml and customize.
+#
+# Triggered by: gh workflow run (from pre-pr-hook.sh async path)
+# Purpose: Run acceptance gate tests asynchronously so PR creation isn't blocked.
+#
+# Setup steps:
+#   1. Copy this file to your repo's .github/workflows/acceptance-gate.yml
+#   2. Add repository secrets (Settings → Secrets → Actions):
+#      - ANTHROPIC_API_KEY: Your Anthropic API key for LLM-calling tests
+#      - Add other secrets your acceptance tests need
+#      Note: Local dev uses vals + GCP Secrets Manager for secret injection.
+#      In CI, GitHub repository secrets serve the same role — no vals needed.
+#   3. Update .claude/verify.json to add the async CI trigger:
+#      "acceptance_test_ci": "acceptance-gate.yml"
+#   4. Customize the test command in the "Run acceptance gate tests" step
+#   5. Adjust node-version to match your project
+#
+# How it works:
+#   - pre-pr-hook.sh detects "acceptance_test_ci" in verify.json
+#   - Hook runs: gh workflow run acceptance-gate.yml --ref <branch>
+#   - This workflow runs tests and reports results as a CI status check
+#   - PR creation proceeds immediately; test results appear on the PR later
+#
+# Customization points (marked with CUSTOMIZE comments below):
+#   - Node.js version
+#   - Test command and file patterns
+#   - Additional secrets
+#   - Job timeout (default: 45 minutes per Decision 7, PRD 35)
+#   - Parallel test execution (commented-out matrix strategy example)
+
+name: Acceptance Gate Tests
+
+on:
+  workflow_dispatch:
+    # Triggered by gh workflow run from pre-pr-hook.sh
+    # The --ref flag sets which branch to check out and test
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  acceptance-gate:
+    runs-on: ubuntu-latest
+    # CUSTOMIZE: Adjust timeout based on your test suite duration.
+    # spinybacked-orbweaver takes ~28min; 45min provides headroom for API latency spikes.
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Use the ref from workflow_dispatch (the branch being PR'd)
+          ref: ${{ github.ref }}
+
+      # CUSTOMIZE: Set node-version to match your project
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # CUSTOMIZE: Replace this test command with your acceptance test pattern.
+      # The --reporter=verbose flag ensures failure details are visible in CI logs.
+      # Common patterns:
+      #   npx vitest run --reporter=verbose test/**/acceptance-gate.test.ts
+      #   npx vitest run --reporter=verbose --testPathPattern acceptance-gate
+      - name: Run acceptance gate tests
+        run: npx vitest run --reporter=verbose test/**/acceptance-gate.test.ts
+        timeout-minutes: 40
+        env:
+          # CUSTOMIZE: Add secrets your acceptance tests need.
+          # Map GitHub repository secrets to environment variables.
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+# ──────────────────────────────────────────────────────────────────────
+# OPTIONAL: Parallel test execution
+#
+# If your test suite has independent test files that can run concurrently,
+# replace the single job above with a matrix strategy. Example:
+#
+#   jobs:
+#     acceptance-gate:
+#       runs-on: ubuntu-latest
+#       timeout-minutes: 45
+#       strategy:
+#         fail-fast: false
+#         matrix:
+#           test-group:
+#             - { name: "core", pattern: "test/acceptance-gate.test.ts test/fix-loop/acceptance-gate.test.ts" }
+#             - { name: "coordinator", pattern: "test/coordinator/acceptance-gate.test.ts" }
+#       steps:
+#         - uses: actions/checkout@v4
+#           with:
+#             ref: ${{ github.ref }}
+#         - uses: actions/setup-node@v4
+#           with:
+#             node-version: '24'
+#             cache: 'npm'
+#         - run: npm ci
+#         - name: Run ${{ matrix.test-group.name }} acceptance tests
+#           run: npx vitest run --reporter=verbose ${{ matrix.test-group.pattern }}
+#           timeout-minutes: 40
+#           env:
+#             ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+# ──────────────────────────────────────────────────────────────────────
