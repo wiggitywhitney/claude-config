@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
+# ABOUTME: PreToolUse hook that blocks git commits directly to main/master branches
+# ABOUTME: Allows docs-only exemptions (.md, .gitignore) and per-repo opt-out via .skip-branching
 # check-branch-protection.sh — PreToolUse hook that blocks commits to main/master
 #
 # Installed as a Claude Code PreToolUse hook on Bash.
 # Detects git commit commands and blocks them if the current branch is main or
 # master. Repos can opt out by placing a `.skip-branching` file at the project root.
 #
-# Docs-only exemption: commits that only add or modify *.md files are allowed
-# directly on main/master. Deletions, renames, and non-.md files still require
-# a feature branch.
+# Docs-only exemption: commits that only add or modify *.md files or .gitignore
+# are allowed directly on main/master. Deletions, renames, and other files
+# still require a feature branch.
 #
 # Decision 16: Per-repo rule overrides via dotfiles.
 # Global CLAUDE.md rule: "Always work on feature branches. Never commit directly to main."
@@ -66,8 +68,8 @@ if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
         A|M) ;;
         *) DOCS_ONLY=false; break ;;
       esac
-      # Block any non-.md file
-      if [[ "$filepath" != *.md ]]; then
+      # Block any non-.md, non-.gitignore file
+      if [[ "$filepath" != *.md ]] && [[ "$(basename "$filepath")" != .gitignore ]]; then
         DOCS_ONLY=false
         break
       fi
@@ -86,7 +88,7 @@ if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
       DOCS_ONLY=true
       while IFS= read -r filepath; do
         [ -z "$filepath" ] && continue
-        if [[ "$filepath" != *.md ]]; then
+        if [[ "$filepath" != *.md ]] && [[ "$(basename "$filepath")" != .gitignore ]]; then
           DOCS_ONLY=false
           break
         fi

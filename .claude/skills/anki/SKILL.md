@@ -92,6 +92,8 @@ Before writing ANY cards, outline the narrative arc of the topic:
 
 Only THEN decide which cards to make. Every card should fit into this narrative. If a card doesn't connect back to the story (why it exists, what it does, how it fits), it's too granular.
 
+**The narrative arc should become cards, not just a planning step.** Dedicate 1-2 cards to the arc itself — the overarching "why" and "how it all fits together." Then weave the arc into each individual card's CONTEXT section so every card reinforces the bigger picture. A card about a specific decision should explain where that decision sits in the overall story, not just what the decision was.
+
 **The anti-pattern**: Jumping straight to implementation details — config flags, middleware patterns, code structure, response codes — without first establishing why the thing exists and how the pieces relate. Implementation details are only card-worthy when they teach a concept you'd explain at a conference.
 
 **Test**: Would you explain this to a colleague over coffee? If not, it's too granular for a card.
@@ -143,6 +145,8 @@ Every card must work for Whitney 4+ months from now with no memory of the origin
 - If a name/reference isn't essential to the concept, remove it
 - If it IS essential, explain who they are or provide a link on the card
 - Ask: "Will this card make sense to me in 6 months with zero context?"
+- **Never use project-internal labels.** No PRD numbers ("PRD #3"), phase numbers ("Phase 1"), milestone names ("M4"), sprint labels, or internal tracking IDs. These are meaningless outside the original context. Instead, describe the work itself: "the spec synthesis phase" not "PRD #3," "single-file instrumentation" not "Phase 1," "the validation chain" not "Phase 2." If a project has a multi-stage build plan, describe what each stage does — the labels are project management artifacts, not knowledge.
+- **Name the project (repo) explicitly in every card.** Don't say "the controller" — say "k8s-vectordb-sync's controller." Don't say "your agent spec" — say "the spinybacked-orbweaver spec." The repo name is the anchor that makes a card findable and contextualizable months later. On first mention in a card, include a brief parenthetical if the project name isn't self-explanatory (e.g., "cluster-whisperer (a Kubernetes AI assistant)").
 
 ### Arguments vs Facts
 When covering debates or competing viewpoints:
@@ -349,8 +353,19 @@ Rules:
 - Rename with descriptive filenames (not `Screenshot 2026-02-02...png`)
 - Example filename: `datadog-trace-detail-showing-content.png`
 - The user provides image files in the chat interface
-- Save images to this directory: `/Users/whitney.lee/Documents/Journal/images/`
+- Save images to this directory: `/Users/whitney.lee/Documents/Journal/make Anki cards/images/`
 - Be careful not to use images in a way that gives away the answer
+
+### Project-Specific Images
+
+Some projects always get an image on the Front of every card. Add these automatically:
+
+| Project | Image | Front line |
+|---|---|---|
+| spinybacked-orbweaver | `spinybacked-orbweaver.png` | `Front: ![[spinybacked-orbweaver.png]]` |
+| Telemetry Agent Spec | `telemetry-agent-spec-sm.png` | `Front: ![[telemetry-agent-spec-sm.png]]` |
+
+The image goes on its own line right after `Front:`, with the question text on the next line.
 
 ---
 

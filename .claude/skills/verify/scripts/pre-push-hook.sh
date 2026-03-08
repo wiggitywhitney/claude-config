@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# ABOUTME: PreToolUse hook that gates git push on standard security checks
+# ABOUTME: Runs security verification and advisory CodeRabbit CLI review on every push
 # pre-push-hook.sh — PreToolUse hook that gates git push on security checks
 #
 # Installed as a Claude Code PreToolUse hook on Bash.
