@@ -112,7 +112,7 @@ def run_tests():
 
     if not main_job:
         # Use the first job
-        main_job_name = list(jobs.keys())[0]
+        main_job_name = next(iter(jobs))
         main_job = jobs[main_job_name]
 
     # Timeout check (Decision 7: at least 45 minutes)
@@ -120,7 +120,7 @@ def run_tests():
     if timeout >= 45:
         t._pass(f"job timeout >= 45 minutes (got {timeout})")
     else:
-        t._fail(f"job timeout >= 45 minutes", f"Got: {timeout}")
+        t._fail("job timeout >= 45 minutes", f"Got: {timeout}")
 
     # ── Steps validation ──
     t.section("Steps validation")
@@ -182,7 +182,7 @@ def run_tests():
     if len(comment_lines) >= 5:
         t._pass(f"has documentation comments ({len(comment_lines)} comment lines)")
     else:
-        t._fail(f"has documentation comments",
+        t._fail("has documentation comments",
                 f"Expected >= 5 comment lines, got {len(comment_lines)}")
 
     return t.passed, t.failed, t.total

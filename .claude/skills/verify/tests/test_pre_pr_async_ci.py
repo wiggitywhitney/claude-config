@@ -154,8 +154,9 @@ def run_tests():
         # Create fake gh that logs its args
         bin_dir = os.path.join(temp_dir, "fake-bin")
         os.makedirs(bin_dir)
+        gh_log = os.path.join(temp_dir, "gh-call.log")
         write_file(temp_dir, "fake-bin/gh",
-                   '#!/bin/bash\necho "gh-called: $@" > /tmp/gh-call-log-$$\necho "gh-args: $@"\n')
+                   f'#!/bin/bash\necho "gh-called: $@" > "{gh_log}"\necho "gh-args: $@"\n')
         make_executable(os.path.join(temp_dir, "fake-bin", "gh"))
 
         os.makedirs(os.path.join(temp_dir, ".claude"), exist_ok=True)

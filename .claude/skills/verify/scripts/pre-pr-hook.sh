@@ -157,6 +157,9 @@ if [[ -z "$FAILED_PHASE" ]] && [[ -n "$CMD_ACCEPTANCE_TEST_CI" ]]; then
     if [[ $gh_trigger_exit -eq 0 ]]; then
       ASYNC_CI_TRIGGERED=true
       ACCEPTANCE_CONTEXT="Acceptance gate tests triggered as CI workflow ($CMD_ACCEPTANCE_TEST_CI) on branch $CURRENT_BRANCH. Check the GitHub Actions tab for results. CI results will appear as status checks on the PR."
+    else
+      # Log trigger failure for debugging
+      echo "DEBUG: gh workflow run failed (exit $gh_trigger_exit): $gh_trigger_output" >&2
     fi
     # If gh workflow run failed, fall through to sync path below
   fi
