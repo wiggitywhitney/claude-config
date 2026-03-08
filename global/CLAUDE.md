@@ -89,15 +89,7 @@ When drafting emails or written communication:
 - NEVER render a system unbootable or overwrite any database or datastore without explicit permission.
 - List planned infrastructure commands before executing so the user can review scope.
 - Only apply Kubernetes resource manifests directly. Do not run host-level setup scripts unless explicitly asked.
-
-## Cloud Resource Lifecycle
-
-When provisioning cloud infrastructure (GKE clusters, cloud databases, VM instances, etc.):
-
-- **Teardown plan required before creation.** Before provisioning cloud resources, confirm the active PRD includes a teardown step. Add one if missing. Every `setup-*.sh` must have a corresponding `teardown-*.sh`.
-- **PRD-level exit criterion.** A PRD cannot close (`/prd-done`) until provisioned resources are torn down or handed off to a named owner.
-- **Remind at checkpoints.** When completing tasks with active cloud resources, remind the user what's running and the teardown plan.
-- **Cross-session safety.** If a conversation ends with cloud resources running, write a prominent warning in MEMORY.md (resource, project, teardown command).
+- **Cloud resource lifecycle:** Before provisioning cloud resources (GKE clusters, databases, VMs), confirm the active PRD includes a teardown step. Every `setup-*.sh` must have a corresponding `teardown-*.sh`. A PRD cannot close until provisioned resources are torn down or handed off. Remind the user at checkpoints what's running. If a conversation ends with cloud resources running, write a warning in MEMORY.md (resource, project, teardown command).
 
 ## ABOUTME File Headers
 

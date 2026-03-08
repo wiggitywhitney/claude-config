@@ -69,7 +69,7 @@ if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
         *) DOCS_ONLY=false; break ;;
       esac
       # Block any non-.md, non-.gitignore file
-      if [[ "$filepath" != *.md ]] && [[ "$filepath" != .gitignore ]]; then
+      if [[ "$filepath" != *.md ]] && [[ "$(basename "$filepath")" != .gitignore ]]; then
         DOCS_ONLY=false
         break
       fi
@@ -88,7 +88,7 @@ if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
       DOCS_ONLY=true
       while IFS= read -r filepath; do
         [ -z "$filepath" ] && continue
-        if [[ "$filepath" != *.md ]] && [[ "$filepath" != .gitignore ]]; then
+        if [[ "$filepath" != *.md ]] && [[ "$(basename "$filepath")" != .gitignore ]]; then
           DOCS_ONLY=false
           break
         fi
