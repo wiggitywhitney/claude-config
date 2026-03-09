@@ -23,6 +23,11 @@ Development progress log for claude-config. Tracks implementation milestones acr
 - Adopted async acceptance gate CI in spinybacked-orbweaver — parallel matrix strategy (core + coordinator), Weaver install, `acceptance_test_ci` key in verify.json (PRD #35, M4)
 - Edge case tests for async CI acceptance gate: standard phase failure skips CI trigger, workflow trigger failure falls back to sync with verbose reporter, CI-only config graceful no-op, context includes workflow name and branch (PRD #35, M5)
 - Rolled out async acceptance gate CI to commit-story-v2-eval and scaling-on-satisfaction — each repo gets `acceptance-gate.yml` workflow and `acceptance_test_ci` key in verify.json (PRD #35, M6)
+- `run-acceptance` label reminder in `/prd-create` skill for projects with acceptance gate tests (PRD #37, M1)
+- Auto-add `run-acceptance` label in `/prd-done` skill step 3.6b, additive to release.yml labels (PRD #37, M2)
+- Documented `run-acceptance` labeling convention in global CLAUDE.md Git Workflow section (PRD #37, M3)
+- Centralized acceptance gate detection script (`scripts/detect-acceptance-gate.sh`) with 20 tests (PRD #37, M4)
+- Verified detection against real repos: spinybacked-orbweaver, commit-story-v2-eval (true), claude-config (false) (PRD #37, M5)
 
 ### Fixed
 
