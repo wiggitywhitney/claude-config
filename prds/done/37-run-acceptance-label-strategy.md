@@ -1,6 +1,6 @@
 # PRD #37: Propagate run-acceptance Label Strategy to PRD Workflow Skills
 
-**Status**: Open
+**Status**: Complete (2026-03-08)
 **Priority**: Medium
 **Created**: 2026-03-08
 
