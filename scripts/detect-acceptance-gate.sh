@@ -17,7 +17,7 @@ fi
 
 # Signal 2: .claude/verify.json contains an "acceptance_test" command
 if [[ -f "${PROJECT_DIR}/.claude/verify.json" ]]; then
-    if grep -q '"acceptance_test"' "${PROJECT_DIR}/.claude/verify.json" 2>/dev/null; then
+    if grep -qE '"acceptance_test"[[:space:]]*:' "${PROJECT_DIR}/.claude/verify.json" 2>/dev/null; then
         echo "true"
         exit 0
     fi

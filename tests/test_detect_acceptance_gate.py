@@ -126,6 +126,13 @@ def run_tests():
         # because the closing quote position differs — correct behavior
         t.assert_equal("acceptance_test_ci only → false (exact key match)", output, "false")
 
+    # acceptance_test appears in a value, not as a key — should not match
+    with TempDir() as tmp:
+        write_file(tmp, ".claude/verify.json", '{"quick": "run acceptance_test suite"}')
+        exit_code, output = run_detect(tmp)
+        t.assert_equal("acceptance_test in value only → exit 0", exit_code, 0)
+        t.assert_equal("acceptance_test in value only → false", output, "false")
+
     # Default directory (no argument — uses cwd)
     with TempDir() as tmp:
         write_file(tmp, ".github/workflows/acceptance-gate.yml", "name: AG")
