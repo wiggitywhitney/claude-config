@@ -1,6 +1,6 @@
 # PRD #37: Propagate run-acceptance Label Strategy to PRD Workflow Skills
 
-**Status**: Open
+**Status**: Complete (2026-03-08)
 **Priority**: Medium
 **Created**: 2026-03-08
 
@@ -31,11 +31,11 @@ A repo has acceptance gate tests if either:
 
 ## Milestones
 
-- [ ] M1: Update `/prd-create` skill to include `run-acceptance` label reminder in generated PRDs when acceptance gate tests are detected
-- [ ] M2: Update `/prd-done` skill to automatically add `run-acceptance` label to PRs created through the PRD workflow
-- [ ] M3: Update global `~/.claude/CLAUDE.md` Git Workflow section with `run-acceptance` labeling convention
-- [ ] M4: Tests covering the new detection logic and label application
-- [ ] M5: Verify end-to-end: create a test PRD in a repo with acceptance gate tests and confirm the label flows through
+- [x] M1: Update `/prd-create` skill to include `run-acceptance` label reminder in generated PRDs when acceptance gate tests are detected
+- [x] M2: Update `/prd-done` skill to automatically add `run-acceptance` label to PRs created through the PRD workflow
+- [x] M3: Update global `~/.claude/CLAUDE.md` Git Workflow section with `run-acceptance` labeling convention
+- [x] M4: Tests covering the new detection logic and label application
+- [x] M5: Verify end-to-end: create a test PRD in a repo with acceptance gate tests and confirm the label flows through
 
 ## Design Notes
 

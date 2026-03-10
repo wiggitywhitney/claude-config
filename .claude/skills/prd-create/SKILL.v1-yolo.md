@@ -124,6 +124,22 @@ Work through the PRD template focusing on project management, milestone tracking
 
 **CRITICAL**: Steps 2-4 must happen in this exact order to avoid the chicken-and-egg problem of needing the issue ID for the filename.
 
+## Acceptance Gate Label Reminder (If Applicable)
+
+After generating the PRD content, check if the target project has acceptance gate tests configured:
+
+**Detection:** Run `scripts/detect-acceptance-gate.sh [project-dir]` (from claude-config repo) or check manually — a project has acceptance gate tests if either:
+- `.github/workflows/acceptance-gate.yml` exists, OR
+- `.claude/verify.json` contains an `"acceptance_test"` command
+
+**If detected:** Add the following note to the PRD's **Design Notes** section (or create one if absent):
+
+```markdown
+- The feature PR created by `/prd-done` needs the `run-acceptance` label to trigger acceptance gate CI. This is handled automatically by `/prd-done` when acceptance gate tests are detected.
+```
+
+**If not detected:** Do nothing — projects without acceptance gate tests see no change.
+
 ## Update ROADMAP.md (If It Exists)
 
 After creating the PRD, check if `docs/ROADMAP.md` exists. If it does, add the new feature to the appropriate timeframe section based on PRD priority:

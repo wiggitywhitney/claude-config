@@ -241,11 +241,23 @@ Present all auto-filled answers together in a summary format:
 - [ ] **Apply detected label**: Add the single best-matching label to the PR creation command
   - Example: `gh pr create --title "..." --body "..." --label "fix"`
 
+#### 3.6b. Detect Acceptance Gate Tests (run-acceptance label)
+
+**Separate from release.yml labels** — this label triggers CI acceptance gate workflows and is additive to any release category label.
+
+- [ ] **Check for acceptance gate tests** in the repository (run `scripts/detect-acceptance-gate.sh` from claude-config, or check manually):
+  - `.github/workflows/acceptance-gate.yml` exists, OR
+  - `.claude/verify.json` contains an `"acceptance_test"` command
+- [ ] **If detected**: Add `run-acceptance` to the PR labels (alongside any release.yml label from 3.6)
+- [ ] **If not detected**: Skip — no change to label behavior
+
 #### 3.7. Create Pull Request
 - [ ] **Construct PR body**: Combine auto-filled and user-provided information following template structure
-- [ ] **Create PR**:
-  - If label detected: `gh pr create --title "[title]" --body "[body]" --label "[single-label]"`
-  - If no release.yml or no matching label: `gh pr create --title "[title]" --body "[body]"`
+- [ ] **Create PR** (combine release.yml label from 3.6 and `run-acceptance` from 3.6b as needed):
+  - Both labels: `gh pr create --title "[title]" --body "[body]" --label "[release-label]" --label "run-acceptance"`
+  - Release label only: `gh pr create --title "[title]" --body "[body]" --label "[release-label]"`
+  - Acceptance label only: `gh pr create --title "[title]" --body "[body]" --label "run-acceptance"`
+  - No labels: `gh pr create --title "[title]" --body "[body]"`
 - [ ] **Verify PR created**: Confirm PR was created successfully, template populated correctly, and label applied (if applicable)
 - [ ] **Request reviews**: Assign appropriate team members for code review if specified
 
