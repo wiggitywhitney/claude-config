@@ -28,7 +28,7 @@ Three changes:
 ## Milestones
 
 - [x] M1: Create the cluster-check script that detects running Kind and GKE clusters and outputs a reminder
-- [ ] M2: Wire the script as a global SessionStart hook in `~/.claude/settings.json`
+- [x] M2: Wire the script as a global SessionStart hook in `~/.claude/settings.json`
 - [ ] M3: Soften the infrastructure safety rule in global `~/.claude/CLAUDE.md`
 - [ ] M4: Remove cluster teardown milestones/exit gates from PRDs in cluster-whisperer and kubecon-2026-gitops
 - [x] M5: Tests for the cluster-check script

@@ -30,6 +30,7 @@ Development progress log for claude-config. Tracks implementation milestones acr
 - Verified detection against real repos: spinybacked-orbweaver, commit-story-v2-eval (true), claude-config (false) (PRD #37, M5)
 - Cluster lifecycle reminder script (`scripts/check-running-clusters.sh`) — detects running Kind and GKE clusters, outputs JSON reminder with teardown hints, graceful degradation for missing tools (PRD #39, M1)
 - 31 tests for cluster-check script covering detection, graceful degradation, teardown hints, and error handling (PRD #39, M5)
+- (2026-03-11) Wired cluster-check script as global SessionStart hook in `~/.claude/settings.json` — fires on every session start, silent when no clusters running (PRD #39, M2)
 
 ### Changed
 
