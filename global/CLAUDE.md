@@ -90,7 +90,7 @@ When drafting emails or written communication:
 - NEVER render a system unbootable or overwrite any database or datastore without explicit permission.
 - List planned infrastructure commands before executing so the user can review scope.
 - Only apply Kubernetes resource manifests directly. Do not run host-level setup scripts unless explicitly asked.
-- **Cloud resource lifecycle:** Before provisioning cloud resources (GKE clusters, databases, VMs), confirm the active PRD includes a teardown step. Every `setup-*.sh` must have a corresponding `teardown-*.sh`. A PRD cannot close until provisioned resources are torn down or handed off. Remind the user at checkpoints what's running. If a conversation ends with cloud resources running, write a warning in MEMORY.md (resource, project, teardown command).
+- **Cloud resource lifecycle:** Every `setup-*.sh` must have a corresponding `teardown-*.sh`. A global SessionStart hook (`scripts/check-running-clusters.sh` in claude-config) detects running Kind and GKE clusters at session start and reminds the user — no mandatory teardown gates needed. When provisioning new cloud resources, mention the teardown command so the user knows how to clean up later.
 
 ## ABOUTME File Headers
 
