@@ -182,6 +182,8 @@ Create `PROGRESS.md` in the repository root with this template (replace `[projec
 
 Development progress log for [project-name]. Tracks implementation milestones across PRD work.
 
+Entry format: `- (YYYY-MM-DD) Description of feature-level change (PRD #X, milestone)`
+
 ## [Unreleased]
 
 ### Added

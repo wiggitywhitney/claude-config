@@ -266,9 +266,10 @@ Before staging and committing, check if `PROGRESS.md` exists in the repository r
    - `### Added` — new features or capabilities
    - `### Changed` — modifications to existing behavior
    - `### Fixed` — bug fixes
-3. **Entry granularity**: Describe at feature level, not file level
-   - Good: "Added contributor-aware PROGRESS.md creation to `/prd-start`"
-   - Bad: "Updated `.claude/skills/prd-start/SKILL.md`"
+3. **Entry format**: Prefix each entry with the date in `(YYYY-MM-DD)` format, then describe at feature level, not file level
+   - Good: "- (2026-03-11) Added contributor-aware PROGRESS.md creation to `/prd-start`"
+   - Bad: "- Updated `.claude/skills/prd-start/SKILL.md`"
+   - Bad: "- Added feature X" (missing date)
 4. **Stage PROGRESS.md** with the rest of the commit
 
 ### Commit Implementation Work

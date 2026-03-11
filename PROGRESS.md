@@ -31,6 +31,11 @@ Development progress log for claude-config. Tracks implementation milestones acr
 - Cluster lifecycle reminder script (`scripts/check-running-clusters.sh`) — detects running Kind and GKE clusters, outputs JSON reminder with teardown hints, graceful degradation for missing tools (PRD #39, M1)
 - 31 tests for cluster-check script covering detection, graceful degradation, teardown hints, and error handling (PRD #39, M5)
 
+### Changed
+
+- (2026-03-11) Added `(YYYY-MM-DD)` date prefix to PROGRESS.md entry format in prd-update-progress and prd-start skills (both yolo and careful variants)
+
 ### Fixed
 
 - Contributor detection counts unique names instead of name+email pairs (same person with multiple emails no longer inflates count)
+- (2026-03-11) Restored all 8 careful skill variants as real files — were incorrectly replaced with symlinks to yolo variants in commit 21a0d6c
