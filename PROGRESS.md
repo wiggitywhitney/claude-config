@@ -34,6 +34,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Changed
 
+- (2026-03-11) Softened infrastructure safety rule in global CLAUDE.md — replaced mandatory teardown gates with awareness-based approach via SessionStart hook (PRD #39, M3)
+
 - (2026-03-11) Added `(YYYY-MM-DD)` date prefix to PROGRESS.md entry format in prd-update-progress and prd-start skills (both yolo and careful variants)
 
 ### Fixed
