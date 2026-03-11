@@ -1,6 +1,6 @@
 # PRD #39: Global Cluster Lifecycle Reminder Hook
 
-**Status**: In Progress
+**Status**: Complete
 **Priority**: Medium
 **Created**: 2026-03-11
 
@@ -30,9 +30,9 @@ Three changes:
 - [x] M1: Create the cluster-check script that detects running Kind and GKE clusters and outputs a reminder
 - [x] M2: Wire the script as a global SessionStart hook in `~/.claude/settings.json`
 - [x] M3: Soften the infrastructure safety rule in global `~/.claude/CLAUDE.md`
-- [ ] M4: Remove cluster teardown milestones/exit gates from PRDs in cluster-whisperer and kubecon-2026-gitops
+- [x] M4: Remove cluster teardown milestones/exit gates from PRDs in cluster-whisperer and kubecon-2026-gitops
 - [x] M5: Tests for the cluster-check script
-- [ ] M6: End-to-end verification — start a session with a Kind cluster running and confirm the reminder appears
+- [x] M6: End-to-end verification — start a session with a Kind cluster running and confirm the reminder appears
 
 ## Design Notes
 

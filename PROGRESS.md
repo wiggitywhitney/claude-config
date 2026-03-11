@@ -31,6 +31,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 - Cluster lifecycle reminder script (`scripts/check-running-clusters.sh`) — detects running Kind and GKE clusters, outputs JSON reminder with teardown hints, graceful degradation for missing tools (PRD #39, M1)
 - 31 tests for cluster-check script covering detection, graceful degradation, teardown hints, and error handling (PRD #39, M5)
 - (2026-03-11) Wired cluster-check script as global SessionStart hook in `~/.claude/settings.json` — fires on every session start, silent when no clusters running (PRD #39, M2)
+- (2026-03-11) Verified no mandatory teardown exit gates remain in cluster-whisperer or kubecon-2026-gitops PRDs (PRD #39, M4)
+- (2026-03-11) End-to-end verification: hook detected real Kind cluster at session start, output valid JSON with teardown command, silent when no clusters (PRD #39, M6)
 
 ### Changed
 
