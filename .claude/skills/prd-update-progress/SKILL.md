@@ -20,7 +20,8 @@ You are helping update an existing Product Requirements Document (PRD) based on 
 6. **Update PRD** - Apply changes to checkboxes and status
 7. **Flag Divergences** - Alert when actual work differs from planned work
 8. **Commit Progress Updates** - Preserve progress checkpoint
-9. **Continue to Next Task** - Prompt user to run /prd-next
+9. **CodeRabbit CLI Review** - Local review to catch issues at milestone boundaries
+10. **Continue to Next Task** - Prompt user to run /prd-next
 
 ## Step 1: Smart PRD Identification
 
@@ -305,9 +306,29 @@ Progress: X% complete - [next major milestone]"
 
 **Note**: Do NOT push commits unless explicitly requested by the user. Commits preserve local progress checkpoints without affecting remote branches.
 
+## Step 8.5: CodeRabbit CLI Review
+
+After committing, run a local CodeRabbit CLI review to catch issues before they accumulate across milestones. This replaces the push-time review with a milestone-time review — same coverage, better timing.
+
+### Run the review
+
+```bash
+# Run CodeRabbit CLI review against the full feature branch diff
+# NOTE: Start with `coderabbit` so it matches Bash(coderabbit *) allowlist.
+# Do NOT use BASE_BRANCH=$(...) — subshell parens break Bash(...) permission patterns.
+coderabbit review --plain --type committed --base origin/main --no-color
+```
+
+If `coderabbit` is not installed, skip this step with a note: "CodeRabbit CLI not installed — skipping local review."
+
+### Handle findings
+
+- **If findings exist**: Present findings to the user for triage. Apply the CodeRabbit triage rubric (see CLAUDE.md) — fix or skip each finding with rationale. Commit fixes, then re-run the review to confirm clean.
+- **If no findings**: Proceed to next steps.
+
 ## Step 9: Next Steps Based on PRD Status
 
-After completing the PRD update and committing changes, guide the user based on completion status:
+After completing the PRD update, committing changes, and addressing any CodeRabbit findings, guide the user based on completion status:
 
 ### If PRD has remaining tasks
 
