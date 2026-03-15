@@ -6,8 +6,8 @@ Whitney uses [vals](https://github.com/helmfile/vals) to inject secrets from Goo
 # Run a command with secrets injected
 vals exec -f .vals.yaml -- command arg1 arg2
 
-# Export all secrets into the current shell session
-eval "$(vals env -f .vals.yaml)"
+# Export all secrets into the current shell session (for MCP servers, etc.)
+eval $(vals eval -f .vals.yaml --output shell)
 ```
 
 **Claude Code usage:** When a command needs a secret from `.vals.yaml`, wrap the entire command with `vals exec` so the secret is injected as an environment variable. Never extract, store, or inline the secret value.
