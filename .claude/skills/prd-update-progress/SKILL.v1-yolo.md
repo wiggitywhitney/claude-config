@@ -16,8 +16,9 @@ You are helping update an existing Product Requirements Document (PRD) based on 
 2. **Context-First Progress Analysis** - Use conversation context first, Git analysis as fallback
 3. **Map Changes to PRD Items** - Intelligently connect work to requirements
 4. **Apply Updates** - Update checkboxes with evidence, flag divergences
-5. **Commit Progress Updates** - Preserve progress checkpoint
-6. **Next Steps** - Present summary and signal what comes next (`/clear` → `/prd-next`, or `/prd-done` if complete)
+5. **Commit Progress Updates** - Preserve progress checkpoint (no push)
+6. **CodeRabbit CLI Review** - Local review to catch issues at milestone boundaries
+7. **Next Steps** - Present summary and signal what comes next (`/clear` → `/prd-next`, or `/prd-done` if complete)
 
 ## Step 1: Smart PRD Identification
 
@@ -296,11 +297,31 @@ Progress: X% complete - [next major milestone]"
 - **Progress indication**: Include completion status and next steps
 - **Evidence-based**: Only commit when there's actual implementation progress
 
-**Note**: Do NOT push commits unless explicitly requested by the user. Commits preserve local progress checkpoints without affecting remote branches.
+**Do NOT push after committing.** Pushing happens later — either manually or at `/prd-done` time. The CodeRabbit CLI review (next step) provides the same feedback loop without push latency.
+
+## Step 8.5: CodeRabbit CLI Review
+
+After committing, run a local CodeRabbit CLI review to catch issues before they accumulate across milestones. This replaces the push-time review with a milestone-time review — same coverage, better timing.
+
+### Run the review
+
+```bash
+# Run CodeRabbit CLI review against the full feature branch diff
+# NOTE: Start with `coderabbit` so it matches Bash(coderabbit *) allowlist.
+# Do NOT use BASE_BRANCH=$(...) — subshell parens break Bash(...) permission patterns.
+coderabbit review --plain --type committed --base origin/main --no-color
+```
+
+If `coderabbit` is not installed, skip this step with a note: "CodeRabbit CLI not installed — skipping local review."
+
+### Handle findings
+
+- **If findings exist**: Apply the CodeRabbit triage rubric (see CLAUDE.md) — fix or skip each finding with rationale. Commit fixes, then re-run the review to confirm clean.
+- **If no findings**: Proceed to next steps.
 
 ## Step 9: Next Steps Based on PRD Status
 
-After completing the PRD update and committing changes, present a brief summary:
+After completing the PRD update, committing changes, and addressing any CodeRabbit findings, present a brief summary:
 
 ### If PRD has remaining tasks
 

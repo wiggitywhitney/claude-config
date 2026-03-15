@@ -48,6 +48,7 @@ When drafting emails or written communication:
 - Tests MUST cover implemented functionality. No tests, not done.
 - NEVER ignore test or system outputs; logs contain critical information.
 - Test output MUST be pristine to pass.
+- **When reporting test results**, always include: percentage passed, percentage skipped (with reason for skipping, e.g., "missing API key" or "no cluster available"), and percentage failed. Do not just report raw counts.
 - Capture and test logs, including expected errors.
 - Do not manually run verification before git operations — hooks enforce this automatically (commit: build+typecheck+lint; push: standard security; PR: expanded security+tests; PR: acceptance gate with live API, advisory).
 - **Acceptance gate tests** are for tests that make real API calls (LLM APIs, external services) and cost real money. Repos opt in by adding `"acceptance_test"` to `.claude/verify.json` commands — e.g., `"acceptance_test": "vals exec -f .vals.yaml -- npx vitest run test/**/acceptance-gate.test.ts"`. These run after standard PR verification passes, are advisory (never block PR creation), and require human review of results before proceeding. Use the `spinybacked-orbweaver/.claude/verify.json` command shape as a reference example.
@@ -80,9 +81,24 @@ When drafting emails or written communication:
 - The pre-push hook runs CodeRabbit CLI review (advisory). When findings appear, fix issues and push again before creating a PR.
 - After creating a PR, start a background sleep timer (7 minutes) to poll for the CodeRabbit review. When the timer fires, check the PR for reviews and comments, then present all findings to the user.
 - After pushing fixes for CodeRabbit feedback, start another 7-minute timer to check for the re-review before merging.
+- **CodeRabbit triage rubric** for non-critical findings:
+  - **Skip** if the suggestion is genuinely not helpful or misunderstands the code.
+  - **Skip** if the complexity or maintenance cost of the fix outweighs its benefit.
+  - **Fix** if the only reason to skip is that it takes time to write — effort alone is not a reason to skip.
 - NEVER include references to Claude, AI, Anthropic, or Co-Authored-By AI attribution in commit messages. Write commit messages as if authored by a human developer.
 - Repos may override rules via dotfiles (`.skip-branching`, `.skip-coderabbit`).
 - **Acceptance gate labeling:** When creating a PR for a project with acceptance gate tests (`.github/workflows/acceptance-gate.yml` exists or `.claude/verify.json` contains `"acceptance_test"`), add `--label run-acceptance` to the `gh pr create` command. This triggers the acceptance gate CI workflow. The `/prd-done` skill handles this automatically for PRD-driven PRs; apply the same convention for manual PRs.
+
+## Issue Juggling
+
+When told to "juggle" issues or work through a queue of issues autonomously:
+
+- Each issue gets its own feature branch and PR.
+- For each issue: create branch, write failing tests first, implement fix, run full suite, push, create PR.
+- The pre-push hook runs CodeRabbit CLI review (advisory). Address any CLI findings before creating the PR — these are cheaper to fix pre-PR than post-PR.
+- Start 7-minute background timer for CodeRabbit PR review. Address findings, push fixes, start another timer for re-review.
+- After merge, switch to main, pull, move to next issue. Clean up merged branches at the end.
+- If an issue is blocked, skip it and flag it when presenting status.
 
 ## Infrastructure Safety
 
@@ -95,6 +111,19 @@ When drafting emails or written communication:
 ## ABOUTME File Headers
 
 Every code file (`.py`, `.sh`, `.ts`, `.tsx`, `.js`, `.jsx`) must start with a 1-2 line ABOUTME header using the file's comment syntax (`# ABOUTME: ...` or `// ABOUTME: ...`). Place after shebang lines when present. Exempt: `__init__.py`, config files (JSON/YAML/TOML), markdown, HTML/CSS, generated files, `node_modules`, `.d.ts`, `.min.js`. A PreToolUse hook enforces this. Examples: @~/.claude/rules/aboutme-headers.md
+
+## Datadog Enterprise Environment
+
+Claude Code routes through the Datadog AI Gateway via two env vars set in `settings.json`:
+- `ANTHROPIC_BASE_URL` — points to `ai-gateway.us1.ddbuild.io`
+- `ANTHROPIC_CUSTOM_HEADERS` — gateway-required headers (`source`, `org-id`, `provider`, auth)
+
+Both are auto-read by `@anthropic-ai/sdk` and `@langchain/anthropic`, so **any subprocess calling the Anthropic API** routes through the gateway and fails if headers are wrong or missing (`400 Missing required header: source`).
+
+**Fix:** Strip **both** vars so calls go directly to Anthropic:
+```bash
+env -u ANTHROPIC_CUSTOM_HEADERS -u ANTHROPIC_BASE_URL vals exec -i -f .vals.yaml -- command
+```
 
 ## Language & Configuration Defaults
 
