@@ -34,13 +34,13 @@ When drafting emails or written communication:
 ## Adopting New Technologies
 
 - Stop and research before writing code with any technology new to the project. Use `/research <technology>`.
-- Full process: @~/Documents/Repositories/claude-config/rules/adopting-new-technologies.md
+- Full process: @~/.claude/rules/adopting-new-technologies.md
 
 ## Testing
 
 - Tests MUST cover implemented functionality. No tests, not done. TDD: write failing test → implement → verify.
 - Use real implementations when feasible; mock only at system boundaries. Separate deterministic from non-deterministic.
-- Full testing rules: @~/Documents/Repositories/claude-config/rules/testing-rules.md
+- Full testing rules: @~/.claude/rules/testing-rules.md
 - Project-type strategies: @~/Documents/Repositories/claude-config/guides/testing-decision-guide.md
 
 ## Development Workflow
@@ -51,17 +51,17 @@ When drafting emails or written communication:
 ## Git Workflow
 
 - Feature branches only. PRs require CodeRabbit review approved by human before merge.
-- Full workflow, CodeRabbit process, and triage rubric: @~/Documents/Repositories/claude-config/rules/git-workflow.md
+- Full workflow, CodeRabbit process, and triage rubric: @~/.claude/rules/git-workflow.md
 
 ## Issue Juggling
 
 - Autonomous multi-issue workflow: branch per issue, TDD, CodeRabbit review cycle, merge, next.
-- Full process: @~/Documents/Repositories/claude-config/rules/issue-juggling.md
+- Full process: @~/.claude/rules/issue-juggling.md
 
 ## Infrastructure Safety
 
 - Backup before editing infra. Never overwrite databases without permission. List commands before executing.
-- Full rules: @~/Documents/Repositories/claude-config/rules/infrastructure-safety.md
+- Full rules: @~/.claude/rules/infrastructure-safety.md
 
 ## ABOUTME File Headers
 
@@ -70,7 +70,7 @@ Every code file (`.py`, `.sh`, `.ts`, `.tsx`, `.js`, `.jsx`) must start with a 1
 ## Datadog Enterprise Environment
 
 - Claude Code routes through the Datadog AI Gateway. Subprocesses calling the Anthropic API will fail if gateway headers are wrong.
-- Routing details and bypass fix: @~/Documents/Repositories/claude-config/rules/datadog-environment.md
+- Routing details and bypass fix: @~/.claude/rules/datadog-environment.md
 
 ## Language & Configuration Defaults
 
@@ -96,4 +96,4 @@ Feature work is tracked in PRDs (`prds/` directory). Use the PRD skills: `/prd-c
 
 ## Hooks Reference
 
-- Hook details: @~/Documents/Repositories/claude-config/rules/hooks-reference.md
+- Hook details: @~/.claude/rules/hooks-reference.md
