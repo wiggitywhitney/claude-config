@@ -18,6 +18,7 @@ You are updating a PRD based on design decisions, strategic changes, and archite
 4. **Map to PRD Sections** - Determine which parts of the PRD need updates
 5. **Propose Updates** - Suggest changes to requirements, approaches, and constraints
 6. **Update Decision Log** - Record new decisions with rationale and impact
+7. **Propagate to Downstream Milestones** - Update affected milestones to reflect new decisions
 
 ## Step 1: PRD Analysis
 
@@ -107,3 +108,34 @@ Update the appropriate PRD sections:
 - Add new risks introduced by design decisions
 - Update mitigation strategies if approach changed
 - Modify dependencies if architectural changes affect integrations
+
+## Step 5: Downstream Milestone Propagation
+
+After recording decisions and updating the current PRD sections, propagate decision impact to downstream milestones. Decisions that sit only in the decision log become invisible to future implementing agents who read milestone descriptions as their working instructions.
+
+### Process
+
+1. **Identify incomplete milestones**: Scan all milestones in the PRD that are not yet marked complete
+2. **For each new decision**, assess whether it affects any downstream milestone's:
+   - **Description or scope**: Does the decision change what this milestone should deliver?
+   - **Acceptance criteria**: Do success conditions need updating to reflect the new reality?
+   - **Implementation approach**: Does the decision change how this milestone should be built?
+   - **Dependencies**: Does the decision introduce or remove dependencies between milestones?
+3. **Update affected milestones** with a brief note explaining what changed and why, referencing the decision number
+
+### Update Format
+
+When updating a milestone, add a concise note that:
+- States what changed in the milestone (not the full decision rationale — that lives in the decision log)
+- References the decision by number (e.g., "Updated per Decision 12")
+- Preserves the milestone's existing structure and content
+
+### When NOT to Propagate
+
+- The decision only affects the current milestone being worked on (already handled by Step 4)
+- The decision is purely retrospective (documents what was done, doesn't change future work)
+- The impact is already captured by a new milestone item added in the Decision Log Updates substep of Step 4
+
+### Report
+
+After propagation, briefly tell the user which milestones were updated and why, or confirm that no downstream milestones were affected.
