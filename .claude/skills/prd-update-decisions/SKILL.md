@@ -132,4 +132,4 @@ When updating a milestone, add a concise note that:
 
 ### Report
 
-After propagation, briefly tell the user which milestones were updated and why, or confirm that no downstream milestones were affected.
+After propagation, report which milestones were updated in a brief list (e.g., "Updated Milestone 3 and 5 per Decision 12: auth approach changed from custom to OAuth"), or confirm that no downstream milestones were affected.
