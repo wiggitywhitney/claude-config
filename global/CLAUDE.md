@@ -23,6 +23,7 @@ When drafting emails or written communication:
 - **You MUST ask permission** before reimplementing features or systems from scratch.
 - Prefer deterministic scripts/code over AI for operational tasks. Use AI for content understanding, narrative synthesis, and semantic analysis.
 - When creating prompts for AI agents, emphasize the process to follow rather than stating the goal upfront.
+- When creating or modifying any SKILL.md file, system prompt, or AI agent instruction, use `/write-prompt` to review the result before committing.
 - **ALWAYS add progress indicators** for any operation that might cause the user to wait. This includes downloading files, processing large datasets, network requests, and any computation that takes more than 1-2 seconds.
 
 ## Getting Help
@@ -32,40 +33,15 @@ When drafting emails or written communication:
 
 ## Adopting New Technologies
 
-- Before writing code with a framework, library, or tool that is new to the current project, **stop and research it first**. WebSearch official documentation using the current year. Use `/research <technology>` for thorough investigation.
-- Check `~/.claude/rules/` for an existing rule file covering this technology. If one exists, verify its guidance is current rather than researching from scratch.
-- When adopting a new framework, API, or tool pattern in a project, check official documentation for current best practices — prioritizing recency and anything that contradicts common assumptions.
-- Document surprises (breaking changes, non-obvious gotchas, patterns that differ from conventions) in a path-scoped rule file and reference it from CLAUDE.md using `@path/to/file` import syntax.
-- Focus on what the model's training data is most likely to get wrong, not what's already well-known.
-- Do not document the obvious. Prioritize the surprising.
-- Never trust training data for version numbers, API signatures, or configuration defaults when the technology is new to the project or has had recent major releases. Verify against official docs.
-- Skip this process when the technology is already established in the project — existing imports, configuration, and tests indicate prior adoption.
+- Stop and research before writing code with any technology new to the project. Use `/research <technology>`.
+- Full process: @~/Documents/Repositories/claude-config/rules/adopting-new-technologies.md
 
 ## Testing
 
-- Every project MUST have unit, integration, and end-to-end tests. Explicit human authorization required to skip any test tier.
-- Repos may opt out of specific test tiers via dotfiles (`.skip-e2e`, `.skip-integration`).
-- Tests MUST cover implemented functionality. No tests, not done.
-- NEVER ignore test or system outputs; logs contain critical information.
-- Test output MUST be pristine to pass.
-- **When reporting test results**, always include: percentage passed, percentage skipped (with reason for skipping, e.g., "missing API key" or "no cluster available"), and percentage failed. Do not just report raw counts.
-- Capture and test logs, including expected errors.
-- Do not manually run verification before git operations — hooks enforce this automatically (commit: build+typecheck+lint; push: standard security; PR: expanded security+tests; PR: acceptance gate with live API, advisory).
-- **Acceptance gate tests** are for tests that make real API calls (LLM APIs, external services) and cost real money. Repos opt in by adding `"acceptance_test"` to `.claude/verify.json` commands — e.g., `"acceptance_test": "vals exec -f .vals.yaml -- npx vitest run test/**/acceptance-gate.test.ts"`. These run after standard PR verification passes, are advisory (never block PR creation), and require human review of results before proceeding. Use the `spinybacked-orbweaver/.claude/verify.json` command shape as a reference example.
-- E2e tests that require network access, external services, or infrastructure (Kind clusters, API keys, databases) MUST have a CI workflow (GitHub Actions).
-- Use real implementations when feasible; mock only at system boundaries.
-- **Never mock locally installed tools or CLIs.** If a tool is installed on the development machine and runs fast (e.g., linters, compilers, schema validators), test against the real binary. Mocking local tools provides false confidence — the mock can't verify output format assumptions, flag compatibility, or behavioral changes across versions. Reserve mocks for remote APIs, expensive operations, and non-deterministic external services.
-- Separate deterministic logic from non-deterministic operations.
+- Tests MUST cover implemented functionality. No tests, not done. TDD: write failing test → implement → verify.
+- Use real implementations when feasible; mock only at system boundaries. Separate deterministic from non-deterministic.
 - Full testing rules: @~/Documents/Repositories/claude-config/rules/testing-rules.md
 - Project-type strategies: @~/Documents/Repositories/claude-config/guides/testing-decision-guide.md
-
-## Test-Driven Development
-
-1. Write a failing test.
-2. Run the test to confirm failure.
-3. Write minimal code to pass the test.
-4. Run the test to confirm success.
-5. Refactor code, maintaining test success.
 
 ## Development Workflow
 
@@ -74,39 +50,18 @@ When drafting emails or written communication:
 
 ## Git Workflow
 
-- Always work on feature branches. Never commit directly to main.
-- Don't squash git commits.
-- Create a new PR to merge to main anytime there are codebase additions.
-- PRs require CodeRabbit review examined and approved by human before merge.
-- The pre-push hook runs CodeRabbit CLI review (advisory). When findings appear, fix issues and push again before creating a PR.
-- After creating a PR, start a background sleep timer (7 minutes) to poll for the CodeRabbit review. When the timer fires, check the PR for reviews and comments, then present all findings to the user.
-- After pushing fixes for CodeRabbit feedback, start another 7-minute timer to check for the re-review before merging.
-- **CodeRabbit triage rubric** for non-critical findings:
-  - **Skip** if the suggestion is genuinely not helpful or misunderstands the code.
-  - **Skip** if the complexity or maintenance cost of the fix outweighs its benefit.
-  - **Fix** if the only reason to skip is that it takes time to write — effort alone is not a reason to skip.
-- NEVER include references to Claude, AI, Anthropic, or Co-Authored-By AI attribution in commit messages. Write commit messages as if authored by a human developer.
-- Repos may override rules via dotfiles (`.skip-branching`, `.skip-coderabbit`).
-- **Acceptance gate labeling:** When creating a PR for a project with acceptance gate tests (`.github/workflows/acceptance-gate.yml` exists or `.claude/verify.json` contains `"acceptance_test"`), add `--label run-acceptance` to the `gh pr create` command. This triggers the acceptance gate CI workflow. The `/prd-done` skill handles this automatically for PRD-driven PRs; apply the same convention for manual PRs.
+- Feature branches only. PRs require CodeRabbit review approved by human before merge.
+- Full workflow, CodeRabbit process, and triage rubric: @~/Documents/Repositories/claude-config/rules/git-workflow.md
 
 ## Issue Juggling
 
-When told to "juggle" issues or work through a queue of issues autonomously:
-
-- Each issue gets its own feature branch and PR.
-- For each issue: create branch, write failing tests first, implement fix, run full suite, push, create PR.
-- The pre-push hook runs CodeRabbit CLI review (advisory). Address any CLI findings before creating the PR — these are cheaper to fix pre-PR than post-PR.
-- Start 7-minute background timer for CodeRabbit PR review. Address findings, push fixes, start another timer for re-review.
-- After merge, switch to main, pull, move to next issue. Clean up merged branches at the end.
-- If an issue is blocked, skip it and flag it when presenting status.
+- Autonomous multi-issue workflow: branch per issue, TDD, CodeRabbit review cycle, merge, next.
+- Full process: @~/Documents/Repositories/claude-config/rules/issue-juggling.md
 
 ## Infrastructure Safety
 
-- When dealing with infrastructure directly (Kubernetes clusters, databases, cloud resources), always make a backup of any files you edit.
-- NEVER render a system unbootable or overwrite any database or datastore without explicit permission.
-- List planned infrastructure commands before executing so the user can review scope.
-- Only apply Kubernetes resource manifests directly. Do not run host-level setup scripts unless explicitly asked.
-- **Cloud resource lifecycle:** Every `setup-*.sh` must have a corresponding `teardown-*.sh`. A global SessionStart hook (`scripts/check-running-clusters.sh` in claude-config) detects running Kind and GKE clusters at session start and reminds the user — no mandatory teardown gates needed. When provisioning new cloud resources, mention the teardown command so the user knows how to clean up later.
+- Backup before editing infra. Never overwrite databases without permission. List commands before executing.
+- Full rules: @~/Documents/Repositories/claude-config/rules/infrastructure-safety.md
 
 ## ABOUTME File Headers
 
@@ -114,16 +69,8 @@ Every code file (`.py`, `.sh`, `.ts`, `.tsx`, `.js`, `.jsx`) must start with a 1
 
 ## Datadog Enterprise Environment
 
-Claude Code routes through the Datadog AI Gateway via two env vars set in `settings.json`:
-- `ANTHROPIC_BASE_URL` — points to `ai-gateway.us1.ddbuild.io`
-- `ANTHROPIC_CUSTOM_HEADERS` — gateway-required headers (`source`, `org-id`, `provider`, auth)
-
-Both are auto-read by `@anthropic-ai/sdk` and `@langchain/anthropic`, so **any subprocess calling the Anthropic API** routes through the gateway and fails if headers are wrong or missing (`400 Missing required header: source`).
-
-**Fix:** Strip **both** vars so calls go directly to Anthropic:
-```bash
-env -u ANTHROPIC_CUSTOM_HEADERS -u ANTHROPIC_BASE_URL vals exec -i -f .vals.yaml -- command
-```
+- Claude Code routes through the Datadog AI Gateway. Subprocesses calling the Anthropic API will fail if gateway headers are wrong.
+- Routing details and bypass fix: @~/Documents/Repositories/claude-config/rules/datadog-environment.md
 
 ## Language & Configuration Defaults
 
@@ -143,29 +90,10 @@ env -u ANTHROPIC_CUSTOM_HEADERS -u ANTHROPIC_BASE_URL vals exec -i -f .vals.yaml
 
 ## PRD Workflow
 
-Feature work is tracked in PRDs (`prds/` directory). When a project has PRDs, use the PRD skills:
-- `/prd-create` — create new PRDs with structured requirements, milestones, and decision logs.
-- `/prd-next` — identify the next task from an active PRD.
-- `/prd-update-progress` — log completed work with evidence. Clear conversation context afterward before starting the next task.
-- `/prd-update-decisions` — capture design decisions and scope changes in the PRD decision log.
-- `/prd-done` — finalize a completed PRD (PR, merge, close issue).
+Feature work is tracked in PRDs (`prds/` directory). Use the PRD skills: `/prd-create`, `/prd-next`, `/prd-update-progress`, `/prd-update-decisions`, `/prd-done`.
+- Do not invent tasks outside the PRD structure. When a PRD exists, follow it.
+- **Do NOT commit manually during PRD work.** `/prd-update-progress` handles commits, PRD updates, and journaling together.
 
-Do not invent tasks outside the PRD structure. When a PRD exists, follow it.
-- **Do NOT commit manually during PRD work.** `/prd-update-progress` handles commits, PRD updates, and journaling together. Committing manually creates duplicate work and skips the skill's workflow.
+## Hooks Reference
 
-## Rules Enforced by Hooks
-
-<!-- PreToolUse hooks (fire before tool execution): -->
-<!-- google-mcp-safety-hook.py (PreToolUse: mcp__.*calendar|youtube|drive|sheet|spreadsheet.*) — defense-in-depth safety for Google API MCP servers -->
-<!-- check-commit-message.sh (PreToolUse: Bash) — blocks git commits with AI/Claude/Anthropic/Co-Authored-By references in commit messages -->
-<!-- check-branch-protection.sh (PreToolUse: Bash) — blocks commits to main/master; opt out with .skip-branching; docs-only exemption per @rules/branch-protection.md -->
-<!-- check-coderabbit-required.sh (PreToolUse: Bash) — blocks PR merge without CodeRabbit review; opt out with .skip-coderabbit -->
-<!-- pre-commit-hook.sh (PreToolUse: Bash) — gates git commit on quick+lint verification (build, typecheck, lint) -->
-<!-- pre-push-hook.sh (PreToolUse: Bash) — gates git push on security verification; escalates to expanded security + tests when an open PR is detected for the branch (uses gh pr list); falls back to standard security when gh is unavailable; runs advisory CodeRabbit CLI review after blocking checks pass (findings in additionalContext; skip with .skip-coderabbit) -->
-<!-- pre-pr-hook.sh (PreToolUse: Bash) — gates PR creation on security+tests verification (expanded security, tests; build/typecheck/lint already passed at commit); also runs advisory acceptance gate tests when .claude/verify.json has an "acceptance_test" command; results require human approval before PR creation continues -->
-<!-- check-test-tiers.sh (PreToolUse: Bash) — warns (not blocks) on git push/PR create when unit/integration/e2e test tiers are missing; opt out with .skip-integration, .skip-e2e -->
-<!-- check-progress-md.sh (PreToolUse: Bash) — blocks git commit when PRD checkboxes are marked done but PROGRESS.md is not staged; only fires when PROGRESS.md exists in repo -->
-<!-- check-aboutme.sh (PreToolUse: Write|Edit) — blocks code files missing ABOUTME headers; fix-and-retry adds headers organically; skips config, markdown, generated files -->
-
-<!-- PostToolUse hooks (fire after tool execution): -->
-<!-- post-write-codeblock-check.sh (PostToolUse: Write|Edit) — checks markdown files for bare code blocks missing language specifiers -->
+- Hook details: @~/Documents/Repositories/claude-config/rules/hooks-reference.md
