@@ -114,6 +114,10 @@ If the research is for a technology being introduced into a project:
 - **Respect the stack** — frame recommendations within the existing toolchain (TypeScript, Go, Python, Kubebuilder, Shell, YAML)
 - **Be opinionated** — "it depends" is not a useful answer. State a recommendation, then note when the alternative is better
 
+## Decision Awareness
+
+If this research was conducted as part of a PRD implementation, assess whether the findings constitute design decisions that affect the PRD — a technology choice, a discovered constraint, a deprecated approach that changes the plan. If so, run `/prd-update-decisions` to capture them so they propagate to downstream milestones.
+
 ## Tools Used
 
 - WebSearch (primary research)

@@ -319,6 +319,10 @@ If `coderabbit` is not installed, skip this step with a note: "CodeRabbit CLI no
 - **If findings exist**: Apply the CodeRabbit triage rubric (see CLAUDE.md) — fix or skip each finding with rationale. Commit fixes, then re-run the review to confirm clean.
 - **If no findings**: Proceed to next steps.
 
+## Step 8.7: Decision Awareness Check
+
+If this work is part of a PRD, assess whether any design decisions emerged during this implementation session — architecture changes, scope adjustments, technical discoveries, or approach pivots. If any did, run `/prd-update-decisions` to capture them before moving on. This ensures decisions are recorded and propagated to downstream milestones while context is fresh.
+
 ## Step 9: Next Steps Based on PRD Status
 
 After completing the PRD update, committing changes, and addressing any CodeRabbit findings, present a brief summary:
