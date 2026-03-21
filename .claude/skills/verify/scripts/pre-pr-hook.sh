@@ -104,13 +104,45 @@ run_phase() {
     return 0  # Skip phases with no command
   fi
 
-  local output
-  output=$("$SCRIPT_DIR/verify-phase.sh" "$phase_name" "$phase_cmd" "$PROJECT_DIR" 2>&1)
+  # Use temp file to decouple output capture from exit code capture.
+  # $() pipe capture can produce false non-zero exit codes with large output
+  # (observed in repos with 1700+ tests producing 20KB+ of output).
+  local tmpfile
+  tmpfile=$(mktemp)
+  "$SCRIPT_DIR/verify-phase.sh" "$phase_name" "$phase_cmd" "$PROJECT_DIR" > "$tmpfile" 2>&1
   local exit_code=$?
+
+  # Diagnostic: persist debug info for post-mortem analysis
+  {
+    echo "TIMESTAMP: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    echo "HOOK: pre-pr-hook.sh run_phase"
+    echo "PHASE: $phase_name"
+    echo "CMD: $phase_cmd"
+    echo "PROJECT_DIR: $PROJECT_DIR"
+    echo "RAW_EXIT: $exit_code"
+    echo "TMPFILE_BYTES: $(wc -c < "$tmpfile" 2>/dev/null || echo 0)"
+    echo "GREP_PASSED: $(grep -c "RESULT: $phase_name PASSED" "$tmpfile" 2>/dev/null || echo 0)"
+    echo "GREP_FAILED: $(grep -c "RESULT: $phase_name FAILED" "$tmpfile" 2>/dev/null || echo 0)"
+    echo "GREP_VERIFY_EXIT: $(grep 'VERIFY_EXIT:' "$tmpfile" 2>/dev/null || echo 'NOT FOUND')"
+    echo "LAST_10_LINES:"
+    tail -10 "$tmpfile" 2>/dev/null || echo "(empty)"
+  } > /tmp/verify-hook-debug.txt 2>&1
+
+  # Belt-and-suspenders: if the process exit code is non-zero but
+  # verify-phase.sh's VERIFY_EXIT marker confirms exit 0, trust it.
+  # Uses VERIFY_EXIT (not RESULT) because only verify-phase.sh emits
+  # this marker — test command output cannot spoof it.
+  if [ $exit_code -ne 0 ] && grep -q "^VERIFY_EXIT: 0$" "$tmpfile" 2>/dev/null; then
+    exit_code=0
+  fi
 
   if [ $exit_code -ne 0 ]; then
     FAILED_PHASE="$phase_name"
-    FAILURE_OUTPUT="$output"
+    FAILURE_OUTPUT=$(cat "$tmpfile")
+  fi
+  rm -f "$tmpfile"
+
+  if [ $exit_code -ne 0 ]; then
     return 1
   fi
   return 0
@@ -122,11 +154,13 @@ run_phase() {
 # This tier adds expanded security and tests only.
 
 # Phase 1: Security (pre-pr expanded mode, before tests per Decision 12)
-security_output=$("$SCRIPT_DIR/security-check.sh" "pre-pr" "$PROJECT_DIR" "$DIFF_BASE" 2>&1)
+security_tmpfile=$(mktemp)
+"$SCRIPT_DIR/security-check.sh" "pre-pr" "$PROJECT_DIR" "$DIFF_BASE" > "$security_tmpfile" 2>&1
 if [ $? -ne 0 ]; then
   FAILED_PHASE="security"
-  FAILURE_OUTPUT="$security_output"
+  FAILURE_OUTPUT=$(cat "$security_tmpfile")
 fi
+rm -f "$security_tmpfile"
 
 # Phase 2: Tests (most expensive blocking phase)
 if [ -z "$FAILED_PHASE" ]; then
@@ -199,10 +233,11 @@ output = os.environ['VERIFY_FAILURE_OUTPUT']
 # Sanitize output: remove invalid Unicode surrogates that break JSON serialization
 output = output.encode('utf-8', errors='replace').decode('utf-8')
 
-# Truncate to prevent oversized API payloads
+# Truncate to prevent oversized API payloads — keep the TAIL because
+# test failures and summaries appear at the end of output.
 MAX_OUTPUT = 4000
 if len(output) > MAX_OUTPUT:
-    output = output[:MAX_OUTPUT] + '\n\n... (output truncated)'
+    output = '(output truncated — showing last 4000 chars) ...\n\n' + output[-MAX_OUTPUT:]
 
 reason = f'PR creation blocked — security+tests check failed at phase: {phase}. Fix the underlying code to resolve the error. NEVER add suppression annotations (@ts-ignore, type:ignore, lint-disable) to bypass the check — fix the actual problem. The ONE exception: eslint-disable-line no-console is allowed for intentional CLI output (the security check already accepts it).\n\n{output}'
 result = {

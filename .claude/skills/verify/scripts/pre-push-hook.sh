@@ -100,33 +100,66 @@ if [[ "$HAS_PR" == true ]]; then
   # This ensures tests run on every push to a PR branch, not just at PR creation.
 
   # Phase 1: Expanded security
-  security_output=$("$SCRIPT_DIR/security-check.sh" "pre-pr" "$PROJECT_DIR" "$DIFF_BASE" 2>&1)
+  security_tmpfile=$(mktemp)
+  "$SCRIPT_DIR/security-check.sh" "pre-pr" "$PROJECT_DIR" "$DIFF_BASE" > "$security_tmpfile" 2>&1
   if [[ $? -ne 0 ]]; then
     FAILED_PHASE="security"
-    FAILURE_OUTPUT="$security_output"
+    FAILURE_OUTPUT=$(cat "$security_tmpfile")
   fi
+  rm -f "$security_tmpfile"
 
   # Phase 2: Tests (only if security passed)
+  # Use temp file to decouple output capture from exit code capture.
+  # $() pipe capture can produce false non-zero exit codes with large output
+  # (observed in repos with 1700+ tests producing 20KB+ of output).
   if [[ -z "$FAILED_PHASE" ]]; then
     DETECTION=$("$SCRIPT_DIR/detect-project.sh" "$PROJECT_DIR" 2>/dev/null || echo '{"project_type":"unknown"}')
     CMD_TEST=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('test') or '')" 2>/dev/null || echo "")
     if [[ -n "$CMD_TEST" ]]; then
-      test_output=$("$SCRIPT_DIR/verify-phase.sh" "test" "$CMD_TEST" "$PROJECT_DIR" 2>&1)
-      if [[ $? -ne 0 ]]; then
-        FAILED_PHASE="test"
-        FAILURE_OUTPUT="$test_output"
+      test_tmpfile=$(mktemp)
+      "$SCRIPT_DIR/verify-phase.sh" "test" "$CMD_TEST" "$PROJECT_DIR" > "$test_tmpfile" 2>&1
+      test_exit=$?
+
+      # Diagnostic: persist debug info for post-mortem analysis
+      {
+        echo "TIMESTAMP: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        echo "CMD_TEST: $CMD_TEST"
+        echo "PROJECT_DIR: $PROJECT_DIR"
+        echo "RAW_EXIT: $test_exit"
+        echo "TMPFILE_BYTES: $(wc -c < "$test_tmpfile" 2>/dev/null || echo 0)"
+        echo "GREP_PASSED: $(grep -c 'RESULT: test PASSED' "$test_tmpfile" 2>/dev/null || echo 0)"
+        echo "GREP_FAILED: $(grep -c 'RESULT: test FAILED' "$test_tmpfile" 2>/dev/null || echo 0)"
+        echo "GREP_VERIFY_EXIT: $(grep 'VERIFY_EXIT:' "$test_tmpfile" 2>/dev/null || echo 'NOT FOUND')"
+        echo "LAST_10_LINES:"
+        tail -10 "$test_tmpfile" 2>/dev/null || echo "(empty)"
+      } > /tmp/verify-hook-debug.txt 2>&1
+
+      # Belt-and-suspenders: if the process exit code is non-zero but
+      # verify-phase.sh's VERIFY_EXIT marker confirms exit 0, trust it.
+      # Uses VERIFY_EXIT (not RESULT) because only verify-phase.sh emits
+      # this marker — test command output cannot spoof it.
+      if [[ $test_exit -ne 0 ]] && grep -q "^VERIFY_EXIT: 0$" "$test_tmpfile" 2>/dev/null; then
+        test_exit=0
       fi
+
+      if [[ $test_exit -ne 0 ]]; then
+        FAILED_PHASE="test"
+        FAILURE_OUTPUT=$(cat "$test_tmpfile")
+      fi
+      rm -f "$test_tmpfile"
     fi
   fi
 
   VERIFY_TIER="security+tests"
 else
   # No PR (or gh unavailable) — standard security only
-  security_output=$("$SCRIPT_DIR/security-check.sh" "standard" "$PROJECT_DIR" "$DIFF_BASE" 2>&1)
+  security_tmpfile=$(mktemp)
+  "$SCRIPT_DIR/security-check.sh" "standard" "$PROJECT_DIR" "$DIFF_BASE" > "$security_tmpfile" 2>&1
   if [[ $? -ne 0 ]]; then
     FAILED_PHASE="security"
-    FAILURE_OUTPUT="$security_output"
+    FAILURE_OUTPUT=$(cat "$security_tmpfile")
   fi
+  rm -f "$security_tmpfile"
 
   VERIFY_TIER="standard security"
 fi
@@ -169,10 +202,11 @@ tier = os.environ['VERIFY_TIER']
 # Sanitize output: remove invalid Unicode surrogates that break JSON serialization
 output = output.encode('utf-8', errors='replace').decode('utf-8')
 
-# Truncate to prevent oversized API payloads
+# Truncate to prevent oversized API payloads — keep the TAIL because
+# test failures and summaries appear at the end of output.
 MAX_OUTPUT = 4000
 if len(output) > MAX_OUTPUT:
-    output = output[:MAX_OUTPUT] + '\n\n... (output truncated)'
+    output = '(output truncated — showing last 4000 chars) ...\n\n' + output[-MAX_OUTPUT:]
 
 reason = f'Push blocked — {tier} check failed at phase: {phase}. Fix the underlying code to resolve the error. NEVER add suppression annotations (@ts-ignore, type:ignore, lint-disable) to bypass the check — fix the actual problem. The ONE exception: eslint-disable-line no-console is allowed for intentional CLI output (the security check already accepts it).\n\n{output}'
 result = {

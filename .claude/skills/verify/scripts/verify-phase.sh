@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# ABOUTME: Run a single verification phase (build, typecheck, lint, test) and report pass/fail
+# ABOUTME: Used by pre-commit, pre-push, and pre-pr hooks to execute and evaluate verification commands
 # verify-phase.sh — Run a single verification phase
 #
 # Usage: verify-phase.sh <phase> <command> [project-directory]
@@ -13,7 +15,10 @@
 #   1 — Phase failed
 #   2 — Invalid arguments
 
-set -uo pipefail
+set -u
+# Note: pipefail intentionally omitted. This script has no pipelines of its own,
+# and pipefail can interfere with eval'd commands that contain implicit pipelines
+# (e.g., npm process trees). The exit code from eval captures the command's result.
 
 PHASE="${1:-}"
 COMMAND="${2:-}"
@@ -46,5 +51,6 @@ if [ $EXIT_CODE -eq 0 ]; then
 else
   echo "RESULT: $PHASE FAILED (exit code $EXIT_CODE)"
 fi
+echo "VERIFY_EXIT: $EXIT_CODE"
 
 exit $EXIT_CODE

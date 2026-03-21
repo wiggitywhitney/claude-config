@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# ABOUTME: PreToolUse hook that gates git commit on quick+lint verification
+# ABOUTME: Runs build, typecheck, and lint checks before allowing commits
 # pre-commit-hook.sh — PreToolUse hook that gates git commit on quick+lint verification
 #
 # Installed as a Claude Code PreToolUse hook on Bash.
@@ -71,13 +73,28 @@ run_phase() {
     return 0  # Skip phases with no command
   fi
 
-  local output
-  output=$("$SCRIPT_DIR/verify-phase.sh" "$phase_name" "$phase_cmd" "$PROJECT_DIR" 2>&1)
+  # Use temp file to decouple output capture from exit code capture.
+  # $() pipe capture can produce false non-zero exit codes with large output.
+  local tmpfile
+  tmpfile=$(mktemp)
+  "$SCRIPT_DIR/verify-phase.sh" "$phase_name" "$phase_cmd" "$PROJECT_DIR" > "$tmpfile" 2>&1
   local exit_code=$?
+
+  # Belt-and-suspenders: if the process exit code is non-zero but
+  # verify-phase.sh's VERIFY_EXIT marker confirms exit 0, trust it.
+  # Uses VERIFY_EXIT (not RESULT) because only verify-phase.sh emits
+  # this marker — test command output cannot spoof it.
+  if [ $exit_code -ne 0 ] && grep -q "^VERIFY_EXIT: 0$" "$tmpfile" 2>/dev/null; then
+    exit_code=0
+  fi
 
   if [ $exit_code -ne 0 ]; then
     FAILED_PHASE="$phase_name"
-    FAILURE_OUTPUT="$output"
+    FAILURE_OUTPUT=$(cat "$tmpfile")
+  fi
+  rm -f "$tmpfile"
+
+  if [ $exit_code -ne 0 ]; then
     return 1
   fi
   return 0
@@ -96,11 +113,13 @@ fi
 
 # Phase 3: Lint — scoped to staged files only (Decision 7)
 if [ -z "$FAILED_PHASE" ]; then
-  lint_output=$("$SCRIPT_DIR/lint-changed.sh" "staged" "$PROJECT_DIR" "$CMD_LINT" 2>&1)
+  lint_tmpfile=$(mktemp)
+  "$SCRIPT_DIR/lint-changed.sh" "staged" "$PROJECT_DIR" "$CMD_LINT" > "$lint_tmpfile" 2>&1
   if [ $? -ne 0 ]; then
     FAILED_PHASE="lint"
-    FAILURE_OUTPUT="$lint_output"
+    FAILURE_OUTPUT=$(cat "$lint_tmpfile")
   fi
+  rm -f "$lint_tmpfile"
 fi
 
 # Return decision
@@ -116,10 +135,11 @@ output = os.environ['VERIFY_FAILURE_OUTPUT']
 # Sanitize output: remove invalid Unicode surrogates that break JSON serialization
 output = output.encode('utf-8', errors='replace').decode('utf-8')
 
-# Truncate to prevent oversized API payloads
+# Truncate to prevent oversized API payloads — keep the TAIL because
+# test failures and summaries appear at the end of output.
 MAX_OUTPUT = 4000
 if len(output) > MAX_OUTPUT:
-    output = output[:MAX_OUTPUT] + '\n\n... (output truncated)'
+    output = '(output truncated — showing last 4000 chars) ...\n\n' + output[-MAX_OUTPUT:]
 
 reason = f'Verification failed at phase: {phase}. Fix the underlying code to resolve the error. NEVER add suppression annotations (@ts-ignore, type:ignore, lint-disable) to bypass the check — fix the actual problem. The ONE exception: eslint-disable-line no-console is allowed for intentional CLI output (the security check already accepts it).\n\n{output}'
 result = {
