@@ -81,10 +81,10 @@ run_phase() {
   local exit_code=$?
 
   # Belt-and-suspenders: if the process exit code is non-zero but
-  # verify-phase.sh's own output confirms the command passed, trust
-  # the output. Handles exit code corruption from credential helpers,
-  # signal handlers, or shell option interactions.
-  if [ $exit_code -ne 0 ] && grep -q "RESULT: $phase_name PASSED" "$tmpfile" 2>/dev/null; then
+  # verify-phase.sh's VERIFY_EXIT marker confirms exit 0, trust it.
+  # Uses VERIFY_EXIT (not RESULT) because only verify-phase.sh emits
+  # this marker — test command output cannot spoof it.
+  if [ $exit_code -ne 0 ] && grep -q "^VERIFY_EXIT: 0$" "$tmpfile" 2>/dev/null; then
     exit_code=0
   fi
 

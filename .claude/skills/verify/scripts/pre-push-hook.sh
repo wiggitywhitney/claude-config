@@ -120,11 +120,25 @@ if [[ "$HAS_PR" == true ]]; then
       "$SCRIPT_DIR/verify-phase.sh" "test" "$CMD_TEST" "$PROJECT_DIR" > "$test_tmpfile" 2>&1
       test_exit=$?
 
+      # Diagnostic: persist debug info for post-mortem analysis
+      {
+        echo "TIMESTAMP: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        echo "CMD_TEST: $CMD_TEST"
+        echo "PROJECT_DIR: $PROJECT_DIR"
+        echo "RAW_EXIT: $test_exit"
+        echo "TMPFILE_BYTES: $(wc -c < "$test_tmpfile" 2>/dev/null || echo 0)"
+        echo "GREP_PASSED: $(grep -c 'RESULT: test PASSED' "$test_tmpfile" 2>/dev/null || echo 0)"
+        echo "GREP_FAILED: $(grep -c 'RESULT: test FAILED' "$test_tmpfile" 2>/dev/null || echo 0)"
+        echo "GREP_VERIFY_EXIT: $(grep 'VERIFY_EXIT:' "$test_tmpfile" 2>/dev/null || echo 'NOT FOUND')"
+        echo "LAST_10_LINES:"
+        tail -10 "$test_tmpfile" 2>/dev/null || echo "(empty)"
+      } > /tmp/verify-hook-debug.txt 2>&1
+
       # Belt-and-suspenders: if the process exit code is non-zero but
-      # verify-phase.sh's own output confirms the command passed, trust
-      # the output. Handles exit code corruption from credential helpers,
-      # signal handlers, or shell option interactions.
-      if [[ $test_exit -ne 0 ]] && grep -q "RESULT: test PASSED" "$test_tmpfile" 2>/dev/null; then
+      # verify-phase.sh's VERIFY_EXIT marker confirms exit 0, trust it.
+      # Uses VERIFY_EXIT (not RESULT) because only verify-phase.sh emits
+      # this marker — test command output cannot spoof it.
+      if [[ $test_exit -ne 0 ]] && grep -q "^VERIFY_EXIT: 0$" "$test_tmpfile" 2>/dev/null; then
         test_exit=0
       fi
 

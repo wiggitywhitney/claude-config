@@ -151,7 +151,7 @@ def run_tests():
                           output, "RESULT: test PASSED")
 
         # Through $() capture (simulating hook behavior)
-        cap_exit, cap_len, cap_last = simulate_hook_capture(
+        cap_exit, cap_len, _cap_last = simulate_hook_capture(
             VERIFY_PHASE, "test", large_pass, temp_dir
         )
         t.assert_equal("large output (6K): captured exit code is 0",
@@ -181,7 +181,7 @@ def run_tests():
                           output, "RESULT: test PASSED")
 
         # Through $() capture (simulating hook behavior)
-        cap_exit, cap_len, cap_last = simulate_hook_capture(
+        cap_exit, cap_len, _cap_last = simulate_hook_capture(
             VERIFY_PHASE, "test", vlarge_pass, temp_dir
         )
         t.assert_equal("very large output (25K): captured exit code is 0",
@@ -287,8 +287,8 @@ def run_tests():
             t._fail(f"temp file capture: output size {tmp_size} > 20000",
                      f"Expected >20000, got {tmp_size}")
 
-    # ─── Section 7: Output-based override (corrupted exit code) ───
-    t.section("Output-based override for corrupted exit codes")
+    # ─── Section 7: VERIFY_EXIT override (corrupted exit code) ───
+    t.section("VERIFY_EXIT override for corrupted exit codes")
 
     with TempDir() as temp_dir:
         lines = generate_large_output_lines(200)
@@ -297,7 +297,7 @@ def run_tests():
         )
 
         # Simulate: verify-phase.sh exits 0, but something corrupts $? to 1.
-        # The hook should detect "RESULT: test PASSED" in the temp file and
+        # The hook should detect VERIFY_EXIT: 0 in the temp file and
         # override the exit code back to 0.
         bash_script = (
             f'tmpfile=$(mktemp)\n'
@@ -306,8 +306,8 @@ def run_tests():
             f'# Simulate corrupted exit code\n'
             f'false\n'
             f'test_exit=$?\n'
-            f'# Belt-and-suspenders override\n'
-            f'if [[ $test_exit -ne 0 ]] && grep -q "RESULT: test PASSED"'
+            f'# Belt-and-suspenders override using VERIFY_EXIT marker\n'
+            f'if [[ $test_exit -ne 0 ]] && grep -q "^VERIFY_EXIT: 0$"'
             f' "$tmpfile" 2>/dev/null; then\n'
             f'  test_exit=0\n'
             f'fi\n'
@@ -326,7 +326,7 @@ def run_tests():
                 override_exit = int(line.split(":", 1)[1])
 
         t.assert_equal(
-            "corrupted exit code overridden to 0 when output says PASSED",
+            "corrupted exit code overridden to 0 via VERIFY_EXIT marker",
             override_exit, 0,
         )
 
@@ -337,14 +337,14 @@ def run_tests():
             temp_dir, "fail_no_override.sh", lines, 1
         )
 
-        # Real failure: exit code is non-zero AND output says FAILED.
+        # Real failure: exit code is non-zero AND VERIFY_EXIT says non-zero.
         # Override should NOT trigger.
         bash_script = (
             f'tmpfile=$(mktemp)\n'
             f'"{VERIFY_PHASE}" "test" "{fail_cmd}" "{temp_dir}"'
             f' > "$tmpfile" 2>&1\n'
             f'test_exit=$?\n'
-            f'if [[ $test_exit -ne 0 ]] && grep -q "RESULT: test PASSED"'
+            f'if [[ $test_exit -ne 0 ]] && grep -q "^VERIFY_EXIT: 0$"'
             f' "$tmpfile" 2>/dev/null; then\n'
             f'  test_exit=0\n'
             f'fi\n'
@@ -363,8 +363,48 @@ def run_tests():
                 no_override_exit = int(line.split(":", 1)[1])
 
         t.assert_equal(
-            "real failure NOT overridden (exit stays 1 when output says FAILED)",
+            "real failure NOT overridden (VERIFY_EXIT shows non-zero)",
             no_override_exit, 1,
+        )
+
+    # ─── Section 8: Spoofed RESULT marker regression ───
+    t.section("Spoofed RESULT marker does not bypass override")
+
+    with TempDir() as temp_dir:
+        # Command prints "RESULT: test PASSED" but exits 1.
+        # verify-phase.sh will see exit 1 and write VERIFY_EXIT: 1.
+        # The override must NOT trigger (VERIFY_EXIT != 0).
+        spoof_cmd = create_test_command(
+            temp_dir, "spoof_pass.sh",
+            ["RESULT: test PASSED", "FAIL: something broke"], 1,
+        )
+
+        bash_script = (
+            f'tmpfile=$(mktemp)\n'
+            f'"{VERIFY_PHASE}" "test" "{spoof_cmd}" "{temp_dir}"'
+            f' > "$tmpfile" 2>&1\n'
+            f'test_exit=$?\n'
+            f'if [[ $test_exit -ne 0 ]] && grep -q "^VERIFY_EXIT: 0$"'
+            f' "$tmpfile" 2>/dev/null; then\n'
+            f'  test_exit=0\n'
+            f'fi\n'
+            f'echo "SPOOF_EXIT:$test_exit"\n'
+            f'rm -f "$tmpfile"\n'
+        )
+        result = subprocess.run(
+            ["bash", "-c", bash_script],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        spoof_exit = -1
+        for line in result.stdout.strip().split("\n"):
+            if line.startswith("SPOOF_EXIT:"):
+                spoof_exit = int(line.split(":", 1)[1])
+
+        t.assert_equal(
+            "spoofed RESULT: test PASSED in command output does NOT override",
+            spoof_exit, 1,
         )
 
     t.summary()
