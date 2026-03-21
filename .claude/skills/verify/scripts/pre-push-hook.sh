@@ -100,33 +100,42 @@ if [[ "$HAS_PR" == true ]]; then
   # This ensures tests run on every push to a PR branch, not just at PR creation.
 
   # Phase 1: Expanded security
-  security_output=$("$SCRIPT_DIR/security-check.sh" "pre-pr" "$PROJECT_DIR" "$DIFF_BASE" 2>&1)
+  security_tmpfile=$(mktemp)
+  "$SCRIPT_DIR/security-check.sh" "pre-pr" "$PROJECT_DIR" "$DIFF_BASE" > "$security_tmpfile" 2>&1
   if [[ $? -ne 0 ]]; then
     FAILED_PHASE="security"
-    FAILURE_OUTPUT="$security_output"
+    FAILURE_OUTPUT=$(cat "$security_tmpfile")
   fi
+  rm -f "$security_tmpfile"
 
   # Phase 2: Tests (only if security passed)
+  # Use temp file to decouple output capture from exit code capture.
+  # $() pipe capture can produce false non-zero exit codes with large output
+  # (observed in repos with 1700+ tests producing 20KB+ of output).
   if [[ -z "$FAILED_PHASE" ]]; then
     DETECTION=$("$SCRIPT_DIR/detect-project.sh" "$PROJECT_DIR" 2>/dev/null || echo '{"project_type":"unknown"}')
     CMD_TEST=$(echo "$DETECTION" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commands',{}).get('test') or '')" 2>/dev/null || echo "")
     if [[ -n "$CMD_TEST" ]]; then
-      test_output=$("$SCRIPT_DIR/verify-phase.sh" "test" "$CMD_TEST" "$PROJECT_DIR" 2>&1)
+      test_tmpfile=$(mktemp)
+      "$SCRIPT_DIR/verify-phase.sh" "test" "$CMD_TEST" "$PROJECT_DIR" > "$test_tmpfile" 2>&1
       if [[ $? -ne 0 ]]; then
         FAILED_PHASE="test"
-        FAILURE_OUTPUT="$test_output"
+        FAILURE_OUTPUT=$(cat "$test_tmpfile")
       fi
+      rm -f "$test_tmpfile"
     fi
   fi
 
   VERIFY_TIER="security+tests"
 else
   # No PR (or gh unavailable) — standard security only
-  security_output=$("$SCRIPT_DIR/security-check.sh" "standard" "$PROJECT_DIR" "$DIFF_BASE" 2>&1)
+  security_tmpfile=$(mktemp)
+  "$SCRIPT_DIR/security-check.sh" "standard" "$PROJECT_DIR" "$DIFF_BASE" > "$security_tmpfile" 2>&1
   if [[ $? -ne 0 ]]; then
     FAILED_PHASE="security"
-    FAILURE_OUTPUT="$security_output"
+    FAILURE_OUTPUT=$(cat "$security_tmpfile")
   fi
+  rm -f "$security_tmpfile"
 
   VERIFY_TIER="standard security"
 fi

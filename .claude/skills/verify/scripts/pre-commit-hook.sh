@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# ABOUTME: PreToolUse hook that gates git commit on quick+lint verification
+# ABOUTME: Runs build, typecheck, and lint checks before allowing commits
 # pre-commit-hook.sh — PreToolUse hook that gates git commit on quick+lint verification
 #
 # Installed as a Claude Code PreToolUse hook on Bash.
@@ -71,13 +73,20 @@ run_phase() {
     return 0  # Skip phases with no command
   fi
 
-  local output
-  output=$("$SCRIPT_DIR/verify-phase.sh" "$phase_name" "$phase_cmd" "$PROJECT_DIR" 2>&1)
+  # Use temp file to decouple output capture from exit code capture.
+  # $() pipe capture can produce false non-zero exit codes with large output.
+  local tmpfile
+  tmpfile=$(mktemp)
+  "$SCRIPT_DIR/verify-phase.sh" "$phase_name" "$phase_cmd" "$PROJECT_DIR" > "$tmpfile" 2>&1
   local exit_code=$?
 
   if [ $exit_code -ne 0 ]; then
     FAILED_PHASE="$phase_name"
-    FAILURE_OUTPUT="$output"
+    FAILURE_OUTPUT=$(cat "$tmpfile")
+  fi
+  rm -f "$tmpfile"
+
+  if [ $exit_code -ne 0 ]; then
     return 1
   fi
   return 0
@@ -96,11 +105,13 @@ fi
 
 # Phase 3: Lint — scoped to staged files only (Decision 7)
 if [ -z "$FAILED_PHASE" ]; then
-  lint_output=$("$SCRIPT_DIR/lint-changed.sh" "staged" "$PROJECT_DIR" "$CMD_LINT" 2>&1)
+  lint_tmpfile=$(mktemp)
+  "$SCRIPT_DIR/lint-changed.sh" "staged" "$PROJECT_DIR" "$CMD_LINT" > "$lint_tmpfile" 2>&1
   if [ $? -ne 0 ]; then
     FAILED_PHASE="lint"
-    FAILURE_OUTPUT="$lint_output"
+    FAILURE_OUTPUT=$(cat "$lint_tmpfile")
   fi
+  rm -f "$lint_tmpfile"
 fi
 
 # Return decision

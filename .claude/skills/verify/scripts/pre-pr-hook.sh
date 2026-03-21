@@ -104,13 +104,21 @@ run_phase() {
     return 0  # Skip phases with no command
   fi
 
-  local output
-  output=$("$SCRIPT_DIR/verify-phase.sh" "$phase_name" "$phase_cmd" "$PROJECT_DIR" 2>&1)
+  # Use temp file to decouple output capture from exit code capture.
+  # $() pipe capture can produce false non-zero exit codes with large output
+  # (observed in repos with 1700+ tests producing 20KB+ of output).
+  local tmpfile
+  tmpfile=$(mktemp)
+  "$SCRIPT_DIR/verify-phase.sh" "$phase_name" "$phase_cmd" "$PROJECT_DIR" > "$tmpfile" 2>&1
   local exit_code=$?
 
   if [ $exit_code -ne 0 ]; then
     FAILED_PHASE="$phase_name"
-    FAILURE_OUTPUT="$output"
+    FAILURE_OUTPUT=$(cat "$tmpfile")
+  fi
+  rm -f "$tmpfile"
+
+  if [ $exit_code -ne 0 ]; then
     return 1
   fi
   return 0
@@ -122,11 +130,13 @@ run_phase() {
 # This tier adds expanded security and tests only.
 
 # Phase 1: Security (pre-pr expanded mode, before tests per Decision 12)
-security_output=$("$SCRIPT_DIR/security-check.sh" "pre-pr" "$PROJECT_DIR" "$DIFF_BASE" 2>&1)
+security_tmpfile=$(mktemp)
+"$SCRIPT_DIR/security-check.sh" "pre-pr" "$PROJECT_DIR" "$DIFF_BASE" > "$security_tmpfile" 2>&1
 if [ $? -ne 0 ]; then
   FAILED_PHASE="security"
-  FAILURE_OUTPUT="$security_output"
+  FAILURE_OUTPUT=$(cat "$security_tmpfile")
 fi
+rm -f "$security_tmpfile"
 
 # Phase 2: Tests (most expensive blocking phase)
 if [ -z "$FAILED_PHASE" ]; then
