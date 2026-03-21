@@ -1,5 +1,9 @@
 # Global Development Standards
 
+## Dates and Times
+
+Before discussing any date, time, day of the week, or scheduling topic with the user, run `date` first to get the current date, time, and day of the week. Do not rely on context injections or training data — use the deterministic output. This applies to any conversation involving deadlines, "today", "tomorrow", days of the week, or relative time references.
+
 ## Writing Style
 
 When drafting emails or written communication:
@@ -33,7 +37,7 @@ When drafting emails or written communication:
 
 ## Adopting New Technologies
 
-- Stop and research before writing code with any technology new to the project. Use `/research <technology>`.
+- **MANDATORY**: Before writing code with any technology new to the project, invoke `/research <technology>`. Do not skip this step.
 - Full process: @~/.claude/rules/adopting-new-technologies.md
 
 ## Testing

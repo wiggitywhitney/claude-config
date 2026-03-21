@@ -5,7 +5,7 @@ description: Process for researching and adopting new frameworks, libraries, and
 
 # Adopting New Technologies
 
-- Before writing code with a framework, library, or tool that is new to the current project, **stop and research it first**. WebSearch official documentation using the current year. Use `/research <technology>` for thorough investigation.
+- Before writing code with a framework, library, or tool that is new to the current project, **stop and invoke `/research <technology>`**. This is mandatory — do not skip it in favor of a quick WebSearch or relying on training data.
 - Check `~/.claude/rules/` for an existing rule file covering this technology. If one exists, verify its guidance is current rather than researching from scratch.
 - When adopting a new framework, API, or tool pattern in a project, check official documentation for current best practices — prioritizing recency and anything that contradicts common assumptions.
 - Document surprises (breaking changes, non-obvious gotchas, patterns that differ from conventions) in a path-scoped rule file and reference it from CLAUDE.md using `@path/to/file` import syntax.
