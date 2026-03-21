@@ -29,6 +29,7 @@ When drafting emails or written communication:
 - When creating prompts for AI agents, emphasize the process to follow rather than stating the goal upfront.
 - When creating or modifying any SKILL.md file, system prompt, or AI agent instruction, use `/write-prompt` to review the result before committing.
 - **ALWAYS add progress indicators** for any operation that might cause the user to wait. This includes downloading files, processing large datasets, network requests, and any computation that takes more than 1-2 seconds.
+- **MANDATORY**: When writing documentation (README, guides, CLAUDE.md instructions, PRD milestones), invoke `/write-docs`. Do not skip this step.
 
 ## Getting Help
 
