@@ -15,7 +15,6 @@ When drafting emails or written communication:
 ## Writing Code
 
 - Prefer simple, clean, maintainable solutions over clever or complex ones.
-- Prioritize readability and maintainability.
 - Make the smallest reasonable changes necessary.
 - Match the style and formatting of surrounding code.
 - NEVER make unrelated code changes. Document them in a new issue instead.
@@ -29,7 +28,7 @@ When drafting emails or written communication:
 - When creating prompts for AI agents, emphasize the process to follow rather than stating the goal upfront.
 - When creating or modifying any SKILL.md file, system prompt, or AI agent instruction, use `/write-prompt` to review the result before committing.
 - **ALWAYS add progress indicators** for any operation that might cause the user to wait. This includes downloading files, processing large datasets, network requests, and any computation that takes more than 1-2 seconds.
-- **MANDATORY**: When writing documentation (README, guides, CLAUDE.md instructions, PRD milestones), invoke `/write-docs`. Do not skip this step.
+- **MANDATORY**: When writing user-facing documentation (README, guides, PRD milestones), invoke `/write-docs`. Do not skip this step. Excludes CLAUDE.md and rule files.
 
 ## Getting Help
 
@@ -98,6 +97,10 @@ Every code file (`.py`, `.sh`, `.ts`, `.tsx`, `.js`, `.jsx`) must start with a 1
 Feature work is tracked in PRDs (`prds/` directory). Use the PRD skills: `/prd-create`, `/prd-next`, `/prd-update-progress`, `/prd-update-decisions`, `/prd-done`.
 - Do not invent tasks outside the PRD structure. When a PRD exists, follow it.
 - **Do NOT commit manually during PRD work.** `/prd-update-progress` handles commits, PRD updates, and journaling together.
+
+## Conflict Resolution
+
+- Project CLAUDE.md overrides global. When rules conflict, ask the user.
 
 ## Hooks Reference
 
