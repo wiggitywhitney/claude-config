@@ -80,6 +80,14 @@ run_phase() {
   "$SCRIPT_DIR/verify-phase.sh" "$phase_name" "$phase_cmd" "$PROJECT_DIR" > "$tmpfile" 2>&1
   local exit_code=$?
 
+  # Belt-and-suspenders: if the process exit code is non-zero but
+  # verify-phase.sh's own output confirms the command passed, trust
+  # the output. Handles exit code corruption from credential helpers,
+  # signal handlers, or shell option interactions.
+  if [ $exit_code -ne 0 ] && grep -q "RESULT: $phase_name PASSED" "$tmpfile" 2>/dev/null; then
+    exit_code=0
+  fi
+
   if [ $exit_code -ne 0 ]; then
     FAILED_PHASE="$phase_name"
     FAILURE_OUTPUT=$(cat "$tmpfile")

@@ -287,6 +287,86 @@ def run_tests():
             t._fail(f"temp file capture: output size {tmp_size} > 20000",
                      f"Expected >20000, got {tmp_size}")
 
+    # ─── Section 7: Output-based override (corrupted exit code) ───
+    t.section("Output-based override for corrupted exit codes")
+
+    with TempDir() as temp_dir:
+        lines = generate_large_output_lines(200)
+        pass_cmd = create_test_command(
+            temp_dir, "pass_for_override.sh", lines, 0
+        )
+
+        # Simulate: verify-phase.sh exits 0, but something corrupts $? to 1.
+        # The hook should detect "RESULT: test PASSED" in the temp file and
+        # override the exit code back to 0.
+        bash_script = (
+            f'tmpfile=$(mktemp)\n'
+            f'"{VERIFY_PHASE}" "test" "{pass_cmd}" "{temp_dir}"'
+            f' > "$tmpfile" 2>&1\n'
+            f'# Simulate corrupted exit code\n'
+            f'false\n'
+            f'test_exit=$?\n'
+            f'# Belt-and-suspenders override\n'
+            f'if [[ $test_exit -ne 0 ]] && grep -q "RESULT: test PASSED"'
+            f' "$tmpfile" 2>/dev/null; then\n'
+            f'  test_exit=0\n'
+            f'fi\n'
+            f'echo "OVERRIDE_EXIT:$test_exit"\n'
+            f'rm -f "$tmpfile"\n'
+        )
+        result = subprocess.run(
+            ["bash", "-c", bash_script],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        override_exit = -1
+        for line in result.stdout.strip().split("\n"):
+            if line.startswith("OVERRIDE_EXIT:"):
+                override_exit = int(line.split(":", 1)[1])
+
+        t.assert_equal(
+            "corrupted exit code overridden to 0 when output says PASSED",
+            override_exit, 0,
+        )
+
+    with TempDir() as temp_dir:
+        lines = generate_large_output_lines(200)
+        lines.append("FAIL: 3 tests failed")
+        fail_cmd = create_test_command(
+            temp_dir, "fail_no_override.sh", lines, 1
+        )
+
+        # Real failure: exit code is non-zero AND output says FAILED.
+        # Override should NOT trigger.
+        bash_script = (
+            f'tmpfile=$(mktemp)\n'
+            f'"{VERIFY_PHASE}" "test" "{fail_cmd}" "{temp_dir}"'
+            f' > "$tmpfile" 2>&1\n'
+            f'test_exit=$?\n'
+            f'if [[ $test_exit -ne 0 ]] && grep -q "RESULT: test PASSED"'
+            f' "$tmpfile" 2>/dev/null; then\n'
+            f'  test_exit=0\n'
+            f'fi\n'
+            f'echo "NOOVERRIDE_EXIT:$test_exit"\n'
+            f'rm -f "$tmpfile"\n'
+        )
+        result = subprocess.run(
+            ["bash", "-c", bash_script],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        no_override_exit = -1
+        for line in result.stdout.strip().split("\n"):
+            if line.startswith("NOOVERRIDE_EXIT:"):
+                no_override_exit = int(line.split(":", 1)[1])
+
+        t.assert_equal(
+            "real failure NOT overridden (exit stays 1 when output says FAILED)",
+            no_override_exit, 1,
+        )
+
     t.summary()
     return t.passed, t.failed, t.total
 

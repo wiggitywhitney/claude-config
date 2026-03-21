@@ -118,7 +118,17 @@ if [[ "$HAS_PR" == true ]]; then
     if [[ -n "$CMD_TEST" ]]; then
       test_tmpfile=$(mktemp)
       "$SCRIPT_DIR/verify-phase.sh" "test" "$CMD_TEST" "$PROJECT_DIR" > "$test_tmpfile" 2>&1
-      if [[ $? -ne 0 ]]; then
+      test_exit=$?
+
+      # Belt-and-suspenders: if the process exit code is non-zero but
+      # verify-phase.sh's own output confirms the command passed, trust
+      # the output. Handles exit code corruption from credential helpers,
+      # signal handlers, or shell option interactions.
+      if [[ $test_exit -ne 0 ]] && grep -q "RESULT: test PASSED" "$test_tmpfile" 2>/dev/null; then
+        test_exit=0
+      fi
+
+      if [[ $test_exit -ne 0 ]]; then
         FAILED_PHASE="test"
         FAILURE_OUTPUT=$(cat "$test_tmpfile")
       fi

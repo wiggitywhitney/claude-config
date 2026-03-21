@@ -51,5 +51,6 @@ if [ $EXIT_CODE -eq 0 ]; then
 else
   echo "RESULT: $PHASE FAILED (exit code $EXIT_CODE)"
 fi
+echo "VERIFY_EXIT: $EXIT_CODE"
 
 exit $EXIT_CODE
