@@ -202,10 +202,11 @@ tier = os.environ['VERIFY_TIER']
 # Sanitize output: remove invalid Unicode surrogates that break JSON serialization
 output = output.encode('utf-8', errors='replace').decode('utf-8')
 
-# Truncate to prevent oversized API payloads
+# Truncate to prevent oversized API payloads — keep the TAIL because
+# test failures and summaries appear at the end of output.
 MAX_OUTPUT = 4000
 if len(output) > MAX_OUTPUT:
-    output = output[:MAX_OUTPUT] + '\n\n... (output truncated)'
+    output = '(output truncated — showing last 4000 chars) ...\n\n' + output[-MAX_OUTPUT:]
 
 reason = f'Push blocked — {tier} check failed at phase: {phase}. Fix the underlying code to resolve the error. NEVER add suppression annotations (@ts-ignore, type:ignore, lint-disable) to bypass the check — fix the actual problem. The ONE exception: eslint-disable-line no-console is allowed for intentional CLI output (the security check already accepts it).\n\n{output}'
 result = {
