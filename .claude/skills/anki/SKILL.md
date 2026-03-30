@@ -139,12 +139,13 @@ Before making cards about tools that change frequently (Claude Code, specific AP
 - Flag any cards where you couldn't verify recency with a note to the user
 - This is especially critical for: Claude Code features, API capabilities, framework versions, ecosystem states
 
-### Future-Self Accessibility
-Every card must work for Whitney 4+ months from now with no memory of the original conversation.
+### Future-Self Accessibility (EACH CARD IS AN ISLAND)
+Every card must work for Whitney 4+ months from now with no memory of the original conversation — and no memory of any other card in the set.
+- **Each card is an island.** Never assume the reader has seen any other card in the batch. Fully qualify every reference every time — don't use phrases like "of the three plugins studied" or "the plugin mentioned above." Repeat full names, full descriptions, and full provenance on every card even if it feels redundant across the batch.
 - No unexplained references to people, conversations, or context that won't exist at review time
 - If a name/reference isn't essential to the concept, remove it
 - If it IS essential, explain who they are or provide a link on the card
-- Ask: "Will this card make sense to me in 6 months with zero context?"
+- Ask: "If this were the only card Whitney saw today with zero memory of the conversation or other cards, would every reference make sense?" If not, add the missing context.
 - **Never use project-internal labels.** No PRD numbers ("PRD #3"), phase numbers ("Phase 1"), milestone names ("M4"), sprint labels, or internal tracking IDs. These are meaningless outside the original context. Instead, describe the work itself: "the spec synthesis phase" not "PRD #3," "single-file instrumentation" not "Phase 1," "the validation chain" not "Phase 2." If a project has a multi-stage build plan, describe what each stage does — the labels are project management artifacts, not knowledge.
 - **Name the project (repo) explicitly in every card.** Don't say "the controller" — say "k8s-vectordb-sync's controller." Don't say "your agent spec" — say "the spinybacked-orbweaver spec." The repo name is the anchor that makes a card findable and contextualizable months later. On first mention in a card, include a brief parenthetical if the project name isn't self-explanatory (e.g., "cluster-whisperer (a Kubernetes AI assistant)").
 
