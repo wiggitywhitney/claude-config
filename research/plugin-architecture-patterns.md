@@ -51,7 +51,7 @@ Skills load context in 3 levels: YAML frontmatter (always), SKILL.md body (on tr
 1. **Add error transcript capture as structured data** — JSON with phase, command, exit code, stderr, timestamp. Enables pattern detection across failures.
 
 ### `/anki` Skill
-1. **Add card-level confidence scoring** — Score 0-10 on memory anchor clarity, future-self accessibility, concept vs. detail balance. Filter for highest-value cards.
+1. **Add card-level confidence scoring** — Score on 3 dimensions (each 1-5): memory anchor clarity, future-self accessibility, concept vs. detail balance. Total max 15; flag cards below 9 for review. See PRD #48 Milestone 4 for full specification.
 2. **Spawn parallel recency-checker agent** — For fast-changing content, launch a background agent that WebSearches for current status and compares with conversation context.
 
 ### `/write-docs` Skill
