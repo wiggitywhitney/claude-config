@@ -62,10 +62,17 @@ fi
 
 PRD_BASENAME=$(basename "$PRD_FILE")
 
-# Count unchecked items: lines matching "- [ ] " (standard markdown checkbox)
-# Only count actual unchecked [ ] — not [~] deferred or [!] blocked
-UNCHECKED=$(grep -cE '^[[:space:]]*- \[ \] ' "$PRD_FILE" 2>/dev/null || true)
-UNCHECKED=${UNCHECKED:-0}
+# Count incomplete items via two detection methods:
+# 1. Standard markdown checkboxes: "- [ ] " (not [~] deferred or [!] blocked)
+UNCHECKED_BOXES=$(grep -cE '^[[:space:]]*- \[ \] ' "$PRD_FILE" 2>/dev/null || true)
+UNCHECKED_BOXES=${UNCHECKED_BOXES:-0}
+
+# 2. Milestone headings without a ✅ completion marker (heading-style PRDs)
+# Requires a number after "Milestone" to exclude section headers like "## Milestones"
+UNCHECKED_MILESTONES=$(grep -E '^#{1,4}.*[Mm]ilestone [0-9]' "$PRD_FILE" 2>/dev/null | grep -cv '✅' || true)
+UNCHECKED_MILESTONES=${UNCHECKED_MILESTONES:-0}
+
+UNCHECKED=$((UNCHECKED_BOXES + UNCHECKED_MILESTONES))
 
 if [[ "$UNCHECKED" -gt 0 ]]; then
     # Items remain — directive to invoke /prd-next
