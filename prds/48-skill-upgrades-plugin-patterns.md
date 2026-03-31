@@ -37,7 +37,7 @@ This document contains the specific patterns, examples, and rationale from the p
 - The skill's existing citation and confidence-level features are preserved
 - Run `/write-prompt` review on the updated SKILL.md
 
-### Milestone 2: `/write-prompt` — Progressive Disclosure and Severity Scoring
+### Milestone 2: `/write-prompt` — Progressive Disclosure and Severity Scoring ✅ Complete
 
 **Research to read first:** [`research/plugin-architecture-patterns.md`](../research/plugin-architecture-patterns.md) — focus on "Progressive Disclosure (Lazy Loading)" and "Confidence Scoring Over Binary Verdicts" and the `/write-prompt` recommendations.
 

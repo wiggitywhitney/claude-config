@@ -91,7 +91,9 @@ After all sections are drafted, present the complete prompt and run the anti-pat
 
 ### Five categories of missing information
 
-Check the prompt for these five categories that cause incorrect output (from Nam et al., "Prompting LLMs for Code Editing: Struggles and Remedies", April 2025, FORGE '26):
+Check the prompt for these five categories that cause incorrect output (from Nam et al., "Prompting LLMs for Code Editing: Struggles and Remedies", April 2025, FORGE '26).
+
+**If reviewing a Claude Code skill** (not an API prompt): skip categories 3–4 (faulty scope/localization and missing codebase context — skills receive input interactively) and skip the code transformation failure modes section unless the skill generates code.
 
 1. **Missing specifics** — The prompt says what to do but omits concrete details. "Refactor this function" without specifying which pattern, target structure, or what to preserve.
 2. **Missing operationalization plan** — The prompt states a goal but doesn't break it into steps. "Add error handling" without specifying where, what to catch, what to do in each case.
@@ -103,32 +105,32 @@ For each gap found, explain what's missing and ask the user how to fill it.
 
 ### Anti-patterns to flag
 
-Flag these if present. Explain why each is harmful and suggest a replacement.
+Flag these if present. Explain why each is harmful and suggest a replacement. Severity: **[High]** = impacts correctness or causes hard failures; **[Medium]** = impacts efficiency or reliability; **[Low]** = style preference with marginal impact.
 
 **Emotional/motivational language (always flag):**
-- Tipping promises ("$200 tip for correct answer")
-- Disability/accessibility claims used as motivation ("I'm blind and can't read truncated code")
-- Threat-based motivation ("If you truncate code, bad things will happen")
-- Emotional appeals ("This is very important to my career")
+- **[High]** Tipping promises ("$200 tip for correct answer")
+- **[High]** Disability/accessibility claims used as motivation ("I'm blind and can't read truncated code")
+- **[High]** Threat-based motivation ("If you truncate code, bad things will happen")
+- **[High]** Emotional appeals ("This is very important to my career")
 
 These produce worse benchmark scores than baseline prompts. Format design choices have far more impact than motivational language. (Source: Aider unified diff research, https://aider.chat/2023/12/21/unified-diffs.html)
 
 **Model-version-dependent anti-patterns (flag based on target model):**
 
 For Claude 4.6 models only:
-- Vague anti-laziness directives ("do not be lazy", "try harder") — these are motivational language that amplifies already-proactive behavior, causing runaway thinking or write-then-rewrite loops. Instead, use explicit depth instructions ("comprehensive", "include edge cases") or format specifications ("Output format: complete source file. Files containing placeholder comments will fail validation."). (Sources: [Anthropic best practices](https://claude.com/blog/best-practices-for-prompt-engineering), [platform release notes](https://platform.claude.com/docs/en/release-notes/overview))
-- Explicit think-tool instructions ("use the think tool to plan your approach") — these cause over-planning. The model thinks effectively without being told to. Use the `effort` API parameter (`output_config.effort`: low/medium/high/max) to control thinking depth instead of `budget_tokens`, which is deprecated for 4.6 models.
-- Aggressive tool-use language ("You MUST use [tool]", "If in doubt, use [tool]") — replace with "Use [tool] when it would enhance your understanding of the problem." Claude 4.x models overtrigger on aggressive language.
-- Prefilled responses on the last assistant turn — Opus 4.6 does not support prefilling assistant messages, and prefilling is incompatible with extended thinking. Use structured outputs (`output_config.format`), XML tags, or direct instructions instead. (Source: [Feb 5, 2026 release notes](https://platform.claude.com/docs/en/release-notes/overview))
+- **[High]** Vague anti-laziness directives ("do not be lazy", "try harder") — these are motivational language that amplifies already-proactive behavior, causing runaway thinking or write-then-rewrite loops. Instead, use explicit depth instructions ("comprehensive", "include edge cases") or format specifications ("Output format: complete source file. Files containing placeholder comments will fail validation."). (Sources: [Anthropic best practices](https://claude.com/blog/best-practices-for-prompt-engineering), [platform release notes](https://platform.claude.com/docs/en/release-notes/overview))
+- **[High]** Prefilled responses on the last assistant turn — Opus 4.6 does not support prefilling assistant messages, and prefilling is incompatible with extended thinking. Use structured outputs (`output_config.format`), XML tags, or direct instructions instead. (Source: [Feb 5, 2026 release notes](https://platform.claude.com/docs/en/release-notes/overview))
+- **[Medium]** Explicit think-tool instructions ("use the think tool to plan your approach") — these cause over-planning. The model thinks effectively without being told to. Use the `effort` API parameter (`output_config.effort`: low/medium/high/max) to control thinking depth instead of `budget_tokens`, which is deprecated for 4.6 models.
+- **[Medium]** Aggressive tool-use language ("You MUST use [tool]", "If in doubt, use [tool]") — replace with "Use [tool] when it would enhance your understanding of the problem." Claude 4.x models overtrigger on aggressive language.
 
 For Claude 4.5 and earlier:
-- The word "think" in Claude Code contexts when extended thinking is off — Claude Code treats "think" as a request for deeper extended thinking. In the raw API, extended thinking is controlled via the `thinking` parameter, not prompt wording. For Claude Code skills, replace with "consider", "evaluate", or "assess" unless you intend to trigger deeper thinking.
+- **[Medium]** The word "think" in Claude Code contexts when extended thinking is off — Claude Code treats "think" as a request for deeper extended thinking. In the raw API, extended thinking is controlled via the `thinking` parameter, not prompt wording. For Claude Code skills, replace with "consider", "evaluate", or "assess" unless you intend to trigger deeper thinking.
 
 **Structural anti-patterns (always flag):**
-- Single "golden" example instead of 3-5 diverse examples — risks overfitting to that example's details
-- Positive aspirations without negative constraints — "Write clean code" is less effective than "Do NOT refactor existing code. Do NOT hallucinate imports not in the allowlist."
-- Vague output format — "Return the result" instead of specifying exact format, delimiters, what to include/exclude
-- Goal-first structure in skills — skills should lead with process steps, not goals. The user's global CLAUDE.md says: "When creating prompts for AI agents, emphasize the process to follow rather than stating the goal upfront."
+- **[High]** Single "golden" example instead of 3-5 diverse examples — risks overfitting to that example's details
+- **[High]** Vague output format — "Return the result" instead of specifying exact format, delimiters, what to include/exclude
+- **[Medium]** Positive aspirations without negative constraints — "Write clean code" is less effective than "Do NOT refactor existing code. Do NOT hallucinate imports not in the allowlist."
+- **[Medium]** Goal-first structure in skills — skills should lead with process steps, not goals. The user's global CLAUDE.md says: "When creating prompts for AI agents, emphasize the process to follow rather than stating the goal upfront."
 
 ### Known code transformation failure modes
 
@@ -179,10 +181,15 @@ When reviewing a prompt, present findings as:
 {List each of the 5 categories with status: addressed / missing / partially addressed}
 
 ### Anti-Patterns Found
-{Each anti-pattern with explanation, severity, and suggested fix}
 
-### Model-Specific Issues
-{Issues specific to the target model}
+#### High Severity
+{Anti-patterns that impact correctness or cause hard failures — fix before using this prompt. Include model-specific items (e.g., "Claude 4.6 only") inline here.}
+
+#### Medium Severity
+{Anti-patterns that impact efficiency or reliability — fix for production use. Include model-specific items inline here.}
+
+### Style Notes
+{Low-severity findings: style preferences with marginal impact. Omit this section if none found.}
 
 ### Strengths
 {What the prompt does well}

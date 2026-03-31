@@ -6,6 +6,7 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-03-31) Added severity scoring ([High]/[Medium]/[Low]) to all anti-patterns in `/write-prompt` skill, with tiered output format (PRD #48, M2)
 - Rolled out PROGRESS.md to all 11 active repos with Keep a Changelog template
 - Gitignored PROGRESS.md in kubecon-2026-gitops (multi-contributor repo)
 - Verified end-to-end PROGRESS.md workflow across spinybacked-orbweaver and scaling-on-satisfaction
