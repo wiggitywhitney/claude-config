@@ -47,3 +47,4 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 - Contributor detection counts unique names instead of name+email pairs (same person with multiple emails no longer inflates count)
 - (2026-03-11) Restored all 8 careful skill variants as real files — were incorrectly replaced with symlinks to yolo variants in commit 21a0d6c
+- (2026-03-31) Fixed `prd-loop-continue.sh` false-positive `/prd-done` trigger for PRDs using milestone heading format (✅ Complete) instead of `- [ ]` checkboxes — now detects both patterns
