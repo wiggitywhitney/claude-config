@@ -17,7 +17,7 @@ This document contains the specific patterns, examples, and rationale from the p
 
 ## Milestones
 
-### Milestone 1: `/research` — Formalize Phases with Explicit Decision Gates
+### Milestone 1: `/research` — Formalize Phases with Explicit Decision Gates ✅ Complete
 
 **Research to read first:** [`research/plugin-architecture-patterns.md`](../research/plugin-architecture-patterns.md) — focus on "Phased Workflows with Explicit Gates" and the `/research` recommendations.
 

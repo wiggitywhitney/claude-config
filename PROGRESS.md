@@ -34,6 +34,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 - (2026-03-11) Verified no mandatory teardown exit gates remain in cluster-whisperer or kubecon-2026-gitops PRDs (PRD #39, M4)
 - (2026-03-11) End-to-end verification: hook detected real Kind cluster at session start, output valid JSON with teardown command, silent when no clusters (PRD #39, M6)
 
+- (2026-03-30) Added explicit decision gates (Gate 1: specificity, Gate 2: evidence, Gate 3: contradictions) and Conflicting Findings output section to `/research` skill (PRD #48, M1)
+
 ### Changed
 
 - (2026-03-11) Softened infrastructure safety rule in global CLAUDE.md — replaced mandatory teardown gates with awareness-based approach via SessionStart hook (PRD #39, M3)
