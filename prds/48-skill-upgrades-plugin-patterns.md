@@ -56,7 +56,7 @@ This document contains the specific patterns, examples, and rationale from the p
 - Existing anti-pattern detection coverage is preserved (no regressions)
 - Run `/write-prompt` review on the updated SKILL.md (meta: use the skill to review itself)
 
-### Milestone 3: `/verify` — Structured Error Transcript Capture
+### Milestone 3: `/verify` — Structured Error Transcript Capture ✅ Complete
 
 **Research to read first:** [`research/plugin-architecture-patterns.md`](../research/plugin-architecture-patterns.md) — focus on "Evidence-Based Assertions" and the `/verify` recommendations.
 

@@ -1,6 +1,6 @@
-# ABOUTME: Tests for verify-phase.sh exit code correctness with varying output sizes
-# ABOUTME: Covers large output scenarios that triggered false denials in repos like spinybacked-orbweaver
-"""Tests for verify-phase.sh — exit code correctness with varying output sizes.
+# ABOUTME: Tests for verify-phase.sh exit code correctness and structured error transcript output
+# ABOUTME: Covers large output scenarios and VERIFY_ERROR_CONTEXT JSON emission on failure
+"""Tests for verify-phase.sh — exit code correctness and structured error transcript output.
 
 Exercises the phase runner with:
 - Normal output (pass and fail)
@@ -10,6 +10,7 @@ Exercises the phase runner with:
 - Exit code accuracy through hook-style $() capture
 """
 
+import json
 import os
 import subprocess
 import sys
@@ -406,6 +407,87 @@ def run_tests():
             "spoofed RESULT: test PASSED in command output does NOT override",
             spoof_exit, 1,
         )
+
+    # ─── Section 9: Structured error transcript on failure ───
+    t.section("Structured error transcript on failure (VERIFY_ERROR_CONTEXT)")
+
+    with TempDir() as temp_dir:
+        fail_cmd = create_test_command(
+            temp_dir, "fail_with_error.sh",
+            ["Starting tests...", "Error: connection refused", "FAIL: 2 tests failed"], 1,
+        )
+        exit_code, output = run_script_combined(
+            VERIFY_PHASE, "phaseX", fail_cmd, temp_dir
+        )
+        t.assert_equal("failing command returns exit 1", exit_code, 1)
+        t.assert_contains("output contains VERIFY_ERROR_CONTEXT",
+                          output, "VERIFY_ERROR_CONTEXT: {")
+
+        # Parse and validate JSON structure
+        error_context = None
+        for line in output.splitlines():
+            if line.startswith("VERIFY_ERROR_CONTEXT: "):
+                json_str = line[len("VERIFY_ERROR_CONTEXT: "):]
+                try:
+                    error_context = json.loads(json_str)
+                except (json.JSONDecodeError, ValueError):
+                    pass
+                break
+
+        if error_context is not None:
+            t._pass("VERIFY_ERROR_CONTEXT is valid JSON")
+            t.assert_equal("phase field matches argument",
+                           error_context.get("phase"), "phaseX")
+            t.assert_equal("exit_code field matches",
+                           error_context.get("exit_code"), 1)
+            if "command" in error_context:
+                t._pass("error context includes command")
+            else:
+                t._fail("error context includes command", "missing 'command' key")
+            if "timestamp" in error_context:
+                t._pass("error context includes timestamp")
+            else:
+                t._fail("error context includes timestamp", "missing 'timestamp' key")
+            output_tail = error_context.get("output_tail", "")
+            if "output_tail" in error_context:
+                t._pass("error context includes output_tail")
+            else:
+                t._fail("error context includes output_tail", "missing 'output_tail' key")
+            if "connection refused" in output_tail:
+                t._pass("output_tail captures relevant error text")
+            else:
+                t._fail("output_tail captures relevant error text",
+                        f"got: {output_tail[:120]!r}")
+        else:
+            t._fail("VERIFY_ERROR_CONTEXT is valid JSON",
+                    "could not parse JSON from VERIFY_ERROR_CONTEXT line")
+
+        # Verify transcript persisted to temp file
+        error_file = "/tmp/verify-last-error-phaseX.json"
+        if os.path.exists(error_file):
+            t._pass("error transcript written to /tmp/verify-last-error-<phase>.json")
+            try:
+                with open(error_file) as f:
+                    file_data = json.load(f)
+                t.assert_equal("persisted file has correct phase",
+                               file_data.get("phase"), "phaseX")
+            except (json.JSONDecodeError, OSError) as e:
+                t._fail("persisted file is valid JSON", str(e))
+        else:
+            t._fail("error transcript written to /tmp/verify-last-error-<phase>.json",
+                    f"{error_file} not found")
+
+    # Passing commands must NOT emit error context
+    with TempDir() as temp_dir:
+        pass_cmd = create_test_command(
+            temp_dir, "pass_no_context.sh", ["all good"], 0
+        )
+        exit_code, output = run_script_combined(
+            VERIFY_PHASE, "build", pass_cmd, temp_dir
+        )
+        t.assert_equal("passing command returns exit 0", exit_code, 0)
+        t.assert_not_contains("passing command omits VERIFY_ERROR_CONTEXT",
+                              output, "VERIFY_ERROR_CONTEXT")
 
     t.summary()
     return t.passed, t.failed, t.total
