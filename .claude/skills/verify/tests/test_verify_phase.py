@@ -411,6 +411,11 @@ def run_tests():
     # ─── Section 9: Structured error transcript on failure ───
     t.section("Structured error transcript on failure (VERIFY_ERROR_CONTEXT)")
 
+    # Clean up any artifact from a prior test run before asserting on its existence
+    _error_file = "/tmp/verify-last-error-phaseX.json"
+    if os.path.exists(_error_file):
+        os.remove(_error_file)
+
     with TempDir() as temp_dir:
         fail_cmd = create_test_command(
             temp_dir, "fail_with_error.sh",
@@ -448,11 +453,12 @@ def run_tests():
                 t._pass("error context includes timestamp")
             else:
                 t._fail("error context includes timestamp", "missing 'timestamp' key")
-            output_tail = error_context.get("output_tail", "")
             if "output_tail" in error_context:
                 t._pass("error context includes output_tail")
+                output_tail = error_context["output_tail"]
             else:
                 t._fail("error context includes output_tail", "missing 'output_tail' key")
+                output_tail = ""
             if "connection refused" in output_tail:
                 t._pass("output_tail captures relevant error text")
             else:
@@ -476,6 +482,9 @@ def run_tests():
         else:
             t._fail("error transcript written to /tmp/verify-last-error-<phase>.json",
                     f"{error_file} not found")
+        # Clean up test artifact regardless of outcome
+        if os.path.exists(error_file):
+            os.remove(error_file)
 
     # Passing commands must NOT emit error context
     with TempDir() as temp_dir:
