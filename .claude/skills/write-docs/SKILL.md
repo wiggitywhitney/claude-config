@@ -57,7 +57,7 @@ Ask the user what they want to document. Gather enough context to plan the work.
    - API reference: `docs/api/`
    - README: project root
 
-After gathering context, confirm the documentation plan with the user before proceeding.
+Use `AskUserQuestion` to present questions 1-5 together in a single prompt. After gathering responses, confirm the documentation plan before proceeding.
 
 If the documentation target involves a technology or API that is new to this project, or one that changes frequently (CLI tools, cloud APIs, package managers), run `/research <technology>` before Phase 2. This surfaces current best practices, breaking changes, and version-specific gotchas — preventing the outline from being built on stale patterns.
 
@@ -111,6 +111,8 @@ Present a structured findings table:
 If no relevant existing docs exist, state this briefly and proceed to Phase 3.
 
 ### Step 2d: Decision Gate
+
+> **Gate — Broken Docs:** Are there failures that must be resolved before writing new docs? If issues were found, present them and wait for the user's decision before proceeding to Phase 3. Do not silently skip failures or assume they're acceptable — surface them explicitly.
 
 If a failure looks like version drift rather than a local environment issue (unknown flag, renamed package, changed output format, different error shape), run `/research <tool>` to find the current correct syntax before deciding whether to fix or proceed.
 

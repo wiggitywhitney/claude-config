@@ -139,7 +139,7 @@ This document contains the specific patterns, examples, and rationale from the p
 - The existing real-command-execution and chunk-by-chunk validation features are preserved
 - Run `/write-prompt` review on the updated SKILL.md after all changes are complete — not partway through (Decision 4)
 
-### Milestone 6: Review and Cross-Skill Consistency
+### Milestone 6: Review and Cross-Skill Consistency ✅ Complete
 
 **Research to read first:** [`research/plugin-architecture-patterns.md`](../research/plugin-architecture-patterns.md) — read the full document one final time.
 
