@@ -42,6 +42,26 @@ This document contains the specific patterns, examples, and rationale from the p
 **Rationale:** M4, M7, and M8 each touch both skill files, but changes are made piecemeal. Without a final comparison pass, features can drift between the two files unnoticed.
 **Impact:** Adds M9 after M8. M8 success criteria note that M9 will do the final sync check.
 
+### Decision 7 — Image dimensions: 800px wide, PNG format (2026-04-04)
+**Decision:** Target image size for the image bank is 800px wide, PNG format. No official Anki pixel spec exists; 800px is the community-tested sweet spot. PNG is preferred over JPG for art/logos (lossless, supports transparent backgrounds). WebP is not reliably supported across Mac/iOS Anki clients.
+**Rationale:** Research found no official spec. 800px is wide enough to be visually engaging without dominating the card or slowing sync. PNG lossless format matches the type of art/logos Whitney wants.
+**Impact:** M8 SKILL.md must document 800px wide PNG as the target. Image resizing in Phase A uses this target.
+
+### Decision 8 — Images must be inside the Obsidian vault; `~/Documents/Journal/anki/images/bank/` is confirmed valid (2026-04-04)
+**Decision:** ObsidianToAnki resolves `![[filename.png]]` via Obsidian's vault index (`metadataCache.getFirstLinkpathDest`). Images outside the vault fail silently with no error shown. `~/Documents/Journal/anki/images/bank/` is inside Whitney's vault — confirmed because the parent directory (`images/`) already works. Images are resolved by filename anywhere in the vault, so `![[filename.png]]` needs no path prefix.
+**Rationale:** Research traced ObsidianToAnki source code. Whitney confirmed images currently appear in Anki, proving the vault path is correct.
+**Impact:** M8 image bank must live at `~/Documents/Journal/anki/images/bank/`. No path prefix in embed syntax — `![[filename.png]]` is sufficient. Removes the "confirm embed syntax" research task from M8 (already confirmed).
+
+### Decision 9 — Image bank filenames must be globally unique within the vault (2026-04-04)
+**Decision:** Obsidian resolves `![[filename.png]]` by nearest filename match across the vault. If two vault files share a name, Obsidian picks the closest one — non-deterministic for image bank use. Use a naming convention: `concept-name-bank.png` to prevent collisions with screenshots or other vault images.
+**Rationale:** Generic names like `logo.png` or `kubernetes.png` risk colliding with other vault files. The `-bank` suffix namespaces image bank files distinctly.
+**Impact:** M8 SKILL.md must specify the `-bank.png` naming convention. The skill enforces this when saving images.
+
+### Decision 10 — Platform: macOS + AnkiMobile (iOS) only; no CSS workarounds needed (2026-04-04)
+**Decision:** Whitney uses Anki desktop (macOS) and AnkiMobile (iOS). No Android/AnkiDroid. The `max-width: 100% !important` CSS workaround found in research is AnkiDroid-specific and irrelevant. Standard CSS works on macOS and AnkiMobile without any special overrides.
+**Rationale:** Whitney confirmed: MacBook Pro + iPhone. The `!important` bug is specific to AnkiDroid's JavaScript-based image rescaling. Not applicable here.
+**Impact:** M8 does not require card template CSS changes. CSS caveats from research do not belong in SKILL.md.
+
 ### Decision 4 — Run `/write-prompt` after all changes, not partway through (2026-04-04)
 **Decision:** The `/write-prompt` review must run after ALL changes to a SKILL.md are complete — not partway through the milestone. Running it early means subsequent changes (enforcement language, new integrations, wording fixes) go unreviewed.
 **Rationale:** During M5, `/write-prompt` ran after the initial Broken Docs Detection phase was written, but before the enforcement language and `/research` integrations were added. A second review at the end caught this gap.
@@ -207,10 +227,14 @@ This document contains the specific patterns, examples, and rationale from the p
 
 **Problem:** Cards are purely text. Whitney is visually motivated — art on a card improves engagement and review completion even without a semantic connection to the concept. There's no mechanism to associate images with concepts or persist those associations across card-making sessions.
 
-**Research phase required before implementation:**
-- Run `/research "Anki image dimensions best practices"` — determine the right pixel dimensions for card images (small enough not to dominate, large enough to be visually engaging)
-- Confirm how images are technically added to Anki cards via the Obsidian embed syntax (`![[filename.png]]`) — verify this is the correct approach and document any gotchas
-- Do not implement until research is complete and pixel dimensions are decided
+**Research complete** — see Decisions 7–10. No further research phase needed before implementation.
+
+**Confirmed technical facts (from research):**
+- Target dimensions: **800px wide, PNG format** (Decision 7)
+- Embed syntax `![[filename.png]]` is correct and confirmed working in Whitney's setup (Decision 8)
+- Images must be inside the Obsidian vault — `~/Documents/Journal/anki/images/bank/` is within vault and valid (Decision 8)
+- Filenames must be globally unique within the vault — use `concept-name-bank.png` convention (Decision 9)
+- Platform: macOS + AnkiMobile (iOS) only — no CSS template changes needed (Decision 10)
 
 **Upgrade — Phase A: Infrastructure**
 - Create image bank directory: `~/Documents/Journal/anki/images/bank/`
@@ -219,8 +243,8 @@ This document contains the specific patterns, examples, and rationale from the p
 
 **Upgrade — Phase B: Skill Integration**
 - During card-making, when a new concept is identified that doesn't have an entry in the concept map: prompt Whitney: "New concept: [X]. Do you want to add an image? (provide the file or skip)"
-- If Whitney provides an image: resize to the researched target dimensions, save to `images/bank/`, add the mapping entry
-- If a concept already has a mapping entry: embed the mapped image automatically on the card front using Obsidian embed syntax
+- If Whitney provides an image: resize to 800px wide, save as PNG to `images/bank/` with a `concept-name-bank.png` filename, add the mapping entry (Decision 7, 9)
+- If a concept already has a mapping entry: embed the mapped image automatically on the card front using `![[filename.png]]` syntax — no path prefix needed, Obsidian resolves by filename (Decision 8)
 - Cards with multiple concepts → embed all mapped images for those concepts
 
 **Image rules:**
@@ -229,16 +253,16 @@ This document contains the specific patterns, examples, and rationale from the p
 - Visually pleasing art without semantic connection is acceptable (Decision 2: Whitney's visual motivation justifies even decorative images)
 
 **Upgrade — Phase C: Instruction Quality**
-- Update SKILL.md with the image bank path, concept-map path, the prompt template for new concepts, and the no-text-in-images rule
-- Include the target pixel dimensions (from research) explicitly in the SKILL.md so future invocations don't need to guess
+- Update SKILL.md with: image bank path, concept-map path, prompt template for new concepts, no-text-in-images rule, 800px PNG target, `concept-name-bank.png` naming convention, vault requirement, `![[filename.png]]` embed syntax (Decisions 7–10)
 
 **Success Criteria:**
-- Research completed: target pixel dimensions documented in SKILL.md
-- Image bank directory and concept-map file exist
+- Image bank directory and concept-map file exist at specified paths (both within Obsidian vault)
 - When a new concept is detected with no mapping, the skill prompts Whitney for an optional image
-- When a concept has a mapping, the image is embedded automatically without prompting
-- Images are resized to the researched target dimensions before saving
+- When a concept has a mapping, the image is embedded automatically using `![[filename.png]]` syntax
+- Images are resized to 800px wide and saved as PNG before going into the bank (Decision 7)
+- Image filenames follow `concept-name-bank.png` convention to prevent vault collisions (Decision 9)
 - Images with text are flagged and rejected with an explanation
+- SKILL.md documents all confirmed technical facts from research (Decisions 7–10) so future invocations need no external context
 - Run `/write-prompt` review on the updated SKILL.md after all changes are complete — not partway through (Decision 4)
 - Note: full anki/anki-yolo consistency check is done in M9, not M8
 
@@ -265,7 +289,7 @@ This document contains the specific patterns, examples, and rationale from the p
 
 ## Implementation Notes
 
-- Each milestone is independent — they can be done in any order, though the listed order builds momentum from quick wins to larger changes. M7 depends on M4 being complete (the scoring section should exist before the glossary section references it). M8 depends on M7 (both touch the same SKILL.md; best done in one session). M8 also requires a research phase before implementation — do not skip it. M9 depends on M8 (final consistency check after all anki changes are made).
+- Each milestone is independent — they can be done in any order, though the listed order builds momentum from quick wins to larger changes. M7 depends on M4 being complete (the scoring section should exist before the glossary section references it). M8 depends on M7 (both touch the same SKILL.md; best done in one session). M8 research is complete (Decisions 7–10) — implementation can proceed directly. M9 depends on M8 (final consistency check after all anki changes are made).
 - Every milestone must preserve existing skill behavior (no regressions)
 - Every milestone must end with a `/write-prompt` review of the updated SKILL.md — run it last, after all other changes are complete (Decision 4)
 - The Skill Creator plugin's eval framework could be used to benchmark before/after for any skill, but this is optional — manual validation is sufficient for this PRD
