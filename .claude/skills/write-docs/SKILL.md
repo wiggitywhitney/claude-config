@@ -24,7 +24,7 @@ Claude Code should use this skill's workflow — not ad-hoc documentation writin
 - **CLAUDE.md instructions** that request documentation for a feature or project
 - **User requests** like "write docs for X", "document this feature", or "update the README"
 
-The difference matters: ad-hoc writing invents examples and skips validation. This skill tests existing docs for accuracy, executes all commands, captures real output, and gates each section on evidence — not assumptions.
+The difference matters: ad-hoc writing invents examples and skips validation. This skill tests existing docs for accuracy, executes all commands, captures real output, and validates every example with evidence — not assumptions.
 
 ## Invocation
 
@@ -40,7 +40,7 @@ These rules are non-negotiable throughout the entire workflow:
 3. **Fix broken docs before writing new ones.** If existing documentation fails during Broken Docs Detection or Environment Setup, STOP and discuss fixing it with the user before proceeding.
 4. **Write for users, not developers.** Use the simplest language that is still accurate. Avoid jargon when plain language works. Define terms on first use.
 5. **Document error cases alongside success paths.** Show what happens when things go wrong, not just the happy path.
-6. **Claude runs infrastructure commands; user runs interactive operations.** Claude executes bash commands, build steps, and CLI tools directly. Ask the user to run anything requiring a browser, GUI, authenticated web session, or interactive tool — then incorporate their output. Do NOT hand a command back to the user because the environment is missing a tool or dependency — install it yourself.
+6. **Claude runs infrastructure commands; user runs interactive operations.** Claude executes bash commands, build steps, and CLI tools directly. Ask the user to run anything requiring a browser, GUI, authenticated web session, or interactive tool — then incorporate their output. When a tool or dependency is missing, install it automatically for project-specific dependencies (npm packages, pip packages, go modules). Confirm with the user before installing system-level tools (e.g., via brew, apt, or curl-pipe-sh).
 7. **Use full flags in commands.** Always use long-form flags (e.g., `--filename` not `-f`, `--namespace` not `-n`, `--output` not `-o`). Full flags are self-documenting for users who are unfamiliar with the tools.
 
 ## Phase 1: Identify Documentation Target
@@ -85,12 +85,12 @@ For each documentation file found:
    - **Command** — something to run (bash, shell, CLI command)
    - **Output** — expected result following a command block
    - **Config/other** — configuration snippets, JSON, YAML, or code samples not meant to be executed
-3. Execute each **command** block, capturing actual output (stdout + stderr)
-4. If an **output** block follows a command, compare actual vs. claimed output
+3. Execute each **command** block, capturing actual output (stdout + stderr). Skip commands that could be destructive (e.g., `rm -rf`, `DROP TABLE`, `kubectl delete`, database wipes) — mark these as ⚠️ Skipped with the reason.
+4. If an **output** block follows a command, compare actual vs. claimed output. Ignore non-deterministic differences: timestamps, request/session IDs, absolute paths, hostnames, and ports. Focus on exit codes, error messages, data structure, and key output fields. When in doubt, mark as ⚠️ Skipped rather than ❌ Fail.
 5. Mark each tested section:
    - ✅ **Pass** — command ran without error; output matches claimed output (or no output block to compare)
-   - ❌ **Fail** — command errored, or actual output differs materially from what the doc claims
-   - ⚠️ **Skipped** — requires authentication, live external service, interactive session, or GUI
+   - ❌ **Fail** — command errored, or key output fields differ from what the doc claims
+   - ⚠️ **Skipped** — requires authentication, live external service, interactive session, GUI, or is potentially destructive
 
 ### Step 2c: Report Findings
 

@@ -27,15 +27,15 @@ This document contains the specific patterns, examples, and rationale from the p
 **Rationale:** Full automation (random image from bank) is feasible but semantic automation isn't. Human-in-the-loop at concept introduction time gives Whitney control while keeping the workflow light. Research on decorative images is mixed but Whitney's personal motivation from art is sufficient justification.
 **Impact:** Adds M8 (Image Bank). M8 must include a research phase to establish correct Anki image dimensions and confirm the image embed syntax before implementing.
 
-### Decision 4 — Run `/write-prompt` after all changes, not partway through (2026-04-04)
-**Decision:** The `/write-prompt` review must run after ALL changes to a SKILL.md are complete — not partway through the milestone. Running it early means subsequent changes (enforcement language, new integrations, wording fixes) go unreviewed.
-**Rationale:** During M5, `/write-prompt` ran after the initial Broken Docs Detection phase was written, but before the enforcement language and `/research` integrations were added. A second review at the end caught this gap.
-**Impact:** Updated success criteria in M6, M7, and M8 to clarify that `/write-prompt` runs last, after all other skill changes are complete.
-
 ### Decision 3 — Glossary cards tagged `concept::glossary` (2026-04-04)
 **Decision:** All Pattern 1 (Glossary/Definition Terms) cards get a `concept::glossary` tag in addition to their other tags. This enables filtered study sessions that prioritize foundational vocabulary before higher-concept cards.
 **Rationale:** Glossary cards are the building blocks — knowing what a term means is prerequisite to understanding cards that use the term. Being able to filter to `concept::glossary` lets Whitney front-load vocabulary review.
 **Impact:** M7 success criteria updated to require `concept::glossary` tagging. The Pattern 1 template in SKILL.md should include `concept::glossary` in its example tags.
+
+### Decision 4 — Run `/write-prompt` after all changes, not partway through (2026-04-04)
+**Decision:** The `/write-prompt` review must run after ALL changes to a SKILL.md are complete — not partway through the milestone. Running it early means subsequent changes (enforcement language, new integrations, wording fixes) go unreviewed.
+**Rationale:** During M5, `/write-prompt` ran after the initial Broken Docs Detection phase was written, but before the enforcement language and `/research` integrations were added. A second review at the end caught this gap.
+**Impact:** Updated success criteria in M6, M7, and M8 to clarify that `/write-prompt` runs last, after all other skill changes are complete.
 
 ## Milestones
 
