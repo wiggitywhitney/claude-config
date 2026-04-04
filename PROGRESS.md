@@ -6,6 +6,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-04-04) Added Broken Docs Detection phase to `/write-docs` skill — Phase 2 scans existing docs, executes code examples, produces structured findings table (Pass/Fail/Skipped), and gates on user decision (fix first / proceed / fix blockers only); also adopted write-directly pattern, full-flags rule, enforcement language preventing command-skipping and environment give-up, and `/research` integration at phase entry and on version-drift failures; `/write-prompt` review ran on final state (PRD #48, M5)
+- (2026-04-04) Recorded Decision 4 in PRD #48 — run `/write-prompt` after all skill changes are complete, not partway through; propagated to M6, M7, M8 success criteria and Implementation Notes (PRD #48)
 - (2026-04-04) Added card quality scoring to `/anki` and `/anki-yolo` skills — 3-dimension rubric (memory anchor clarity, future-self accessibility, concept vs. detail balance, each 1–5, max 15); cards below 9/15 auto-rewritten once with re-score; score table shown in Phase 1 output; `/write-prompt` review fixed column name collision and wired Story-First Framing into workflow steps (PRD #48, M4)
 - (2026-04-04) Added Milestone 7 (glossary index) and Milestone 8 (image bank) to PRD #48; recorded design decisions for auto-rewrite behavior, glossary `concept::glossary` tagging, and human-in-the-loop image prompting with no-text-in-images rule (PRD #48)
 - (2026-03-31) Added severity scoring ([High]/[Medium]/[Low]) to all anti-patterns in `/write-prompt` skill, with tiered output format (PRD #48, M2)

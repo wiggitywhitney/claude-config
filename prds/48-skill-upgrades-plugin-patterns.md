@@ -27,6 +27,11 @@ This document contains the specific patterns, examples, and rationale from the p
 **Rationale:** Full automation (random image from bank) is feasible but semantic automation isn't. Human-in-the-loop at concept introduction time gives Whitney control while keeping the workflow light. Research on decorative images is mixed but Whitney's personal motivation from art is sufficient justification.
 **Impact:** Adds M8 (Image Bank). M8 must include a research phase to establish correct Anki image dimensions and confirm the image embed syntax before implementing.
 
+### Decision 4 — Run `/write-prompt` after all changes, not partway through (2026-04-04)
+**Decision:** The `/write-prompt` review must run after ALL changes to a SKILL.md are complete — not partway through the milestone. Running it early means subsequent changes (enforcement language, new integrations, wording fixes) go unreviewed.
+**Rationale:** During M5, `/write-prompt` ran after the initial Broken Docs Detection phase was written, but before the enforcement language and `/research` integrations were added. A second review at the end caught this gap.
+**Impact:** Updated success criteria in M6, M7, and M8 to clarify that `/write-prompt` runs last, after all other skill changes are complete.
+
 ### Decision 3 — Glossary cards tagged `concept::glossary` (2026-04-04)
 **Decision:** All Pattern 1 (Glossary/Definition Terms) cards get a `concept::glossary` tag in addition to their other tags. This enables filtered study sessions that prioritize foundational vocabulary before higher-concept cards.
 **Rationale:** Glossary cards are the building blocks — knowing what a term means is prerequisite to understanding cards that use the term. Being able to filter to `concept::glossary` lets Whitney front-load vocabulary review.
@@ -52,7 +57,7 @@ This document contains the specific patterns, examples, and rationale from the p
 - The skill stops and searches more when the "enough evidence?" gate fails
 - Contradictions between sources are surfaced explicitly rather than silently resolved
 - The skill's existing citation and confidence-level features are preserved
-- Run `/write-prompt` review on the updated SKILL.md
+- Run `/write-prompt` review on the updated SKILL.md after all changes are complete — not partway through (Decision 4)
 
 ### Milestone 2: `/write-prompt` — Progressive Disclosure and Severity Scoring ✅ Complete
 
@@ -71,7 +76,7 @@ This document contains the specific patterns, examples, and rationale from the p
 - Anti-patterns are scored by severity and presented in priority order
 - Low-severity findings don't clutter the main review output
 - Existing anti-pattern detection coverage is preserved (no regressions)
-- Run `/write-prompt` review on the updated SKILL.md (meta: use the skill to review itself)
+- Run `/write-prompt` review on the updated SKILL.md after all changes are complete — not partway through (Decision 4) (meta: use the skill to review itself)
 
 ### Milestone 3: `/verify` — Structured Error Transcript Capture ✅ Complete
 
@@ -89,7 +94,7 @@ This document contains the specific patterns, examples, and rationale from the p
 - Error messages include a specific suggested fix, not just "Phase N failed"
 - The existing phase structure, restart-on-failure rule, and docs-only skip are preserved
 - Integration tests verify structured error output format
-- Run `/write-prompt` review on the updated SKILL.md
+- Run `/write-prompt` review on the updated SKILL.md after all changes are complete — not partway through (Decision 4)
 
 ### Milestone 4: `/anki` — Card-Level Confidence Scoring ✅ Complete
 
@@ -111,9 +116,9 @@ This document contains the specific patterns, examples, and rationale from the p
 - Cards scoring below 9/15 are automatically rewritten (one attempt) and re-scored; the original score and the improvement made are shown so the change is visible (Decision 1: auto-rewrite, no human in the loop). If the card still scores < 9 after one rewrite, accept it with a note explaining why it couldn't reach the threshold (e.g., "Memory anchor limited: no project experience with this technology yet").
 - Scoring doesn't slow down the card-making workflow — it's integrated into the existing two-phase process
 - The "EACH CARD IS AN ISLAND" rule, personal anchor requirements, and terminology provenance rules are preserved
-- Run `/write-prompt` review on the updated SKILL.md
+- Run `/write-prompt` review on the updated SKILL.md after all changes are complete — not partway through (Decision 4)
 
-### Milestone 5: `/write-docs` — Broken Docs Detection Phase
+### Milestone 5: `/write-docs` — Broken Docs Detection Phase ✅ Complete
 
 **Research to read first:** [`research/plugin-architecture-patterns.md`](../research/plugin-architecture-patterns.md) — focus on "Multi-Agent Specialization" and the `/write-docs` recommendations.
 
@@ -132,7 +137,7 @@ This document contains the specific patterns, examples, and rationale from the p
 - Broken instructions, non-working code examples, and stale output claims are surfaced
 - The user sees broken docs findings and chooses whether to fix them first
 - The existing real-command-execution and chunk-by-chunk validation features are preserved
-- Run `/write-prompt` review on the updated SKILL.md
+- Run `/write-prompt` review on the updated SKILL.md after all changes are complete — not partway through (Decision 4)
 
 ### Milestone 6: Review and Cross-Skill Consistency
 
@@ -152,7 +157,7 @@ This document contains the specific patterns, examples, and rationale from the p
 - All upgraded skills use consistent terminology for shared patterns
 - Phase numbering and gate naming follow the same convention across skills
 - Scoring scales are compatible (a "high confidence" finding in one skill means the same thing in another)
-- Run `/write-prompt` review on any skills modified in this milestone
+- Run `/write-prompt` review on each modified skill after all changes to that skill are complete — not partway through (Decision 4)
 
 ### Milestone 7: `/anki` — Glossary Index Setup and Integration
 
@@ -184,7 +189,7 @@ This document contains the specific patterns, examples, and rationale from the p
 - All Pattern 1 glossary cards include `concept::glossary` tag (Decision 3: enables filtered study sessions to front-load vocabulary)
 - The Pattern 1 template in SKILL.md is updated to include `concept::glossary` in its example tags
 - SKILL.md instructions are self-contained — the index behavior is maintainable without external context
-- Run `/write-prompt` review on the updated SKILL.md
+- Run `/write-prompt` review on the updated SKILL.md after all changes are complete — not partway through (Decision 4)
 
 ### Milestone 8: `/anki` — Image Bank for Visual Motivation
 
@@ -224,11 +229,11 @@ This document contains the specific patterns, examples, and rationale from the p
 - When a concept has a mapping, the image is embedded automatically without prompting
 - Images are resized to the researched target dimensions before saving
 - Images with text are flagged and rejected with an explanation
-- Run `/write-prompt` review on the updated SKILL.md
+- Run `/write-prompt` review on the updated SKILL.md after all changes are complete — not partway through (Decision 4)
 
 ## Implementation Notes
 
 - Each milestone is independent — they can be done in any order, though the listed order builds momentum from quick wins to larger changes. M7 depends on M4 being complete (the scoring section should exist before the glossary section references it). M8 depends on M7 (both touch the same SKILL.md; best done in one session). M8 also requires a research phase before implementation — do not skip it.
 - Every milestone must preserve existing skill behavior (no regressions)
-- Every milestone must end with a `/write-prompt` review of the updated SKILL.md
+- Every milestone must end with a `/write-prompt` review of the updated SKILL.md — run it last, after all other changes are complete (Decision 4)
 - The Skill Creator plugin's eval framework could be used to benchmark before/after for any skill, but this is optional — manual validation is sufficient for this PRD
