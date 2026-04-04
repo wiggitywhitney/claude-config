@@ -10,14 +10,14 @@ allowed-tools: Read, Write, AskUserQuestion
 
 Update these paths before using this skill. All save locations and style references below use these values.
 
-- **ANKI_CARDS_DIR**: `/Users/whitney.lee/Documents/Journal/make Anki cards`
-- **ANKI_FINISHED_DIR**: `/Users/whitney.lee/Documents/Journal/make Anki cards/finished`
+- **ANKI_CARDS_DIR**: `/Users/whitney.lee/Documents/Journal/anki`
+- **ANKI_FINISHED_DIR**: `/Users/whitney.lee/Documents/Journal/anki/finished`
 - **ANKI_IMAGES_DIR**: `/Users/whitney.lee/Documents/Journal/images`
-- **DEFAULT_DECK**: `AWSAIPractitionerCert`
+- **DEFAULT_DECK**: `FlashOfLightning`
 
 ---
 
-You are helping Whitney create Anki cards from a conversation she just had. The goal is to capture key concepts while they're fresh.
+You are helping Whitney create Anki cards from a conversation she just had.
 
 ## Two-Phase Workflow
 
@@ -25,14 +25,71 @@ You are helping Whitney create Anki cards from a conversation she just had. The 
 
 1. Review the conversation above this skill invocation
 2. Extract the key concepts that are worth remembering
-3. Structure them in a card-ready format (organized by theme, with clear concepts)
-4. Present the document to the user
+3. Before structuring cards: outline the narrative arc of the topic (why it exists, what it is, how it connects, what was surprising) — see Story-First Framing in Card Rules. Only then organize concepts into card-ready format by theme.
+4. Score each card candidate using the Card Quality Scoring rubric below
+5. For any card scoring below 9/15: rewrite it once to improve the weakest dimensions, then re-score. If still below 9 after rewriting, accept it and note why it couldn't reach the threshold (e.g., "Memory anchor limited: no project experience with this technology yet")
+6. Present the card-ready document with the score table
 
 ### Phase 2: Make Cards
 
 1. Generate actual START/END block cards following the rules below
 2. Present cards for user approval
-3. After approval, save to: `/Users/whitney.lee/Documents/Journal/make Anki cards/finished/CARDS MADE - [topic].md`
+3. After approval, save to: `/Users/whitney.lee/Documents/Journal/anki/finished/CARDS MADE - [topic].md`
+4. Run `python3 ~/Documents/Journal/anki/tag-cards.py --apply` to ensure all saved cards have hierarchical tags
+
+---
+
+## Card Quality Scoring
+
+Score every card candidate on 3 dimensions before generating the final card blocks. Include the score table in the Phase 1 output.
+
+### Dimensions (each scored 1–5)
+
+**1. Memory anchor clarity** — Does this card connect to a specific experience, project, or "aha moment"?
+- 1: Generic "What is X?" with no personal context (acceptable for brand-new tech)
+- 2: Some context but no project or moment named
+- 3: References a project by name but not a specific situation
+- 4: References a specific situation or discovery in a named project
+- 5: Vivid anchor — names the repo, the goal, and the specific problem encountered
+
+**2. Future-self accessibility** — Will this card make sense in 6 months with zero context and no other cards?
+- 1: Full of unexplained references, assumes other cards or the conversation
+- 2: Mostly understandable but has gaps (unnamed projects, undefined terms)
+- 3: Self-contained but terse — would require effort to reconstruct meaning
+- 4: Clear and self-contained; all references explained
+- 5: Fully self-contained island — every term, project, and reference is explained on the card itself
+
+**3. Concept vs. detail balance** — Is this a conference-worthy concept or implementation trivia?
+- 1: Pure implementation trivia (JSON schema, exact flag, specific HTTP status code)
+- 2: Narrow detail — useful but only in one specific context
+- 3: Useful but not something you'd explain at a conference
+- 4: Conceptual — explains the "why" behind a decision or design
+- 5: Conference-worthy — a concept you'd explain to a colleague over coffee or on a slide
+
+### Scoring and Auto-Rewrite
+
+**Total score = sum of 3 dimensions (max 15)**
+
+- **9–15**: Card passes. Include in the batch as-is.
+- **Below 9**: Rewrite the card once, targeting the weakest dimension(s). Re-score after rewriting.
+  - If the rewritten card reaches 9+, use the rewritten version and note the improvement.
+  - If still below 9, accept the card and add a parenthetical note explaining why it couldn't reach the threshold.
+
+### Score Table Format
+
+Include this table in the Phase 1 output, after the card-ready document:
+
+```text
+## Card Quality Scores
+
+| Card | Anchor | Clarity | Balance | Total | Notes |
+|------|--------|---------|---------|-------|-------|
+| Why OTel needs the API/SDK split | 4 | 5 | 5 | 14 | |
+| What `strict: false` does in Hono | 2 | 3 | 1 | 6→10 | Rewritten: converted to "why does Hono expose strict mode?" |
+| New tech: what is Hono | 1 | 4 | 4 | 9 | Memory anchor limited: no project experience yet |
+```
+
+The `Total` column shows `original→revised` when a rewrite occurred, or just the score if no rewrite was needed.
 
 ---
 
@@ -206,16 +263,17 @@ For concepts and terminology (e.g., "Scalar vs Vector vs Embedding"):
 ### Pattern 1: Glossary/Definition Terms (two cards per term)
 
 ```text
-TARGET DECK: AWSAIPractitionerCert
+TARGET DECK: FlashOfLightning
 START
 Basic
 Front: What is [term]?
 Back: [definition - 30 words or fewer]
 
 CONTEXT: [1-3 sentences explaining why this matters]
+Tags: tech::example-technology concept::terminology
 END
 
-TARGET DECK: AWSAIPractitionerCert
+TARGET DECK: FlashOfLightning
 START
 Basic
 Front: What term describes this?
@@ -224,6 +282,7 @@ Front: What term describes this?
 Back: [term]
 
 CONTEXT: [explanation]
+Tags: tech::example-technology concept::terminology
 END
 ```
 
@@ -236,7 +295,7 @@ For lists or sequences, create one card per item where that item is "the missing
 - Add a short parenthetical description to each listed item so the list isn't just bare labels. The description should help the reader recall what each item means without giving away the missing answer.
 
 ```text
-TARGET DECK: AWSAIPractitionerCert
+TARGET DECK: FlashOfLightning
 START
 Basic
 Front: [context about the sequence]
@@ -249,6 +308,7 @@ X has four steps. Which is missing?
 Back: **Step three** — [short explanation]
 
 CONTEXT: [why this step matters]
+Tags: concept::example-process tech::example-technology
 END
 ```
 
@@ -274,7 +334,7 @@ When a card asks about the contents/components of something, state the count on 
 For concepts that emerged from discussion:
 
 ```text
-TARGET DECK: AWSAIPractitionerCert
+TARGET DECK: FlashOfLightning
 START
 Basic
 Front: [project/topic context]
@@ -283,6 +343,7 @@ Front: [project/topic context]
 Back: [short answer - 30 words or fewer]
 
 CONTEXT: [additional explanation from the conversation]
+Tags: project::example-project tech::example-technology
 END
 ```
 
@@ -291,22 +352,24 @@ END
 Cover important concepts twice with different framing:
 
 ```text
-TARGET DECK: AWSAIPractitionerCert
+TARGET DECK: FlashOfLightning
 START
 Basic
 Front: [Context] What does X do?
 Back: [Answer]
 
 CONTEXT: [Explanation]
+Tags: project::example-project tech::example-technology concept::example-concept
 END
 
-TARGET DECK: AWSAIPractitionerCert
+TARGET DECK: FlashOfLightning
 START
 Basic
 Front: [Context] When would you use X?
 Back: [Answer from different angle]
 
 CONTEXT: [Different aspect of explanation]
+Tags: project::example-project tech::example-technology concept::example-concept
 END
 ```
 
@@ -315,21 +378,21 @@ END
 ## Card Format (Anki-to-Obsidian compatible)
 
 ```text
-TARGET DECK: AWSAIPractitionerCert
+TARGET DECK: FlashOfLightning
 START
 Basic
 Front: [question]
 Back: [answer]
 
 CONTEXT: [explanation]
-Tags: [optional tags]
+Tags: [hierarchical tags — REQUIRED, see Tag Taxonomy]
 END
 ```
 
 Notes:
-- **Always include `TARGET DECK: AWSAIPractitionerCert`** before each START block
+- **Always include `TARGET DECK: FlashOfLightning`** before each START block
 - No `<!--ID: -->` line needed - Anki adds these on import
-- Tags are optional
+- Tags are **mandatory** — every card must have at least one hierarchical tag (see Tag Taxonomy below)
 
 ### Embedding Images
 
@@ -338,7 +401,7 @@ Notes:
 Use Obsidian's embed syntax:
 
 ```text
-TARGET DECK: AWSAIPractitionerCert
+TARGET DECK: FlashOfLightning
 START
 Basic
 Front: What does this diagram show?
@@ -354,7 +417,7 @@ Rules:
 - Rename with descriptive filenames (not `Screenshot 2026-02-02...png`)
 - Example filename: `datadog-trace-detail-showing-content.png`
 - The user provides image files in the chat interface
-- Save images to this directory: `/Users/whitney.lee/Documents/Journal/make Anki cards/images/`
+- Save images to this directory: `/Users/whitney.lee/Documents/Journal/anki/images/`
 - Be careful not to use images in a way that gives away the answer
 
 ### Project-Specific Images
@@ -370,12 +433,34 @@ The image goes on its own line right after `Front:`, with the question text on t
 
 ---
 
+## Tag Taxonomy
+
+Every card MUST have at least one hierarchical tag. Tags use Anki's `::` hierarchy convention, enabling filtered study sessions without the learning penalty of multiple decks.
+
+**Tag prefixes** (use at least one per card):
+
+| Prefix | Purpose | Examples |
+|---|---|---|
+| `project::` | Which repo/project spawned this card | `project::cluster-whisperer`, `project::spinybacked-orbweaver` |
+| `tech::` | Technology domain | `tech::kubernetes`, `tech::opentelemetry`, `tech::python` |
+| `concept::` | Abstract concept | `concept::distributed-systems`, `concept::spaced-repetition` |
+| `source::` | Where it was learned | `source::kubecon-talk`, `source::book`, `source::docs` |
+
+**Rules:**
+- Space-separated on the Tags line: `Tags: project::cluster-whisperer tech::kubernetes concept::observability`
+- Lowercase, hyphens for multi-word values (`tech::open-telemetry` not `tech::OpenTelemetry`)
+- Be specific: `tech::kubernetes` not just `tech::cloud`
+- A card can (and often should) have tags from multiple prefixes
+- Flat (non-hierarchical) tags are allowed alongside hierarchical ones but must not be the only tags
+
+---
+
 ## Style Examples
 
 For reference, read these files (under ANKI_FINISHED_DIR / ANKI_CARDS_DIR) to see card-making style:
 
 - **Conversational style**: `ANKI_FINISHED_DIR/CARDS MADE - GitHub & ArgoCD auto sync webhook.md`
-- **Glossary style**: `ANKI_CARDS_DIR/AWS AI Practitioner Certification/final_study_materials/master_glossary.md` (first 200 lines)
+- **Glossary style**: `ANKI_CARDS_DIR/aws-ai-practitioner/final_study_materials/master_glossary.md` (first 200 lines)
 
 ---
 
@@ -390,7 +475,7 @@ For reference, read these files (under ANKI_FINISHED_DIR / ANKI_CARDS_DIR) to se
 ## Quality Checklist
 
 Before presenting cards:
-- [ ] Every card has `TARGET DECK: AWSAIPractitionerCert` before START
+- [ ] Every card has `TARGET DECK: FlashOfLightning` before START
 - [ ] Every important concept is covered at least twice
 - [ ] Card fronts don't give away the answer
 - [ ] Answers are 30 words or fewer
@@ -401,3 +486,5 @@ Before presenting cards:
 - [ ] Future-self accessible - no unexplained names/references
 - [ ] Arguments framed as arguments, not facts
 - [ ] Code blocks have language identifiers (typescript, yaml, bash, etc.)
+- [ ] Every card has at least one hierarchical tag (`project::`, `tech::`, `concept::`, or `source::`)
+- [ ] Every card scored; cards that were rewritten show original→revised score; cards that couldn't reach 9 have a threshold note

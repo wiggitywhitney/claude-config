@@ -6,6 +6,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-04-04) Added card quality scoring to `/anki` and `/anki-yolo` skills — 3-dimension rubric (memory anchor clarity, future-self accessibility, concept vs. detail balance, each 1–5, max 15); cards below 9/15 auto-rewritten once with re-score; score table shown in Phase 1 output; `/write-prompt` review fixed column name collision and wired Story-First Framing into workflow steps (PRD #48, M4)
+- (2026-04-04) Added Milestone 7 (glossary index) and Milestone 8 (image bank) to PRD #48; recorded design decisions for auto-rewrite behavior, glossary `concept::glossary` tagging, and human-in-the-loop image prompting with no-text-in-images rule (PRD #48)
 - (2026-03-31) Added severity scoring ([High]/[Medium]/[Low]) to all anti-patterns in `/write-prompt` skill, with tiered output format (PRD #48, M2)
 - Rolled out PROGRESS.md to all 11 active repos with Keep a Changelog template
 - Gitignored PROGRESS.md in kubecon-2026-gitops (multi-contributor repo)

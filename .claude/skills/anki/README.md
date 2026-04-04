@@ -13,12 +13,12 @@ A Claude Code skill for creating Anki cards from conversations.
 - Asks: save for later, or make cards now?
 
 **Phase 2: Output**
-- **Save document**: Goes to `~/Documents/Journal/make Anki cards/[topic].md`
-- **Make cards**: Generates START/END blocks, saves to `~/Documents/Journal/make Anki cards/finished/CARDS MADE - [topic].md`
+- **Save document**: Goes to `~/Documents/Journal/anki/[topic].md`
+- **Make cards**: Generates START/END blocks, saves to `~/Documents/Journal/anki/finished/CARDS MADE - [topic].md`
 
 ## Invocation
 
-```
+```text
 /anki                     # Make cards from this conversation
 /anki "OpenTelemetry"     # Focus on specific topic
 /anki docs/concept.md     # Make cards from a file
@@ -48,8 +48,8 @@ To add cloze cards, image cards, etc., add a new `### Pattern N:` section.
 ### Changing Output Paths
 
 Paths are hardcoded in `SKILL.md`:
-- Card-ready documents: `/Users/whitney.lee/Documents/Journal/make Anki cards/`
-- Finished cards: `/Users/whitney.lee/Documents/Journal/make Anki cards/finished/`
+- Card-ready documents: `/Users/whitney.lee/Documents/Journal/anki/`
+- Finished cards: `/Users/whitney.lee/Documents/Journal/anki/finished/`
 
 To change, update the paths in the "Two-Phase Workflow" section.
 
@@ -57,7 +57,7 @@ To change, update the paths in the "Two-Phase Workflow" section.
 
 Some card sets need a specific deck. Add to the card format:
 
-```
+```text
 TARGET DECK: DeckName
 START
 Basic
@@ -85,7 +85,7 @@ See: https://docs.anthropic.com/en/docs/claude-code/skills
 
 ## Files
 
-```
+```text
 ~/.claude/skills/anki/
 ├── SKILL.md    # Main skill instructions (Claude reads this)
 └── README.md   # This file (documentation for humans)
