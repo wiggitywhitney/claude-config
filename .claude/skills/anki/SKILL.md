@@ -28,7 +28,8 @@ You are helping Whitney create Anki cards from a conversation she just had.
 3. Before structuring cards: outline the narrative arc of the topic (why it exists, what it is, how it connects, what was surprising) — see Story-First Framing in Card Rules. Only then organize concepts into card-ready format by theme.
 4. Score each card candidate using the Card Quality Scoring rubric below
 5. For any card scoring below 9/15: rewrite it once to improve the weakest dimensions, then re-score. If still below 9 after rewriting, accept it and note why it couldn't reach the threshold (e.g., "Memory anchor limited: no project experience with this technology yet")
-6. Present the card-ready document with the score table
+6. **Glossary Index Check** — scan the conversation for newly introduced technologies, APIs, frameworks, and coined project terms. Read the index at `~/Documents/Journal/anki/glossary-index.md` and cross-reference. Add a "## Missing Glossary Cards" section in the Phase 1 output listing any terms with no index entry — these will be included as Pattern 1 cards in Phase 2 automatically.
+7. Present the card-ready document with the score table and the Missing Glossary Cards section
 
 ### Phase 2: Make Cards
 
@@ -36,6 +37,47 @@ You are helping Whitney create Anki cards from a conversation she just had.
 2. Present cards for user approval
 3. After approval, save to: `/Users/whitney.lee/Documents/Journal/anki/finished/CARDS MADE - [topic].md`
 4. Run `python3 ~/Documents/Journal/anki/tag-cards.py --apply` to ensure all saved cards have hierarchical tags
+5. Append any newly-made Pattern 1 glossary terms to the index — see Glossary Index section below
+
+---
+
+## Glossary Index
+
+The glossary index tracks which technologies, APIs, frameworks, and coined terms already have Pattern 1 ("What is X?") coverage in the FlashOfLightning deck.
+
+**Index location:** `~/Documents/Journal/anki/glossary-index.md`
+**Entry format:** `term name | YYYY-MM-DD` (one per line, plain text below the `---` separator in the index file)
+
+### What qualifies as a glossary term
+
+- Technologies, frameworks, databases, platforms (e.g., Flagger, Hono, LangGraph)
+- APIs and named SDKs (e.g., OpenTelemetry SDK)
+- Coined project terms — words or phrases invented in a specific project or conversation (e.g., scoped discovery pattern, capability inference)
+- Any term where "What is X?" is a natural question for someone unfamiliar with it
+
+Does NOT include: implementation details, config flags, specific package names without a conceptual identity, or project names Whitney built herself (those are anchors, not glossary terms).
+
+### During Phase 1 (step 6: Glossary Index Check)
+
+1. Read the index file at `~/Documents/Journal/anki/glossary-index.md`
+2. Scan the conversation for newly introduced terms matching the criteria above
+3. Cross-reference: which terms appear in the conversation but are NOT in the index?
+4. Output a "## Missing Glossary Cards" section listing unindexed terms as a bullet list — these will be added as Pattern 1 cards automatically in Phase 2:
+   ```text
+   ## Missing Glossary Cards (will be added as Pattern 1 cards)
+   - Hono
+   - LangGraph StateGraph
+   ```
+
+### After Phase 2 save (step 5: auto-append)
+
+For each Pattern 1 glossary card made in this session, append one line to the index file:
+
+```text
+term name | YYYY-MM-DD
+```
+
+Append automatically after saving — no user action required. All Pattern 1 cards must also include `concept::glossary` in their tags.
 
 ---
 
@@ -262,6 +304,8 @@ For concepts and terminology (e.g., "Scalar vs Vector vs Embedding"):
 
 ### Pattern 1: Glossary/Definition Terms (two cards per term)
 
+All Pattern 1 cards must include `concept::glossary` in their tags. After saving, append the term to `~/Documents/Journal/anki/glossary-index.md`.
+
 ```text
 TARGET DECK: FlashOfLightning
 START
@@ -270,7 +314,7 @@ Front: What is [term]?
 Back: [definition - 30 words or fewer]
 
 CONTEXT: [1-3 sentences explaining why this matters]
-Tags: tech::example-technology concept::terminology
+Tags: tech::example-technology concept::terminology concept::glossary
 END
 
 TARGET DECK: FlashOfLightning
@@ -282,7 +326,7 @@ Front: What term describes this?
 Back: [term]
 
 CONTEXT: [explanation]
-Tags: tech::example-technology concept::terminology
+Tags: tech::example-technology concept::terminology concept::glossary
 END
 ```
 
@@ -488,3 +532,5 @@ Before presenting cards:
 - [ ] Code blocks have language identifiers (typescript, yaml, bash, etc.)
 - [ ] Every card has at least one hierarchical tag (`project::`, `tech::`, `concept::`, or `source::`)
 - [ ] Every card scored; cards that were rewritten show original→revised score; cards that couldn't reach 9 have a threshold note
+- [ ] Glossary index checked; Missing Glossary Cards section included in Phase 1 output; missing terms queued as Pattern 1 cards for Phase 2
+- [ ] Pattern 1 cards include `concept::glossary` tag; new terms appended to glossary-index.md after saving

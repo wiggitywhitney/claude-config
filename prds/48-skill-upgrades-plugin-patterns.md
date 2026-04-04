@@ -32,6 +32,16 @@ This document contains the specific patterns, examples, and rationale from the p
 **Rationale:** Glossary cards are the building blocks — knowing what a term means is prerequisite to understanding cards that use the term. Being able to filter to `concept::glossary` lets Whitney front-load vocabulary review.
 **Impact:** M7 success criteria updated to require `concept::glossary` tagging. The Pattern 1 template in SKILL.md should include `concept::glossary` in its example tags.
 
+### Decision 5 — Glossary cards are never deferred: always create them in the same session (2026-04-04)
+**Decision:** When the Glossary Index Check finds missing terms, those Pattern 1 cards are automatically included in the Phase 2 batch — no prompt to defer. Whitney always wants glossary coverage made immediately.
+**Rationale:** The "defer" option adds friction with no benefit. If a term is worth noting as missing, it's worth making the card now.
+**Impact:** M7 glossary check step uses no AskUserQuestion for defer; missing terms are queued automatically for Phase 2.
+
+### Decision 6 — Add a final anki consistency milestone (M9) to keep /anki and /anki-yolo in sync (2026-04-04)
+**Decision:** Add Milestone 9 as a dedicated consistency pass: compare `/anki` and `/anki-yolo` SKILL.md side by side and ensure they are identical except for the autonomous workflow difference (no approval gate in YOLO).
+**Rationale:** M4, M7, and M8 each touch both skill files, but changes are made piecemeal. Without a final comparison pass, features can drift between the two files unnoticed.
+**Impact:** Adds M9 after M8. M8 success criteria note that M9 will do the final sync check.
+
 ### Decision 4 — Run `/write-prompt` after all changes, not partway through (2026-04-04)
 **Decision:** The `/write-prompt` review must run after ALL changes to a SKILL.md are complete — not partway through the milestone. Running it early means subsequent changes (enforcement language, new integrations, wording fixes) go unreviewed.
 **Rationale:** During M5, `/write-prompt` ran after the initial Broken Docs Detection phase was written, but before the enforcement language and `/research` integrations were added. A second review at the end caught this gap.
@@ -159,7 +169,7 @@ This document contains the specific patterns, examples, and rationale from the p
 - Scoring scales are compatible (a "high confidence" finding in one skill means the same thing in another)
 - Run `/write-prompt` review on each modified skill after all changes to that skill are complete — not partway through (Decision 4)
 
-### Milestone 7: `/anki` — Glossary Index Setup and Integration
+### Milestone 7: `/anki` — Glossary Index Setup and Integration ✅ Complete
 
 **No external research required** — design was decided in conversation on 2026-04-04.
 
@@ -183,7 +193,7 @@ This document contains the specific patterns, examples, and rationale from the p
 
 **Success Criteria:**
 - Glossary index file exists and is populated from existing finished cards
-- `/anki` prompts for missing glossary cards at Phase 1 (after scoring section), before card generation
+- `/anki` surfaces missing glossary cards in Phase 1 output and automatically queues them as Pattern 1 cards for Phase 2 (Decision 5: no defer prompt)
 - After saving, new glossed terms are appended to the index without user action
 - `/anki-yolo` surfaces missing glossary terms in its final summary
 - All Pattern 1 glossary cards include `concept::glossary` tag (Decision 3: enables filtered study sessions to front-load vocabulary)
@@ -230,10 +240,32 @@ This document contains the specific patterns, examples, and rationale from the p
 - Images are resized to the researched target dimensions before saving
 - Images with text are flagged and rejected with an explanation
 - Run `/write-prompt` review on the updated SKILL.md after all changes are complete — not partway through (Decision 4)
+- Note: full anki/anki-yolo consistency check is done in M9, not M8
+
+### Milestone 9: `/anki` vs `/anki-yolo` — Final Consistency Check
+
+**No external research required** — this is a structural comparison pass.
+
+**Problem:** M4, M7, and M8 each touched both skill files piecemeal. Features can silently drift between `/anki` and `/anki-yolo` — one skill gets an improvement that the other doesn't. There's no single moment where both files are compared holistically.
+
+**Upgrade:**
+- Read both SKILL.md files in full
+- Do a section-by-section comparison: Card Quality Scoring, Card Rules, Glossary Index, Image Bank, Card Patterns, Tag Taxonomy, Quality Checklist
+- The only accepted differences between the files:
+  - `/anki` has a two-phase workflow with a user approval gate; `/anki-yolo` is a single autonomous flow
+  - `/anki` uses AskUserQuestion for decisions; `/anki-yolo` makes autonomous choices
+  - `/anki-yolo` has a 10-card default limit; `/anki` does not
+- Everything else — card rules, scoring, glossary check, image bank, pattern templates, tag taxonomy — must be identical
+- Fix any divergences found
+
+**Success Criteria:**
+- Both SKILL.md files read and compared section by section
+- All divergences outside the accepted autonomy differences are documented and fixed
+- Run `/write-prompt` review on any modified SKILL.md after all changes are complete — not partway through (Decision 4)
 
 ## Implementation Notes
 
-- Each milestone is independent — they can be done in any order, though the listed order builds momentum from quick wins to larger changes. M7 depends on M4 being complete (the scoring section should exist before the glossary section references it). M8 depends on M7 (both touch the same SKILL.md; best done in one session). M8 also requires a research phase before implementation — do not skip it.
+- Each milestone is independent — they can be done in any order, though the listed order builds momentum from quick wins to larger changes. M7 depends on M4 being complete (the scoring section should exist before the glossary section references it). M8 depends on M7 (both touch the same SKILL.md; best done in one session). M8 also requires a research phase before implementation — do not skip it. M9 depends on M8 (final consistency check after all anki changes are made).
 - Every milestone must preserve existing skill behavior (no regressions)
 - Every milestone must end with a `/write-prompt` review of the updated SKILL.md — run it last, after all other changes are complete (Decision 4)
 - The Skill Creator plugin's eval framework could be used to benchmark before/after for any skill, but this is optional — manual validation is sufficient for this PRD

@@ -26,7 +26,14 @@ Make cards and save them immediately. No two-phase workflow, no approval gate.
 5. Score every card using the Card Quality Scoring rubric below. For any card scoring below 9/15, rewrite it once targeting the weakest dimensions and re-score. If still below 9, accept it with a threshold note.
 6. Save directly to: `ANKI_FINISHED_DIR/CARDS MADE - [topic].md`
 7. Run `python3 ~/Documents/Journal/anki/tag-cards.py --apply` to ensure all saved cards have hierarchical tags
-8. Present a brief summary: card count, topics covered, and a score table showing all cards with their final scores (and original→revised for rewrites)
+8. Append any newly-made Pattern 1 glossary terms to `~/Documents/Journal/anki/glossary-index.md` (format: `term name | YYYY-MM-DD`)
+9. Present a brief summary: card count, topics covered, score table, and a **Missing Glossary Cards** note listing any technologies/frameworks/terms from the conversation that have no entry in the glossary index. Format the note as a bullet list:
+   ```text
+   ## Missing Glossary Cards
+   - Hono (no glossary entry — consider making Pattern 1 cards)
+   - LangGraph StateGraph (no glossary entry — consider making Pattern 1 cards)
+   ```
+   Omit this section if all terms from the conversation are already indexed.
 
 ## Constraints
 
@@ -260,6 +267,8 @@ For concepts and terminology (e.g., "Scalar vs Vector vs Embedding"):
 
 ### Pattern 1: Glossary/Definition Terms (two cards per term)
 
+All Pattern 1 cards must include `concept::glossary` in their tags. After saving, append the term to `~/Documents/Journal/anki/glossary-index.md`.
+
 ```text
 TARGET DECK: FlashOfLightning
 START
@@ -268,7 +277,7 @@ Front: What is [term]?
 Back: [definition - 30 words or fewer]
 
 CONTEXT: [1-3 sentences explaining why this matters]
-Tags: tech::example-technology concept::terminology
+Tags: tech::example-technology concept::terminology concept::glossary
 END
 
 TARGET DECK: FlashOfLightning
@@ -280,7 +289,7 @@ Front: What term describes this?
 Back: [term]
 
 CONTEXT: [explanation]
-Tags: tech::example-technology concept::terminology
+Tags: tech::example-technology concept::terminology concept::glossary
 END
 ```
 
@@ -477,3 +486,5 @@ Before saving cards:
 - [ ] Arguments framed as arguments, not facts
 - [ ] Code blocks have language identifiers (typescript, yaml, bash, etc.)
 - [ ] Every card has at least one hierarchical tag (`project::`, `tech::`, `concept::`, or `source::`)
+- [ ] Pattern 1 cards include `concept::glossary` tag; new terms appended to glossary-index.md after saving
+- [ ] Summary includes Missing Glossary Cards note for any unindexed terms in the conversation
