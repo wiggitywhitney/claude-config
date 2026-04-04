@@ -168,7 +168,7 @@ Write one section at a time. For each section in the approved outline:
 ### Step 5a: Execute commands first
 - Run every command that will appear in the section — NEVER skip a command because it seems simple, obvious, or standard
 - Capture the actual output
-- If a command can't run because a tool or dependency is missing, install it — do not ask the user to set up the environment or skip the command
+- If a command can't run because a tool or dependency is missing: auto-install project-level dependencies (npm, pip, go modules, etc.) without asking; for system-level tools (brew, apt, curl-pipe-sh, etc.) confirm with the user first per Rule 6 above
 - If a command fails, capture the error — do not retry silently or substitute different output
 - If a command requires user interaction (browser, GUI, authenticated session), ask the user to run it and share the output
 
