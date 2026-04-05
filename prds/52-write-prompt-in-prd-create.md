@@ -27,9 +27,19 @@ Add a mandatory `/write-prompt` review step to both `prd-create` skill files (CL
 **Rationale:** The skill already says PRD milestones guide implementation. But without explicitly framing them as prompts, the write-prompt review might treat them as human-readable documentation and miss prompt-specific failure modes (missing specifics, vague directives, missing operationalization plan).
 **Impact:** The workflow step says "Run `/write-prompt` on the milestones section as AI agent instructions."
 
+### Decision 3 — `/skill-creator eval` excluded from suggest-write-prompt hook (2026-04-05)
+**Decision:** The `suggest-write-prompt.sh` hook only recommends `/write-prompt`. It does NOT recommend `/skill-creator eval`.
+**Rationale:** The hook fires on every Write|Edit to a SKILL.md or CLAUDE.md — including typo fixes, wording tweaks, and code block label additions. Recommending eval on every edit would (1) create noise that trains the implementing agent to ignore the recommendation, (2) incur real cost for trivial changes, and (3) dilute the value of the `/write-prompt` reminder. Eval is appropriate for significant behavioral changes, attached to milestone completion events — not every file save.
+**Impact:** M3 implemented without eval recommendation. Future work: add `/skill-creator eval` advisory to `/prd-done` and/or `/prd-update-progress` skills, triggered after milestone completion rather than individual file edits. This is a separate PRD or enhancement, not in scope for PRD #52.
+
+### Decision 4 — Research-explicit milestone characteristic added to both skill files (2026-04-05)
+**Decision:** Both `SKILL.md` and `SKILL.v1-yolo.md` received an additional milestone characteristic: "Research-explicit: when a milestone requires researching a technology or API before implementing, direct the implementing AI to run `/research <topic>` explicitly — do not leave it as 'investigate X' or 'look into Y'."
+**Rationale:** User requested this during implementation. Vague "investigate" instructions are the exact failure mode the PRD exists to prevent. Naming `/research` explicitly gives the implementing AI a concrete action instead of an open-ended directive.
+**Impact:** M1 and M2 scope expanded during implementation to include this characteristic in the Milestone Characteristics section. Both milestones delivered with this addition.
+
 ## Milestones
 
-### Milestone 1: Update `SKILL.md` (CLI version) ⬜
+### Milestone 1: Update `SKILL.md` (CLI version) ✅ Complete
 
 **Location:** `.claude/skills/prd-create/SKILL.md`
 
@@ -57,7 +67,7 @@ Renumber all subsequent workflow steps accordingly.
 - Subsequent steps are renumbered correctly
 - Run `/write-prompt` on the modified SKILL.md after all changes are complete
 
-### Milestone 2: Update `SKILL.v1-yolo.md` (YOLO version) ⬜
+### Milestone 2: Update `SKILL.v1-yolo.md` (YOLO version) ✅ Complete
 
 **Location:** `.claude/skills/prd-create/SKILL.v1-yolo.md`
 
@@ -70,7 +80,7 @@ Apply the identical changes as Milestone 1:
 - Both files contain identical callout and workflow step additions
 - Run `/write-prompt` on the modified SKILL.v1-yolo.md after all changes are complete
 
-### Milestone 3: PostToolUse hook — suggest /write-prompt on SKILL.md and CLAUDE.md edits ⬜
+### Milestone 3: PostToolUse hook — suggest /write-prompt on SKILL.md and CLAUDE.md edits ✅ Complete
 
 **Research first:** Run `/research` to verify the PostToolUse hook input format and `additionalContext` output schema before implementing. The existing `post-write-codeblock-check.sh` hook demonstrates the stdin JSON pattern; verify that advisory (non-blocking) PostToolUse output uses `hookSpecificOutput.additionalContext` and exits 0.
 
