@@ -200,7 +200,7 @@ git pull --rebase origin main && git push origin main
 ✅ PRD committed and pushed to main
 
 The PRD is now available in the repository. To start working on it later, execute:
-prd-start [issue-id]
+/prd-start [issue-id]
 ```
 
 ## Important Notes
