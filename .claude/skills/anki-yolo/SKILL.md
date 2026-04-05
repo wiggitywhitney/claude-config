@@ -24,7 +24,7 @@ Make cards and save them immediately. No two-phase workflow, no approval gate.
 2. Review conversation context (or provided args/file)
 3. Outline the narrative arc (why it exists, what it is, how it connects, what was surprising)
 4. **Glossary Index Check** — read `~/Documents/Journal/anki/glossary-index.md` and scan the conversation for newly introduced technologies, APIs, frameworks, and coined project terms. Identify any with no index entry — these will be generated as Pattern 1 cards in the next step.
-5. Generate cards following all rules below. Include Pattern 1 cards for any terms identified in the Glossary Index Check (no deferral — make them in this session).
+5. Generate cards following all rules below. Include Pattern 1 cards for any terms identified in the Glossary Index Check (no deferral — make them in this session). For any concept with a mapping in `~/Documents/Journal/anki/images/concept-map.md`, embed the mapped image at the top of the card front using `![[filename.png]]`.
 6. Score every card using the Card Quality Scoring rubric below. For any card scoring below 9/15, rewrite it once targeting the weakest dimensions and re-score. If still below 9, accept it with a threshold note.
 7. Save directly to: `ANKI_FINISHED_DIR/CARDS MADE - [topic].md`
 8. Run `python3 ~/Documents/Journal/anki/tag-cards.py --apply` to ensure all saved cards have hierarchical tags

@@ -40,7 +40,7 @@ These rules are non-negotiable throughout the entire workflow:
 3. **Fix broken docs before writing new ones.** If existing documentation fails during Broken Docs Detection or Environment Setup, STOP and discuss fixing it with the user before proceeding.
 4. **Write for users, not developers.** Use the simplest language that is still accurate. Avoid jargon when plain language works. Define terms on first use.
 5. **Document error cases alongside success paths.** Show what happens when things go wrong, not just the happy path.
-6. **Claude runs infrastructure commands; user runs interactive operations.** Claude executes bash commands, build steps, and CLI tools directly. Ask the user to run anything requiring a browser, GUI, authenticated web session, or interactive tool — then incorporate their output. When a tool or dependency is missing, install it automatically for project-specific dependencies (npm packages, pip packages, go modules). Confirm with the user before installing system-level tools (e.g., via brew, apt, or curl-pipe-sh).
+6. **Claude runs infrastructure commands; user runs interactive operations.** Claude executes bash commands, build steps, and CLI tools directly. Ask the user to run anything requiring a browser, GUI, authenticated web session, or interactive tool — then incorporate their output. When a tool or dependency is missing, auto-install only if it is already declared in the project's manifest or lockfile (e.g., `package.json`, `requirements.txt`, `go.mod`). Confirm with the user before installing anything not already in the manifest, and before any system-level installs (e.g., via brew, apt, or curl-pipe-sh).
 7. **Use full flags in commands.** Always use long-form flags (e.g., `--filename` not `-f`, `--namespace` not `-n`, `--output` not `-o`). Full flags are self-documenting for users who are unfamiliar with the tools.
 
 ## Phase 1: Identify Documentation Target
@@ -134,7 +134,7 @@ Ensure a clean, reproducible starting state before writing any documentation.
 
 1. **Detect project type**: Run `~/.claude/skills/verify/scripts/detect-project.sh` (from the `/verify` skill) if available. Otherwise, check for `package.json`, `Makefile`, `go.mod`, `pyproject.toml`, `Cargo.toml`, or other project markers to understand the tech stack.
 2. **Follow existing setup docs**: If the project has setup documentation (README, CONTRIBUTING.md, setup guide), follow those steps to set up the environment. If Phase 2 already validated the setup docs, this should proceed without surprises. If no setup docs exist, use project markers from step 1 to run standard setup commands (e.g., `npm install`, `pip install --editable .`, `go mod download`) and note what was needed — this becomes input for the Prerequisites section.
-3. **If setup fails due to broken docs**: STOP immediately and tell the user what failed. If the user previously chose "Proceed" in Phase 2 (leaving existing issues in place), remind them of those known issues and confirm whether to fix them now or troubleshoot independently before continuing.
+3. **If setup fails due to broken docs**: STOP immediately and tell the user what failed. Fix the broken docs before continuing — do not proceed with documentation on a broken environment.
 4. **Verify clean state**: Run build, lint, or test commands as appropriate to confirm the environment is working before documenting anything.
 5. **Note prerequisites**: Record what was needed to get the environment working — these become the Prerequisites section of the documentation.
 
@@ -169,7 +169,7 @@ Write one section at a time. For each section in the approved outline:
 ### Step 5a: Execute commands first
 - Run every command that will appear in the section — NEVER skip a command because it seems simple, obvious, or standard
 - Capture the actual output
-- If a command can't run because a tool or dependency is missing: auto-install project-level dependencies (npm, pip, go modules, etc.) without asking; for system-level tools (brew, apt, curl-pipe-sh, etc.) confirm with the user first per Rule 6 above
+- If a command can't run because a tool or dependency is missing: follow Rule 6 — auto-install only if already declared in the project's manifest or lockfile; confirm with the user before installing anything else
 - If a command fails, capture the error — do not retry silently or substitute different output
 - If a command requires user interaction (browser, GUI, authenticated session), ask the user to run it and share the output
 

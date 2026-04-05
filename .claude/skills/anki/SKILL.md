@@ -40,15 +40,15 @@ You are helping Whitney create Anki cards from a conversation she just had.
 1. Generate actual START/END block cards following the rules below. For any concept with a mapping in `~/Documents/Journal/anki/images/concept-map.md`, embed the mapped image automatically at the top of the card front using `![[filename.png]]`.
 2. **Image Bank** — for each new concept listed in the Phase 1 Image Bank Status (no map entry), prompt Whitney one at a time using AskUserQuestion:
    ```text
-   New concept: [X]. Do you want to provide a logo or screenshot for this concept?
-   - Yes → drop the image and I'll save it
-   - No → I'll assign an art image from the bank
+   New concept: [X]. Do you want an image for this concept?
+   - Yes, I'll provide one → drop the image and I'll save it
+   - Pull from bank → I'll assign the next unassigned art image
    - Skip → proceed without an image for this concept
    ```
-   - **If yes**: save the provided image to `~/Documents/Journal/anki/images/bank/` as `concept-name-bank.png`, add the mapping to the concept map, embed on the card
-   - **If no**: pick the next unassigned art image deterministically (use Glob to list `~/Documents/Journal/anki/images/bank/*.png`, exclude filenames already in the concept map, take the first result), assign it to this concept in the concept map, embed on the card
+   When the bank has no unassigned art images, omit the "Pull from bank" option.
+   - **If "Yes, I'll provide one"**: save the provided image to `~/Documents/Journal/anki/images/bank/` as `concept-name-bank.png`, add the mapping to the concept map, embed on the card
+   - **If "Pull from bank"**: pick the next unassigned art image deterministically (use Glob to list `~/Documents/Journal/anki/images/bank/*.png`, exclude filenames already in the concept map, take the first result), assign it to this concept in the concept map, embed on the card
    - **If bank has ≤2 unassigned art images left**: after processing, warn — "Image bank is getting low (N images left). Consider adding more art images."
-   - **If bank has no unassigned art images**: skip the "no" option — ask Whitney to provide an image or say "skip" to proceed without one
 3. Present cards for user approval (with all images embedded)
 4. After approval, save to: `/Users/whitney.lee/Documents/Journal/anki/finished/CARDS MADE - [topic].md`
 5. Run `python3 ~/Documents/Journal/anki/tag-cards.py --apply` to ensure all saved cards have hierarchical tags
@@ -110,7 +110,7 @@ Append automatically after saving — no user action required. All Pattern 1 car
 
 ### What qualifies as a concept for image assignment
 
-Every concept that appears on a card gets an image. Prompt for all concepts in the batch.
+Every concept that appears on a card gets an image when possible. Prompt for all concepts in the batch. The only exception is when the bank has no unassigned art images and Whitney says "Skip" — in that case, proceed without an image for that concept.
 
 ### How the bank works
 
