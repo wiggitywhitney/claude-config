@@ -85,7 +85,15 @@ For each documentation file found:
    - **Command** — something to run (bash, shell, CLI command)
    - **Output** — expected result following a command block
    - **Config/other** — configuration snippets, JSON, YAML, or code samples not meant to be executed
-3. Execute each **command** block, capturing actual output (stdout + stderr). Skip commands that could be destructive (e.g., `rm -rf`, `DROP TABLE`, `kubectl delete`, database wipes) — mark these as ⚠️ Skipped with the reason.
+3. Execute each **command** block, capturing actual output (stdout + stderr). Skip commands that could be destructive — mark these as ⚠️ Skipped with the reason. Destructive patterns include:
+   - File/directory deletion: `rm -rf`, `rmdir`, `unlink`
+   - Database operations: `DROP`, `DELETE`, `TRUNCATE`, database wipes
+   - Kubernetes/container operations: `kubectl delete`, `docker rm`, `docker system prune`
+   - Cloud resource operations: `aws`/`gcloud`/`az` create or delete commands
+   - Git history mutations: `git push --force`, `git reset --hard`, `git rebase`
+   - System modifications: `chmod`, `chown`, `systemctl`, `service`
+   - Global package installs: `npm install -g`, `pip install --user`, `brew install`
+   - Writes to critical system paths: `/etc`, `/usr`, `/System`
 4. If an **output** block follows a command, compare actual vs. claimed output. Ignore non-deterministic differences: timestamps, request/session IDs, absolute paths, hostnames, and ports. Focus on exit codes, error messages, data structure, and key output fields. When in doubt, mark as ⚠️ Skipped rather than ❌ Fail.
 5. Mark each tested section:
    - ✅ **Pass** — command ran without error; output matches claimed output (or no output block to compare)
@@ -133,7 +141,7 @@ Ensure a clean, reproducible starting state before writing any documentation.
 
 1. **Detect project type**: Run `~/.claude/skills/verify/scripts/detect-project.sh` (from the `/verify` skill) if available. Otherwise, check for `package.json`, `Makefile`, `go.mod`, `pyproject.toml`, `Cargo.toml`, or other project markers to understand the tech stack.
 2. **Follow existing setup docs**: If the project has setup documentation (README, CONTRIBUTING.md, setup guide), follow those steps to set up the environment. If Phase 2 already validated the setup docs, this should proceed without surprises. If no setup docs exist, use project markers from step 1 to run standard setup commands (e.g., `npm install`, `pip install --editable .`, `go mod download`) and note what was needed — this becomes input for the Prerequisites section.
-3. **If existing docs are broken**: STOP immediately. Tell the user what failed and discuss fixing it before proceeding.
+3. **If setup fails due to broken docs**: STOP immediately and tell the user what failed. If the user previously chose "Proceed" in Phase 2 (leaving existing issues in place), remind them of those known issues and confirm whether to fix them now or troubleshoot independently before continuing.
 4. **Verify clean state**: Run build, lint, or test commands as appropriate to confirm the environment is working before documenting anything.
 5. **Note prerequisites**: Record what was needed to get the environment working — these become the Prerequisites section of the documentation.
 
