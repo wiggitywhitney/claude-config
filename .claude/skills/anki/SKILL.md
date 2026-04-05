@@ -1,7 +1,7 @@
 ---
 name: anki
 description: Create Anki cards from the current conversation. Invoke when learning a concept and want to capture it for spaced repetition.
-allowed-tools: Read, Write, Glob, AskUserQuestion
+allowed-tools: Read, Write, Glob, Bash, AskUserQuestion
 ---
 
 # Anki Card-Making Skill
@@ -45,7 +45,7 @@ You are helping Whitney create Anki cards from a conversation she just had.
    - No → I'll assign an art image from the bank
    ```
    - **If yes**: save the provided image to `~/Documents/Journal/anki/images/bank/` as `concept-name-bank.png`, add the mapping to the concept map, embed on the card
-   - **If no**: pick the oldest unassigned art image from the bank (use Glob to list `~/Documents/Journal/anki/images/bank/*.png`, exclude filenames already in the concept map, take the first result), assign it to this concept in the concept map, embed on the card
+   - **If no**: pick the next unassigned art image deterministically (use Glob to list `~/Documents/Journal/anki/images/bank/*.png`, exclude filenames already in the concept map, take the first result), assign it to this concept in the concept map, embed on the card
    - **If bank has ≤2 unassigned art images left**: after processing, warn — "Image bank is getting low (N images left). Consider adding more art images."
    - **If bank has no unassigned art images**: skip the "no" option — ask Whitney to provide an image or say "skip" to proceed without one
 3. Present cards for user approval (with all images embedded)

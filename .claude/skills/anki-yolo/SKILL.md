@@ -1,7 +1,7 @@
 ---
 name: anki-yolo
 description: Create and save Anki cards autonomously without approval. Use when cards should just get made.
-allowed-tools: Read, Write, Glob, Grep, WebSearch, WebFetch
+allowed-tools: Read, Write, Glob, Grep, Bash, WebSearch, WebFetch
 ---
 
 # Anki YOLO — Autonomous Card Making
@@ -31,7 +31,7 @@ Make cards and save them immediately. No two-phase workflow, no approval gate.
 9. **Image Bank** — complete image assignments and update the concept map. During card generation (step 5), known concepts already had their images embedded using the concept map. This step handles new concepts:
    - Read `~/Documents/Journal/anki/images/concept-map.md`
    - **Known concepts** (in the map): already embedded during step 5 — nothing to do here
-   - **New concepts** (no map entry): pick the next unassigned art image from the bank (oldest file in `~/Documents/Journal/anki/images/bank/` with no concept-map entry), assign it to this concept in the concept map, add the `![[filename.png]]` embed to the card in the saved file
+   - **New concepts** (no map entry): pick the next unassigned art image deterministically (use Glob to list `~/Documents/Journal/anki/images/bank/*.png`, exclude filenames already in the concept map, take the first result), assign it to this concept in the concept map, add the `![[filename.png]]` embed to the card in the saved file
    - **Low bank**: if ≤2 unassigned art images remain after processing, note it in the summary
    - **Empty bank**: if no unassigned art images remain, skip auto-assignment; note the concept in the summary for Whitney to add images manually
 10. Append any newly-made Pattern 1 glossary terms to `~/Documents/Journal/anki/glossary-index.md` (format: `term name | YYYY-MM-DD`)
@@ -104,7 +104,7 @@ The bank directory contains two kinds of images:
 
 The **concept map** tracks every assignment. Any bank image with no concept-map entry is part of the unassigned art pool.
 
-To find unassigned art images: use Glob to list `~/Documents/Journal/anki/images/bank/*.png`, then exclude filenames that appear in the concept map. Assign the first (oldest) result.
+To find unassigned art images: use Glob to list `~/Documents/Journal/anki/images/bank/*.png`, then exclude filenames that appear in the concept map. Assign the first result.
 
 ### Placing images on cards
 

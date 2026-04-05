@@ -50,7 +50,7 @@ eval "$COMMAND" 2>&1 | tee "$TMPOUT"
 EXIT_CODE=${PIPESTATUS[0]}
 
 echo "---"
-if [ $EXIT_CODE -eq 0 ]; then
+if [ "$EXIT_CODE" -eq 0 ]; then
   echo "RESULT: $PHASE PASSED"
 else
   echo "RESULT: $PHASE FAILED (exit code $EXIT_CODE)"

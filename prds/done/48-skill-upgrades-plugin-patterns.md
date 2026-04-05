@@ -262,8 +262,7 @@ This document contains the specific patterns, examples, and rationale from the p
 - Cards with multiple concepts → embed all mapped images for those concepts
 
 **Image rules:**
-- **No images with text** — text in an image can reveal the answer on the card front before the user flips
-- Logos with text are forbidden for this reason; text-free art or abstract images are preferred
+- **Answer-reveal rule** (Decision 11): don't place an image on the Front if its text or logo reveals the card answer before flipping. Logos, product art, and branded images are welcome — put them on the Back if they'd give it away, or on the Front if they don't.
 - Visually pleasing art without semantic connection is acceptable (Decision 2: Whitney's visual motivation justifies even decorative images)
 
 **Upgrade — Phase C: Instruction Quality**
@@ -275,7 +274,7 @@ This document contains the specific patterns, examples, and rationale from the p
 - When a concept has a mapping, the image is embedded automatically using `![[filename.png]]` syntax
 - Images are resized to 800px wide and saved as PNG before going into the bank (Decision 7)
 - Image filenames follow `concept-name-bank.png` convention to prevent vault collisions (Decision 9)
-- Images with text are flagged and rejected with an explanation
+- Images that would reveal the answer on the Front are flagged and moved to the Back
 - SKILL.md documents all confirmed technical facts from research (Decisions 7–10) so future invocations need no external context
 - Run `/write-prompt` review on the updated SKILL.md after all changes are complete — not partway through (Decision 4)
 - Note: full anki/anki-yolo consistency check is done in M9, not M8
