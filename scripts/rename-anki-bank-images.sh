@@ -6,6 +6,11 @@ set -e
 
 BANK="$HOME/Documents/Journal/anki/images/bank"
 
+if [[ ! -d "$BANK" ]]; then
+  echo "Error: Bank directory does not exist: $BANK"
+  exit 1
+fi
+
 # Map source screenshot names → descriptive bank names
 declare -a PAIRS=(
   "Screenshot 2026-04-04 at 8.32.57 AM.png|rainbow-cloud-bank.png"
