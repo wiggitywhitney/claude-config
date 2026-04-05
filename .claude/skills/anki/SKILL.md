@@ -43,6 +43,7 @@ You are helping Whitney create Anki cards from a conversation she just had.
    New concept: [X]. Do you want to provide a logo or screenshot for this concept?
    - Yes → drop the image and I'll save it
    - No → I'll assign an art image from the bank
+   - Skip → proceed without an image for this concept
    ```
    - **If yes**: save the provided image to `~/Documents/Journal/anki/images/bank/` as `concept-name-bank.png`, add the mapping to the concept map, embed on the card
    - **If no**: pick the next unassigned art image deterministically (use Glob to list `~/Documents/Journal/anki/images/bank/*.png`, exclude filenames already in the concept map, take the first result), assign it to this concept in the concept map, embed on the card

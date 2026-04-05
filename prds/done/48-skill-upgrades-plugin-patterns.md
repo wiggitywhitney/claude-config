@@ -27,7 +27,7 @@ This document contains the specific patterns, examples, and rationale from the p
 **Impact:** M4 success criteria updated to reflect auto-rewrite behavior.
 
 ### Decision 2 — Image bank: human-in-the-loop, art is acceptable without semantic meaning (2026-04-04)
-**Decision:** When a new concept is detected during card-making, prompt Whitney: "New concept: [X]. Do you want to add an image?" She provides the image (logo, art, etc.). The concept→image mapping persists so the same concept always gets the same image. Images with text are forbidden (text could reveal the answer). Visually pleasing art without semantic connection to the concept is acceptable — Whitney is visually motivated and art on a card improves engagement even without semantic relevance.
+**Decision:** When a new concept is detected during card-making, prompt Whitney: "New concept: [X]. Do you want to add an image?" She provides the image (logo, art, etc.). The concept→image mapping persists so the same concept always gets the same image. Images with text or logos are allowed when they do not reveal the card answer on the Front; if they would, place them on the Back instead (see Decision 11). Visually pleasing art without semantic connection to the concept is acceptable — Whitney is visually motivated and art on a card improves engagement even without semantic relevance.
 **Rationale:** Full automation (random image from bank) is feasible but semantic automation isn't. Human-in-the-loop at concept introduction time gives Whitney control while keeping the workflow light. Research on decorative images is mixed but Whitney's personal motivation from art is sufficient justification.
 **Impact:** Adds M8 (Image Bank). M8 must include a research phase to establish correct Anki image dimensions and confirm the image embed syntax before implementing.
 
@@ -47,9 +47,9 @@ This document contains the specific patterns, examples, and rationale from the p
 **Impact:** Adds M9 after M8. M8 success criteria note that M9 will do the final sync check.
 
 ### Decision 7 — Image dimensions: 800px wide, PNG format (2026-04-04)
-**Decision:** Target image size for the image bank is 800px wide, PNG format. No official Anki pixel spec exists; 800px is the community-tested sweet spot. PNG is preferred over JPG for art/logos (lossless, supports transparent backgrounds). WebP is not reliably supported across Mac/iOS Anki clients.
-**Rationale:** Research found no official spec. 800px is wide enough to be visually engaging without dominating the card or slowing sync. PNG lossless format matches the type of art/logos Whitney wants.
-**Impact:** M8 SKILL.md must document 800px wide PNG as the target. Image resizing in Phase A uses this target.
+**Decision:** Target image size for the image bank is 800px on the longest side, PNG format. No official Anki pixel spec exists; 800px is the community-tested sweet spot. PNG is preferred over JPG for art/logos (lossless, supports transparent backgrounds). WebP is not reliably supported across Mac/iOS Anki clients.
+**Rationale:** Research found no official spec. 800px on the longest side is large enough to be visually engaging without dominating the card or slowing sync. PNG lossless format matches the type of art/logos Whitney wants.
+**Impact:** M8 SKILL.md must document 800px on the longest side, PNG as the target. Image resizing in Phase A uses this target.
 
 ### Decision 8 — Images must be inside the Obsidian vault; `~/Documents/Journal/anki/images/bank/` is confirmed valid (2026-04-04)
 **Decision:** ObsidianToAnki resolves `![[filename.png]]` via Obsidian's vault index (`metadataCache.getFirstLinkpathDest`). Images outside the vault fail silently with no error shown. `~/Documents/Journal/anki/images/bank/` is inside Whitney's vault — confirmed because the parent directory (`images/`) already works. Images are resolved by filename anywhere in the vault, so `![[filename.png]]` needs no path prefix.
