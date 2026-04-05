@@ -87,14 +87,14 @@ Append automatically after saving — no user action required. All Pattern 1 car
 - **Concept map:** `~/Documents/Journal/anki/images/concept-map.md` — maps concept names to filenames
 - **Embed syntax:** `![[filename.png]]` — Obsidian resolves by filename anywhere in the vault; no path prefix needed
 - **Naming convention for user-provided images:** `concept-name-bank.png` — the `-bank` suffix prevents collisions with other vault images; art pool images keep their original names
-- **Target dimensions:** 800px wide, PNG format — community-tested sweet spot; PNG for lossless quality and transparency
+- **Target dimensions:** 800px on the longest side, PNG format — community-tested sweet spot; PNG for lossless quality and transparency. Do not upscale if the image is already smaller than 800px on the longest side.
 - **Platform:** macOS + AnkiMobile (iOS) only — no CSS template changes needed
 
 **Answer-reveal rule:** Don't place an image on the Front if its text or logo reveals the card answer before flipping. Logos, product art, and branded images are welcome — put them on the Back if they'd give it away, or on the Front if they don't.
 
 ### What qualifies as a concept for image assignment
 
-Technologies, frameworks, databases, platforms, APIs, named SDKs, and coined project terms — the same category as glossary terms. Don't assign images to every card topic; only terms where a logo or art would give Whitney a visual anchor across future review sessions.
+Every concept that appears on a card gets an image.
 
 ### How the bank works
 

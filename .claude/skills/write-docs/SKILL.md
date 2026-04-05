@@ -118,20 +118,13 @@ Present a structured findings table:
 
 If no relevant existing docs exist, state this briefly and proceed to Phase 3.
 
-### Step 2d: Decision Gate
+### Step 2d: Fix Broken Docs
 
-> **Gate — Broken Docs:** Are there failures that must be resolved before writing new docs? If issues were found, present them and wait for the user's decision before proceeding to Phase 3. Do not silently skip failures or assume they're acceptable — surface them explicitly.
+If issues were found, fix them before proceeding to Phase 3. Do not silently skip failures or assume they're acceptable — surface them and fix them.
 
-If a failure looks like version drift rather than a local environment issue (unknown flag, renamed package, changed output format, different error shape), run `/research <tool>` to find the current correct syntax before deciding whether to fix or proceed.
+If a failure looks like version drift rather than a local environment issue (unknown flag, renamed package, changed output format, different error shape), run `/research <tool>` to find the current correct syntax before fixing.
 
-If issues were found, ask the user:
-
-> "Found [N] issues in existing docs. How would you like to proceed?
-> - **Fix first** — Fix the broken sections before writing new documentation
-> - **Proceed** — Continue with new documentation, leaving existing issues in place
-> - **Fix blockers only** — Fix only the issues that directly affect the new documentation"
-
-Wait for the user's choice before proceeding to Phase 3.
+Present findings and the fixes made, then proceed to Phase 3.
 
 If zero issues were found, proceed to Phase 3 automatically with a brief note: "All tested doc sections passed — proceeding to environment setup."
 
