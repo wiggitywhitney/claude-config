@@ -40,8 +40,15 @@ The difference matters: ad-hoc web searches produce scattered results. This skil
 2. Identify 2-3 specific sub-questions to investigate
 3. Note what context exists locally (current project stack, constraints)
 4. Check `~/.claude/rules/` for an existing rule file covering this technology — if one exists, read it and note what it already covers
+5. Check prior research index:
+   - Run `git rev-parse --show-toplevel` to get repo root. If not in a git repo, skip this step.
+   - If `<repo-root>/docs/research/index.md` exists, read it.
+   - Identify any entries that appear relevant to the current topic (semantic judgment — not keyword-only matching).
+   - If relevant entries exist, read those files in full before proceeding to Phase 2.
+   - State explicitly: "Found prior research: [files]. Building on it." or "No prior research found on this topic."
+   - Do NOT re-research what is already well-covered in prior files — extend or update instead.
 
-> **Gate 1 — Specificity check:** Is the question specific enough to produce actionable findings? If the sub-questions are vague or overlapping, narrow scope and restart Phase 1 before searching.
+> **Gate 1 — Specificity check:** Is the question specific enough to produce actionable findings? If the sub-questions are vague or overlapping, narrow scope and restart Phase 1 before searching. Is this question substantially answered by prior research found in Step 5? If yes, present the prior findings and ask the user whether they want to extend, update, or accept the existing research as-is.
 
 ### Phase 2: Search and Gather
 1. **WebSearch** for the primary question using current year for recency — prioritize latest GA'd version numbers

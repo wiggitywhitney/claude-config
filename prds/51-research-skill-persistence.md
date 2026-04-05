@@ -106,7 +106,7 @@ Every `/research` run writes its output to `docs/research/<topic-slug>.md` in th
 - Every file in `docs/research/` has a corresponding index entry
 - Index format matches: `| filename | brief description | last updated |`
 
-### Milestone 3: Check index before starting new research ⬜
+### Milestone 3: Check index before starting new research ✅
 
 **Upgrade:**
 - At the start of every research run, before any web searching:
