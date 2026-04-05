@@ -15,7 +15,7 @@ Research a topic, technology, or question using web search and documentation. Pr
 - Investigating a concept or architecture pattern
 - Finding current documentation for an API or library
 - Answering "how does X work?" or "what's the best way to do Y?"
-- **Adopting a new technology** into an existing project (see Phase 5 below)
+- **Adopting a new technology** into an existing project (see Phase 6 below)
 
 ## Proactive Invocation
 
@@ -73,7 +73,7 @@ The difference matters: ad-hoc web searches produce scattered results. This skil
 5. **Flag confidence levels** — mark each finding as **high**, **medium**, or **low** confidence based on source quality and corroboration
 6. **Decision check** — if this research was conducted as part of a PRD implementation, assess whether the findings constitute design decisions that affect the PRD (technology choice, discovered constraint, deprecated approach that changes the plan). If so, run `/prd-update-decisions` to capture them so they propagate to downstream milestones.
 
-### Phase 6: Persist Research
+### Phase 5: Persist Research
 
 Run this phase after every research session, immediately after Phase 4.
 
@@ -152,9 +152,9 @@ If the index doesn't exist, create it:
 
 #### Follow-up Q&A
 
-After Phase 6, if the user asks follow-up questions: answer them in the conversation, then update the research file using the update protocol above (read full file → changelog entry naming what was added → rewrite). Update the index Last Updated date.
+After Phase 5, if the user asks follow-up questions: answer them in the conversation, then update the research file using the update protocol above (read full file → changelog entry naming what was added → rewrite). Update the index Last Updated date.
 
-### Phase 5: Document Adoption Gotchas
+### Phase 6: Document Adoption Gotchas
 
 **When to run this phase:** Only when the research is for a technology being introduced into a project. Skip for general research questions.
 If the research is for a technology being introduced into a project:
@@ -212,7 +212,7 @@ If the research is for a technology being introduced into a project:
 
 ## Tools Used
 
-- Bash (`git rev-parse --show-toplevel` for repo root detection in Phase 6)
+- Bash (`git rev-parse --show-toplevel` for repo root detection in Phase 5)
 - WebSearch (primary research)
 - WebFetch (reading specific pages)
 - Glob, Grep, Read (local codebase context; checking for existing research files)
