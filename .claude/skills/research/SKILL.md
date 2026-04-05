@@ -1,7 +1,7 @@
 ---
 name: research
 description: Research a topic, technology, or question using web search and documentation. Use this skill before adopting new technologies or when current documentation is needed.
-allowed-tools: WebSearch, WebFetch, Glob, Grep, Read, Write
+allowed-tools: Bash, WebSearch, WebFetch, Glob, Grep, Read, Write
 ---
 
 # /research - Structured Technical Research
@@ -73,6 +73,87 @@ The difference matters: ad-hoc web searches produce scattered results. This skil
 5. **Flag confidence levels** — mark each finding as **high**, **medium**, or **low** confidence based on source quality and corroboration
 6. **Decision check** — if this research was conducted as part of a PRD implementation, assess whether the findings constitute design decisions that affect the PRD (technology choice, discovered constraint, deprecated approach that changes the plan). If so, run `/prd-update-decisions` to capture them so they propagate to downstream milestones.
 
+### Phase 6: Persist Research
+
+Run this phase after every research session, immediately after Phase 4.
+
+#### Step 1 — Get repo root
+
+```bash
+git rev-parse --show-toplevel
+```
+
+If this fails (not inside a git repository), stop and tell the user:
+
+> "Not inside a git repository — cannot auto-detect project root. Provide a path to save the research file (e.g., `/path/to/project/docs/research/my-topic.md`), or say 'skip' to proceed without saving."
+
+If the user provides a path, use it directly (skip slug/path derivation, proceed to Step 4 using that path). If they say skip, proceed without saving.
+
+#### Step 2 — Derive topic slug
+
+Convert the research topic to a filename: lowercase, hyphens, no special characters.
+Examples: "Vitest config options" → `vitest-config-options.md`, "Redis vs Valkey" → `redis-vs-valkey.md`
+
+#### Step 3 — Determine file path
+
+`<repo-root>/docs/research/<slug>.md`
+
+Create `docs/research/` if it doesn't exist.
+
+#### Step 4 — Write or update the research file
+
+Check if the file exists using Glob.
+
+**If new file:** write using this template:
+
+```markdown
+# Research: <Topic Name>
+
+**Project:** <repo name (basename of repo root)>
+**Last Updated:** YYYY-MM-DD
+
+## Update Log
+| Date | Summary |
+|------|---------|
+| YYYY-MM-DD | Initial research |
+
+## Findings
+
+<research content from Phase 3/4>
+
+## Sources
+```
+
+**If existing file:**
+1. Read the full existing file
+2. Produce an internal summary: "Removing X (stale because Y). Adding Z."
+3. Write that summary as a new row in the Update Log table
+4. Rewrite the file with updated content — no silent overwrites
+
+#### Step 5 — Update the index
+
+**File:** `<repo-root>/docs/research/index.md`
+
+If the index doesn't exist, create it:
+
+```markdown
+# Research Index
+
+| File | Description | Last Updated |
+|------|-------------|--------------|
+```
+
+- **New research file:** append a row: `| <slug>.md | <one-line description> | YYYY-MM-DD |`
+- **Updated research file:** find the existing row for this slug and update the Last Updated date
+
+#### Step 6 — Confirm to user
+
+> "Research saved to `docs/research/<slug>.md`. Index updated."
+
+#### Follow-up Q&A
+
+After Phase 6, if the user asks follow-up questions: answer them in the conversation, then update the research file using the update protocol above (read full file → changelog entry naming what was added → rewrite). Update the index Last Updated date.
+
 ### Phase 5: Document Adoption Gotchas
 
 **When to run this phase:** Only when the research is for a technology being introduced into a project. Skip for general research questions.
@@ -131,7 +212,8 @@ If the research is for a technology being introduced into a project:
 
 ## Tools Used
 
+- Bash (`git rev-parse --show-toplevel` for repo root detection in Phase 6)
 - WebSearch (primary research)
 - WebFetch (reading specific pages)
-- Glob, Grep, Read (local codebase context)
-- Write (rule files for gotchas documentation, when adopting new tech)
+- Glob, Grep, Read (local codebase context; checking for existing research files)
+- Write (research files, index, rule files for gotchas documentation)

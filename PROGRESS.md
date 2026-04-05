@@ -45,6 +45,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 - (2026-04-03) Added structured error transcript capture to `/verify` skill — `verify-phase.sh` emits `VERIFY_ERROR_CONTEXT` JSON (phase, command, exit_code, timestamp, output_tail) on failure; SKILL.md updated to parse JSON and produce targeted fix suggestions; prior failure persisted to `/tmp/verify-last-error-<phase>.json` for repeated-failure detection (PRD #48, M3)
 - (2026-03-30) Added explicit decision gates (Gate 1: specificity, Gate 2: evidence, Gate 3: contradictions) and Conflicting Findings output section to `/research` skill (PRD #48, M1)
+- (2026-04-05) Added research persistence to `/research` skill — Phase 6 writes output to `docs/research/<topic-slug>.md` using Decision 6 template (date header, Update Log, Findings, Sources); update protocol requires reading full existing file and producing explicit changelog entry before rewriting; non-git fallback alerts user and accepts arbitrary path; added `Bash` to allowed-tools for repo root detection (PRD #51, M1)
+- (2026-04-05) Added research index maintenance to `/research` skill — Phase 6 creates/updates `docs/research/index.md` after every run; new files append a row, updated files refresh the Last Updated date; follow-up Q&A answers update the research file via update protocol (PRD #51, M2)
 
 ### Changed
 

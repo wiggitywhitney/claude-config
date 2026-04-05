@@ -77,7 +77,7 @@ Every `/research` run writes its output to `docs/research/<topic-slug>.md` in th
 
 ## Milestones
 
-### Milestone 1: Write research output to `docs/research/<topic-slug>.md` ⬜
+### Milestone 1: Write research output to `docs/research/<topic-slug>.md` ✅
 
 **Upgrade:**
 - After completing research synthesis, save the output to `docs/research/<topic-slug>.md`
@@ -93,7 +93,7 @@ Every `/research` run writes its output to `docs/research/<topic-slug>.md` in th
 - No update overwrites the file without first reading the full existing content
 - Run `/write-prompt` review on the updated SKILL.md after all changes are complete
 
-### Milestone 2: Maintain `docs/research/index.md` ⬜
+### Milestone 2: Maintain `docs/research/index.md` ✅
 
 **Upgrade:**
 - After saving a research file, update `docs/research/index.md`:
