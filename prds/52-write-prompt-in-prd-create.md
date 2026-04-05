@@ -70,8 +70,38 @@ Apply the identical changes as Milestone 1:
 - Both files contain identical callout and workflow step additions
 - Run `/write-prompt` on the modified SKILL.v1-yolo.md after all changes are complete
 
+### Milestone 3: PostToolUse hook — suggest /write-prompt on SKILL.md and CLAUDE.md edits ⬜
+
+**Research first:** Run `/research` to verify the PostToolUse hook input format and `additionalContext` output schema before implementing. The existing `post-write-codeblock-check.sh` hook demonstrates the stdin JSON pattern; verify that advisory (non-blocking) PostToolUse output uses `hookSpecificOutput.additionalContext` and exits 0.
+
+**Implementation:**
+- Create `~/.claude/skills/verify/scripts/suggest-write-prompt.sh` — a PostToolUse hook on Write|Edit
+- Read file path from `tool_input.file_path` in stdin JSON
+- If path matches `*/SKILL.md`, `*/SKILL.v1-yolo.md`, or `*CLAUDE.md`: emit advisory via `additionalContext` suggesting `/write-prompt` on the changed file
+- Always exit 0 — advisory only, never blocking
+- Register in `~/.claude/settings.json` as a PostToolUse hook on `Write|Edit` alongside the existing codeblock check
+
+**TDD — write failing tests before implementing:**
+- Write tests in `~/.claude/skills/verify/tests/` (or equivalent test location)
+- Test cases:
+  - SKILL.md path → advisory emitted
+  - SKILL.v1-yolo.md path → advisory emitted
+  - CLAUDE.md path → advisory emitted
+  - Non-matching path (e.g., `main.ts`) → no output, exit 0
+  - Empty file path → no output, exit 0
+- Run tests and confirm they fail before writing the hook
+- Implement hook, run tests, confirm they pass
+
+**Success Criteria:**
+- Tests written and passing before milestone is marked complete
+- Hook fires advisory (not blocking) for SKILL.md, SKILL.v1-yolo.md, and CLAUDE.md edits
+- Hook is silent for all other file types
+- Registered correctly in `~/.claude/settings.json`
+- Run `/write-prompt` on the hook script after implementation
+
 ## Implementation Notes
 
-- Both milestones touch the same skill from different entry points (CLI vs YOLO). Implement in one session.
+- Milestones 1 and 2 touch the same skill from different entry points (CLI vs YOLO). Implement in one session.
 - After editing both files, run `/write-prompt` on the edits themselves (the workflow additions are skill instructions and should meet the same quality bar).
+- Milestone 3 is independent of 1 and 2 — can be implemented in a separate session on the same branch.
 - Commit on a feature branch — not directly to main.
