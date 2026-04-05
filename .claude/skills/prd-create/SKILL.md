@@ -34,6 +34,8 @@ Work through the PRD template focusing on project management, milestone tracking
 
 **Key Principle**: Focus on 5-10 major milestones rather than exhaustive task lists. Each milestone should represent meaningful progress that can be clearly validated.
 
+> **Milestone Quality:** After finalizing milestones, you will run `/write-prompt` to review them as AI agent instructions. Write milestones with this review in mind: be specific about what to do, give the implementing AI the "why" behind each decision, and avoid open-ended instructions like "investigate X."
+
 **Consider Including** (when applicable to the project/feature):
 - **Tests** - If the project has tests, include a milestone for test coverage of new functionality
 - **Documentation** - If the feature is user-facing, include a milestone for docs following existing project patterns
@@ -56,6 +58,7 @@ Work through the PRD template focusing on project management, milestone tracking
 - **Testable**: Clear success criteria that can be validated
 - **User-focused**: Relates to user value or feature capability
 - **Manageable**: Can be completed in reasonable timeframe
+- **Research-explicit**: When a milestone requires researching a technology or API before implementing, direct the implementing AI to run `/research <topic>` explicitly — do not leave it as "investigate X" or "look into Y"
 
 ## GitHub Issue Template (Keep Short & Stable)
 
@@ -120,7 +123,8 @@ Work through the PRD template focusing on project management, milestone tracking
 4. **Update GitHub Issue**: Add link to PRD file now that filename is known
 5. **Section-by-Section Discussion**: Work through each template section systematically
 6. **Milestone Definition**: Define 5-10 major milestones that represent meaningful progress
-7. **Review & Validation**: Ensure completeness and clarity
+7. **Prompt Quality Review**: Run `/write-prompt` on the milestones section as AI agent instructions — milestone text is executed by a future AI implementor, making it a de-facto prompt. Apply all suggested improvements before committing. Do not skip this step.
+8. **Review & Validation**: Ensure completeness and clarity
 
 **CRITICAL**: Steps 2-4 must happen in this exact order to avoid the chicken-and-egg problem of needing the issue ID for the filename.
 
@@ -139,7 +143,7 @@ The ROADMAP.md update will be included in the commit at the end of the workflow 
 
 After completing the PRD, present the user with numbered options:
 
-```
+```text
 ✅ PRD Created Successfully!
 
 **PRD File**: prds/[issue-id]-[feature-name].md
@@ -192,7 +196,7 @@ git pull --rebase origin main && git push origin main
 ```
 
 **Confirmation Message:**
-```
+```text
 ✅ PRD committed and pushed to main
 
 The PRD is now available in the repository. To start working on it later, execute:
