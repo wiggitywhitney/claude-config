@@ -120,7 +120,7 @@ The bank directory contains two kinds of images:
 
 The **concept map** tracks every assignment. Any bank image with no concept-map entry is part of the unassigned art pool.
 
-To find unassigned art images: use Glob to list `~/Documents/Journal/anki/images/bank/*.png`, then exclude filenames that appear in the concept map. The oldest unassigned file (first in the Glob result) is assigned next.
+To find unassigned art images: use Glob to list `~/Documents/Journal/anki/images/bank/*.png`, then exclude filenames that appear in the concept map. Take the first result.
 
 ### Placing images on cards
 
