@@ -6,6 +6,15 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-04-05) Final /anki vs /anki-yolo consistency check — fixed 5 divergences between skill files: missing "note the improvement" in scoring auto-rewrite, incomplete "EACH CARD IS AN ISLAND" section header and island bullet, missing scoring checklist item, missing Glossary Index section in YOLO, glossary terms now auto-generated as Pattern 1 cards in YOLO (no deferral per Decision 5); /write-prompt review caught Image Bank step ordering ambiguity and stale "only when explicitly requested" note in both files' Embedding Images sections; PRD #48 complete (PRD #48, M9)
+- (2026-04-05) Added image bank to `/anki` and `/anki-yolo` — Phase 1 Image Bank Check identifies known/new concepts; Phase 2 prompts Whitney for logos or assigns oldest unassigned art from pool; concept-map at `~/Documents/Journal/anki/images/concept-map.md` persists concept→image assignments; 7 initial art images seeded; answer-reveal rule (logos OK on Back); `/write-prompt` review added Glob to allowed-tools and clarified art pool selection logic; Decisions 11–12 recorded (PRD #48, M8)
+- (2026-04-04) Added glossary index to `/anki` and `/anki-yolo` — Phase 1 scans conversation for unindexed terms and auto-queues Pattern 1 glossary cards for Phase 2; index auto-appended after save; added `concept::glossary` tag to Pattern 1 template; AWS AI Practitioner master glossary (207 cards) backfilled with `concept::glossary` tag; added Decisions 5 and 6 and new M9 consistency milestone to PRD (PRD #48, M7)
+- (2026-04-04) Audited all 5 upgraded skills (M1-M5) for cross-skill consistency in phase naming, gate format, and scoring terminology; harmonized `/write-docs` Step 2d Decision Gate with consistent `> **Gate —**` blockquote format matching `/research`; added explicit `AskUserQuestion` instruction to Phase 1 context-gathering; `/write-prompt` review confirmed no high-severity issues (PRD #48, M6)
+- (2026-04-04) Added Broken Docs Detection phase to `/write-docs` skill — Phase 2 scans existing docs, executes code examples, produces structured findings table (Pass/Fail/Skipped), and gates on user decision (fix first / proceed / fix blockers only); also adopted write-directly pattern, full-flags rule, enforcement language preventing command-skipping and environment give-up, and `/research` integration at phase entry and on version-drift failures; `/write-prompt` review ran on final state (PRD #48, M5)
+- (2026-04-04) Recorded Decision 4 in PRD #48 — run `/write-prompt` after all skill changes are complete, not partway through; propagated to M6, M7, M8 success criteria and Implementation Notes (PRD #48)
+- (2026-04-04) Added card quality scoring to `/anki` and `/anki-yolo` skills — 3-dimension rubric (memory anchor clarity, future-self accessibility, concept vs. detail balance, each 1–5, max 15); cards below 9/15 auto-rewritten once with re-score; score table shown in Phase 1 output; `/write-prompt` review fixed column name collision and wired Story-First Framing into workflow steps (PRD #48, M4)
+- (2026-04-04) Added Milestone 7 (glossary index) and Milestone 8 (image bank) to PRD #48; recorded design decisions for auto-rewrite behavior, glossary `concept::glossary` tagging, and human-in-the-loop image prompting with no-text-in-images rule (PRD #48)
+- (2026-03-31) Added severity scoring ([High]/[Medium]/[Low]) to all anti-patterns in `/write-prompt` skill, with tiered output format (PRD #48, M2)
 - Rolled out PROGRESS.md to all 11 active repos with Keep a Changelog template
 - Gitignored PROGRESS.md in kubecon-2026-gitops (multi-contributor repo)
 - Verified end-to-end PROGRESS.md workflow across spinybacked-orbweaver and scaling-on-satisfaction
@@ -34,6 +43,9 @@ Development progress log for claude-config. Tracks implementation milestones acr
 - (2026-03-11) Verified no mandatory teardown exit gates remain in cluster-whisperer or kubecon-2026-gitops PRDs (PRD #39, M4)
 - (2026-03-11) End-to-end verification: hook detected real Kind cluster at session start, output valid JSON with teardown command, silent when no clusters (PRD #39, M6)
 
+- (2026-04-03) Added structured error transcript capture to `/verify` skill — `verify-phase.sh` emits `VERIFY_ERROR_CONTEXT` JSON (phase, command, exit_code, timestamp, output_tail) on failure; SKILL.md updated to parse JSON and produce targeted fix suggestions; prior failure persisted to `/tmp/verify-last-error-<phase>.json` for repeated-failure detection (PRD #48, M3)
+- (2026-03-30) Added explicit decision gates (Gate 1: specificity, Gate 2: evidence, Gate 3: contradictions) and Conflicting Findings output section to `/research` skill (PRD #48, M1)
+
 ### Changed
 
 - (2026-03-11) Softened infrastructure safety rule in global CLAUDE.md — replaced mandatory teardown gates with awareness-based approach via SessionStart hook (PRD #39, M3)
@@ -44,3 +56,4 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 - Contributor detection counts unique names instead of name+email pairs (same person with multiple emails no longer inflates count)
 - (2026-03-11) Restored all 8 careful skill variants as real files — were incorrectly replaced with symlinks to yolo variants in commit 21a0d6c
+- (2026-03-31) Fixed `prd-loop-continue.sh` false-positive `/prd-done` trigger for PRDs using milestone heading format (✅ Complete) instead of `- [ ]` checkboxes — now detects both patterns

@@ -98,13 +98,28 @@ bash scripts/verify-phase.sh test "<test-command>" .
 
 **Critical rule: Stop on first failure.**
 
-When a phase fails:
-1. Show the error output clearly
-2. Explain what went wrong
-3. Suggest a specific fix
-4. After the fix is applied, **restart from Phase 1** — do not resume from where you left off
+**For phases 1, 2, 3, and 5** (run via `verify-phase.sh`): the script emits a `VERIFY_ERROR_CONTEXT:` line with structured JSON:
 
-This ensures earlier fixes don't break later phases.
+```text
+VERIFY_ERROR_CONTEXT: {"phase":"test","command":"npm test","exit_code":1,"timestamp":"...","output_tail":"<last 20 lines of output>"}
+```
+
+Parse this JSON and produce a structured error summary:
+
+```text
+## Phase [N] Failed: [phase]
+
+**Command:** [command]
+**Exit code:** [exit_code]
+**Error:** [1-2 sentences identifying the specific error from output_tail]
+**Suggested fix:** [concrete action — not "check the logs"]
+```
+
+If `/tmp/verify-last-error-[phase].json` exists when a phase fails, a prior attempt already failed this phase. Reference the prior context if the same error is recurring.
+
+**For Phase 4** (run via `security-check.sh`): no `VERIFY_ERROR_CONTEXT` is emitted. Read the script's output directly to identify what triggered the security check failure and suggest a specific remediation.
+
+After the fix is applied, **restart from Phase 1** — do not resume from where you left off. This ensures earlier fixes don't break later phases.
 
 ## Step 4: Report Results
 

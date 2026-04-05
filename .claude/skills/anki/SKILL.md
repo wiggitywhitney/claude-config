@@ -1,7 +1,7 @@
 ---
 name: anki
 description: Create Anki cards from the current conversation. Invoke when learning a concept and want to capture it for spaced repetition.
-allowed-tools: Read, Write, AskUserQuestion
+allowed-tools: Read, Write, Glob, Bash, AskUserQuestion
 ---
 
 # Anki Card-Making Skill
@@ -10,14 +10,15 @@ allowed-tools: Read, Write, AskUserQuestion
 
 Update these paths before using this skill. All save locations and style references below use these values.
 
-- **ANKI_CARDS_DIR**: `/Users/whitney.lee/Documents/Journal/make Anki cards`
-- **ANKI_FINISHED_DIR**: `/Users/whitney.lee/Documents/Journal/make Anki cards/finished`
-- **ANKI_IMAGES_DIR**: `/Users/whitney.lee/Documents/Journal/images`
-- **DEFAULT_DECK**: `AWSAIPractitionerCert`
+- **ANKI_CARDS_DIR**: `/Users/whitney.lee/Documents/Journal/anki`
+- **ANKI_FINISHED_DIR**: `/Users/whitney.lee/Documents/Journal/anki/finished`
+- **ANKI_IMAGE_BANK_DIR**: `~/Documents/Journal/anki/images/bank/`
+- **ANKI_CONCEPT_MAP**: `~/Documents/Journal/anki/images/concept-map.md`
+- **DEFAULT_DECK**: `FlashOfLightning`
 
 ---
 
-You are helping Whitney create Anki cards from a conversation she just had. The goal is to capture key concepts while they're fresh.
+You are helping Whitney create Anki cards from a conversation she just had.
 
 ## Two-Phase Workflow
 
@@ -25,14 +26,209 @@ You are helping Whitney create Anki cards from a conversation she just had. The 
 
 1. Review the conversation above this skill invocation
 2. Extract the key concepts that are worth remembering
-3. Structure them in a card-ready format (organized by theme, with clear concepts)
-4. Present the document to the user
+3. Before structuring cards: outline the narrative arc of the topic (why it exists, what it is, how it connects, what was surprising) — see Story-First Framing in Card Rules. Only then organize concepts into card-ready format by theme.
+4. Score each card candidate using the Card Quality Scoring rubric below
+5. For any card scoring below 9/15: rewrite it once to improve the weakest dimensions, then re-score. If still below 9 after rewriting, accept it and note why it couldn't reach the threshold (e.g., "Memory anchor limited: no project experience with this technology yet")
+6. **Glossary Index Check** — scan the conversation for newly introduced technologies, APIs, frameworks, and coined project terms. Read the index at `~/Documents/Journal/anki/glossary-index.md` and cross-reference. Add a "## Missing Glossary Cards" section in the Phase 1 output listing any terms with no index entry — these will be included as Pattern 1 cards in Phase 2 automatically.
+7. **Image Bank Check** — read `~/Documents/Journal/anki/images/concept-map.md` and check concepts from this conversation. Add an "## Image Bank Status" section to the Phase 1 output:
+   - **Known concepts** (in the map): list them with their mapped filename — images will be auto-embedded in Phase 2
+   - **New concepts** (no map entry): list them — each will be prompted individually in Phase 2
+8. Present the card-ready document with the score table, Missing Glossary Cards section, and Image Bank Status section
 
 ### Phase 2: Make Cards
 
-1. Generate actual START/END block cards following the rules below
-2. Present cards for user approval
-3. After approval, save to: `/Users/whitney.lee/Documents/Journal/make Anki cards/finished/CARDS MADE - [topic].md`
+1. Generate actual START/END block cards following the rules below. For any concept with a mapping in `~/Documents/Journal/anki/images/concept-map.md`, embed the mapped image automatically at the top of the card front using `![[filename.png]]`.
+2. **Image Bank** — for each new concept listed in the Phase 1 Image Bank Status (no map entry), prompt Whitney one at a time using AskUserQuestion:
+   ```text
+   New concept: [X]. Do you want an image for this concept?
+   - Yes, I'll provide one → drop the image and I'll save it
+   - Pull from bank → I'll assign the next unassigned art image
+   - Skip → proceed without an image for this concept
+   ```
+   When the bank has no unassigned art images, omit the "Pull from bank" option.
+   - **If "Yes, I'll provide one"**: save the provided image to `~/Documents/Journal/anki/images/bank/` as `concept-name-bank.png`, add the mapping to the concept map, embed on the card
+   - **If "Pull from bank"**: pick the next unassigned art image deterministically (use Glob to list `~/Documents/Journal/anki/images/bank/*.png`, exclude filenames already in the concept map, take the first result), assign it to this concept in the concept map, embed on the card
+   - **If bank has ≤2 unassigned art images left**: after processing, warn — "Image bank is getting low (N images left). Consider adding more art images."
+3. Present cards for user approval (with all images embedded)
+4. After approval, save to: `/Users/whitney.lee/Documents/Journal/anki/finished/CARDS MADE - [topic].md`
+5. Run `python3 ~/Documents/Journal/anki/tag-cards.py --apply` to ensure all saved cards have hierarchical tags
+6. Append any newly-made Pattern 1 glossary terms to the index — see Glossary Index section below
+
+---
+
+## Glossary Index
+
+The glossary index tracks which technologies, APIs, frameworks, and coined terms already have Pattern 1 ("What is X?") coverage in the FlashOfLightning deck.
+
+**Index location:** `~/Documents/Journal/anki/glossary-index.md`
+**Entry format:** `term name | YYYY-MM-DD` (one per line, plain text below the `---` separator in the index file)
+
+### What qualifies as a glossary term
+
+- Technologies, frameworks, databases, platforms (e.g., Flagger, Hono, LangGraph)
+- APIs and named SDKs (e.g., OpenTelemetry SDK)
+- Coined project terms — words or phrases invented in a specific project or conversation (e.g., scoped discovery pattern, capability inference)
+- Any term where "What is X?" is a natural question for someone unfamiliar with it
+
+Does NOT include: implementation details, config flags, specific package names without a conceptual identity, or project names Whitney built herself (those are anchors, not glossary terms).
+
+### During Phase 1 (step 6: Glossary Index Check)
+
+1. Read the index file at `~/Documents/Journal/anki/glossary-index.md`
+2. Scan the conversation for newly introduced terms matching the criteria above
+3. Cross-reference: which terms appear in the conversation but are NOT in the index?
+4. Output a "## Missing Glossary Cards" section listing unindexed terms as a bullet list — these will be added as Pattern 1 cards automatically in Phase 2:
+   ```text
+   ## Missing Glossary Cards (will be added as Pattern 1 cards)
+   - Hono
+   - LangGraph StateGraph
+   ```
+
+### After Phase 2 save (step 6: auto-append)
+
+For each Pattern 1 glossary card made in this session, append one line to the index file:
+
+```text
+term name | YYYY-MM-DD
+```
+
+Append automatically after saving — no user action required. All Pattern 1 cards must also include `concept::glossary` in their tags.
+
+---
+
+## Image Bank
+
+**Confirmed technical facts (do not research again):**
+- **Bank path:** `~/Documents/Journal/anki/images/bank/` — inside the Obsidian vault
+- **Concept map:** `~/Documents/Journal/anki/images/concept-map.md` — maps concept names to filenames
+- **Embed syntax:** `![[filename.png]]` — Obsidian resolves by filename anywhere in the vault; no path prefix needed
+- **Naming convention for user-provided images:** `concept-name-bank.png` — the `-bank` suffix prevents collisions with other vault images; art pool images keep their original names
+- **Target dimensions:** 800px on the longest side, PNG format — community-tested sweet spot; PNG for lossless quality and transparency. Do not upscale if the image is already smaller than 800px on the longest side.
+- **Platform:** macOS + AnkiMobile (iOS) only — no CSS template changes needed
+
+**Answer-reveal rule:** Don't place an image on the Front if its text or logo reveals the card answer before flipping. Logos, product art, and branded images are welcome — put them on the Back if they'd give it away, or on the Front if they don't.
+
+### What qualifies as a concept for image assignment
+
+Every concept that appears on a card gets an image when possible. Prompt for all concepts in the batch. The only exception is when the bank has no unassigned art images and Whitney says "Skip" — in that case, proceed without an image for that concept.
+
+### How the bank works
+
+The bank directory contains two kinds of images:
+- **Concept-specific images** (logos, product screenshots): saved when Whitney provides one for a specific concept; always use the same image for that concept; named `concept-name-bank.png`
+- **Art images** (decorative pool): general art with no concept yet; assigned to new concepts when Whitney says "no, pull from the bank"; keep their original filenames
+
+The **concept map** tracks every assignment. Any bank image with no concept-map entry is part of the unassigned art pool.
+
+To find unassigned art images: use Glob to list `~/Documents/Journal/anki/images/bank/*.png`, then exclude filenames that appear in the concept map. Take the first result.
+
+### Placing images on cards
+
+**On the Front** (when it doesn't reveal the answer):
+
+```text
+TARGET DECK: FlashOfLightning
+START
+Basic
+Front: ![[kubernetes-bank.png]]
+
+What problem does Kubernetes solve for containerized applications?
+Back: [answer]
+
+CONTEXT: [explanation]
+Tags: tech::kubernetes concept::orchestration
+END
+```
+
+**On the Back** (when the logo/text would reveal the answer if shown on front):
+
+```text
+TARGET DECK: FlashOfLightning
+START
+Basic
+Front: Which CNCF project manages containerized workloads at scale?
+Back: Kubernetes
+
+![[kubernetes-bank.png]]
+
+CONTEXT: [explanation]
+Tags: tech::kubernetes concept::orchestration
+END
+```
+
+Cards with multiple mapped concepts: embed all mapped images on their own lines.
+
+### Adding new images to the bank
+
+When Whitney provides an image file:
+1. Save to `~/Documents/Journal/anki/images/bank/` as `concept-name-bank.png`
+2. Add one row to `~/Documents/Journal/anki/images/concept-map.md`:
+
+```text
+| Concept | concept-name-bank.png | YYYY-MM-DD |
+```
+
+When assigning an art pool image (user said "no"):
+1. Assign the oldest unassigned art image (use Glob + concept-map cross-reference)
+2. Add one row to the concept map using the art image's original filename:
+
+```text
+| Concept | rainbow-cloud-bank.png | YYYY-MM-DD |
+```
+
+---
+
+## Card Quality Scoring
+
+Score every card candidate on 3 dimensions before generating the final card blocks. Include the score table in the Phase 1 output.
+
+### Dimensions (each scored 1–5)
+
+**1. Memory anchor clarity** — Does this card connect to a specific experience, project, or "aha moment"?
+- 1: Generic "What is X?" with no personal context (acceptable for brand-new tech)
+- 2: Some context but no project or moment named
+- 3: References a project by name but not a specific situation
+- 4: References a specific situation or discovery in a named project
+- 5: Vivid anchor — names the repo, the goal, and the specific problem encountered
+
+**2. Future-self accessibility** — Will this card make sense in 6 months with zero context and no other cards?
+- 1: Full of unexplained references, assumes other cards or the conversation
+- 2: Mostly understandable but has gaps (unnamed projects, undefined terms)
+- 3: Self-contained but terse — would require effort to reconstruct meaning
+- 4: Clear and self-contained; all references explained
+- 5: Fully self-contained island — every term, project, and reference is explained on the card itself
+
+**3. Concept vs. detail balance** — Is this a conference-worthy concept or implementation trivia?
+- 1: Pure implementation trivia (JSON schema, exact flag, specific HTTP status code)
+- 2: Narrow detail — useful but only in one specific context
+- 3: Useful but not something you'd explain at a conference
+- 4: Conceptual — explains the "why" behind a decision or design
+- 5: Conference-worthy — a concept you'd explain to a colleague over coffee or on a slide
+
+### Scoring and Auto-Rewrite
+
+**Total score = sum of 3 dimensions (max 15)**
+
+- **9–15**: Card passes. Include in the batch as-is.
+- **Below 9**: Rewrite the card once, targeting the weakest dimension(s). Re-score after rewriting.
+  - If the rewritten card reaches 9+, use the rewritten version and note the improvement.
+  - If still below 9, accept the card and add a parenthetical note explaining why it couldn't reach the threshold.
+
+### Score Table Format
+
+Include this table in the Phase 1 output, after the card-ready document:
+
+```text
+## Card Quality Scores
+
+| Card | Anchor | Clarity | Balance | Total | Notes |
+|------|--------|---------|---------|-------|-------|
+| Why OTel needs the API/SDK split | 4 | 5 | 5 | 14 | |
+| What `strict: false` does in Hono | 2 | 3 | 1 | 6→10 | Rewritten: converted to "why does Hono expose strict mode?" |
+| New tech: what is Hono | 1 | 4 | 4 | 9 | Memory anchor limited: no project experience yet |
+```
+
+The `Total` column shows `original→revised` when a rewrite occurred, or just the score if no rewrite was needed.
 
 ---
 
@@ -205,17 +401,20 @@ For concepts and terminology (e.g., "Scalar vs Vector vs Embedding"):
 
 ### Pattern 1: Glossary/Definition Terms (two cards per term)
 
+All Pattern 1 cards must include `concept::glossary` in their tags. After saving, append the term to `~/Documents/Journal/anki/glossary-index.md`.
+
 ```text
-TARGET DECK: AWSAIPractitionerCert
+TARGET DECK: FlashOfLightning
 START
 Basic
 Front: What is [term]?
 Back: [definition - 30 words or fewer]
 
 CONTEXT: [1-3 sentences explaining why this matters]
+Tags: tech::example-technology concept::terminology concept::glossary
 END
 
-TARGET DECK: AWSAIPractitionerCert
+TARGET DECK: FlashOfLightning
 START
 Basic
 Front: What term describes this?
@@ -224,6 +423,7 @@ Front: What term describes this?
 Back: [term]
 
 CONTEXT: [explanation]
+Tags: tech::example-technology concept::terminology concept::glossary
 END
 ```
 
@@ -236,7 +436,7 @@ For lists or sequences, create one card per item where that item is "the missing
 - Add a short parenthetical description to each listed item so the list isn't just bare labels. The description should help the reader recall what each item means without giving away the missing answer.
 
 ```text
-TARGET DECK: AWSAIPractitionerCert
+TARGET DECK: FlashOfLightning
 START
 Basic
 Front: [context about the sequence]
@@ -249,6 +449,7 @@ X has four steps. Which is missing?
 Back: **Step three** — [short explanation]
 
 CONTEXT: [why this step matters]
+Tags: concept::example-process tech::example-technology
 END
 ```
 
@@ -274,7 +475,7 @@ When a card asks about the contents/components of something, state the count on 
 For concepts that emerged from discussion:
 
 ```text
-TARGET DECK: AWSAIPractitionerCert
+TARGET DECK: FlashOfLightning
 START
 Basic
 Front: [project/topic context]
@@ -283,6 +484,7 @@ Front: [project/topic context]
 Back: [short answer - 30 words or fewer]
 
 CONTEXT: [additional explanation from the conversation]
+Tags: project::example-project tech::example-technology
 END
 ```
 
@@ -291,22 +493,24 @@ END
 Cover important concepts twice with different framing:
 
 ```text
-TARGET DECK: AWSAIPractitionerCert
+TARGET DECK: FlashOfLightning
 START
 Basic
 Front: [Context] What does X do?
 Back: [Answer]
 
 CONTEXT: [Explanation]
+Tags: project::example-project tech::example-technology concept::example-concept
 END
 
-TARGET DECK: AWSAIPractitionerCert
+TARGET DECK: FlashOfLightning
 START
 Basic
 Front: [Context] When would you use X?
 Back: [Answer from different angle]
 
 CONTEXT: [Different aspect of explanation]
+Tags: project::example-project tech::example-technology concept::example-concept
 END
 ```
 
@@ -315,30 +519,30 @@ END
 ## Card Format (Anki-to-Obsidian compatible)
 
 ```text
-TARGET DECK: AWSAIPractitionerCert
+TARGET DECK: FlashOfLightning
 START
 Basic
 Front: [question]
 Back: [answer]
 
 CONTEXT: [explanation]
-Tags: [optional tags]
+Tags: [hierarchical tags — REQUIRED, see Tag Taxonomy]
 END
 ```
 
 Notes:
-- **Always include `TARGET DECK: AWSAIPractitionerCert`** before each START block
+- **Always include `TARGET DECK: FlashOfLightning`** before each START block
 - No `<!--ID: -->` line needed - Anki adds these on import
-- Tags are optional
+- Tags are **mandatory** — every card must have at least one hierarchical tag (see Tag Taxonomy below)
 
 ### Embedding Images
 
-**Only add images when the user explicitly requests it or provides images in the conversation.**
+**Image Bank images are auto-assigned** to qualifying concepts (see Image Bank section) — no user request needed. **One-off images** (diagrams, screenshots of specific things) are only added when the user explicitly provides them.
 
 Use Obsidian's embed syntax:
 
 ```text
-TARGET DECK: AWSAIPractitionerCert
+TARGET DECK: FlashOfLightning
 START
 Basic
 Front: What does this diagram show?
@@ -351,10 +555,8 @@ END
 
 Rules:
 - Images can go on Front, Back, or both
-- Rename with descriptive filenames (not `Screenshot 2026-02-02...png`)
-- Example filename: `datadog-trace-detail-showing-content.png`
-- The user provides image files in the chat interface
-- Save images to this directory: `/Users/whitney.lee/Documents/Journal/make Anki cards/images/`
+- For concept-linked images, use the Image Bank workflow (see Image Bank section) — the bank assigns one image per concept and persists it across sessions
+- For one-off user-provided images (diagrams, screenshots of specific things): save to `~/Documents/Journal/anki/images/bank/` with a descriptive `concept-name-bank.png` filename and add to concept map so the assignment persists
 - Be careful not to use images in a way that gives away the answer
 
 ### Project-Specific Images
@@ -370,12 +572,34 @@ The image goes on its own line right after `Front:`, with the question text on t
 
 ---
 
+## Tag Taxonomy
+
+Every card MUST have at least one hierarchical tag. Tags use Anki's `::` hierarchy convention, enabling filtered study sessions without the learning penalty of multiple decks.
+
+**Tag prefixes** (use at least one per card):
+
+| Prefix | Purpose | Examples |
+|---|---|---|
+| `project::` | Which repo/project spawned this card | `project::cluster-whisperer`, `project::spinybacked-orbweaver` |
+| `tech::` | Technology domain | `tech::kubernetes`, `tech::opentelemetry`, `tech::python` |
+| `concept::` | Abstract concept | `concept::distributed-systems`, `concept::spaced-repetition` |
+| `source::` | Where it was learned | `source::kubecon-talk`, `source::book`, `source::docs` |
+
+**Rules:**
+- Space-separated on the Tags line: `Tags: project::cluster-whisperer tech::kubernetes concept::observability`
+- Lowercase, hyphens for multi-word values (`tech::open-telemetry` not `tech::OpenTelemetry`)
+- Be specific: `tech::kubernetes` not just `tech::cloud`
+- A card can (and often should) have tags from multiple prefixes
+- Flat (non-hierarchical) tags are allowed alongside hierarchical ones but must not be the only tags
+
+---
+
 ## Style Examples
 
 For reference, read these files (under ANKI_FINISHED_DIR / ANKI_CARDS_DIR) to see card-making style:
 
 - **Conversational style**: `ANKI_FINISHED_DIR/CARDS MADE - GitHub & ArgoCD auto sync webhook.md`
-- **Glossary style**: `ANKI_CARDS_DIR/AWS AI Practitioner Certification/final_study_materials/master_glossary.md` (first 200 lines)
+- **Glossary style**: `ANKI_CARDS_DIR/aws-ai-practitioner/final_study_materials/master_glossary.md` (first 200 lines)
 
 ---
 
@@ -390,7 +614,7 @@ For reference, read these files (under ANKI_FINISHED_DIR / ANKI_CARDS_DIR) to se
 ## Quality Checklist
 
 Before presenting cards:
-- [ ] Every card has `TARGET DECK: AWSAIPractitionerCert` before START
+- [ ] Every card has `TARGET DECK: FlashOfLightning` before START
 - [ ] Every important concept is covered at least twice
 - [ ] Card fronts don't give away the answer
 - [ ] Answers are 30 words or fewer
@@ -401,3 +625,9 @@ Before presenting cards:
 - [ ] Future-self accessible - no unexplained names/references
 - [ ] Arguments framed as arguments, not facts
 - [ ] Code blocks have language identifiers (typescript, yaml, bash, etc.)
+- [ ] Every card has at least one hierarchical tag (`project::`, `tech::`, `concept::`, or `source::`)
+- [ ] Every card scored; cards that were rewritten show original→revised score; cards that couldn't reach 9 have a threshold note
+- [ ] Glossary index checked; Missing Glossary Cards section included in Phase 1 output; missing terms queued as Pattern 1 cards for Phase 2
+- [ ] Pattern 1 cards include `concept::glossary` tag; new terms appended to glossary-index.md after saving
+- [ ] Image Bank checked in Phase 1; known concepts have images embedded; new concepts prompted individually in Phase 2
+- [ ] No images where visible text reveals the card answer; concept-map updated with any new assignments after Phase 2

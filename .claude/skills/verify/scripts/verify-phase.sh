@@ -40,17 +40,43 @@ echo "Command: $COMMAND"
 echo "Directory: $PROJECT_DIR"
 echo "---"
 
+# Capture output to temp file so we can emit a structured error transcript on failure
+TMPOUT=$(mktemp)
+trap 'rm -f "$TMPOUT"' EXIT
+
 # Run the command in the project directory
 cd "$PROJECT_DIR" || exit 2
-eval "$COMMAND" 2>&1
-EXIT_CODE=$?
+eval "$COMMAND" 2>&1 | tee "$TMPOUT"
+EXIT_CODE=${PIPESTATUS[0]}
 
 echo "---"
-if [ $EXIT_CODE -eq 0 ]; then
+if [ "$EXIT_CODE" -eq 0 ]; then
   echo "RESULT: $PHASE PASSED"
 else
   echo "RESULT: $PHASE FAILED (exit code $EXIT_CODE)"
+
+  # Emit a structured error transcript so the LLM can produce a targeted fix suggestion.
+  # Also write to /tmp so repeated failures on the same phase can reference prior attempts.
+  TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u)
+  OUTPUT_TAIL=$(tail -20 "$TMPOUT")
+  ERROR_JSON=$(python3 -c "
+import json, sys
+data = {
+    'phase': sys.argv[1],
+    'command': sys.argv[2],
+    'exit_code': int(sys.argv[3]),
+    'timestamp': sys.argv[4],
+    'output_tail': sys.argv[5],
+}
+sys.stdout.write(json.dumps(data))
+" "$PHASE" "$COMMAND" "$EXIT_CODE" "$TIMESTAMP" "$OUTPUT_TAIL" 2>/dev/null)
+
+  if [ -n "$ERROR_JSON" ]; then
+    echo "VERIFY_ERROR_CONTEXT: $ERROR_JSON"
+    echo "$ERROR_JSON" > "/tmp/verify-last-error-${PHASE}.json"
+  fi
 fi
+
 echo "VERIFY_EXIT: $EXIT_CODE"
 
 exit $EXIT_CODE

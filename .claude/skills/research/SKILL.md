@@ -40,6 +40,8 @@ The difference matters: ad-hoc web searches produce scattered results. This skil
 3. Note what context exists locally (current project stack, constraints)
 4. Check `~/.claude/rules/` for an existing rule file covering this technology — if one exists, read it and note what it already covers
 
+> **Gate 1 — Specificity check:** Is the question specific enough to produce actionable findings? If the sub-questions are vague or overlapping, narrow scope and restart Phase 1 before searching.
+
 ### Phase 2: Search and Gather
 1. **WebSearch** for the primary question using current year for recency — prioritize latest GA'd version numbers
 2. **WebFetch** the top 2-3 most relevant results (official docs, reputable sources)
@@ -49,6 +51,8 @@ The difference matters: ad-hoc web searches produce scattered results. This skil
 6. **Explicitly search for known issues, breaking changes, and migration gotchas** — these are the highest-value findings
 7. **Verify before citing**: For each claim you plan to include, **WebFetch and read the specific page** you are citing. Do not cite a URL you have not fetched and read in this session.
 
+> **Gate 2 — Evidence check:** Do I have evidence from at least 2 independent sources covering each key sub-question? Have I explicitly searched for gotchas and breaking changes? If no, search more and fetch more pages before synthesizing.
+
 ### Phase 3: Synthesize
 1. Distill findings into a concise summary (not a raw paste of web content)
 2. For comparisons, use a structured table with clear criteria
@@ -57,6 +61,8 @@ The difference matters: ad-hoc web searches produce scattered results. This skil
 5. **Separate the surprising from the obvious** — lead with findings that contradict common assumptions, recent breaking changes, or gotchas that tutorials skip over. Do not waste space on what any experienced developer would already know.
 6. **Separate source claims from interpretation** — clearly distinguish what the sources actually say from your synthesis or inference. For example, if the Aider docs say whole mode is "easiest," do not restate that as "most reliable" — those are different claims. Quote the source, then offer your interpretation separately.
 7. **Cite exact quotes** — for each factual claim, include the exact quote from the source with the URL. This forces verification against the actual source rather than synthesis from memory.
+
+> **Gate 3 — Contradiction check:** Do sources corroborate each other, or do they conflict on key points? If sources contradict each other, add a **Conflicting Findings** section to the output before presenting. Do not silently resolve disagreements by picking one source — surface the conflict explicitly.
 
 ### Phase 4: Present
 1. Lead with the answer or recommendation
@@ -90,6 +96,11 @@ If the research is for a technology being introduced into a project:
 
 **Source says:** "{exact quote}" ([Source Title](URL))
 **Interpretation:** {your synthesis or inference, clearly separated}
+
+### Conflicting Findings (include only when Gate 3 triggers — sources disagree)
+- **Source A says:** "{exact quote}" ([Source Title](URL))
+- **Source B says:** "{exact quote}" ([Source Title](URL))
+- **Interpretation:** {Which source is more reliable and why — consider recency, authority, and specificity}
 
 ### Recommendation
 {Clear recommendation with rationale, if applicable}

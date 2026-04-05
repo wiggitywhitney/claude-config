@@ -25,6 +25,7 @@ description: Git workflow rules including branching, CodeRabbit reviews, and com
   - **Skip** if the suggestion is genuinely not helpful or misunderstands the code.
   - **Skip** if the complexity or maintenance cost of the fix outweighs its benefit.
   - **Fix** if the only reason to skip is that it takes time to write — effort alone is not a reason to skip.
+- **After merging a PR**, delete the local and remote feature branch immediately. Don't leave stale branches accumulating.
 - NEVER include references to Claude, AI, Anthropic, or Co-Authored-By AI attribution in commit messages. Write commit messages as if authored by a human developer.
 - Repos may override rules via dotfiles (`.skip-branching`, `.skip-coderabbit`).
 - **Acceptance gate labeling:** When creating a PR for a project with acceptance gate tests (`.github/workflows/acceptance-gate.yml` exists or `.claude/verify.json` contains `"acceptance_test"`), add `--label run-acceptance` to the `gh pr create` command. This triggers the acceptance gate CI workflow. The `/prd-done` skill handles this automatically for PRD-driven PRs; apply the same convention for manual PRs.
