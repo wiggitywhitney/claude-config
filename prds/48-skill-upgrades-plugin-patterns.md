@@ -62,6 +62,16 @@ This document contains the specific patterns, examples, and rationale from the p
 **Rationale:** Whitney confirmed: MacBook Pro + iPhone. The `!important` bug is specific to AnkiDroid's JavaScript-based image rescaling. Not applicable here.
 **Impact:** M8 does not require card template CSS changes. CSS caveats from research do not belong in SKILL.md.
 
+### Decision 11 — Images with text are allowed; rule is answer-reveal on the Front (2026-04-05)
+**Decision:** Images with visible text (logos, branding, product screenshots) are acceptable. The rule is: don't place an image on the Front if its text or logo reveals the card answer before the user flips. Logos and branded images are welcome — put them on the Back when they'd give it away, or on the Front when they don't.
+**Rationale:** Whitney said she would provide images with visible text (logos, screenshots from product websites). The PRD's original "images with text are forbidden" was overly broad. The actual concern is spoiling the answer, not text per se.
+**Impact:** Updated answer-reveal rule in both SKILL.md files. Updated Quality Checklist items. Removed "logos with embedded text are forbidden" language.
+
+### Decision 12 — Two-tier image bank: concept-specific and art pool; oldest-unassigned selection (2026-04-05)
+**Decision:** The bank contains two kinds of images: (1) concept-specific images (logos, product screenshots) saved when Whitney provides one — named `concept-name-bank.png`; (2) art pool images (decorative general art) that keep their original filenames and are assigned to new concepts when Whitney says "no, pull from bank." Art images are assigned in order (oldest first, determined by Glob result order). Concept qualification for image assignment mirrors glossary term criteria (technologies, frameworks, APIs, coined terms) — not every card topic.
+**Rationale:** Whitney clarified the image bank is a pool of art images for reuse when no specific logo exists. Each concept gets one image persistently tracked in the concept map. The oldest-first policy is deterministic and avoids random assignment.
+**Impact:** Image Bank section in both SKILL.md files documents the two-tier design, art pool selection logic (Glob + concept-map cross-reference, first result), and concept qualification criteria. Added Glob to `/anki` allowed-tools so the skill can scan the bank directory.
+
 ### Decision 4 — Run `/write-prompt` after all changes, not partway through (2026-04-04)
 **Decision:** The `/write-prompt` review must run after ALL changes to a SKILL.md are complete — not partway through the milestone. Running it early means subsequent changes (enforcement language, new integrations, wording fixes) go unreviewed.
 **Rationale:** During M5, `/write-prompt` ran after the initial Broken Docs Detection phase was written, but before the enforcement language and `/research` integrations were added. A second review at the end caught this gap.
@@ -221,7 +231,7 @@ This document contains the specific patterns, examples, and rationale from the p
 - SKILL.md instructions are self-contained — the index behavior is maintainable without external context
 - Run `/write-prompt` review on the updated SKILL.md after all changes are complete — not partway through (Decision 4)
 
-### Milestone 8: `/anki` — Image Bank for Visual Motivation
+### Milestone 8: `/anki` — Image Bank for Visual Motivation ✅ Complete
 
 **Best done in the same work session as M7** — both touch the core anki/anki-yolo SKILL.md and the card-making workflow.
 

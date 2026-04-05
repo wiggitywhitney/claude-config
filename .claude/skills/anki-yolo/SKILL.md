@@ -12,7 +12,8 @@ Make cards and save them immediately. No two-phase workflow, no approval gate.
 
 - **ANKI_CARDS_DIR**: `/Users/whitney.lee/Documents/Journal/anki`
 - **ANKI_FINISHED_DIR**: `/Users/whitney.lee/Documents/Journal/anki/finished`
-- **ANKI_IMAGES_DIR**: `/Users/whitney.lee/Documents/Journal/images`
+- **ANKI_IMAGE_BANK_DIR**: `~/Documents/Journal/anki/images/bank/`
+- **ANKI_CONCEPT_MAP**: `~/Documents/Journal/anki/images/concept-map.md`
 - **DEFAULT_DECK**: `FlashOfLightning`
 
 ---
@@ -26,14 +27,86 @@ Make cards and save them immediately. No two-phase workflow, no approval gate.
 5. Score every card using the Card Quality Scoring rubric below. For any card scoring below 9/15, rewrite it once targeting the weakest dimensions and re-score. If still below 9, accept it with a threshold note.
 6. Save directly to: `ANKI_FINISHED_DIR/CARDS MADE - [topic].md`
 7. Run `python3 ~/Documents/Journal/anki/tag-cards.py --apply` to ensure all saved cards have hierarchical tags
-8. Append any newly-made Pattern 1 glossary terms to `~/Documents/Journal/anki/glossary-index.md` (format: `term name | YYYY-MM-DD`)
-9. Present a brief summary: card count, topics covered, score table, and a **Missing Glossary Cards** note listing any technologies/frameworks/terms from the conversation that have no entry in the glossary index. Format the note as a bullet list:
-   ```text
-   ## Missing Glossary Cards
-   - Hono (no glossary entry — consider making Pattern 1 cards)
-   - LangGraph StateGraph (no glossary entry — consider making Pattern 1 cards)
-   ```
-   Omit this section if all terms from the conversation are already indexed.
+8. **Image Bank** — for each concept in the session:
+   - Read `~/Documents/Journal/anki/images/concept-map.md`
+   - **Known concepts** (in the map): embed the mapped image automatically at the top of the card front using `![[filename.png]]`
+   - **New concepts** (no map entry): pick the next unassigned art image from the bank (oldest file in `~/Documents/Journal/anki/images/bank/` with no concept-map entry), assign it to this concept in the concept map, embed it on the card
+   - **Low bank**: if ≤2 unassigned art images remain after processing, note it in the summary
+   - **Empty bank**: if no unassigned art images remain, skip auto-assignment; note the concept in the summary for Whitney to add images manually
+9. Append any newly-made Pattern 1 glossary terms to `~/Documents/Journal/anki/glossary-index.md` (format: `term name | YYYY-MM-DD`)
+10. Present a brief summary: card count, topics covered, score table, and:
+    - **Missing Glossary Cards** note listing any technologies/frameworks/terms from the conversation that have no entry in the glossary index. Format:
+      ```text
+      ## Missing Glossary Cards
+      - Hono (no glossary entry — consider making Pattern 1 cards)
+      - LangGraph StateGraph (no glossary entry — consider making Pattern 1 cards)
+      ```
+      Omit this section if all terms from the conversation are already indexed.
+    - **Image Bank Status** note: list concepts that got images (assigned) and any concepts that couldn't get images (bank empty). If bank has ≤2 unassigned images left: "Image bank is getting low (N images left). Consider adding more art images."
+
+## Image Bank
+
+**Confirmed technical facts (do not research again):**
+- **Bank path:** `~/Documents/Journal/anki/images/bank/` — inside the Obsidian vault
+- **Concept map:** `~/Documents/Journal/anki/images/concept-map.md` — maps concept names to filenames
+- **Embed syntax:** `![[filename.png]]` — Obsidian resolves by filename anywhere in the vault; no path prefix needed
+- **Naming convention for user-provided images:** `concept-name-bank.png` — the `-bank` suffix prevents collisions with other vault images; art pool images keep their original names
+- **Target dimensions:** 800px wide, PNG format — community-tested sweet spot; PNG for lossless quality and transparency
+- **Platform:** macOS + AnkiMobile (iOS) only — no CSS template changes needed
+
+**Answer-reveal rule:** Don't place an image on the Front if its text or logo reveals the card answer before flipping. Logos, product art, and branded images are welcome — put them on the Back if they'd give it away, or on the Front if they don't.
+
+### What qualifies as a concept for image assignment
+
+Technologies, frameworks, databases, platforms, APIs, named SDKs, and coined project terms — the same category as glossary terms. Don't assign images to every card topic; only terms where a logo or art would give Whitney a visual anchor across future review sessions.
+
+### How the bank works
+
+The bank directory contains two kinds of images:
+- **Concept-specific images** (logos, product screenshots): saved when Whitney provides one; always use the same image for that concept; named `concept-name-bank.png`
+- **Art images** (decorative pool): general art with no concept yet; assigned autonomously to new concepts; keep their original filenames
+
+The **concept map** tracks every assignment. Any bank image with no concept-map entry is part of the unassigned art pool.
+
+To find unassigned art images: use Glob to list `~/Documents/Journal/anki/images/bank/*.png`, then exclude filenames that appear in the concept map. Assign the first (oldest) result.
+
+### Placing images on cards
+
+**On the Front** (when it doesn't reveal the answer):
+
+```text
+TARGET DECK: FlashOfLightning
+START
+Basic
+Front: ![[kubernetes-bank.png]]
+
+What problem does Kubernetes solve for containerized applications?
+Back: [answer]
+
+CONTEXT: [explanation]
+Tags: tech::kubernetes concept::orchestration
+END
+```
+
+**On the Back** (when the logo/text would reveal the answer if shown on front):
+
+```text
+TARGET DECK: FlashOfLightning
+START
+Basic
+Front: Which CNCF project manages containerized workloads at scale?
+Back: Kubernetes
+
+![[kubernetes-bank.png]]
+
+CONTEXT: [explanation]
+Tags: tech::kubernetes concept::orchestration
+END
+```
+
+Cards with multiple mapped concepts: embed all mapped images on their own lines.
+
+---
 
 ## Constraints
 
@@ -421,10 +494,8 @@ END
 
 Rules:
 - Images can go on Front, Back, or both
-- Rename with descriptive filenames (not `Screenshot 2026-02-02...png`)
-- Example filename: `datadog-trace-detail-showing-content.png`
-- The user provides image files in the chat interface
-- Save images to this directory: `/Users/whitney.lee/Documents/Journal/anki/images/`
+- For concept-linked images, use the Image Bank workflow (see Image Bank section) — the bank assigns one image per concept and persists it across sessions
+- For one-off user-provided images (diagrams, screenshots of specific things): save to `~/Documents/Journal/anki/images/bank/` with a descriptive `concept-name-bank.png` filename and add to concept map so the assignment persists
 - Be careful not to use images in a way that gives away the answer
 
 ### Project-Specific Images
@@ -488,3 +559,5 @@ Before saving cards:
 - [ ] Every card has at least one hierarchical tag (`project::`, `tech::`, `concept::`, or `source::`)
 - [ ] Pattern 1 cards include `concept::glossary` tag; new terms appended to glossary-index.md after saving
 - [ ] Summary includes Missing Glossary Cards note for any unindexed terms in the conversation
+- [ ] Image Bank checked; known concepts have images auto-embedded; new concepts have art images assigned from bank; concept-map updated
+- [ ] No images where visible text on the Front reveals the card answer (logos OK on Back)
