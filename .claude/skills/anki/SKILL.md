@@ -536,7 +536,7 @@ Notes:
 
 ### Embedding Images
 
-**Only add images when the user explicitly requests it or provides images in the conversation.**
+**Image Bank images are auto-assigned** to qualifying concepts (see Image Bank section) — no user request needed. **One-off images** (diagrams, screenshots of specific things) are only added when the user explicitly provides them.
 
 Use Obsidian's embed syntax:
 

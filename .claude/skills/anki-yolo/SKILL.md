@@ -23,26 +23,62 @@ Make cards and save them immediately. No two-phase workflow, no approval gate.
 1. Check for existing cards in `ANKI_FINISHED_DIR` to avoid duplicating concepts already captured
 2. Review conversation context (or provided args/file)
 3. Outline the narrative arc (why it exists, what it is, how it connects, what was surprising)
-4. Generate cards following all rules below
-5. Score every card using the Card Quality Scoring rubric below. For any card scoring below 9/15, rewrite it once targeting the weakest dimensions and re-score. If still below 9, accept it with a threshold note.
-6. Save directly to: `ANKI_FINISHED_DIR/CARDS MADE - [topic].md`
-7. Run `python3 ~/Documents/Journal/anki/tag-cards.py --apply` to ensure all saved cards have hierarchical tags
-8. **Image Bank** — for each concept in the session:
+4. **Glossary Index Check** — read `~/Documents/Journal/anki/glossary-index.md` and scan the conversation for newly introduced technologies, APIs, frameworks, and coined project terms. Identify any with no index entry — these will be generated as Pattern 1 cards in the next step.
+5. Generate cards following all rules below. Include Pattern 1 cards for any terms identified in the Glossary Index Check (no deferral — make them in this session).
+6. Score every card using the Card Quality Scoring rubric below. For any card scoring below 9/15, rewrite it once targeting the weakest dimensions and re-score. If still below 9, accept it with a threshold note.
+7. Save directly to: `ANKI_FINISHED_DIR/CARDS MADE - [topic].md`
+8. Run `python3 ~/Documents/Journal/anki/tag-cards.py --apply` to ensure all saved cards have hierarchical tags
+9. **Image Bank** — complete image assignments and update the concept map. During card generation (step 5), known concepts already had their images embedded using the concept map. This step handles new concepts:
    - Read `~/Documents/Journal/anki/images/concept-map.md`
-   - **Known concepts** (in the map): embed the mapped image automatically at the top of the card front using `![[filename.png]]`
-   - **New concepts** (no map entry): pick the next unassigned art image from the bank (oldest file in `~/Documents/Journal/anki/images/bank/` with no concept-map entry), assign it to this concept in the concept map, embed it on the card
+   - **Known concepts** (in the map): already embedded during step 5 — nothing to do here
+   - **New concepts** (no map entry): pick the next unassigned art image from the bank (oldest file in `~/Documents/Journal/anki/images/bank/` with no concept-map entry), assign it to this concept in the concept map, add the `![[filename.png]]` embed to the card in the saved file
    - **Low bank**: if ≤2 unassigned art images remain after processing, note it in the summary
    - **Empty bank**: if no unassigned art images remain, skip auto-assignment; note the concept in the summary for Whitney to add images manually
-9. Append any newly-made Pattern 1 glossary terms to `~/Documents/Journal/anki/glossary-index.md` (format: `term name | YYYY-MM-DD`)
-10. Present a brief summary: card count, topics covered, score table, and:
-    - **Missing Glossary Cards** note listing any technologies/frameworks/terms from the conversation that have no entry in the glossary index. Format:
+10. Append any newly-made Pattern 1 glossary terms to `~/Documents/Journal/anki/glossary-index.md` (format: `term name | YYYY-MM-DD`)
+11. Present a brief summary: card count, topics covered, score table, and:
+    - **New Glossary Cards** note listing any Pattern 1 cards made for terms with no prior glossary index entry. Format:
       ```text
-      ## Missing Glossary Cards
-      - Hono (no glossary entry — consider making Pattern 1 cards)
-      - LangGraph StateGraph (no glossary entry — consider making Pattern 1 cards)
+      ## New Glossary Cards
+      - Hono (Pattern 1 cards — added to glossary index)
+      - LangGraph StateGraph (Pattern 1 cards — added to glossary index)
       ```
-      Omit this section if all terms from the conversation are already indexed.
+      Omit this section if all terms from the conversation were already in the glossary index.
     - **Image Bank Status** note: list concepts that got images (assigned) and any concepts that couldn't get images (bank empty). If bank has ≤2 unassigned images left: "Image bank is getting low (N images left). Consider adding more art images."
+
+## Glossary Index
+
+The glossary index tracks which technologies, APIs, frameworks, and coined terms already have Pattern 1 ("What is X?") coverage in the FlashOfLightning deck.
+
+**Index location:** `~/Documents/Journal/anki/glossary-index.md`
+**Entry format:** `term name | YYYY-MM-DD` (one per line, plain text below the `---` separator in the index file)
+
+### What qualifies as a glossary term
+
+- Technologies, frameworks, databases, platforms (e.g., Flagger, Hono, LangGraph)
+- APIs and named SDKs (e.g., OpenTelemetry SDK)
+- Coined project terms — words or phrases invented in a specific project or conversation (e.g., scoped discovery pattern, capability inference)
+- Any term where "What is X?" is a natural question for someone unfamiliar with it
+
+Does NOT include: implementation details, config flags, specific package names without a conceptual identity, or project names Whitney built herself (those are anchors, not glossary terms).
+
+### During card generation (Glossary Index Check step)
+
+1. Read the index file at `~/Documents/Journal/anki/glossary-index.md`
+2. Scan the conversation for newly introduced terms matching the criteria above
+3. Cross-reference: which terms appear in the conversation but are NOT in the index?
+4. Generate Pattern 1 cards for all unindexed terms automatically — no deferral. Include them in the batch generated in step 5.
+
+### After saving (auto-append step)
+
+For each Pattern 1 glossary card made in this session, append one line to the index file:
+
+```text
+term name | YYYY-MM-DD
+```
+
+Append automatically after saving — no user action required. All Pattern 1 cards must also include `concept::glossary` in their tags.
+
+---
 
 ## Image Bank
 
@@ -155,7 +191,7 @@ Score every card on 3 dimensions before saving. Include the score table in the f
 
 - **9–15**: Card passes. Save as-is.
 - **Below 9**: Rewrite the card once, targeting the weakest dimension(s). Re-score after rewriting.
-  - If the rewritten card reaches 9+, use the rewritten version.
+  - If the rewritten card reaches 9+, use the rewritten version and note the improvement.
   - If still below 9, accept the card and add a parenthetical note explaining why it couldn't reach the threshold.
 
 ### Score Table Format (in final summary)
@@ -275,12 +311,13 @@ Before making cards about tools that change frequently (Claude Code, specific AP
 - Flag any cards where you couldn't verify recency with a note to the user
 - This is especially critical for: Claude Code features, API capabilities, framework versions, ecosystem states
 
-### Future-Self Accessibility
-Every card must work for Whitney 4+ months from now with no memory of the original conversation.
+### Future-Self Accessibility (EACH CARD IS AN ISLAND)
+Every card must work for Whitney 4+ months from now with no memory of the original conversation — and no memory of any other card in the set.
+- **Each card is an island.** Never assume the reader has seen any other card in the batch. Fully qualify every reference every time — don't use phrases like "of the three plugins studied" or "the plugin mentioned above." Repeat full names, full descriptions, and full provenance on every card even if it feels redundant across the batch.
 - No unexplained references to people, conversations, or context that won't exist at review time
 - If a name/reference isn't essential to the concept, remove it
 - If it IS essential, explain who they are or provide a link on the card
-- Ask: "Will this card make sense to me in 6 months with zero context?"
+- Ask: "If this were the only card Whitney saw today with zero memory of the conversation or other cards, would every reference make sense?" If not, add the missing context.
 - **Never use project-internal labels.** No PRD numbers ("PRD #3"), phase numbers ("Phase 1"), milestone names ("M4"), sprint labels, or internal tracking IDs. These are meaningless outside the original context. Instead, describe the work itself: "the spec synthesis phase" not "PRD #3," "single-file instrumentation" not "Phase 1," "the validation chain" not "Phase 2." If a project has a multi-stage build plan, describe what each stage does — the labels are project management artifacts, not knowledge.
 - **Name the project (repo) explicitly in every card.** Don't say "the controller" — say "k8s-vectordb-sync's controller." Don't say "your agent spec" — say "the spinybacked-orbweaver spec." The repo name is the anchor that makes a card findable and contextualizable months later. On first mention in a card, include a brief parenthetical if the project name isn't self-explanatory (e.g., "cluster-whisperer (a Kubernetes AI assistant)").
 
@@ -476,7 +513,7 @@ Notes:
 
 ### Embedding Images
 
-**Only add images when the user explicitly requests it or provides images in the conversation.**
+**Image Bank images are auto-assigned** to qualifying concepts (see Image Bank section) — no user request needed. **One-off images** (diagrams, screenshots of specific things) are only added when the user explicitly provides them.
 
 Use Obsidian's embed syntax:
 
@@ -557,7 +594,9 @@ Before saving cards:
 - [ ] Arguments framed as arguments, not facts
 - [ ] Code blocks have language identifiers (typescript, yaml, bash, etc.)
 - [ ] Every card has at least one hierarchical tag (`project::`, `tech::`, `concept::`, or `source::`)
+- [ ] Every card scored; cards that were rewritten show original→revised score; cards that couldn't reach 9 have a threshold note
+- [ ] Glossary index checked; missing terms generated as Pattern 1 cards in this session (no deferral)
 - [ ] Pattern 1 cards include `concept::glossary` tag; new terms appended to glossary-index.md after saving
-- [ ] Summary includes Missing Glossary Cards note for any unindexed terms in the conversation
+- [ ] Summary includes New Glossary Cards note for any Pattern 1 cards made for previously unindexed terms
 - [ ] Image Bank checked; known concepts have images auto-embedded; new concepts have art images assigned from bank; concept-map updated
 - [ ] No images where visible text on the Front reveals the card answer (logos OK on Back)

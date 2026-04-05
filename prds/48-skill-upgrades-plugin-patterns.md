@@ -276,7 +276,7 @@ This document contains the specific patterns, examples, and rationale from the p
 - Run `/write-prompt` review on the updated SKILL.md after all changes are complete — not partway through (Decision 4)
 - Note: full anki/anki-yolo consistency check is done in M9, not M8
 
-### Milestone 9: `/anki` vs `/anki-yolo` — Final Consistency Check
+### Milestone 9: `/anki` vs `/anki-yolo` — Final Consistency Check ✅ Complete
 
 **No external research required** — this is a structural comparison pass.
 
