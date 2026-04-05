@@ -83,7 +83,7 @@ Does NOT include: implementation details, config flags, specific package names w
    - LangGraph StateGraph
    ```
 
-### After Phase 2 save (step 5: auto-append)
+### After Phase 2 save (step 6: auto-append)
 
 For each Pattern 1 glossary card made in this session, append one line to the index file:
 

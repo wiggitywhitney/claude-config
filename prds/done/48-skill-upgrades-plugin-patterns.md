@@ -266,7 +266,7 @@ This document contains the specific patterns, examples, and rationale from the p
 - Visually pleasing art without semantic connection is acceptable (Decision 2: Whitney's visual motivation justifies even decorative images)
 
 **Upgrade — Phase C: Instruction Quality**
-- Update SKILL.md with: image bank path, concept-map path, prompt template for new concepts, no-text-in-images rule, 800px PNG target, `concept-name-bank.png` naming convention, vault requirement, `![[filename.png]]` embed syntax (Decisions 7–10)
+- Update SKILL.md with: image bank path, concept-map path, prompt template for new concepts, answer-reveal rule (Decision 11), 800px PNG target, `concept-name-bank.png` naming convention, vault requirement, `![[filename.png]]` embed syntax (Decisions 7–11)
 
 **Success Criteria:**
 - Image bank directory and concept-map file exist at specified paths (both within Obsidian vault)
