@@ -183,10 +183,16 @@ After Phase 5, if the user asks follow-up questions: answer them in the conversa
 
 **When to run this phase:** Only when the research is for a technology being introduced into a project. Skip for general research questions.
 If the research is for a technology being introduced into a project:
-1. Collect all surprises, breaking changes, non-obvious defaults, and gotchas into a path-scoped rule file (e.g., `rules/kubebuilder-gotchas.md` with appropriate `paths:` frontmatter)
-2. Keep it concise — bullet points, not a tutorial. Only what would bite someone who assumed training-data knowledge was sufficient.
-3. Reference the rule file from the project's `CLAUDE.md` using `@path/to/file` import syntax
-4. If an existing rule file in `~/.claude/rules/` covers this technology, note any discrepancies between the rule file and current official docs
+1. Collect all surprises, breaking changes, non-obvious defaults, and gotchas into a **global** rule file at `~/.claude/rules/<technology>-gotchas.md` (e.g., `~/.claude/rules/kyverno-gotchas.md`). Always use the global location — never a project-level `rules/` directory. Technology knowledge is cross-project.
+2. Add `paths:` frontmatter to the rule file scoping it to relevant file patterns (e.g., `paths: ["**/*.yaml", "**/kyverno*"]`)
+3. Keep it concise — bullet points, not a tutorial. Only what would bite someone who assumed training-data knowledge was sufficient.
+4. Reference the rule file from `~/.claude/CLAUDE.md` under the "Adopting New Technologies" section using `@~/.claude/rules/<technology>-gotchas.md` syntax
+5. If an existing rule file in `~/.claude/rules/` covers this technology:
+   - Read the full existing file
+   - Check whether the current research adds anything not already covered — new gotchas, changed behavior, version-specific differences
+   - Check whether any existing content is now stale or contradicted by current docs
+   - Add new findings and remove stale ones; do not duplicate what's already there
+   - Do not create a new file — update in place
 
 ## Output Format
 

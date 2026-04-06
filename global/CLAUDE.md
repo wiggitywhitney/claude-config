@@ -39,6 +39,7 @@ When drafting emails or written communication:
 
 - **MANDATORY**: Before writing code with any technology new to the project, invoke `/research <technology>`. Do not skip this step.
 - Full process: @~/.claude/rules/adopting-new-technologies.md
+- Kyverno (version numbering, GKE firewall, subjects matching): @~/.claude/rules/kyverno-gotchas.md
 
 ## Testing
 
@@ -105,6 +106,7 @@ Every code file (`.py`, `.sh`, `.ts`, `.tsx`, `.js`, `.jsx`) must start with a 1
 Feature work is tracked in PRDs (`prds/` directory). Use the PRD skills: `/prd-create`, `/prd-next`, `/prd-update-progress`, `/prd-update-decisions`, `/prd-done`.
 - Do not invent tasks outside the PRD structure. When a PRD exists, follow it.
 - **Do NOT commit manually during PRD work.** `/prd-update-progress` handles commits, PRD updates, and journaling together.
+- Cross-PRD dependencies block clean merges. Design PRDs so every milestone is completable from main alone. Recovery when one is discovered mid-implementation: @~/.claude/rules/prd-dependency-management.md
 
 ## Conflict Resolution
 
