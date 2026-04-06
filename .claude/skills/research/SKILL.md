@@ -1,7 +1,7 @@
 ---
 name: research
 description: Research a topic, technology, or question using web search and documentation. Use this skill before adopting new technologies or when current documentation is needed.
-allowed-tools: WebSearch, WebFetch, Glob, Grep, Read, Write
+allowed-tools: Bash, WebSearch, WebFetch, Glob, Grep, Read, Write, Edit
 ---
 
 # /research - Structured Technical Research
@@ -15,7 +15,7 @@ Research a topic, technology, or question using web search and documentation. Pr
 - Investigating a concept or architecture pattern
 - Finding current documentation for an API or library
 - Answering "how does X work?" or "what's the best way to do Y?"
-- **Adopting a new technology** into an existing project (see Phase 5 below)
+- **Adopting a new technology** into an existing project (see Phase 6 below)
 
 ## Proactive Invocation
 
@@ -40,8 +40,15 @@ The difference matters: ad-hoc web searches produce scattered results. This skil
 2. Identify 2-3 specific sub-questions to investigate
 3. Note what context exists locally (current project stack, constraints)
 4. Check `~/.claude/rules/` for an existing rule file covering this technology — if one exists, read it and note what it already covers
+5. Check prior research index:
+   - Run `git rev-parse --show-toplevel` to get repo root. If not in a git repo, skip this step.
+   - If `<repo-root>/docs/research/index.md` exists, read it.
+   - Identify any entries that appear relevant to the current topic (semantic judgment — not keyword-only matching).
+   - If relevant entries exist, read those files in full before proceeding to Phase 2.
+   - State explicitly: "Found prior research: [files]. Building on it." or "No prior research found on this topic."
+   - Do NOT re-research what is already well-covered in prior files — extend or update instead.
 
-> **Gate 1 — Specificity check:** Is the question specific enough to produce actionable findings? If the sub-questions are vague or overlapping, narrow scope and restart Phase 1 before searching.
+> **Gate 1 — Specificity check:** Is the question specific enough to produce actionable findings? If the sub-questions are vague or overlapping, narrow scope and restart Phase 1 before searching. Is this question substantially answered by prior research found in Step 5? If yes, present the prior findings and ask the user whether they want to extend, update, or accept the existing research as-is.
 
 ### Phase 2: Search and Gather
 1. **WebSearch** for the primary question using current year for recency — prioritize latest GA'd version numbers
@@ -73,7 +80,106 @@ The difference matters: ad-hoc web searches produce scattered results. This skil
 5. **Flag confidence levels** — mark each finding as **high**, **medium**, or **low** confidence based on source quality and corroboration
 6. **Decision check** — if this research was conducted as part of a PRD implementation, assess whether the findings constitute design decisions that affect the PRD (technology choice, discovered constraint, deprecated approach that changes the plan). If so, run `/prd-update-decisions` to capture them so they propagate to downstream milestones.
 
-### Phase 5: Document Adoption Gotchas
+### Phase 5: Persist Research
+
+Run this phase after every research session, immediately after Phase 4.
+
+#### Step 1 — Get repo root
+
+```bash
+git rev-parse --show-toplevel
+```
+
+If this fails (not inside a git repository), stop and tell the user:
+
+> "Not inside a git repository — cannot auto-detect project root. Provide a path to save the research file (e.g., `/path/to/project/docs/research/my-topic.md`), or say 'skip' to proceed without saving."
+
+If the user provides a path, use it directly (skip slug/path derivation, proceed to Step 4 using that path). If they say skip, proceed without saving.
+
+#### Step 2 — Derive topic slug
+
+Convert the research topic to a filename: lowercase, hyphens, no special characters.
+Examples: "Vitest config options" → `vitest-config-options.md`, "Redis vs Valkey" → `redis-vs-valkey.md`
+
+#### Step 3 — Determine file path
+
+`<repo-root>/docs/research/<slug>.md`
+
+Create `docs/research/` if it doesn't exist.
+
+#### Step 4 — Write or update the research file
+
+Check if the file exists using Glob.
+
+**If new file:** write using this template:
+
+```markdown
+# Research: <Topic Name>
+
+**Project:** <repo name (basename of repo root)>
+**Last Updated:** YYYY-MM-DD
+
+## Update Log
+| Date | Summary |
+|------|---------|
+| YYYY-MM-DD | Initial research |
+
+## Findings
+
+<research content from Phase 3/4>
+
+## Sources
+```
+
+**If existing file:**
+1. Read the full existing file
+2. Produce an internal summary: "Removing X (stale because Y). Adding Z."
+3. Write that summary as a new row in the Update Log table
+4. Rewrite the file with updated content — no silent overwrites
+
+#### Step 5 — Update the index
+
+**File:** `<repo-root>/docs/research/index.md`
+
+If the index doesn't exist, create it:
+
+```markdown
+# Research Index
+
+| File | Description | Last Updated |
+|------|-------------|--------------|
+```
+
+- **New research file:** append a row: `| <slug>.md | <one-line description> | YYYY-MM-DD |`
+- **Updated research file:** find the existing row for this slug and update the Last Updated date
+
+#### Step 6 — Confirm to user
+
+> "Research saved to `docs/research/<slug>.md`. Index updated."
+
+*(After Step 7 completes, append to this confirmation: "PRD links added to: [milestone list]." or "No open PRDs referenced this topic.")*
+
+#### Step 7 — Cross-reference open PRDs
+
+After saving the research file:
+
+1. Use Glob to list all `prds/*.md` files at the repo root. Skip anything in `prds/done/`.
+2. Read each open PRD file.
+3. For each PRD, use semantic judgment to identify milestones or sections that reference the researched topic. Keyword matching is not sufficient — judge whether the milestone's work would benefit from reading this research.
+4. For each relevant milestone heading found, check whether the line immediately after the heading already contains a `[Research:` link to the same slug. If it does, skip — do not insert a duplicate.
+5. If no such link exists, insert the following on a new line immediately after the heading:
+
+   `**Step 0:** Read related research before starting: [Research: <topic name>](../docs/research/<slug>.md)`
+
+   Use Edit to insert the line — do not rewrite the full PRD file.
+6. Add the link to every relevant milestone in every relevant PRD — each milestone is worked independently by a fresh AI instance that may not have read the top of the file.
+7. If no relevant milestones are found in any PRD, skip silently.
+
+#### Follow-up Q&A
+
+After Phase 5, if the user asks follow-up questions: answer them in the conversation, then update the research file using the update protocol above (read full file → changelog entry naming what was added → rewrite). Update the index Last Updated date.
+
+### Phase 6: Document Adoption Gotchas
 
 **When to run this phase:** Only when the research is for a technology being introduced into a project. Skip for general research questions.
 If the research is for a technology being introduced into a project:
@@ -131,7 +237,9 @@ If the research is for a technology being introduced into a project:
 
 ## Tools Used
 
+- Bash (`git rev-parse --show-toplevel` for repo root detection in Phase 5)
 - WebSearch (primary research)
 - WebFetch (reading specific pages)
-- Glob, Grep, Read (local codebase context)
-- Write (rule files for gotchas documentation, when adopting new tech)
+- Glob, Grep, Read (local codebase context; checking for existing research files)
+- Write (research files, index, rule files for gotchas documentation)
+- Edit (inserting research links into PRD files in Phase 5 Step 7)
