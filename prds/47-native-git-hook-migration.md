@@ -157,12 +157,15 @@ Install hooks across all active repos, verify everything works, clean up.
 
 **Deliverables:**
 - Run `install-git-hooks.sh` across all active repos in `~/Documents/Repositories/`
+- Verify native hooks fire correctly in each repo before proceeding
 - Verify commit-story `post-commit` hooks still work in all 15 repos
 - Verify Datadog global hooks still dispatch correctly
-- Remove all migrated hook entries from `~/.claude/settings.json`
+- **Only after all repos verified**: Remove all migrated hook entries from `~/.claude/settings.json`
 - Archive original Claude Code hook scripts in `hooks/archive/claude-code/` with a README explaining the migration
 - Update `rules/hooks-reference.md` to document the new git hook architecture
 - Update project `CLAUDE.md` to reference the new hook system
+
+**Safe rollout order (Decision 1):** Install native hooks and verify in all repos first. Remove from `settings.json` last, as a single final step. This ensures no repo has a coverage gap — if native hook installation fails in any repo, `settings.json` still provides enforcement while the issue is resolved.
 
 **Success Criteria:**
 - All active repos have native git hooks installed and working

@@ -59,7 +59,7 @@ Ask the user what they want to document. Gather enough context to plan the work.
 
 Use `AskUserQuestion` to present questions 1-5 together in a single prompt. After gathering responses, confirm the documentation plan before proceeding.
 
-If the documentation target involves a technology or API that is new to this project, or one that changes frequently (CLI tools, cloud APIs, package managers), run `/research <technology>` before Phase 2. This surfaces current best practices, breaking changes, and version-specific gotchas — preventing the outline from being built on stale patterns.
+If the documentation target involves a technology or API that is new to this project, or one that changes frequently (CLI tools, cloud APIs, package managers), run `/research <technology>` before Phase 2. This surfaces current best practices, breaking changes, and version-specific gotchas — preventing the outline from being built on stale patterns. Note: the research skill's Phase 6 may create or update a global gotchas file at `~/.claude/rules/<technology>-gotchas.md` and add a reference in `~/.claude/CLAUDE.md` — this is expected behavior.
 
 ## Phase 2: Broken Docs Detection
 
