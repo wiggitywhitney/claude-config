@@ -161,7 +161,7 @@ Cards with multiple mapped concepts: embed all mapped images on their own lines.
 ### Adding new images to the bank
 
 When Whitney provides an image file:
-1. Save to `~/Documents/Journal/anki/images/bank/` as `concept-name-bank.png`
+1. Save to `~/Documents/Journal/anki/images/bank/` as `concept-name-bank.png` using the `resize_image` helper from `@~/.claude/rules/macos-image-processing.md` (handles the sips/spaces bug and skips upscaling automatically)
 2. Add one row to `~/Documents/Journal/anki/images/concept-map.md`:
 
 ```text

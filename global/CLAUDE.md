@@ -44,7 +44,9 @@ When drafting emails or written communication:
 
 - Tests MUST cover implemented functionality. No tests, not done. TDD: write failing test → implement → verify.
 - Use real implementations when feasible; mock only at system boundaries. Separate deterministic from non-deterministic.
+- **Bash scripts**: Use **bats-core** (`brew install bats-core`) for all bash test suites. Place tests in `tests/<script-name>.bats`. Do NOT use plain-bash ad hoc test scripts.
 - Full testing rules: @~/.claude/rules/testing-rules.md
+- Bats gotchas and patterns: @~/.claude/rules/bats-bash-testing.md
 - Project-type strategies: @~/Documents/Repositories/claude-config/guides/testing-decision-guide.md
 
 ## Development Workflow
@@ -76,6 +78,12 @@ Every code file (`.py`, `.sh`, `.ts`, `.tsx`, `.js`, `.jsx`) must start with a 1
 - Claude Code routes through the Datadog AI Gateway. Subprocesses calling the Anthropic API will fail if gateway headers are wrong.
 - Routing details and bypass fix: @~/.claude/rules/datadog-environment.md
 
+## macOS Image Processing
+
+- `sips` silently skips files with spaces in their paths (exit 0, no output). Always use a temp-file workaround.
+- macOS screenshots contain a narrow no-break space (U+202F) before "AM"/"PM" — never hardcode screenshot names; use glob iteration.
+- Full rules and resize helpers: @~/.claude/rules/macos-image-processing.md
+
 ## Language & Configuration Defaults
 
 - Primary languages: TypeScript, Markdown, YAML, Shell, JSON. Prefer TypeScript for code, YAML for configuration.
@@ -101,6 +109,14 @@ Feature work is tracked in PRDs (`prds/` directory). Use the PRD skills: `/prd-c
 ## Conflict Resolution
 
 - Project CLAUDE.md overrides global. When rules conflict, ask the user.
+
+## Current Life Context
+
+Whitney's current context (location, schedule, active projects, upcoming deadlines, recent git activity) is pre-loaded from a nightly-generated file:
+
+@~/Documents/Journal/CURRENT-CONTEXT.md
+
+Check the freshness timestamp in that file. If it is more than 48 hours old, treat it as background only and rely on Whitney's direct answers for current state.
 
 ## Hooks Reference
 
