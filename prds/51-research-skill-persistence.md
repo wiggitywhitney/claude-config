@@ -122,7 +122,7 @@ Every `/research` run writes its output to `docs/research/<topic-slug>.md` in th
 - The skill explicitly surfaces what prior research was found (or confirms none exists)
 - The skill does NOT re-research what's already well-covered in prior files; it extends or updates
 
-### Milestone 4: PRD cross-referencing after save ⬜
+### Milestone 4: PRD cross-referencing after save ✅
 
 **Upgrade:**
 - After saving a research file (new or updated), scan all files in `prds/` (not `prds/done/`)
@@ -137,7 +137,7 @@ Every `/research` run writes its output to `docs/research/<topic-slug>.md` in th
 - Links use relative paths so they work from any context
 - No PRD sections are modified except to add the research link
 
-### Milestone 5: `/write-prompt` review of final SKILL.md ⬜
+### Milestone 5: `/write-prompt` review of final SKILL.md ✅
 
 Run `/write-prompt` on the updated `/research` SKILL.md after all other milestones are complete — not partway through. The review must cover the full updated skill including the persistence workflow, index check, update protocol, and PRD cross-referencing.
 

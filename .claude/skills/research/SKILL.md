@@ -1,7 +1,7 @@
 ---
 name: research
 description: Research a topic, technology, or question using web search and documentation. Use this skill before adopting new technologies or when current documentation is needed.
-allowed-tools: Bash, WebSearch, WebFetch, Glob, Grep, Read, Write
+allowed-tools: Bash, WebSearch, WebFetch, Glob, Grep, Read, Write, Edit
 ---
 
 # /research - Structured Technical Research
@@ -157,6 +157,24 @@ If the index doesn't exist, create it:
 
 > "Research saved to `docs/research/<slug>.md`. Index updated."
 
+*(After Step 7 completes, append to this confirmation: "PRD links added to: [milestone list]." or "No open PRDs referenced this topic.")*
+
+#### Step 7 — Cross-reference open PRDs
+
+After saving the research file:
+
+1. Use Glob to list all `prds/*.md` files at the repo root. Skip anything in `prds/done/`.
+2. Read each open PRD file.
+3. For each PRD, use semantic judgment to identify milestones or sections that reference the researched topic. Keyword matching is not sufficient — judge whether the milestone's work would benefit from reading this research.
+4. For each relevant milestone heading found, check whether the line immediately after the heading already contains a `[Research:` link to the same slug. If it does, skip — do not insert a duplicate.
+5. If no such link exists, insert the following on a new line immediately after the heading:
+
+   `**Step 0:** Read related research before starting: [Research: <topic name>](../docs/research/<slug>.md)`
+
+   Use Edit to insert the line — do not rewrite the full PRD file.
+6. Add the link to every relevant milestone in every relevant PRD — each milestone is worked independently by a fresh AI instance that may not have read the top of the file.
+7. If no relevant milestones are found in any PRD, skip silently.
+
 #### Follow-up Q&A
 
 After Phase 5, if the user asks follow-up questions: answer them in the conversation, then update the research file using the update protocol above (read full file → changelog entry naming what was added → rewrite). Update the index Last Updated date.
@@ -224,3 +242,4 @@ If the research is for a technology being introduced into a project:
 - WebFetch (reading specific pages)
 - Glob, Grep, Read (local codebase context; checking for existing research files)
 - Write (research files, index, rule files for gotchas documentation)
+- Edit (inserting research links into PRD files in Phase 5 Step 7)
