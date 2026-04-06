@@ -31,7 +31,18 @@ Make cards and save them immediately. No two-phase workflow, no approval gate.
 9. **Image Bank** — complete image assignments and update the concept map. During card generation (step 5), known concepts already had their images embedded using the concept map. This step handles new concepts:
    - Read `~/Documents/Journal/anki/images/concept-map.md`
    - **Known concepts** (in the map): already embedded during step 5 — nothing to do here
-   - **New concepts** (no map entry): pick the next unassigned art image deterministically (use Glob to list `~/Documents/Journal/anki/images/bank/*.png`, exclude filenames already in the concept map, take the first result), assign it to this concept in the concept map, add the `![[filename.png]]` embed to the card in the saved file
+   - **New concepts** (no map entry): before assigning from the art pool, use AskUserQuestion with this format:
+     ```text
+     I found [N] new concept(s) that need images:
+     - [concept 1]
+     - [concept 2]
+
+     Do you have specific logos or images for any of these?
+     - To provide an image: reply with "concept-name: /path/to/image.png"
+     - To use art pool: reply "skip" or "use art pool" (or leave blank)
+     - You can mix and match — provide images for some and skip others
+     ```
+     For any concept Whitney provides an image for, save it to `ANKI_IMAGE_BANK_DIR/concept-name-bank.png` using the `resize_image` helper from `@~/.claude/rules/macos-image-processing.md` (handles the sips/spaces bug and skips upscaling automatically), add it to the concept map, and embed it on the card. For concepts she declines or doesn't supply, pick the next unassigned art image deterministically (use Glob to list `~/Documents/Journal/anki/images/bank/*.png`, exclude filenames already in the concept map, take the first result), assign it in the concept map, and embed it on the card.
    - **Low bank**: if ≤2 unassigned art images remain after processing, note it in the summary
    - **Empty bank**: if no unassigned art images remain, skip auto-assignment; note the concept in the summary for Whitney to add images manually
 10. Append any newly-made Pattern 1 glossary terms to `~/Documents/Journal/anki/glossary-index.md` (format: `term name | YYYY-MM-DD`)
