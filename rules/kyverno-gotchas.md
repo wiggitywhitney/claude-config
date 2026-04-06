@@ -1,6 +1,6 @@
 ---
 description: Kyverno gotchas — version numbering, GKE firewall requirements, subjects matching, Helm migration
-paths: ["**/*.yaml", "**/*.yml", "**/kyverno*", "**/cluster-whisperer*"]
+paths: ["**/*.yaml", "**/*.yml", "**/kyverno*"]
 ---
 
 # Kyverno Gotchas
