@@ -33,8 +33,9 @@ for hook in "${MANAGED_HOOKS[@]}"; do
     fi
 
     if [[ -L "$dst" ]]; then
-        current_target="$(readlink "$dst")"
-        if [[ "$current_target" == "$src" ]]; then
+        current_target="$(readlink -f "$dst" 2>/dev/null || readlink "$dst")"
+        resolved_src="$(readlink -f "$src" 2>/dev/null || echo "$src")"
+        if [[ "$current_target" == "$resolved_src" ]]; then
             echo "  $hook: already installed (up to date)"
             (( skipped++ )) || true
             continue
