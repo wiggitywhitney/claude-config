@@ -29,14 +29,18 @@ This catches problems in ~30s locally, reducing review round-trips after PR crea
 
 **Process:**
 1. Create the PR and push to remote
-2. Wait 7 minutes, then check for CodeRabbit review using `mcp__coderabbitai__get_coderabbit_reviews`
-3. If review not ready, wait another 2-3 minutes before checking again
+2. Wait 7 minutes, then fetch all CodeRabbit findings using three `gh api` calls — CodeRabbit posts to all three channels and missing any one means missing findings:
+   ```bash
+   gh api repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '[.[] | {user: .user.login, state, body}]'
+   gh api repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '[.[] | {user: .user.login, path, line, body}]'
+   gh api repos/OWNER/REPO/issues/PR_NUMBER/comments --jq '[.[] | {user: .user.login, body}]'
+   ```
+3. If no review yet, wait another 2-3 minutes before checking again
 4. For each CodeRabbit comment: explain the issue, give a recommendation, then **follow your own recommendation** (YOLO mode)
-5. After addressing each issue, use `mcp__coderabbitai__resolve_comment` to mark resolved
-6. Only stop for user input if something is truly ambiguous or has major architectural implications
-7. After pushing fixes, wait 7 minutes, then check for CodeRabbit re-review
-8. If re-review adds new comments, address and resolve them, then repeat step 7
-9. After re-review is clear and human has approved, merge the PR
+5. Only stop for user input if something is truly ambiguous or has major architectural implications
+6. After pushing fixes, wait 7 minutes, then re-run the three `gh api` calls from step 2 to check for new findings
+7. If new comments appear, address them and repeat step 6
+8. After re-review is clear and human has approved, merge the PR
 
 ## Git Conventions
 

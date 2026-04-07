@@ -19,7 +19,16 @@ description: Git workflow rules including branching, CodeRabbit reviews, and com
   - Always use `--type committed` for branch-vs-base comparison. The default `--type all` looks for uncommitted changes and will report "No files found" on a clean working tree.
   - Always use `origin/main` (not `main`) as the base ref.
   - The branch must have commits that the base doesn't — if you cherry-pick from main, the CLI sees no diff.
-- After creating a PR, start a background sleep timer (7 minutes) to poll for the CodeRabbit review. When the timer fires, check the PR for reviews and comments, then present all findings to the user.
+- After creating a PR, start a background sleep timer (7 minutes) to poll for the CodeRabbit review. When the timer fires, fetch all CodeRabbit findings using three `gh api` calls — CodeRabbit posts to all three channels and missing any one means missing findings:
+  ```bash
+  gh api repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '[.[] | {user: .user.login, state, body}]'
+  gh api repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '[.[] | {user: .user.login, path, line, body}]'
+  gh api repos/OWNER/REPO/issues/PR_NUMBER/comments --jq '[.[] | {user: .user.login, body}]'
+  ```
+  - `/pulls/{n}/reviews` — full review bodies including "outside diff range" findings (most content lives here)
+  - `/pulls/{n}/comments` — inline comments attached to specific diff lines
+  - `/issues/{n}/comments` — conversation-level notices (e.g., "reviews paused")
+  Present all findings to the user.
 - After pushing fixes for CodeRabbit feedback, start another 7-minute timer to check for the re-review before merging.
 - **CodeRabbit triage rubric** for non-critical findings:
   - **Skip** if the suggestion is genuinely not helpful or misunderstands the code.
