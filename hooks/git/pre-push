@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# ABOUTME: pre-push git hook dispatcher — runs all pre-push check scripts in order
+# ABOUTME: Called by git before pushing; remote name is $1, remote URL is $2, refspecs on stdin
+
+set -uo pipefail
+
+# Resolve symlink to find the real hooks/git/ directory
+if [[ -L "$0" ]]; then
+    _link_target="$(readlink "$0")"
+    if [[ "$_link_target" = /* ]]; then
+        HOOK_DIR="$(dirname "$_link_target")"
+    else
+        HOOK_DIR="$(cd "$(dirname "$0")/$(dirname "$_link_target")" && pwd)"
+    fi
+else
+    HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+fi
+CHECKS_DIR="$HOOK_DIR/checks"
+
+# Capture stdin (refspec lines) before it is consumed — stdin can only be read once
+PUSH_STDIN="$(cat)"
+readonly REMOTE_NAME="${1:-}"
+readonly REMOTE_URL="${2:-}"
+
+# Run a check script if it exists; accumulate failures (run-all, not fail-fast)
+# Replays captured stdin to each check so they all see the full refspec list
+run_check() {
+    local script="$1"
+    shift
+    [[ -f "$script" ]] || return 0
+    [[ -x "$script" ]] || chmod +x "$script"
+    echo "$PUSH_STDIN" | "$script" "$REMOTE_NAME" "$REMOTE_URL" "$@"
+}
+
+exit_code=0
+
+run_check "$CHECKS_DIR/test-tiers.sh"        || exit_code=$?
+# Phase 2 (Milestone 3): security verification and CodeRabbit advisory review
+# run_check "$CHECKS_DIR/pre-push-verify.sh" || exit_code=$?
+
+exit "$exit_code"
