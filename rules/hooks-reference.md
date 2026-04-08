@@ -21,3 +21,4 @@ description: Reference for all PreToolUse and PostToolUse hooks and what they en
 ## PostToolUse hooks (fire after tool execution)
 
 - **post-write-codeblock-check.sh** (PostToolUse: Write|Edit) — checks markdown files for bare code blocks missing language specifiers
+- **suggest-write-prompt.sh** (PostToolUse: Write|Edit, Bash) — advisory reminder to run `/write-prompt` when SKILL.md or CLAUDE.md files are edited, or when `gh issue create` succeeds; explains that any AI-consumed document is a prompt

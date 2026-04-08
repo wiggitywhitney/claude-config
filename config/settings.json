@@ -108,7 +108,7 @@
       "Bash(npm publish*)"
     ]
   },
-  "model": "sonnet[1m]",
+  "model": "opus[1m]",
   "hooks": {
     "PreToolUse": [
       {
@@ -191,6 +191,15 @@
             "type": "command",
             "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/post-write-codeblock-check.sh"
           },
+          {
+            "type": "command",
+            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/suggest-write-prompt.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
           {
             "type": "command",
             "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/suggest-write-prompt.sh"
