@@ -20,6 +20,23 @@ Port 9443 must be open from the control plane to worker nodes. Without it, the w
 
 ClusterPolicies that use `match.any[].subjects` to scope by ServiceAccount only work on live admission requests — the subject info is absent during background scans. Missing `background: false` causes unexpected behavior.
 
+## `kinds` is required in `resources` even when using subject scoping
+
+Kyverno rejects a ClusterPolicy at apply time if the `resources` block doesn't include at least one `kinds` entry:
+
+```text
+admission webhook "validate-policy.kyverno.svc" denied the request:
+at least one element must be specified in a kind block, the kind attribute is mandatory when working with the resources element
+```
+
+For an allowlist that blocks all non-approved types, use `kinds: ["*"]` to intercept all resource types and let the deny conditions do the filtering:
+
+```yaml
+resources:
+  kinds: ["*"]      # required — wildcard captures all resource types
+  operations: ["CREATE"]
+```
+
 ## `subjects` syntax: sibling of `resources`, same indentation
 
 ```yaml

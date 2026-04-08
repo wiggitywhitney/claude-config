@@ -14,7 +14,7 @@ description: Git workflow rules including branching, CodeRabbit reviews, and com
   ```bash
   coderabbit review --plain --type committed --base origin/main --no-color 2>&1
   ```
-  Run in background — reviews take 1-7+ minutes. Key gotchas:
+  Run in background — reviews take 1-7+ minutes. If CodeRabbit returns a rate-limit error with a wait time (e.g., "please try after 4 minutes and 29 seconds"), set a background sleep timer for that duration and retry automatically. Key gotchas:
   - Always use `--plain` (interactive mode requires a TTY, which Claude Code's Bash tool lacks).
   - Always use `--type committed` for branch-vs-base comparison. The default `--type all` looks for uncommitted changes and will report "No files found" on a clean working tree.
   - Always use `origin/main` (not `main`) as the base ref.
