@@ -64,10 +64,15 @@ Create `scripts/bootstrap.sh` with argument parsing, prerequisite checks, and th
 
 **To implement:**
 - Script accepts `--dry-run` flag (prints what it would do without doing it) and `--claude-personal-dir <path>` (defaults to `~/Documents/Repositories/claude-personal`)
+- The script must determine its own repo root: `REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"`. Use this to construct the symlink target: `$REPO_ROOT/config/settings.json`.
 - Prerequisite checks: claude-personal dir exists and is a git repo; `~/.claude/` exists
-- Step: create `~/.claude/settings.json` symlink pointing to `config/settings.json` in claude-config; skip with "already installed" message if symlink already points to the right target; back up with `.pre-bootstrap-backup` suffix if a non-symlink file is in the way
-- Print a summary line for each step: `[OK]`, `[SKIPPED]`, or `[BACKED UP]`
-- Write bats tests: dry-run produces no changes, symlink created on fresh setup, idempotent on re-run, non-symlink file is backed up not clobbered
+- Symlink step logic:
+  - If `~/.claude/settings.json` is already a symlink pointing to `$REPO_ROOT/config/settings.json` → print `[SKIPPED] settings.json symlink already correct` and move on
+  - If `~/.claude/settings.json` is a symlink pointing to any *other* path → back it up with `.pre-bootstrap-backup` suffix and replace it
+  - If `~/.claude/settings.json` is a regular file → back it up with `.pre-bootstrap-backup` suffix and replace with symlink
+  - If `~/.claude/settings.json` does not exist → create the symlink
+- All steps use the same output format: `[OK]`, `[SKIPPED]`, or `[BACKED UP]`
+- Write bats tests: dry-run produces no changes, symlink created on fresh setup, idempotent on re-run, non-symlink file is backed up not clobbered, wrong-target symlink is replaced
 
 **Success criteria:**
 - `--dry-run` output lists all planned actions without executing any
@@ -94,7 +99,7 @@ Add the memory file restore step to `scripts/bootstrap.sh`.
 
 ### Milestone 3: Git Hook Installation (Design Decision A)
 
-Add git hook installation to `scripts/bootstrap.sh`. **Discuss Decision A (repo discovery strategy) before writing code.**
+Add git hook installation to `scripts/bootstrap.sh`. **Read Decision A above, then present your implementation plan (which option you'd implement and why) and wait for Whitney to confirm before writing any code.**
 
 **Decision A recap**: auto-discover repos under `~/Documents/Repositories/` and install hooks in all git repos found, skipping those with a `.skip-git-hooks` dotfile.
 
@@ -111,7 +116,7 @@ Add git hook installation to `scripts/bootstrap.sh`. **Discuss Decision A (repo 
 
 ### Milestone 4: settings.local.json Restore (Design Decision B)
 
-Add per-project `settings.local.json` restore to `scripts/bootstrap.sh`. **Discuss Decision B (missing repo handling) before writing code.**
+Add per-project `settings.local.json` restore to `scripts/bootstrap.sh`. **Read Decision B above, then present your implementation plan and wait for Whitney to confirm before writing any code.**
 
 **Decision B recap**: restore only to repos that already exist on disk; skip with a warning for repos not yet cloned.
 
@@ -136,7 +141,7 @@ Validate the full bootstrap flow and document the new-machine setup process.
 **To implement:**
 - Write an end-to-end bats test that: creates a temp `~/.claude/`-like directory, a temp repos directory with two fake git repos, a temp claude-personal with sample memory and settings files, runs `bootstrap.sh`, and asserts all outputs are in place
 - Run `/write-docs` to produce a `docs/bootstrap.md` guide covering: prerequisites (clone claude-config and claude-personal), running bootstrap, what each step does, re-running after cloning more repos
-- Update `README.md` (if one exists) to reference the bootstrap guide
+- If a `README.md` exists at the repo root, add a "Getting Started on a New Machine" section that links to `docs/bootstrap.md`. If no README exists, the guide is sufficient — do not create a README just for this.
 
 **Success criteria:**
 - End-to-end test passes

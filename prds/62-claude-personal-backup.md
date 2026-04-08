@@ -63,11 +63,12 @@ Before writing any code, decide how memory directories are named in the repo (Op
 
 **To implement:**
 - Review the two options above and their trade-offs (portability, readability, sync complexity)
-- Make the call and record it as a Decision in this PRD
-- Draft the directory layout the repo will use
+- Present your recommendation (Option A or B) with a one-paragraph rationale covering portability, readability, and sync complexity
+- **Stop and wait for Whitney to confirm before writing any directory layout or code**
+- Once confirmed, record the decision in this PRD's Decision Log with rationale and draft the directory layout the repo will use
 
 **Success criteria:**
-- Decision recorded in this PRD with rationale
+- Decision confirmed by Whitney and recorded in the Decision Log with rationale
 - Repo directory layout defined (even if the repo doesn't exist yet)
 
 ### Milestone 2: Create Private Repo and Initial Memory Snapshot
@@ -88,32 +89,38 @@ Create the `claude-personal` private GitHub repo and commit the current state of
 
 ### Milestone 3: Push Script (local → repo)
 
-Write `scripts/sync-push.sh` that syncs local memory files to the repo and commits if anything changed.
+Write `scripts/sync-push.sh` in the claude-personal repo that syncs local memory files and `settings.local.json` files to the repo and commits if anything changed.
 
 **To implement:**
-- Script reads from `~/.claude/projects/*/memory/` and copies to the repo (applying the M1 naming convention)
-- Idempotent: if nothing changed, exits 0 without committing
-- If changes exist: stages, commits with a timestamp message, and pushes
+- Script reads from `~/.claude/projects/*/memory/` and copies to the repo (applying the M1 naming convention for memory files)
+- Script also syncs per-project `settings.local.json` files: reads from `~/Documents/Repositories/<project>/.claude/settings.local.json` and writes to `local-settings/<project-name>/settings.local.json` in the repo. If a project directory exists but has no `settings.local.json`, skip silently.
+- Idempotent: if nothing changed across both file sets, exits 0 without committing
+- If changes exist: stages, commits with message `"backup: sync memory and settings $(date -u +%Y-%m-%dT%H:%M:%SZ)"`, and pushes
 - Dry-run flag (`--dry-run`) shows what would change without committing
-- Write bats tests covering: no changes (no commit), new file added, file modified, dry-run output
+- Push is additive-only: files deleted locally are not removed from the repo (accidental local deletions should not destroy the backup)
+- Write bats tests covering: no changes (no commit), new memory file added, `settings.local.json` updated, dry-run output, missing `settings.local.json` skipped silently
 
 **Success criteria:**
 - Running twice with no local changes produces zero commits
-- New memory file shows up in repo after push
+- New memory file and updated `settings.local.json` both appear in repo after push
+- Locally-deleted files remain in repo after push
 - Tests pass
 
 ### Milestone 4: Restore Script (repo → local)
 
-Write `scripts/sync-restore.sh` that restores memory files from the repo to `~/.claude/projects/*/memory/` on a new machine.
+Write `scripts/sync-restore.sh` in the claude-personal repo that restores memory files and `settings.local.json` files from the repo to the correct local locations on a new machine.
 
 **To implement:**
-- Script reads the repo's memory files and writes them to the correct `~/.claude/projects/` paths (reversing the M1 naming convention)
-- Idempotent: safe to run on a machine that already has the files (overwrites with repo version)
-- Prints what it restored vs what it skipped (already identical)
-- Write bats tests covering: fresh restore (creates dirs and files), re-restore (idempotent), directory creation for missing project paths
+- Restore memory files: read from repo (using M1 naming convention), write to `~/.claude/projects/<encoded-path>/memory/` (reversing the M1 mapping). Create parent directories as needed.
+- Restore `settings.local.json` files: read from `local-settings/<project-name>/settings.local.json` in the repo, write to `~/Documents/Repositories/<project-name>/.claude/settings.local.json`. Skip if the project directory doesn't exist on disk (repo not yet cloned) — print `[SKIPPED] <project-name> — repo not cloned yet`.
+- Skip files that are already identical (byte-for-byte); overwrite if different (repo is authoritative on restore)
+- If a local file is newer than the repo version, print a warning before overwriting: `[WARNING] <file> is newer locally than in repo — overwriting with repo version. Run sync-push.sh first if you want to preserve local changes.`
+- Prints per-file status: `[RESTORED]`, `[SKIPPED identical]`, `[UPDATED]`, or `[SKIPPED repo not cloned]`
+- Write bats tests covering: fresh restore (creates dirs and files), re-restore (idempotent), missing project dir skips with message, directory creation for missing `~/.claude/projects/` paths
 
 **Success criteria:**
-- Fresh machine gets all memory files in the correct locations
+- Fresh machine gets all memory files and `settings.local.json` files in the correct locations
+- Missing project repos produce skip messages, not errors
 - Re-running on a machine with identical files produces no errors
 - Tests pass
 - Round-trip (push then restore) produces byte-identical files
