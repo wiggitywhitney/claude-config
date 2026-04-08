@@ -105,7 +105,15 @@
       "Bash(git rebase*)",
       "Bash(git branch -D*)",
       "Bash(gh pr merge*)",
-      "Bash(npm publish*)"
+      "Bash(npm publish*)",
+      "Bash(rm -r *)",
+      "Bash(rm -r)",
+      "Bash(rm -rf *)",
+      "Bash(rm -rf)",
+      "Bash(rm -R *)",
+      "Bash(rm -Rf *)",
+      "Bash(rm -fr *)",
+      "Bash(rm -fR *)"
     ]
   },
   "model": "opus[1m]",
