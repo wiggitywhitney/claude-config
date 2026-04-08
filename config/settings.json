@@ -105,18 +105,10 @@
       "Bash(git rebase*)",
       "Bash(git branch -D*)",
       "Bash(gh pr merge*)",
-      "Bash(npm publish*)",
-      "Bash(rm -r *)",
-      "Bash(rm -r)",
-      "Bash(rm -rf *)",
-      "Bash(rm -rf)",
-      "Bash(rm -R *)",
-      "Bash(rm -Rf *)",
-      "Bash(rm -fr *)",
-      "Bash(rm -fR *)"
+      "Bash(npm publish*)"
     ]
   },
-  "model": "opus[1m]",
+  "model": "sonnet[1m]",
   "hooks": {
     "PreToolUse": [
       {
@@ -150,14 +142,6 @@
           },
           {
             "type": "command",
-            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/check-commit-message.sh"
-          },
-          {
-            "type": "command",
-            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/check-branch-protection.sh"
-          },
-          {
-            "type": "command",
             "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/check-coderabbit-required.sh"
           },
           {
@@ -171,14 +155,6 @@
           {
             "type": "command",
             "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/pre-pr-hook.sh"
-          },
-          {
-            "type": "command",
-            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/check-test-tiers.sh"
-          },
-          {
-            "type": "command",
-            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/check-progress-md.sh"
           },
           {
             "type": "command",
