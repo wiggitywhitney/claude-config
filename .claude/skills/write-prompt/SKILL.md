@@ -1,6 +1,6 @@
 ---
 name: write-prompt
-description: Write high-quality system prompts for AI agents or Claude Code skills. Use this skill when creating or reviewing any system prompt or SKILL.md file.
+description: Write and review any document an AI will read and act on — system prompts, SKILL.md/CLAUDE.md/rules files, PRDs, GitHub issues, agent specs. If an AI reads it and acts on it, it's a prompt.
 argument-hint: "[review|migrate]"
 ---
 
@@ -12,19 +12,27 @@ Write high-quality system prompts for AI agents or Claude Code skills. Guides th
 
 - Writing a system prompt for an API call (Messages API, Bedrock, etc.)
 - Writing a Claude Code skill (SKILL.md file)
+- Creating or revising a CLAUDE.md or rules/*.md file (Claude Code reads and acts on these)
+- Creating or revising a PRD (the prd-* skills read and act on these)
+- Creating a GitHub issue (CodeRabbit and AI agents read and follow these)
 - Reviewing an existing prompt or skill for anti-patterns
 - Adapting a prompt from one model generation to another (e.g., Claude 4.5 → 4.6)
 
+**General rule**: If an AI will read the document and take action based on it, run /write-prompt on it.
+
 ## Proactive Invocation
 
-Claude Code should use this skill — not ad-hoc prompt writing — whenever it needs to create or review a system prompt or skill file. This includes:
+Claude Code should use this skill — not ad-hoc writing — whenever it creates or modifies a document that an AI will read and act on. This includes:
 
 - **Creating new skills**: When building a SKILL.md file for a Claude Code skill
 - **Writing system prompts**: When building prompts for API calls (Messages API, Bedrock, etc.)
+- **Editing CLAUDE.md or rules/*.md files**: Claude Code reads and acts on these
+- **Creating or revising PRDs**: The prd-* skills read and act on these
+- **Creating GitHub issues**: CodeRabbit and AI agents read and follow these
 - **Reviewing existing prompts**: When modifying or debugging an existing prompt or skill
 - **Model migration**: When adapting prompts after a model upgrade
 
-The difference matters: ad-hoc prompt writing misses anti-patterns, skips the five missing information categories, and produces prompts that fail in predictable ways. This skill applies validated research on what actually works.
+The difference matters: ad-hoc writing misses anti-patterns, skips the five missing information categories, and produces instructions that fail in predictable ways. This skill applies validated research on what actually works.
 
 ## Invocation
 
