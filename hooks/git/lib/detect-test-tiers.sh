@@ -205,21 +205,21 @@ if [ "$PROJECT_TYPE" = "python" ]; then
   # --- Unit tests ---
   if [ -d "$PROJECT_DIR/tests/unit" ]; then
     # Check that it actually contains test files
-    if find "$PROJECT_DIR/tests/unit" -name "test_*.py" -o -name "*_test.py" 2>/dev/null | head -1 | grep -q .; then
+    if find "$PROJECT_DIR/tests/unit" \( -name "test_*.py" -o -name "*_test.py" \) 2>/dev/null | head -1 | grep -q .; then
       HAS_UNIT=true
     fi
   fi
 
   # Fall back to test files in tests/ root (common for projects without tier directories)
   if [ "$HAS_UNIT" = false ] && [ -d "$PROJECT_DIR/tests" ]; then
-    if find "$PROJECT_DIR/tests" -maxdepth 1 -name "test_*.py" -o -name "*_test.py" 2>/dev/null | head -1 | grep -q .; then
+    if find "$PROJECT_DIR/tests" -maxdepth 1 \( -name "test_*.py" -o -name "*_test.py" \) 2>/dev/null | head -1 | grep -q .; then
       HAS_UNIT=true
     fi
   fi
 
   # --- Integration tests ---
   if [ -d "$PROJECT_DIR/tests/integration" ]; then
-    if find "$PROJECT_DIR/tests/integration" -name "test_*.py" -o -name "*_test.py" 2>/dev/null | head -1 | grep -q .; then
+    if find "$PROJECT_DIR/tests/integration" \( -name "test_*.py" -o -name "*_test.py" \) 2>/dev/null | head -1 | grep -q .; then
       HAS_INTEGRATION=true
     fi
   fi
