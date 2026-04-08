@@ -158,7 +158,8 @@ Migrate `pre-commit-hook.sh` (build/typecheck/lint verification) and `pre-push-h
 Install hooks across all active repos, verify everything works, clean up.
 
 **Deliverables:**
-- Run `install-git-hooks.sh` across all active repos in `~/Documents/Repositories/`
+- Run `install-git-hooks.sh` across all active repos in `~/Documents/Repositories/` AND `~/Documents/Journal` (Decision 6)
+- **Approval gate**: Get explicit user approval before running `install-git-hooks.sh` in `~/Documents/Journal` or `spinybacked-orbweaver` — user may be actively working there (Decision 7)
 - Verify native hooks fire correctly in each repo before proceeding
 - Verify commit-story `post-commit` hooks still work in all 15 repos
 - Verify Datadog global hooks still dispatch correctly
@@ -208,6 +209,12 @@ Each dispatcher hard-codes which check scripts it calls (rather than auto-discov
 
 ### Decision 5: Stdin Capture in pre-push Dispatcher (2026-04-07)
 The `pre-push` dispatcher reads all of stdin (the refspec list) into a variable at startup, before calling any check scripts. It then replays this captured content to each check via a pipe. Rationale: stdin is a one-time stream; without capture, only the first check script would see the refspec list.
+
+### Decision 6: Include ~/Documents/Journal in M4 Rollout (2026-04-08)
+Run `install-git-hooks.sh` in `~/Documents/Journal` in addition to all repos under `~/Documents/Repositories/`. The Journal directory is an active git repo that benefits from the same native hook protections (branch protection, commit message, verification). It lives outside the standard `Repositories/` tree so it must be listed explicitly.
+
+### Decision 7: Approval Gate for Active Repos During Rollout (2026-04-08)
+During M4 rollout, get explicit user approval before running `install-git-hooks.sh` in `~/Documents/Journal` and `spinybacked-orbweaver`. The user may be actively working in these repos and wants to control the timing. All other repos can be installed in batch without per-repo approval.
 
 ## References
 
