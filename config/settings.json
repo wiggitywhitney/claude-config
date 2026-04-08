@@ -146,14 +146,6 @@
           },
           {
             "type": "command",
-            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/pre-commit-hook.sh"
-          },
-          {
-            "type": "command",
-            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/pre-push-hook.sh"
-          },
-          {
-            "type": "command",
             "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/pre-pr-hook.sh"
           },
           {

@@ -317,3 +317,105 @@ teardown() {
     [ "$status" -eq 0 ]
     [[ "$output" == *".skip-integration"* ]]
 }
+
+# ── pre-commit-verify.sh ──────────────────────────────────────────────────────
+
+@test "pre-commit-verify: exits 0 when only .md files are staged (docs-only skip)" {
+    git -C "$GIT_REPO" checkout -b feature/docs --quiet
+    echo "# docs" > "$GIT_REPO/notes.md"
+    git -C "$GIT_REPO" add notes.md
+    run bash -c "cd \"$GIT_REPO\" && \"$CHECKS_DIR/pre-commit-verify.sh\" 2>&1"
+    [ "$status" -eq 0 ]
+}
+
+@test "pre-commit-verify: exits 0 when project has no build system" {
+    git -C "$GIT_REPO" checkout -b feature/test --quiet
+    echo "plain content" > "$GIT_REPO/file.txt"
+    git -C "$GIT_REPO" add file.txt
+    # No package.json, go.mod, etc. — detect-project.sh returns unknown with no commands
+    run bash -c "cd \"$GIT_REPO\" && \"$CHECKS_DIR/pre-commit-verify.sh\" 2>&1"
+    [ "$status" -eq 0 ]
+}
+
+@test "pre-commit-verify: exits 1 and prints ERROR when build command fails" {
+    git -C "$GIT_REPO" checkout -b feature/failing-build --quiet
+    mkdir -p "$GIT_REPO/.claude"
+    printf '{"commands":{"build":"exit 1"}}\n' > "$GIT_REPO/.claude/verify.json"
+    echo "code" > "$GIT_REPO/main.sh"
+    git -C "$GIT_REPO" add .claude/verify.json main.sh
+    run bash -c "cd \"$GIT_REPO\" && \"$CHECKS_DIR/pre-commit-verify.sh\" 2>&1"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"ERROR"* ]]
+}
+
+@test "pre-commit-verify: exits 0 when all verify.json phases pass" {
+    git -C "$GIT_REPO" checkout -b feature/passing-build --quiet
+    mkdir -p "$GIT_REPO/.claude"
+    printf '{"commands":{"build":"exit 0"}}\n' > "$GIT_REPO/.claude/verify.json"
+    echo "code" > "$GIT_REPO/main.sh"
+    git -C "$GIT_REPO" add .claude/verify.json main.sh
+    run bash -c "cd \"$GIT_REPO\" && \"$CHECKS_DIR/pre-commit-verify.sh\" 2>&1"
+    [ "$status" -eq 0 ]
+}
+
+@test "pre-commit-verify: error message instructs not to add suppression annotations" {
+    git -C "$GIT_REPO" checkout -b feature/bad-build --quiet
+    mkdir -p "$GIT_REPO/.claude"
+    printf '{"commands":{"build":"exit 1"}}\n' > "$GIT_REPO/.claude/verify.json"
+    echo "code" > "$GIT_REPO/main.sh"
+    git -C "$GIT_REPO" add .claude/verify.json main.sh
+    run bash -c "cd \"$GIT_REPO\" && \"$CHECKS_DIR/pre-commit-verify.sh\" 2>&1"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"suppression"* ]] || [[ "$output" == *"ts-ignore"* ]] || [[ "$output" == *"lint-disable"* ]]
+}
+
+# ── pre-push-verify.sh ────────────────────────────────────────────────────────
+
+@test "pre-push-verify: exits 0 on clean project with no remote (no diff base)" {
+    git -C "$GIT_REPO" checkout -b feature/clean --quiet
+    echo "plain" > "$GIT_REPO/file.txt"
+    git -C "$GIT_REPO" add file.txt
+    git -C "$GIT_REPO" commit -m "add file" --quiet
+    # No remote configured — DIFF_BASE will be empty, security check runs in repo-grep mode
+    run bash -c "cd \"$GIT_REPO\" && printf 'refs/heads/feature/clean abc123 refs/heads/feature/clean abc123\n' | \"$CHECKS_DIR/pre-push-verify.sh\" origin https://example.com 2>&1"
+    [ "$status" -eq 0 ]
+}
+
+@test "pre-push-verify: exits 0 for docs-only branch changes vs remote base" {
+    BARE_REPO="$TMPDIR/bare"
+    git init --bare "$BARE_REPO" --quiet
+    git -C "$GIT_REPO" remote add origin "file://$BARE_REPO"
+    git -C "$GIT_REPO" push -u origin main --quiet
+
+    git -C "$GIT_REPO" checkout -b feature/docs-only --quiet
+    echo "# docs" > "$GIT_REPO/guide.md"
+    git -C "$GIT_REPO" add guide.md
+    git -C "$GIT_REPO" commit -m "add guide" --quiet
+
+    run bash -c "cd \"$GIT_REPO\" && printf 'refs/heads/feature/docs-only abc123 refs/heads/feature/docs-only abc123\n' | \"$CHECKS_DIR/pre-push-verify.sh\" origin file://$BARE_REPO 2>&1"
+    [ "$status" -eq 0 ]
+}
+
+@test "pre-push-verify: exits 1 and prints ERROR when security check fails" {
+    git -C "$GIT_REPO" checkout -b feature/security-violation --quiet
+    # .only( in a test file triggers the standard security check
+    mkdir -p "$GIT_REPO/tests"
+    echo "it.only('focused test', () => {});" > "$GIT_REPO/tests/foo.test.js"
+    git -C "$GIT_REPO" add tests/foo.test.js
+    git -C "$GIT_REPO" commit -m "add focused test" --quiet
+    run bash -c "cd \"$GIT_REPO\" && printf 'refs/heads/feature/security-violation abc123 refs/heads/feature/security-violation abc123\n' | \"$CHECKS_DIR/pre-push-verify.sh\" origin https://example.com 2>&1"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"ERROR"* ]]
+}
+
+@test "pre-push-verify: skips CodeRabbit review when .skip-coderabbit present" {
+    git -C "$GIT_REPO" checkout -b feature/skip-cr --quiet
+    touch "$GIT_REPO/.skip-coderabbit"
+    echo "plain" > "$GIT_REPO/file.txt"
+    git -C "$GIT_REPO" add .skip-coderabbit file.txt
+    git -C "$GIT_REPO" commit -m "add file" --quiet
+    run bash -c "cd \"$GIT_REPO\" && printf 'refs/heads/feature/skip-cr abc123 refs/heads/feature/skip-cr abc123\n' | \"$CHECKS_DIR/pre-push-verify.sh\" origin https://example.com 2>&1"
+    [ "$status" -eq 0 ]
+    # No CodeRabbit output expected — would only appear if CR CLI is installed and finds issues
+    [[ "$output" != *"CodeRabbit Advisory"* ]]
+}

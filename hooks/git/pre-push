@@ -35,7 +35,6 @@ run_check() {
 exit_code=0
 
 run_check "$CHECKS_DIR/test-tiers.sh"        || exit_code=$?
-# Phase 2 (Milestone 3): security verification and CodeRabbit advisory review
-# run_check "$CHECKS_DIR/pre-push-verify.sh" || exit_code=$?
+run_check "$CHECKS_DIR/pre-push-verify.sh" || exit_code=$?
 
 exit "$exit_code"
