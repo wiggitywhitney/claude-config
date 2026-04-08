@@ -184,12 +184,24 @@ teardown() {
 
 @test "bootstrap installs hooks into claude-config repo itself" {
     CLAUDE_CONFIG_DIR="$BATS_TEST_DIRNAME/.."
-    # Back up any existing non-symlink hooks so we can restore them after the test
+
+    # Back up any existing hooks (preserve symlinks with cp -P)
     for hook in pre-commit commit-msg pre-push; do
-        if [ -e "$CLAUDE_CONFIG_DIR/.git/hooks/$hook" ] && [ ! -L "$CLAUDE_CONFIG_DIR/.git/hooks/$hook" ]; then
-            cp "$CLAUDE_CONFIG_DIR/.git/hooks/$hook" "$TMPDIR/$hook.bak"
+        if [ -e "$CLAUDE_CONFIG_DIR/.git/hooks/$hook" ]; then
+            cp -P "$CLAUDE_CONFIG_DIR/.git/hooks/$hook" "$TMPDIR/$hook.bak"
         fi
     done
+
+    # Ensure restoration happens even on test failure
+    restore_hooks() {
+        for hook in pre-commit commit-msg pre-push; do
+            if [ -e "$TMPDIR/$hook.bak" ]; then
+                rm -f "$CLAUDE_CONFIG_DIR/.git/hooks/$hook"
+                cp -P "$TMPDIR/$hook.bak" "$CLAUDE_CONFIG_DIR/.git/hooks/$hook"
+            fi
+        done
+    }
+    trap restore_hooks EXIT
 
     run "$SCRIPT" "$CLAUDE_CONFIG_DIR"
     [ "$status" -eq 0 ]
@@ -197,11 +209,6 @@ teardown() {
     [ -L "$CLAUDE_CONFIG_DIR/.git/hooks/commit-msg" ]
     [ -L "$CLAUDE_CONFIG_DIR/.git/hooks/pre-push" ]
 
-    # Restore any backed-up hooks so the real repo is left in its original state
-    for hook in pre-commit commit-msg pre-push; do
-        if [ -f "$TMPDIR/$hook.bak" ]; then
-            rm -f "$CLAUDE_CONFIG_DIR/.git/hooks/$hook"
-            cp "$TMPDIR/$hook.bak" "$CLAUDE_CONFIG_DIR/.git/hooks/$hook"
-        fi
-    done
+    restore_hooks
+    trap - EXIT
 }
