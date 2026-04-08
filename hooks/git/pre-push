@@ -29,7 +29,7 @@ run_check() {
     shift
     [[ -f "$script" ]] || return 0
     [[ -x "$script" ]] || chmod +x "$script"
-    echo "$PUSH_STDIN" | "$script" "$REMOTE_NAME" "$REMOTE_URL" "$@"
+    printf '%s\n' "$PUSH_STDIN" | "$script" "$REMOTE_NAME" "$REMOTE_URL" "$@"
 }
 
 exit_code=0
