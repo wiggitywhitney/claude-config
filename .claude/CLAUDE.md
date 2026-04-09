@@ -42,6 +42,29 @@ This catches problems in ~30s locally, reducing review round-trips after PR crea
 7. If new comments appear, address them and repeat step 6
 8. After re-review is clear and human has approved, merge the PR
 
+### Triage: When to Defer vs. Fix Now
+
+**Default: fix it now.** See [Deferring Known Issues](#deferring-known-issues) below for the narrow set of legitimate reasons to defer and the required process when deferring.
+
+## Deferring Known Issues
+
+**Default: fix it now.** Future instances have no memory of deferred intent — silent deferrals disappear.
+
+Deferral is only appropriate when the fix is:
+- In a **different repo** (out of scope for the current branch)
+- **PRD-scoped** — needs its own milestone and planning
+- Likely to cause **merge conflicts** with current branch work
+- Blocked on **significant investigation** that can't be done in this session
+
+When any of these apply, **stop and surface it explicitly** before continuing:
+
+> "I want to defer [X] because [reason]. What would you like to do?
+> A. Fix it now
+> B. Create a GitHub issue (tracked, you'll see it)
+> C. Let it go — knowing it may not come back up"
+
+Wait for the user's answer. Never choose a default silently.
+
 ## Git Conventions
 
 - Don't squash git commits

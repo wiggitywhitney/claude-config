@@ -1,48 +1,39 @@
 ---
 name: prds-get
-description: Fetch all open GitHub issues from this project that have the 'PRD' label
+description: Fetch all open GitHub issues — PRDs and standalone issues — for project planning
 category: project-management
 ---
 
-# Get All PRDs
+# Get Open PRDs and Issues
 
-Fetch all open GitHub issues from this project that have the 'PRD' label.
+Fetch all open GitHub issues from this project: PRDs (labeled `PRD`) and standalone issues (everything else). Present both in a single overview for project planning.
 
 **Note**: If any `gh` command fails with "command not found", inform the user that GitHub CLI is required and provide the installation link: https://cli.github.com/
 
 ## Process
 
-1. **Fetch Issues**: Use GitHub CLI to get all open issues with PRD label
+1. **Fetch all open issues** in a single call:
    ```bash
-   gh issue list --label PRD --state open --json number,title,url,labels,assignees,createdAt,updatedAt
+   gh issue list --state open --json number,title,url,labels,body,createdAt,updatedAt
    ```
+   Split the results into two groups:
+   - **PRDs**: issues where any label name equals `PRD`
+   - **Standalone issues**: everything else
 
-2. **Format Results**: Present the issues in a clear, organized format showing:
-   - Issue number and title
-   - Creation and last update dates
-   - Current assignees (if any)
-   - Direct link to the issue
-   - PRD file link (if available in issue description)
+2. **Present PRDs** as a table:
+   - Issue number (as a clickable GitHub link), title, last updated date
+   - Check the current branch name (`git branch --show-current`). If it matches `feature/prd-<number>-*`, mark that PRD as `(active)` in the table.
 
-3. **Meaningful Categorization**: Group PRDs by their actual purpose and impact, not generic labels:
-   - **Architecture & Infrastructure**: Core system changes, API designs, major refactors
-   - **User Experience**: Features that directly impact how users interact with the system
-   - **Developer Experience**: Tools, workflows, testing, documentation that help developers
-   - **AI & Intelligence**: Machine learning, AI-powered features, recommendation engines
-   - **Operations & Monitoring**: Deployment, scaling, observability, performance
-   - **Integration & Extensibility**: Third-party integrations, plugin systems, APIs
+3. **Present standalone issues** as a separate table:
+   - Issue number (as a clickable GitHub link), title, last updated date
+   - Note any that reference a PRD (e.g., "blocked by #47") based on issue body text (already fetched in step 1; do not make per-issue API calls for comments unless the user asks for deeper analysis)
 
-   Each category should briefly explain what the PRDs in that group will accomplish for users or the system.
+4. **Dependency and blocking analysis** across both groups:
+   - Which PRDs block which issues (look for "blocked by", "depends on", "after #X" in issue bodies)
+   - Which PRDs depend on other PRDs
+   - Which standalone issues could be worked in parallel with the active PRD
 
-4. **Priority Analysis**: If multiple PRDs exist, help identify:
-   - Which PRDs are most recently updated or have active discussion
-   - Which PRDs have dependencies on other PRDs
-   - Which PRDs are foundational vs. incremental improvements
-   - Which PRDs might be blocked or need clarification
-
-5. **Next Steps Suggestion**: Based on the PRD list, suggest logical next actions:
-   - Which PRD to work on next based on dependencies and impact
-   - PRDs that need attention, updates, or clarification
-   - Opportunities for parallel work on independent PRDs
-
-This provides a complete view of all active product requirements and helps with project planning and prioritization.
+5. **Next steps suggestion** based on the full picture:
+   - What to work on next given current dependencies and the active branch
+   - Issues that are unblocked and ready to start
+   - PRDs that need attention or are stalled
