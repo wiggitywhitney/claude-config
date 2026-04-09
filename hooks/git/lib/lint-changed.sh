@@ -62,6 +62,20 @@ $GO_FILES"
 fi
 
 if [ -z "$ALL_LINT_FILES" ]; then
+  # No JS/Go files changed — run fallback if provided and there are changed files
+  if [ -n "$FALLBACK_CMD" ] && [ -n "$CHANGED_FILES" ]; then
+    echo "=== Phase: lint ==="
+    echo "No JS/Go files changed — running fallback: $FALLBACK_CMD"
+    echo "---"
+    eval "$FALLBACK_CMD" 2>&1
+    FALLBACK_EXIT=$?
+    if [ $FALLBACK_EXIT -ne 0 ]; then
+      echo "RESULT: lint FAILED (fallback lint returned $FALLBACK_EXIT)"
+      exit 1
+    fi
+    echo "RESULT: lint PASSED (fallback)"
+    exit 0
+  fi
   echo "=== Phase: lint ==="
   echo "No lintable files changed — skipping"
   echo "---"
@@ -82,7 +96,10 @@ OVERALL_EXIT=0
 # --- JS/TS linting ---
 
 if [ -n "$JS_FILES" ]; then
-  mapfile -t JS_FILE_ARRAY <<< "$JS_FILES"
+  JS_FILE_ARRAY=()
+  while IFS= read -r line; do
+    [ -n "$line" ] && JS_FILE_ARRAY+=("$line")
+  done <<< "$JS_FILES"
 
   # Detect ESLint config (flat or legacy)
   HAS_ESLINT=false

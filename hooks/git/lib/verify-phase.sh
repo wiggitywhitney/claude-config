@@ -79,4 +79,4 @@ fi
 
 echo "VERIFY_EXIT: $EXIT_CODE"
 
-exit $EXIT_CODE
+exit "$EXIT_CODE"

@@ -24,7 +24,7 @@ if ! git diff --cached -- 'prds/*.md' 'prds/**/*.md' 2>/dev/null | grep -qiE '^\
 fi
 
 # Check if PROGRESS.md is staged
-if git diff --cached --name-only 2>/dev/null | grep -qF -- 'PROGRESS.md'; then
+if git diff --cached --name-only 2>/dev/null | grep -qFx -- 'PROGRESS.md'; then
     exit 0  # PROGRESS.md is staged — all good
 fi
 

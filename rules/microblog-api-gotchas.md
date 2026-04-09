@@ -41,4 +41,4 @@ Changing a scheduled post's publication date can cause it to appear at ALL previ
 
 ## Cross-posting has no per-post API control
 
-9 platforms supported (see `docs/research/microblog-api.md` for current list). LinkedIn image cross-posting is reportedly planned but not yet implemented. There is no API to selectively cross-post a single post — it's all or nothing per feed.
+9 platforms supported (LinkedIn image cross-posting is reportedly planned but not yet implemented). There is no API to selectively cross-post a single post — it's all or nothing per feed.

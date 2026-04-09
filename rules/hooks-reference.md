@@ -7,7 +7,7 @@ description: Reference for all PreToolUse and PostToolUse hooks and what they en
 
 ## Native git hooks (installed via `scripts/install-git-hooks.sh`)
 
-These run inside the git process itself — no alternative code path exists. Install with `bash scripts/install-git-hooks.sh [repo-path]` (idempotent, never touches post-commit). Source of truth: `hooks/git/`.
+These run inside the git process itself — no alternative code path exists for normal git usage. Install with `bash scripts/install-git-hooks.sh [repo-path]` (idempotent, never touches post-commit). Source of truth: `hooks/git/`. Note: users can bypass with `--no-verify` (`git commit --no-verify`, `git push --no-verify`), so these provide strong local enforcement but are not absolute.
 
 **pre-commit dispatcher** (`hooks/git/pre-commit`) runs:
 - **branch-protection.sh** — blocks commits to main/master; opt out with `.skip-branching`; docs-only exemption per @rules/branch-protection.md

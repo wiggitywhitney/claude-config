@@ -231,10 +231,10 @@ if [ "$PROJECT_TYPE" = "python" ]; then
 
   # Check for browser automation in dependencies
   if [ "$HAS_E2E" = false ]; then
-    if python3 -c "
-import sys
+    if PROJECT_DIR="$PROJECT_DIR" python3 -c "
+import sys, os
 try:
-    with open('$PROJECT_DIR/pyproject.toml') as f:
+    with open(os.path.join(os.environ['PROJECT_DIR'], 'pyproject.toml')) as f:
         content = f.read()
     e2e_deps = ['selenium', 'playwright', 'puppeteer', 'splinter']
     sys.exit(0 if any(d in content for d in e2e_deps) else 1)
@@ -328,15 +328,17 @@ fi
 
 # --- Output JSON ---
 
-python3 -c "
-import json
+PROJECT_DIR="$PROJECT_DIR" PROJECT_TYPE="$PROJECT_TYPE" \
+  HAS_UNIT="$HAS_UNIT" HAS_INTEGRATION="$HAS_INTEGRATION" HAS_E2E="$HAS_E2E" \
+  python3 -c "
+import json, os
 result = {
-    'project_dir': '$PROJECT_DIR',
-    'project_type': '$PROJECT_TYPE',
+    'project_dir': os.environ['PROJECT_DIR'],
+    'project_type': os.environ['PROJECT_TYPE'],
     'test_tiers': {
-        'unit': $( [ "$HAS_UNIT" = true ] && echo 'True' || echo 'False' ),
-        'integration': $( [ "$HAS_INTEGRATION" = true ] && echo 'True' || echo 'False' ),
-        'e2e': $( [ "$HAS_E2E" = true ] && echo 'True' || echo 'False' )
+        'unit': os.environ['HAS_UNIT'] == 'true',
+        'integration': os.environ['HAS_INTEGRATION'] == 'true',
+        'e2e': os.environ['HAS_E2E'] == 'true'
     }
 }
 print(json.dumps(result, indent=2))

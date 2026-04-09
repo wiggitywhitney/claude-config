@@ -219,7 +219,11 @@ def check_sheets_allowlist(cmd: str) -> dict | None:
         r"\bgog\s+.*sheets\s+(?:update|append|write)\s+(\S+)", cmd, re.IGNORECASE
     )
     if not match:
-        return None
+        return deny(
+            "detected a sheet write command but could not parse the spreadsheet ID — blocking as a precaution. "
+            "Check that the sheet ID is provided explicitly in the command.",
+            cmd,
+        )
     sheet_id = match.group(1)
     if sheet_id in ALLOWED_SHEET_IDS:
         return None

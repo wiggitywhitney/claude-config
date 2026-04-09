@@ -5,8 +5,8 @@
 set -uo pipefail
 
 # pre-push dispatcher passes remote name and URL as positional args
-REMOTE_NAME="${1:-}"
-REMOTE_URL="${2:-}"
+_REMOTE_NAME="${1:-}"
+_REMOTE_URL="${2:-}"
 
 # Project root is cwd when a native pre-push hook fires
 PROJECT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || echo ".")"

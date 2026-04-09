@@ -18,5 +18,7 @@ every git operation — both manual terminal use and Claude Code — providing s
 | `check-branch-protection.sh` | `hooks/git/checks/branch-protection.sh` | `pre-commit` |
 | `check-progress-md.sh` | `hooks/git/checks/progress-md.sh` | `pre-commit` |
 | `check-test-tiers.sh` | `hooks/git/checks/test-tiers.sh` | `pre-push` |
+| `pre-commit-hook.sh` | `hooks/git/checks/pre-commit-verify.sh` | `pre-commit` |
+| `pre-push-hook.sh` | `hooks/git/checks/pre-push-verify.sh` | `pre-push` |
 
 These files are kept for reference. They are no longer registered in `settings.json`.

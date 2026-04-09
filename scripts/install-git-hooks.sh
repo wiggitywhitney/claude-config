@@ -9,10 +9,12 @@ CLAUDE_CONFIG_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 HOOKS_SRC="$CLAUDE_CONFIG_DIR/hooks/git"
 
 TARGET_REPO="${1:-$(pwd)}"
-HOOKS_DST="$TARGET_REPO/.git/hooks"
 
-if [[ ! -d "$HOOKS_DST" ]]; then
-    echo "ERROR: $TARGET_REPO is not a git repository (no .git/hooks/ directory found)" >&2
+# Use git to resolve the hooks directory — handles both regular repos and worktrees
+HOOKS_DST="$(git -C "$TARGET_REPO" rev-parse --git-path hooks 2>/dev/null || echo "")"
+
+if [[ -z "$HOOKS_DST" ]] || [[ ! -d "$HOOKS_DST" ]]; then
+    echo "ERROR: $TARGET_REPO is not a git repository or hooks directory not found" >&2
     exit 1
 fi
 
