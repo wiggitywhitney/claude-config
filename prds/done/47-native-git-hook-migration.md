@@ -1,5 +1,7 @@
 # PRD #47: Native Git Hook Migration
 
+**Status: Complete** — 2026-04-09
+
 ## Problem
 
 Claude Code hooks that enforce git operations (commit message checks, branch protection, build verification, security checks) are regex-based pattern matchers running inside Claude Code's tool-call interception layer. Research shows this layer can be behaviorally circumvented by the AI agent through creative command routing, alternative git command formats, and regex gaps — without technically "jailbreaking" the hook mechanism ([research/claude-code-hook-security.md](../research/claude-code-hook-security.md)).
@@ -121,6 +123,7 @@ Migrate `check-commit-message.sh`, `check-branch-protection.sh`, `check-progress
 - `hooks/git/checks/progress-md.sh` — blocks commits when PRD checkboxes are marked done but PROGRESS.md not staged; prints message listing which PRD files have new checkboxes and reminds to `git add PROGRESS.md`
 - `hooks/git/checks/test-tiers.sh` — warns (does not block) when test tiers are missing on push/PR; prints advisory message listing which tiers are missing; respects `.skip-integration` and `.skip-e2e`
 - Integration tests for each hook: attempt the blocked operation in a temp git repo, assert it fails with the correct error message; attempt the allowed operation, assert it succeeds
+- Dispatcher scripts updated to register each new check (Decision 3: dispatchers are the explicit registry — add a `run_check` call to the appropriate dispatcher for each new script)
 - Claude Code hooks for these 4 checks archived to `hooks/archive/claude-code/` and removed from `settings.json`
 
 **Success Criteria:**
@@ -140,6 +143,7 @@ Migrate `pre-commit-hook.sh` (build/typecheck/lint verification) and `pre-push-h
 - `hooks/git/checks/pre-push-verify.sh` — runs security checks before push; detects open PRs via `gh pr list` and escalates to expanded security + tests when PR exists; runs advisory CodeRabbit CLI review after blocking checks pass; prints clear messages for each phase; preserves docs-only early exit
 - Shared infrastructure migrated to `hooks/git/lib/` (detect-project.sh, verify-phase.sh, security-check.sh, lint-changed.sh, is-docs-only.sh, coderabbit-review.sh)
 - Integration tests for each hook covering: clean pass, phase failure with error message, docs-only skip, PR-aware escalation (for pre-push)
+- Dispatcher scripts updated to register each new check (Decision 3: uncomment the `run_check` lines in `hooks/git/pre-commit` and `hooks/git/pre-push` that are currently commented out as Phase 2 placeholders)
 - Claude Code hooks for these 2 checks archived and removed from `settings.json`
 
 **Success Criteria:**
@@ -156,7 +160,7 @@ Migrate `pre-commit-hook.sh` (build/typecheck/lint verification) and `pre-push-h
 Install hooks across all active repos, verify everything works, clean up.
 
 **Deliverables:**
-- Run `install-git-hooks.sh` across all active repos in `~/Documents/Repositories/`
+- Run `install-git-hooks.sh` across all active repos in `~/Documents/Repositories/` AND `~/Documents/Journal` in a single batch — no per-repo approval gate required (Decision 6, Decision 8)
 - Verify native hooks fire correctly in each repo before proceeding
 - Verify commit-story `post-commit` hooks still work in all 15 repos
 - Verify Datadog global hooks still dispatch correctly
@@ -178,17 +182,43 @@ Install hooks across all active repos, verify everything works, clean up.
 
 ### Milestone 5: Future Exploration — Plugin Architecture Learnings
 
-Evaluate whether patterns learned from studying Claude Code plugins (Skill Creator, Superpowers, Code Review) can improve the hook system or related skills.
+Create a dedicated PRD for evaluating the Code Review plugin and determining the right code review approach to supplement CodeRabbit when rate limits are hit.
 
 **Deliverables:**
-- Review plugin study findings (confidence scoring, multi-agent patterns, phased workflows with gate points)
-- Assess applicability to hook error messages (e.g., confidence-scored warnings)
-- Assess applicability to existing skills (`/verify`, `/anki`, `/write-prompt`, `/research`)
-- Document recommendations for follow-up PRDs
+- Run `/prd-create` for "Code Review Plugin Evaluation" — PRD must include a research spike as the first milestone to decide: use the existing plugin as-is, or build a custom skill drawing on its patterns
 
 **Success Criteria:**
-- Written assessment with concrete recommendations
-- Follow-up PRDs created for any approved improvements
+- New PRD exists and is ready to work on
+- Research spike milestone is the first milestone (decision precedes implementation)
+
+## Decision Log
+
+### Decision 1: Safe Rollout Order (2026-04-07)
+Install native hooks and verify in all repos first. Remove migrated hook entries from `~/.claude/settings.json` last, as a single final step after all repos are verified. If native hook installation fails in any repo, `settings.json` still provides enforcement while the issue is resolved. No repo ever has a coverage gap.
+
+### Decision 2: Run-All, Not Fail-Fast in Dispatchers (2026-04-07)
+Dispatcher scripts run every check script even when an earlier check fails. All failures are collected before the dispatcher exits non-zero. Rationale: users (and Claude) see every problem in one pass and can fix everything before retrying, rather than encountering failures one at a time.
+
+### Decision 3: Dispatchers as Explicit Registry (2026-04-07)
+Each dispatcher hard-codes which check scripts it calls (rather than auto-discovering scripts by glob or subdirectory naming convention). Consequence: adding a new check script in M2 or M3 requires also adding the corresponding `run_check` call in the dispatcher. This is intentional — the dispatcher serves as the human-readable source of truth for what runs at each git event.
+
+### Decision 4: Absolute Symlinks in Bootstrap (2026-04-07)
+`install-git-hooks.sh` creates absolute symlinks (not relative). Rationale: simplifies symlink resolution inside dispatcher scripts — a single `readlink "$0"` returns the full path to the real dispatcher, so `CHECKS_DIR` can be computed without complex relative-path arithmetic.
+
+### Decision 5: Stdin Capture in pre-push Dispatcher (2026-04-07)
+The `pre-push` dispatcher reads all of stdin (the refspec list) into a variable at startup, before calling any check scripts. It then replays this captured content to each check via a pipe. Rationale: stdin is a one-time stream; without capture, only the first check script would see the refspec list.
+
+### Decision 6: Include ~/Documents/Journal in M4 Rollout (2026-04-08)
+Run `install-git-hooks.sh` in `~/Documents/Journal` in addition to all repos under `~/Documents/Repositories/`. The Journal directory is an active git repo that benefits from the same native hook protections (branch protection, commit message, verification). It lives outside the standard `Repositories/` tree so it must be listed explicitly.
+
+### Decision 7: Approval Gate for Active Repos During Rollout (2026-04-08)
+During M4 rollout, get explicit user approval before running `install-git-hooks.sh` in `~/Documents/Journal` and `spinybacked-orbweaver`. The user may be actively working in these repos and wants to control the timing. All other repos can be installed in batch without per-repo approval.
+
+### Decision 8: Rollout Scope Corrections (2026-04-09)
+Amends Decision 7. Two corrections to M4 rollout scope:
+1. `~/Documents/Journal` is a standalone git repo (not under `~/Documents/Repositories/`). It needs no special approval gate — install `install-git-hooks.sh` there as part of the normal batch rollout.
+2. `spinybacked-orbweaver` is at `~/Documents/Repositories/spinybacked-orbweaver` and is now closed/inactive. Treat it like any other repo — no special approval gate needed.
+Consequence: Decision 7's approval gate is fully superseded. All repos (including Journal and spinybacked-orbweaver) can be installed in a single batch pass without per-repo confirmation.
 
 ## References
 

@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# ABOUTME: pre-commit git hook dispatcher — runs all pre-commit check scripts in order
+# ABOUTME: Called by git before creating a commit; blocks the commit if any check fails
+
+set -uo pipefail
+
+# Resolve symlink to find the real hooks/git/ directory
+if [[ -L "$0" ]]; then
+    _link_target="$(readlink "$0")"
+    if [[ "$_link_target" = /* ]]; then
+        HOOK_DIR="$(dirname "$_link_target")"
+    else
+        HOOK_DIR="$(cd "$(dirname "$0")/$(dirname "$_link_target")" && pwd)"
+    fi
+else
+    HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+fi
+CHECKS_DIR="$HOOK_DIR/checks"
+
+# Run a check script if it exists; accumulate failures (run-all, not fail-fast)
+run_check() {
+    local script="$1"
+    shift
+    [[ -f "$script" ]] || return 0
+    [[ -x "$script" ]] || chmod +x "$script"
+    "$script" "$@"
+}
+
+exit_code=0
+
+run_check "$CHECKS_DIR/branch-protection.sh" || exit_code=$?
+run_check "$CHECKS_DIR/progress-md.sh"       || exit_code=$?
+run_check "$CHECKS_DIR/pre-commit-verify.sh" || exit_code=$?
+
+exit "$exit_code"

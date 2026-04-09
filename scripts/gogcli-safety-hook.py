@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# ABOUTME: PreToolUse safety hook that blocks destructive or people-affecting gog CLI commands.
+# ABOUTME: Denies data deletion, outreach, calendar with attendees, sharing, and non-allowlisted sheet writes.
 """
 gogcli Safety Hook for Claude Code
 
@@ -11,6 +13,7 @@ Blocked categories:
 - OUTREACH: send email, reply, forward, chat messages, DMs
 - CALENDAR WITH PEOPLE: create/update events with attendees, propose times
 - SHARING: drive permissions, drive comments (notifies collaborators)
+- SHEETS ALLOWLIST: write/update/append to non-approved spreadsheets
 - ACCOUNT SAFETY: gmail delegation, vacation auto-reply, appscript run
 - CLASSROOM: announcements, invitations (notifies students/parents)
 
@@ -27,6 +30,12 @@ import re
 import sys
 import datetime
 from pathlib import Path
+
+# Sheets allowed for writes (all others blocked)
+ALLOWED_SHEET_IDS = {
+    "1eatUotHm4YOin1_rsqRSb71wY4S-lh5SsGInJVznBts",  # Staging sheet (Thunder workflow)
+    "14SKb5lOhlOznUTx7gJhH4KHidFOaxNwF5dx4cXNssz4",  # Datadog Illuminated tracker
+}
 
 DEBUG = os.getenv("CLAUDE_HOOK_DEBUG") == "1"
 DEBUG_LOG = Path(
@@ -87,7 +96,7 @@ DESTRUCTIVE_SUBCOMMANDS_ONLY = [
 
 def check_destructive(cmd: str) -> dict | None:
     # Filter and label management are personal config, not data destruction
-    if re.search(r"\bgog\s+gmail\s+(filters|labels)\b", cmd, re.IGNORECASE):
+    if re.search(r"\bgog\b.*?\bgmail\s+(filters|labels)\b", cmd, re.IGNORECASE):
         return None
     for pattern in DESTRUCTIVE_KEYWORDS:
         if re.search(pattern, cmd, re.IGNORECASE):
@@ -102,14 +111,14 @@ def check_destructive(cmd: str) -> dict | None:
 
 OUTREACH_COMMANDS = [
     # Gmail
-    r"\bgog\s+gmail\s+send\b",
+    r"\bgog\b.*?\bgmail\s+send\b",
     # Chat
-    r"\bgog\s+chat\s+messages\s+send\b",
-    r"\bgog\s+chat\s+send-dm\b",
-    r"\bgog\s+chat\s+send\b",
+    r"\bgog\b.*?\bchat\s+messages\s+send\b",
+    r"\bgog\b.*?\bchat\s+send-dm\b",
+    r"\bgog\b.*?\bchat\s+send\b",
     # Classroom (notifies students/parents)
-    r"\bgog\s+classroom\s+announcements\b",
-    r"\bgog\s+classroom\s+invitations\b",
+    r"\bgog\b.*?\bclassroom\s+announcements\b",
+    r"\bgog\b.*?\bclassroom\s+invitations\b",
 ]
 
 
@@ -126,8 +135,8 @@ def check_outreach(cmd: str) -> dict | None:
 # --- Calendar operations that involve other people ---
 
 CALENDAR_WRITE_COMMANDS = [
-    r"\bgog\s+calendar\s+create\b",
-    r"\bgog\s+calendar\s+update\b",
+    r"\bgog\b.*?\bcalendar\s+create\b",
+    r"\bgog\b.*?\bcalendar\s+update\b",
 ]
 
 ATTENDEE_FLAGS = [
@@ -138,8 +147,8 @@ ATTENDEE_FLAGS = [
 
 # These calendar commands always involve other people
 CALENDAR_PEOPLE_COMMANDS = [
-    r"\bgog\s+calendar\s+invitations\b",
-    r"\bgog\s+calendar\s+propose-time\b",
+    r"\bgog\b.*?\bcalendar\s+invitations\b",
+    r"\bgog\b.*?\bcalendar\s+propose-time\b",
 ]
 
 
@@ -172,8 +181,8 @@ def check_calendar(cmd: str) -> dict | None:
 # --- Sharing and collaboration (notifies other people) ---
 
 SHARING_COMMANDS = [
-    r"\bgog\s+drive\s+permissions\b",
-    r"\bgog\s+drive\s+comments\b",
+    r"\bgog\b.*?\bdrive\s+permissions\b",
+    r"\bgog\b.*?\bdrive\s+comments\b",
 ]
 
 
@@ -191,14 +200,38 @@ def check_sharing(cmd: str) -> dict | None:
 
 ACCOUNT_SAFETY_COMMANDS = [
     # Grants others access to your Gmail
-    r"\bgog\s+gmail\s+delegation\b",
+    r"\bgog\b.*?\bgmail\s+delegation\b",
     # Sets auto-replies that go to other people
-    r"\bgog\s+gmail\s+vacation\b",
+    r"\bgog\b.*?\bgmail\s+vacation\b",
     # Executes arbitrary Apps Script code
-    r"\bgog\s+appscript\s+run\b",
+    r"\bgog\b.*?\bappscript\s+run\b",
     # Pub/Sub push notifications (infrastructure change)
-    r"\bgog\s+gmail\s+watch\b",
+    r"\bgog\b.*?\bgmail\s+watch\b",
 ]
+
+
+def check_sheets_allowlist(cmd: str) -> dict | None:
+    """Block sheet writes to non-allowlisted spreadsheets."""
+    if not re.search(r"\bgog\s+.*sheets\s+(update|append|write)\b", cmd, re.IGNORECASE):
+        return None
+    # Extract spreadsheet ID — it follows the subcommand
+    match = re.search(
+        r"\bgog\s+.*sheets\s+(?:update|append|write)\s+(\S+)", cmd, re.IGNORECASE
+    )
+    if not match:
+        return deny(
+            "detected a sheet write command but could not parse the spreadsheet ID — blocking as a precaution. "
+            "Check that the sheet ID is provided explicitly in the command.",
+            cmd,
+        )
+    sheet_id = match.group(1)
+    if sheet_id in ALLOWED_SHEET_IDS:
+        return None
+    return deny(
+        "writing to this spreadsheet is blocked. Only approved sheets can be written to. "
+        "Add the sheet ID to ALLOWED_SHEET_IDS in gogcli-safety-hook.py to allow writes.",
+        cmd,
+    )
 
 
 def check_account_safety(cmd: str) -> dict | None:
@@ -242,6 +275,7 @@ def main():
         or check_outreach(gog_cmd)
         or check_calendar(gog_cmd)
         or check_sharing(gog_cmd)
+        or check_sheets_allowlist(gog_cmd)
         or check_account_safety(gog_cmd)
     )
 

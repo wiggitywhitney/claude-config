@@ -12,6 +12,10 @@ When drafting emails or written communication:
 - **Don't**: "Happy to answer any questions." / "Just bubbling this back up."
 - Kind but direct, with full sentences.
 
+## Shell Commands
+
+- Always provide shell commands as a single line. Never use backslash line continuation — it breaks when pasted into a terminal.
+
 ## Writing Code
 
 - Prefer simple, clean, maintainable solutions over clever or complex ones.
@@ -35,11 +39,18 @@ When drafting emails or written communication:
 - ALWAYS ask for clarification rather than making assumptions.
 - Ask for help when encountering difficulties.
 
+## Asking Multiple Questions
+
+When you have multiple questions or decisions for the user, present them **one at a time**. Ask the first question, discuss it until resolved, then move to the next. Never dump a numbered list of 2+ questions in a single message. This applies to design decisions, clarifications, and any situation where the user's answer to one question might inform the next.
+
 ## Adopting New Technologies
 
 - **MANDATORY**: Before writing code with any technology new to the project, invoke `/research <technology>`. Do not skip this step.
 - Full process: @~/.claude/rules/adopting-new-technologies.md
 - Kyverno (version numbering, GKE firewall, subjects matching): @~/.claude/rules/kyverno-gotchas.md
+- yt-dlp (format selectors, ffmpeg-absent behavior, mweb stability, Node v20+): @~/.claude/rules/yt-dlp-gotchas.md
+- Weaver (v0.22.1 auto-escaping defaults, definition schema format): @~/.claude/rules/weaver-gotchas.md
+- Micro.blog API (dual auth tokens, editPage param order, feed-based cross-posting): @~/.claude/rules/microblog-api-gotchas.md
 
 ## Testing
 
@@ -59,6 +70,10 @@ When drafting emails or written communication:
 
 - Feature branches only. PRs require CodeRabbit review approved by human before merge.
 - Full workflow, CodeRabbit process, and triage rubric: @~/.claude/rules/git-workflow.md
+
+## GitHub Issues
+
+When creating a GitHub issue: draft the body, then use the Skill tool to invoke `/write-prompt` passing the draft as input — ask it to organize the unstructured content into a clear, polished version without adding, removing, or changing meaning. Use the polished result when calling `gh issue create`.
 
 ## Issue Juggling
 

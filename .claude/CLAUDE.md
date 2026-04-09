@@ -29,14 +29,41 @@ This catches problems in ~30s locally, reducing review round-trips after PR crea
 
 **Process:**
 1. Create the PR and push to remote
-2. Wait 7 minutes, then check for CodeRabbit review using `mcp__coderabbitai__get_coderabbit_reviews`
-3. If review not ready, wait another 2-3 minutes before checking again
+2. Wait 7 minutes, then fetch all CodeRabbit findings using three `gh api` calls — CodeRabbit posts to all three channels and missing any one means missing findings:
+   ```bash
+   gh api repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '[.[] | {user: .user.login, state, body}]'
+   gh api repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '[.[] | {user: .user.login, path, line, body}]'
+   gh api repos/OWNER/REPO/issues/PR_NUMBER/comments --jq '[.[] | {user: .user.login, body}]'
+   ```
+3. If no review yet, wait another 2-3 minutes before checking again
 4. For each CodeRabbit comment: explain the issue, give a recommendation, then **follow your own recommendation** (YOLO mode)
-5. After addressing each issue, use `mcp__coderabbitai__resolve_comment` to mark resolved
-6. Only stop for user input if something is truly ambiguous or has major architectural implications
-7. After pushing fixes, wait 7 minutes, then check for CodeRabbit re-review
-8. If re-review adds new comments, address and resolve them, then repeat step 7
-9. After re-review is clear and human has approved, merge the PR
+5. Only stop for user input if something is truly ambiguous or has major architectural implications
+6. After pushing fixes, wait 7 minutes, then re-run the three `gh api` calls from step 2 to check for new findings
+7. If new comments appear, address them and repeat step 6
+8. After re-review is clear and human has approved, merge the PR
+
+### Triage: When to Defer vs. Fix Now
+
+**Default: fix it now.** See [Deferring Known Issues](#deferring-known-issues) below for the narrow set of legitimate reasons to defer and the required process when deferring.
+
+## Deferring Known Issues
+
+**Default: fix it now.** Future instances have no memory of deferred intent — silent deferrals disappear.
+
+Deferral is only appropriate when the fix is:
+- In a **different repo** (out of scope for the current branch)
+- **PRD-scoped** — needs its own milestone and planning
+- Likely to cause **merge conflicts** with current branch work
+- Blocked on **significant investigation** that can't be done in this session
+
+When any of these apply, **stop and surface it explicitly** before continuing:
+
+> "I want to defer [X] because [reason]. What would you like to do?
+> A. Fix it now
+> B. Create a GitHub issue (tracked, you'll see it)
+> C. Let it go — knowing it may not come back up"
+
+Wait for the user's answer. Never choose a default silently.
 
 ## Git Conventions
 
@@ -53,6 +80,16 @@ This catches problems in ~30s locally, reducing review round-trips after PR crea
 **Rule file frontmatter:** All rule files in `rules/` must include `paths:` frontmatter so Claude Code only loads them in relevant file contexts. Example: `paths: ["**/*.ts", "**/*.tsx"]` for TypeScript rules. This reduces token cost by avoiding irrelevant rules in every conversation.
 
 **Placeholder rule files:** When creating a new rule file for a domain that doesn't have established patterns yet, create a stub with correct `paths:` frontmatter and a single line: "Add rules as patterns emerge from real usage." Do not fill rule files with speculative rules — let real usage drive content.
+
+## Native Git Hook System
+
+Git enforcement (branch protection, commit message, build verification, push security) runs as native git hooks, not Claude Code hooks. Source of truth: `hooks/git/`. When setting up a new repo or confirming hooks are in place, install with:
+
+```bash
+bash scripts/install-git-hooks.sh [repo-path]
+```
+
+Idempotent — safe to re-run. Never touches `post-commit` (reserved for commit-story). Full reference: @~/.claude/rules/hooks-reference.md
 
 ## Secrets Management (vals)
 
