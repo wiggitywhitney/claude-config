@@ -39,7 +39,9 @@
       "Bash(npm ci*)",
       "Bash(git pull*)",
       "Bash(git push*)",
-      "Bash(rm *)",
+      "Bash(rm *.tmp)",
+      "Bash(rm *.log)",
+      "Bash(rm -f *.tmp)",
       "Bash(mkdir *)",
       "Bash(coderabbit *)",
       "Bash(gog *)",
@@ -104,7 +106,8 @@
       "Bash(git rebase*)",
       "Bash(git branch -D*)",
       "Bash(gh pr merge*)",
-      "Bash(npm publish*)"
+      "Bash(npm publish*)",
+      "Bash(rm *)"
     ]
   },
   "model": "sonnet[1m]",
