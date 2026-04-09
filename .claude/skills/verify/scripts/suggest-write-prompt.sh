@@ -71,11 +71,9 @@ print('FIRE:' + url)
 import json, os
 url = os.environ['SUGGEST_ISSUE_URL']
 msg = (
-    '/write-prompt reminder: The issue you just created (' + url + ') may contain instructions '
-    'that an AI will follow \u2014 that makes it a prompt. '
-    'Run /write-prompt on the issue body before implementing it.\n\n'
-    '/write-prompt applies to: SKILL.md files, CLAUDE.md files, PRDs, GitHub issues, system prompts, agent specs. '
-    'Do NOT skip this because \"it\'s not a prompt.\" If an AI reads it and acts on it, it\'s a prompt.'
+    '/write-prompt check: Did you run /write-prompt on the issue body for ' + url + ' before creating it? '
+    'If not, run it now. Any issue an AI will read and act on is a prompt.\n\n'
+    '/write-prompt applies to: SKILL.md files, CLAUDE.md files, PRDs, GitHub issues, system prompts, agent specs.'
 )
 print(json.dumps({
     'hookSpecificOutput': {
