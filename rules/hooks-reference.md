@@ -7,7 +7,9 @@ description: Reference for all PreToolUse and PostToolUse hooks and what they en
 
 ## Native git hooks (installed via `scripts/install-git-hooks.sh`)
 
-These run inside the git process itself — no alternative code path exists for normal git usage. Install with `bash scripts/install-git-hooks.sh [repo-path]` (idempotent, never touches post-commit). Source of truth: `hooks/git/`. Note: users can bypass with `--no-verify` (`git commit --no-verify`, `git push --no-verify`), so these provide strong local enforcement but are not absolute.
+These run inside the git process itself, providing stronger enforcement than Claude Code hooks because they intercept git operations directly. However, users can bypass them with `--no-verify` (e.g., `git commit --no-verify`, `git push --no-verify`), so they provide strong local enforcement but are not absolute.
+
+Install with `bash scripts/install-git-hooks.sh [repo-path]`. The installer is idempotent, backs up existing hooks, and never touches `post-commit` (reserved for commit-story). Source of truth: `hooks/git/`.
 
 **pre-commit dispatcher** (`hooks/git/pre-commit`) runs:
 - **branch-protection.sh** — blocks commits to main/master; opt out with `.skip-branching`; docs-only exemption per @rules/branch-protection.md
@@ -19,7 +21,9 @@ These run inside the git process itself — no alternative code path exists for 
 
 **pre-push dispatcher** (`hooks/git/pre-push`) runs:
 - **test-tiers.sh** — warns (does not block) when unit/integration/e2e test tiers are missing; opt out with `.skip-integration`, `.skip-e2e`
-- **pre-push-verify.sh** — gates push on security verification; escalates to expanded security + tests when an open PR exists; runs advisory CodeRabbit CLI review after blocking checks pass; docs-only early exit
+- **pre-push-verify.sh** — gates push on security verification (docs-only early exit)
+  - Escalates to expanded security + tests when an open PR exists
+  - Runs advisory CodeRabbit CLI review after blocking checks pass
 
 ## PreToolUse hooks (fire before tool execution)
 

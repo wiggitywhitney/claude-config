@@ -14,7 +14,7 @@
 
 ### What the Repo Is
 
-**Repo:** `~/Documents/Repositories/forrester-workflow` (cloned from `peopleforrester/llm-coding-workflow` — private, Whitney has access)
+**Repo:** `peopleforrester/llm-coding-workflow` (cloned locally as `forrester-workflow`)
 
 A workflow optimization system built around a Python CLI ("Observatory") that deterministically audits Claude Code sessions — zero LLM calls, parses JSONL session files — plus a full shareable `claude-config/` with 40 skills, 8 hooks, 46 rule files, and a doc scraper. Core principle: **deterministic scripts for all operations, LLM only for judgment and narrative synthesis.**
 
@@ -60,7 +60,7 @@ A workflow optimization system built around a Python CLI ("Observatory") that de
 
 **CURRENT-CONTEXT.md auto-population** — Whitney's CURRENT-CONTEXT.md is manually populated and currently stale. Michael's session harvester + weekly digest pipeline auto-regenerates context from git activity, session data, and journal entries. A nightly cron job that populates CURRENT-CONTEXT.md deterministically from git log + session JSONL files is the right direction.
 
-**Per-session decision log** — Michael has `decisions/<repo-name>.md` per-repo decision logs. Whitney captures decisions in PRD milestones but has no lightweight per-repo decision log outside of PRDs.
+**Per-session decision log** — Michael has `decisions/<repo-name>.md` per-repo decision logs. Whitney captures decisions in PRD milestones but has no lightweight per-repo decision log.
 
 ### What Whitney Has That Michael Doesn't
 

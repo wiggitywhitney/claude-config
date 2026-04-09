@@ -97,7 +97,7 @@ except Exception:
       if find "$PROJECT_DIR" -maxdepth 4 \
         \( -name "*.test.js" -o -name "*.test.ts" -o -name "*.test.jsx" -o -name "*.test.tsx" \
            -o -name "*.spec.js" -o -name "*.spec.ts" -o -name "*.spec.jsx" -o -name "*.spec.tsx" \) \
-        -not -path "*/node_modules/*" -not -path "*/.git/*" 2>/dev/null | head -1 | grep -q .; then
+        -not -path "*/node_modules/*" -not -path "*/.git/*" -print -quit 2>/dev/null | grep -q .; then
         HAS_UNIT=true
       fi
     fi
@@ -108,7 +108,7 @@ except Exception:
     if find "$PROJECT_DIR" -maxdepth 4 \
       \( -name "*.test.js" -o -name "*.test.ts" -o -name "*.test.jsx" -o -name "*.test.tsx" \
          -o -name "*.spec.js" -o -name "*.spec.ts" -o -name "*.spec.jsx" -o -name "*.spec.tsx" \) \
-      -not -path "*/node_modules/*" -not -path "*/.git/*" 2>/dev/null | head -1 | grep -q .; then
+      -not -path "*/node_modules/*" -not -path "*/.git/*" -print -quit 2>/dev/null | grep -q .; then
       HAS_UNIT=true
     fi
   fi
@@ -131,7 +131,7 @@ except Exception:
          -o -name "*.integration.test.jsx" -o -name "*.integration.test.tsx" \
          -o -name "*.integration.spec.js" -o -name "*.integration.spec.ts" \
          -o -name "*.integration.spec.jsx" -o -name "*.integration.spec.tsx" \) \
-      -not -path "*/node_modules/*" -not -path "*/.git/*" 2>/dev/null | head -1 | grep -q .; then
+      -not -path "*/node_modules/*" -not -path "*/.git/*" -print -quit 2>/dev/null | grep -q .; then
       HAS_INTEGRATION=true
     fi
   fi
@@ -179,7 +179,7 @@ except Exception:
          -o -name "*.e2e.test.jsx" -o -name "*.e2e.test.tsx" \
          -o -name "*.e2e.spec.js" -o -name "*.e2e.spec.ts" \
          -o -name "*.e2e.spec.jsx" -o -name "*.e2e.spec.tsx" \) \
-      -not -path "*/node_modules/*" -not -path "*/.git/*" 2>/dev/null | head -1 | grep -q .; then
+      -not -path "*/node_modules/*" -not -path "*/.git/*" -print -quit 2>/dev/null | grep -q .; then
       HAS_E2E=true
     fi
   fi
@@ -205,21 +205,21 @@ if [ "$PROJECT_TYPE" = "python" ]; then
   # --- Unit tests ---
   if [ -d "$PROJECT_DIR/tests/unit" ]; then
     # Check that it actually contains test files
-    if find "$PROJECT_DIR/tests/unit" \( -name "test_*.py" -o -name "*_test.py" \) 2>/dev/null | head -1 | grep -q .; then
+    if find "$PROJECT_DIR/tests/unit" \( -name "test_*.py" -o -name "*_test.py" \) -print -quit 2>/dev/null | grep -q .; then
       HAS_UNIT=true
     fi
   fi
 
   # Fall back to test files in tests/ root (common for projects without tier directories)
   if [ "$HAS_UNIT" = false ] && [ -d "$PROJECT_DIR/tests" ]; then
-    if find "$PROJECT_DIR/tests" -maxdepth 1 \( -name "test_*.py" -o -name "*_test.py" \) 2>/dev/null | head -1 | grep -q .; then
+    if find "$PROJECT_DIR/tests" -maxdepth 1 \( -name "test_*.py" -o -name "*_test.py" \) -print -quit 2>/dev/null | grep -q .; then
       HAS_UNIT=true
     fi
   fi
 
   # --- Integration tests ---
   if [ -d "$PROJECT_DIR/tests/integration" ]; then
-    if find "$PROJECT_DIR/tests/integration" \( -name "test_*.py" -o -name "*_test.py" \) 2>/dev/null | head -1 | grep -q .; then
+    if find "$PROJECT_DIR/tests/integration" \( -name "test_*.py" -o -name "*_test.py" \) -print -quit 2>/dev/null | grep -q .; then
       HAS_INTEGRATION=true
     fi
   fi
@@ -284,16 +284,16 @@ if [ "$PROJECT_TYPE" = "go" ]; then
       fi
     done <<< "$GO_TEST_FILES"
 
-    # Check for envtest import (Kubebuilder controller testing pattern)
-    if [ "$HAS_E2E" = false ]; then
-      if echo "$GO_TEST_FILES" | xargs grep -l 'sigs.k8s.io/controller-runtime/pkg/envtest' 2>/dev/null | head -1 | grep -q .; then
-        HAS_E2E=true
+    # Check for envtest import (Kubebuilder controller testing — integration, not e2e)
+    if [ "$HAS_INTEGRATION" = false ]; then
+      if echo "$GO_TEST_FILES" | xargs grep -l 'sigs.k8s.io/controller-runtime/pkg/envtest' -print -quit 2>/dev/null | grep -q .; then
+        HAS_INTEGRATION=true
       fi
     fi
 
     # Check for Kind cluster import (kind-based e2e testing)
     if [ "$HAS_E2E" = false ]; then
-      if echo "$GO_TEST_FILES" | xargs grep -l 'sigs.k8s.io/kind/pkg/cluster' 2>/dev/null | head -1 | grep -q .; then
+      if echo "$GO_TEST_FILES" | xargs grep -l 'sigs.k8s.io/kind/pkg/cluster' -print -quit 2>/dev/null | grep -q .; then
         HAS_E2E=true
       fi
     fi
@@ -304,7 +304,7 @@ if [ "$PROJECT_TYPE" = "go" ]; then
   if [ "$HAS_INTEGRATION" = false ]; then
     for int_dir in "$PROJECT_DIR/tests/integration" "$PROJECT_DIR/test/integration"; do
       if [ -d "$int_dir" ]; then
-        if find "$int_dir" -name "*_test.go" 2>/dev/null | head -1 | grep -q .; then
+        if find "$int_dir" -name "*_test.go" -print -quit 2>/dev/null | grep -q .; then
           HAS_INTEGRATION=true
           break
         fi
@@ -316,7 +316,7 @@ if [ "$PROJECT_TYPE" = "go" ]; then
   if [ "$HAS_E2E" = false ]; then
     for e2e_dir in "$PROJECT_DIR/tests/e2e" "$PROJECT_DIR/test/e2e" "$PROJECT_DIR/e2e"; do
       if [ -d "$e2e_dir" ]; then
-        if find "$e2e_dir" -name "*_test.go" 2>/dev/null | head -1 | grep -q .; then
+        if find "$e2e_dir" -name "*_test.go" -print -quit 2>/dev/null | grep -q .; then
           HAS_E2E=true
           break
         fi

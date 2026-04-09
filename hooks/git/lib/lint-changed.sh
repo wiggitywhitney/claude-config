@@ -130,7 +130,10 @@ fi
 # --- Go linting ---
 
 if [ -n "$GO_FILES" ]; then
-  GO_FILE_ARGS=$(echo "$GO_FILES" | tr '\n' ' ')
+  GO_FILE_ARRAY=()
+  while IFS= read -r line; do
+    [ -n "$line" ] && GO_FILE_ARRAY+=("$line")
+  done <<< "$GO_FILES"
 
   # Detect golangci-lint availability
   HAS_GOLANGCI_LINT=false
@@ -141,8 +144,7 @@ if [ -n "$GO_FILES" ]; then
   if [ "$HAS_GOLANGCI_LINT" = true ]; then
     if [ "$SCOPE" = "staged" ]; then
       # Staged scope: lint specific changed files
-      # shellcheck disable=SC2086  # Word splitting is intentional — GO_FILE_ARGS is space-separated file list
-      golangci-lint run $GO_FILE_ARGS 2>&1
+      golangci-lint run "${GO_FILE_ARRAY[@]}" 2>&1
       GO_EXIT=$?
     else
       # Branch scope: use --new-from-rev for diff-scoped linting
