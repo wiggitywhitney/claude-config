@@ -100,7 +100,6 @@
       "Bash(wget * | sh*)"
     ],
     "ask": [
-      "mcp__google-calendar__delete-event",
       "Bash(git merge*)",
       "Bash(git rebase*)",
       "Bash(git branch -D*)",
@@ -112,7 +111,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "mcp__.*(calendar|youtube|drive|sheet|spreadsheet).*",
+        "matcher": "mcp__.*(youtube).*",
         "hooks": [
           {
             "type": "command",

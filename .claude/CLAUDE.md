@@ -58,6 +58,16 @@ This catches problems in ~30s locally, reducing review round-trips after PR crea
 
 **Placeholder rule files:** When creating a new rule file for a domain that doesn't have established patterns yet, create a stub with correct `paths:` frontmatter and a single line: "Add rules as patterns emerge from real usage." Do not fill rule files with speculative rules — let real usage drive content.
 
+## Native Git Hook System
+
+Git enforcement (branch protection, commit message, build verification, push security) runs as native git hooks, not Claude Code hooks. Source of truth: `hooks/git/`. When setting up a new repo or confirming hooks are in place, install with:
+
+```bash
+bash scripts/install-git-hooks.sh [repo-path]
+```
+
+Idempotent — safe to re-run. Never touches `post-commit` (reserved for commit-story). Full reference: @~/.claude/rules/hooks-reference.md
+
 ## Secrets Management (vals)
 
 This project uses [vals](https://github.com/helmfile/vals) for secrets management, pulling from GCP Secrets Manager.

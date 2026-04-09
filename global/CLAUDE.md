@@ -39,6 +39,10 @@ When drafting emails or written communication:
 - ALWAYS ask for clarification rather than making assumptions.
 - Ask for help when encountering difficulties.
 
+## Asking Multiple Questions
+
+When you have multiple questions or decisions for the user, present them **one at a time**. Ask the first question, discuss it until resolved, then move to the next. Never dump a numbered list of 2+ questions in a single message. This applies to design decisions, clarifications, and any situation where the user's answer to one question might inform the next.
+
 ## Adopting New Technologies
 
 - **MANDATORY**: Before writing code with any technology new to the project, invoke `/research <technology>`. Do not skip this step.

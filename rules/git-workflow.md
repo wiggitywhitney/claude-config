@@ -31,9 +31,9 @@ description: Git workflow rules including branching, CodeRabbit reviews, and com
   Present all findings to the user.
 - After pushing fixes for CodeRabbit feedback, start another 7-minute timer to check for the re-review before merging.
 - **CodeRabbit triage rubric** for non-critical findings:
-  - **Skip** if the suggestion is genuinely not helpful or misunderstands the code.
-  - **Skip** if the complexity or maintenance cost of the fix outweighs its benefit.
-  - **Fix** if the only reason to skip is that it takes time to write — effort alone is not a reason to skip.
+  - **Fix** if the finding is real and the only reason not to fix it is effort — effort alone is not a reason to skip.
+  - **Defer** if the finding is real and worth addressing, but complexity or scope makes it better suited to a dedicated issue than an inline fix. Create a GitHub issue; run `/write-prompt` on the issue body before creating it.
+  - **Skip** if the suggestion misunderstands the code, or if fix complexity genuinely outweighs the benefit and the finding is not worth tracking at all.
 - **After merging a PR**, delete the local and remote feature branch immediately. Don't leave stale branches accumulating.
 - NEVER include references to Claude, AI, Anthropic, or Co-Authored-By AI attribution in commit messages. Write commit messages as if authored by a human developer.
 - Repos may override rules via dotfiles (`.skip-branching`, `.skip-coderabbit`).

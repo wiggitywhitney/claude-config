@@ -5,17 +5,28 @@ description: Reference for all PreToolUse and PostToolUse hooks and what they en
 
 # Hooks Reference
 
+## Native git hooks (installed via `scripts/install-git-hooks.sh`)
+
+These run inside the git process itself — no alternative code path exists. Install with `bash scripts/install-git-hooks.sh [repo-path]` (idempotent, never touches post-commit). Source of truth: `hooks/git/`.
+
+**pre-commit dispatcher** (`hooks/git/pre-commit`) runs:
+- **branch-protection.sh** — blocks commits to main/master; opt out with `.skip-branching`; docs-only exemption per @rules/branch-protection.md
+- **progress-md.sh** — blocks commits when PRD checkboxes are marked done but PROGRESS.md is not staged
+- **pre-commit-verify.sh** — gates commit on build/typecheck/lint verification; docs-only early exit
+
+**commit-msg dispatcher** (`hooks/git/commit-msg`) runs:
+- **commit-message.sh** — blocks commits with AI/Claude/Anthropic/Co-Authored-By references
+
+**pre-push dispatcher** (`hooks/git/pre-push`) runs:
+- **test-tiers.sh** — warns (does not block) when unit/integration/e2e test tiers are missing; opt out with `.skip-integration`, `.skip-e2e`
+- **pre-push-verify.sh** — gates push on security verification; escalates to expanded security + tests when an open PR exists; runs advisory CodeRabbit CLI review after blocking checks pass; docs-only early exit
+
 ## PreToolUse hooks (fire before tool execution)
 
-- **google-mcp-safety-hook.py** (PreToolUse: `mcp__.*calendar|youtube|drive|sheet|spreadsheet.*`) — defense-in-depth safety for Google API MCP servers
-- **check-commit-message.sh** (PreToolUse: Bash) — blocks git commits with AI/Claude/Anthropic/Co-Authored-By references in commit messages
-- **check-branch-protection.sh** (PreToolUse: Bash) — blocks commits to main/master; opt out with `.skip-branching`; docs-only exemption per @rules/branch-protection.md
+- **google-mcp-safety-hook.py** (PreToolUse: `mcp__.*(youtube).*`) — blocks destructive YouTube MCP operations (delete, upload)
+- **gogcli-safety-hook.py** (PreToolUse: Bash) — blocks destructive or people-affecting gog CLI commands: data deletion, outreach, calendar with attendees, sharing, non-allowlisted sheet writes, account safety changes
 - **check-coderabbit-required.sh** (PreToolUse: Bash) — blocks PR merge without CodeRabbit review; opt out with `.skip-coderabbit`
-- **pre-commit-hook.sh** (PreToolUse: Bash) — gates git commit on quick+lint verification (build, typecheck, lint)
-- **pre-push-hook.sh** (PreToolUse: Bash) — gates git push on security verification; escalates to expanded security + tests when an open PR is detected for the branch (uses `gh pr list`); falls back to standard security when gh is unavailable; runs advisory CodeRabbit CLI review after blocking checks pass (findings in additionalContext; skip with `.skip-coderabbit`)
 - **pre-pr-hook.sh** (PreToolUse: Bash) — gates PR creation on security+tests verification (expanded security, tests; build/typecheck/lint already passed at commit); also runs advisory acceptance gate tests when `.claude/verify.json` has an `"acceptance_test"` command; results require human approval before PR creation continues
-- **check-test-tiers.sh** (PreToolUse: Bash) — warns (not blocks) on git push/PR create when unit/integration/e2e test tiers are missing; opt out with `.skip-integration`, `.skip-e2e`
-- **check-progress-md.sh** (PreToolUse: Bash) — blocks git commit when PRD checkboxes are marked done but PROGRESS.md is not staged; only fires when PROGRESS.md exists in repo
 - **check-aboutme.sh** (PreToolUse: Write|Edit) — blocks code files missing ABOUTME headers; fix-and-retry adds headers organically; skips config, markdown, generated files
 
 ## PostToolUse hooks (fire after tool execution)
