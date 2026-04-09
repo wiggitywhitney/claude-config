@@ -167,11 +167,22 @@ except Exception:
     PKG_MANAGER="bun"
   fi
 
+  # Map package manager to executor for fallback commands.
+  # Yarn Berry (PnP) requires 'yarn dlx'; classic Yarn uses 'yarn'; npm/pnpm use npx.
+  EXEC="npx"
+  if [ "$PKG_MANAGER" = "yarn" ]; then
+    if [ -f "$PROJECT_DIR/.yarnrc.yml" ]; then
+      EXEC="yarn dlx"
+    else
+      EXEC="yarn"
+    fi
+  fi
+
   # Detect build command
   if echo "$SCRIPTS_JSON" | python3 -c "import json,sys; sys.exit(0 if 'build' in json.load(sys.stdin) else 1)" 2>/dev/null; then
     CMD_BUILD="$PKG_MANAGER run build"
   elif [ "$HAS_TSCONFIG" = true ]; then
-    CMD_BUILD="npx tsc --noEmit"
+    CMD_BUILD="$EXEC tsc --noEmit"
   fi
 
   # Detect typecheck command
@@ -180,23 +191,23 @@ except Exception:
   elif echo "$SCRIPTS_JSON" | python3 -c "import json,sys; sys.exit(0 if 'type-check' in json.load(sys.stdin) else 1)" 2>/dev/null; then
     CMD_TYPECHECK="$PKG_MANAGER run type-check"
   elif [ "$HAS_TSCONFIG" = true ]; then
-    CMD_TYPECHECK="npx tsc --noEmit"
+    CMD_TYPECHECK="$EXEC tsc --noEmit"
   fi
 
   # Detect lint command
   if echo "$SCRIPTS_JSON" | python3 -c "import json,sys; sys.exit(0 if 'lint' in json.load(sys.stdin) else 1)" 2>/dev/null; then
     CMD_LINT="$PKG_MANAGER run lint"
   elif [ -f "$PROJECT_DIR/.eslintrc.json" ] || [ -f "$PROJECT_DIR/.eslintrc.js" ] || [ -f "$PROJECT_DIR/.eslintrc.yml" ] || [ -f "$PROJECT_DIR/.eslintrc.yaml" ] || [ -f "$PROJECT_DIR/eslint.config.js" ] || [ -f "$PROJECT_DIR/eslint.config.mjs" ] || [ -f "$PROJECT_DIR/eslint.config.ts" ]; then
-    CMD_LINT="npx eslint ."
+    CMD_LINT="$EXEC eslint ."
   fi
 
   # Detect test command
   if echo "$SCRIPTS_JSON" | python3 -c "import json,sys; sys.exit(0 if 'test' in json.load(sys.stdin) else 1)" 2>/dev/null; then
     CMD_TEST="$PKG_MANAGER run test"
   elif [ -f "$PROJECT_DIR/jest.config.js" ] || [ -f "$PROJECT_DIR/jest.config.ts" ] || [ -f "$PROJECT_DIR/jest.config.mjs" ]; then
-    CMD_TEST="npx jest"
+    CMD_TEST="$EXEC jest"
   elif [ -f "$PROJECT_DIR/vitest.config.js" ] || [ -f "$PROJECT_DIR/vitest.config.ts" ] || [ -f "$PROJECT_DIR/vitest.config.mjs" ]; then
-    CMD_TEST="npx vitest run"
+    CMD_TEST="$EXEC vitest run"
   fi
 fi
 

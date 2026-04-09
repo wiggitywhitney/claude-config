@@ -15,14 +15,36 @@ REMOTE_URL="${2:-}"
 # Get project directory (the git repo root)
 PROJECT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
+# Read pre-push payload from stdin (git provides: local_ref local_sha remote_ref remote_sha).
+# Must be captured before any subshell or pipeline consumes stdin.
+PUSH_STDIN=$(cat)
+
 # Compute diff base for scoping security checks to branch changes only.
-# Prefer upstream tracking ref; fall back to origin/main or origin/master.
-DIFF_BASE=$(git rev-parse --abbrev-ref '@{upstream}' 2>/dev/null || echo "")
+# Primary: derive from the stdin push payload using the actual remote name (handles
+# non-origin remotes and detached HEAD). Fallback: upstream tracking ref, then
+# well-known base refs.
+DIFF_BASE=""
+if [[ -n "$PUSH_STDIN" ]]; then
+    while IFS=' ' read -r local_ref _local_sha remote_ref _remote_sha; do
+        [[ -z "$local_ref" ]] && continue
+        if [[ "$remote_ref" == refs/heads/* ]] && [[ -n "$REMOTE_NAME" ]]; then
+            remote_branch="${remote_ref#refs/heads/}"
+            if git rev-parse --verify "$REMOTE_NAME/$remote_branch" &>/dev/null; then
+                DIFF_BASE="$REMOTE_NAME/$remote_branch"
+            fi
+        fi
+        break  # use first ref; multi-ref pushes share the same diff base
+    done <<< "$PUSH_STDIN"
+fi
+
 if [[ -z "$DIFF_BASE" ]]; then
-    if git rev-parse --verify origin/main &>/dev/null; then
-        DIFF_BASE="origin/main"
-    elif git rev-parse --verify origin/master &>/dev/null; then
-        DIFF_BASE="origin/master"
+    DIFF_BASE=$(git rev-parse --abbrev-ref '@{upstream}' 2>/dev/null || echo "")
+fi
+if [[ -z "$DIFF_BASE" ]]; then
+    if git rev-parse --verify "${REMOTE_NAME:-origin}/main" &>/dev/null; then
+        DIFF_BASE="${REMOTE_NAME:-origin}/main"
+    elif git rev-parse --verify "${REMOTE_NAME:-origin}/master" &>/dev/null; then
+        DIFF_BASE="${REMOTE_NAME:-origin}/master"
     fi
 fi
 
@@ -37,7 +59,20 @@ fi
 
 # Detect if pushing to a branch with an open PR.
 # If so, escalate to expanded security + tests to catch post-review regressions.
-BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+# Derive BRANCH from stdin payload (handles detached HEAD); fall back to local state.
+BRANCH=""
+if [[ -n "$PUSH_STDIN" ]]; then
+    while IFS=' ' read -r local_ref _local_sha _remote_ref _remote_sha; do
+        [[ -z "$local_ref" ]] && continue
+        if [[ "$local_ref" == refs/heads/* ]]; then
+            BRANCH="${local_ref#refs/heads/}"
+        fi
+        break
+    done <<< "$PUSH_STDIN"
+fi
+if [[ -z "$BRANCH" ]]; then
+    BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+fi
 HAS_PR=false
 
 if [[ -n "$BRANCH" && "$BRANCH" != "HEAD" ]] && command -v gh &>/dev/null; then
@@ -89,10 +124,10 @@ fi
 # Advisory CodeRabbit CLI review (runs after blocking checks pass; never blocks push)
 if [[ ! -f "$PROJECT_DIR/.skip-coderabbit" ]]; then
     REVIEW_BASE=""
-    if git rev-parse --verify origin/main &>/dev/null; then
-        REVIEW_BASE="origin/main"
-    elif git rev-parse --verify origin/master &>/dev/null; then
-        REVIEW_BASE="origin/master"
+    if git rev-parse --verify "${REMOTE_NAME:-origin}/main" &>/dev/null; then
+        REVIEW_BASE="${REMOTE_NAME:-origin}/main"
+    elif git rev-parse --verify "${REMOTE_NAME:-origin}/master" &>/dev/null; then
+        REVIEW_BASE="${REMOTE_NAME:-origin}/master"
     fi
 
     if [[ -n "$REVIEW_BASE" ]]; then
