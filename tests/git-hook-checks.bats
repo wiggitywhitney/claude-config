@@ -3,6 +3,7 @@
 # ABOUTME: Tests commit-message, branch-protection, progress-md, and test-tiers checks
 
 CHECKS_DIR="$BATS_TEST_DIRNAME/../hooks/git/checks"
+LIB_DIR="$BATS_TEST_DIRNAME/../hooks/git/lib"
 
 setup() {
     TMPDIR="$(mktemp -d)"
@@ -418,4 +419,59 @@ teardown() {
     [ "$status" -eq 0 ]
     # No CodeRabbit output expected — would only appear if CR CLI is installed and finds issues
     [[ "$output" != *"CodeRabbit Advisory"* ]]
+}
+
+@test "pre-push-verify: uses REMOTE_NAME arg to derive diff base when remote is not origin" {
+    BARE_REPO="$TMPDIR/bare"
+    git init --bare "$BARE_REPO" --quiet
+
+    # Add a .only violation to main (simulates existing violation on the base branch)
+    mkdir -p "$GIT_REPO/tests"
+    echo "it.only('focused test', () => {});" > "$GIT_REPO/tests/base.test.js"
+    git -C "$GIT_REPO" add tests/base.test.js
+    git -C "$GIT_REPO" commit -m "add base test" --quiet
+
+    # Push to 'upstream' without -u (no tracking ref, no origin remote)
+    git -C "$GIT_REPO" remote add upstream "file://$BARE_REPO"
+    git -C "$GIT_REPO" push upstream main --quiet
+
+    git -C "$GIT_REPO" checkout -b feature/upstream-docs --quiet
+    echo "# docs" > "$GIT_REPO/guide.md"
+    git -C "$GIT_REPO" add guide.md
+    git -C "$GIT_REPO" commit -m "add guide" --quiet
+
+    # Before fix: DIFF_BASE="" (no tracking ref, no origin/main) → repo-scoped security
+    #             → finds .only in base commit → exits 1
+    # After fix: DIFF_BASE="upstream/main" (derived from REMOTE_NAME + stdin ref)
+    #            → docs-only branch → exits 0
+    run bash -c "cd \"$GIT_REPO\" && printf 'refs/heads/feature/upstream-docs abc123 refs/heads/main abc123\n' | \"$CHECKS_DIR/pre-push-verify.sh\" upstream file://$BARE_REPO 2>&1"
+    [ "$status" -eq 0 ]
+}
+
+# ── detect-project.sh ─────────────────────────────────────────────────────────
+
+@test "detect-project: yarn classic project uses yarn for fallback typecheck command" {
+    PROJ="$TMPDIR/yarn-classic"
+    mkdir "$PROJ"
+    echo '{"name": "test", "scripts": {}}' > "$PROJ/package.json"
+    echo '{}' > "$PROJ/tsconfig.json"
+    touch "$PROJ/yarn.lock"
+    # No .yarnrc.yml = classic Yarn
+
+    run "$LIB_DIR/detect-project.sh" "$PROJ"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *'"typecheck": "yarn tsc --noEmit"'* ]]
+}
+
+@test "detect-project: yarn berry project uses yarn dlx for fallback typecheck command" {
+    PROJ="$TMPDIR/yarn-berry"
+    mkdir "$PROJ"
+    echo '{"name": "test", "scripts": {}}' > "$PROJ/package.json"
+    echo '{}' > "$PROJ/tsconfig.json"
+    touch "$PROJ/yarn.lock"
+    touch "$PROJ/.yarnrc.yml"  # presence of .yarnrc.yml = Berry/PnP
+
+    run "$LIB_DIR/detect-project.sh" "$PROJ"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *'"typecheck": "yarn dlx tsc --noEmit"'* ]]
 }
