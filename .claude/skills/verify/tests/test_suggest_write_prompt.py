@@ -11,8 +11,8 @@ from test_harness import TestResults, hook_path, run_hook
 HOOK = hook_path("suggest-write-prompt.sh")
 
 
-def make_input(file_path: str) -> str:
-    return json.dumps({"tool_input": {"file_path": file_path}})
+def make_input(file_path: str, tool_name: str = "Write") -> str:
+    return json.dumps({"tool_name": tool_name, "tool_input": {"file_path": file_path}})
 
 
 def has_advisory(stdout: str) -> bool:
