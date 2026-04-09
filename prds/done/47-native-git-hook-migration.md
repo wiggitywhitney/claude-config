@@ -1,5 +1,7 @@
 # PRD #47: Native Git Hook Migration
 
+**Status: Complete** — 2026-04-09
+
 ## Problem
 
 Claude Code hooks that enforce git operations (commit message checks, branch protection, build verification, security checks) are regex-based pattern matchers running inside Claude Code's tool-call interception layer. Research shows this layer can be behaviorally circumvented by the AI agent through creative command routing, alternative git command formats, and regex gaps — without technically "jailbreaking" the hook mechanism ([research/claude-code-hook-security.md](../research/claude-code-hook-security.md)).
