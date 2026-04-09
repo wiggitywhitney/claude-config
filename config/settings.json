@@ -115,10 +115,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/whitney.lee/.claude/scripts/google-mcp-safety-hook.py"
-          },
-          {
-            "type": "command",
             "command": "/Users/whitney.lee/Documents/Repositories/claude-config/scripts/google-mcp-safety-hook.py"
           }
         ]
@@ -137,7 +133,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/whitney.lee/.claude/scripts/gogcli-safety-hook.py"
+            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/scripts/gogcli-safety-hook.py"
           },
           {
             "type": "command",
@@ -146,10 +142,6 @@
           {
             "type": "command",
             "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/pre-pr-hook.sh"
-          },
-          {
-            "type": "command",
-            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/scripts/gogcli-safety-hook.py"
           },
           {
             "type": "command",

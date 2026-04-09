@@ -61,10 +61,10 @@ fi
 if [ "$PROJECT_TYPE" = "node-typescript" ] || [ "$PROJECT_TYPE" = "node-javascript" ]; then
 
   # Read package.json scripts once
-  SCRIPTS_JSON=$(python3 -c "
-import json
+  SCRIPTS_JSON=$(PROJECT_DIR="$PROJECT_DIR" python3 -c "
+import json, os
 try:
-    with open('$PROJECT_DIR/package.json') as f:
+    with open(os.path.join(os.environ['PROJECT_DIR'], 'package.json')) as f:
         scripts = json.load(f).get('scripts', {})
     print(json.dumps(scripts))
 except Exception:
@@ -72,10 +72,10 @@ except Exception:
 " 2>/dev/null || echo '{}')
 
   # Read package.json devDependencies once
-  DEV_DEPS_JSON=$(python3 -c "
-import json
+  DEV_DEPS_JSON=$(PROJECT_DIR="$PROJECT_DIR" python3 -c "
+import json, os
 try:
-    with open('$PROJECT_DIR/package.json') as f:
+    with open(os.path.join(os.environ['PROJECT_DIR'], 'package.json')) as f:
         pkg = json.load(f)
     deps = pkg.get('devDependencies', {})
     deps.update(pkg.get('dependencies', {}))
@@ -260,7 +260,7 @@ if [ "$PROJECT_TYPE" = "go" ]; then
     # --- Unit tests ---
     # A _test.go file is a unit test if it does NOT have integration or e2e build tags
     while IFS= read -r testfile; do
-      if ! grep -m1 -qE '^//go:build\s+(integration|e2e)' "$testfile" 2>/dev/null; then
+      if ! grep -m1 -qE '^//go:build\s+.*\b(integration|e2e)\b' "$testfile" 2>/dev/null; then
         HAS_UNIT=true
         break
       fi
@@ -269,7 +269,7 @@ if [ "$PROJECT_TYPE" = "go" ]; then
     # --- Integration tests ---
     # Check for //go:build integration tag in any _test.go file
     while IFS= read -r testfile; do
-      if grep -m1 -qE '^//go:build\s+integration' "$testfile" 2>/dev/null; then
+      if grep -m1 -qE '^//go:build\s+.*\bintegration\b' "$testfile" 2>/dev/null; then
         HAS_INTEGRATION=true
         break
       fi
@@ -278,7 +278,7 @@ if [ "$PROJECT_TYPE" = "go" ]; then
     # --- E2E tests ---
     # Check for //go:build e2e tag in any _test.go file
     while IFS= read -r testfile; do
-      if grep -m1 -qE '^//go:build\s+e2e' "$testfile" 2>/dev/null; then
+      if grep -m1 -qE '^//go:build\s+.*\be2e\b' "$testfile" 2>/dev/null; then
         HAS_E2E=true
         break
       fi

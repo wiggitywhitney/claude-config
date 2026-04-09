@@ -82,7 +82,7 @@ OVERALL_EXIT=0
 # --- JS/TS linting ---
 
 if [ -n "$JS_FILES" ]; then
-  JS_FILE_ARGS=$(echo "$JS_FILES" | tr '\n' ' ')
+  mapfile -t JS_FILE_ARRAY <<< "$JS_FILES"
 
   # Detect ESLint config (flat or legacy)
   HAS_ESLINT=false
@@ -92,7 +92,7 @@ if [ -n "$JS_FILES" ]; then
   fi
 
   if [ "$HAS_ESLINT" = true ]; then
-    eval "npx eslint $JS_FILE_ARGS" 2>&1
+    npx eslint "${JS_FILE_ARRAY[@]}" 2>&1
     JS_EXIT=$?
   elif [ -n "$FALLBACK_CMD" ] && [ -z "$GO_FILES" ]; then
     # Only use fallback for JS if there are no Go files
