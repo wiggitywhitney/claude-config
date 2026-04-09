@@ -180,17 +180,14 @@ Install hooks across all active repos, verify everything works, clean up.
 
 ### Milestone 5: Future Exploration — Plugin Architecture Learnings
 
-Evaluate whether patterns learned from studying Claude Code plugins (Skill Creator, Superpowers, Code Review) can improve the hook system or related skills.
+Create a dedicated PRD for evaluating the Code Review plugin and determining the right code review approach to supplement CodeRabbit when rate limits are hit.
 
 **Deliverables:**
-- Review plugin study findings (confidence scoring, multi-agent patterns, phased workflows with gate points)
-- Assess applicability to hook error messages (e.g., confidence-scored warnings)
-- Assess applicability to existing skills (`/verify`, `/anki`, `/write-prompt`, `/research`)
-- Document recommendations for follow-up PRDs
+- Run `/prd-create` for "Code Review Plugin Evaluation" — PRD must include a research spike as the first milestone to decide: use the existing plugin as-is, or build a custom skill drawing on its patterns
 
 **Success Criteria:**
-- Written assessment with concrete recommendations
-- Follow-up PRDs created for any approved improvements
+- New PRD exists and is ready to work on
+- Research spike milestone is the first milestone (decision precedes implementation)
 
 ## Decision Log
 
