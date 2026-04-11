@@ -91,6 +91,11 @@ bash scripts/install-git-hooks.sh [repo-path]
 
 Idempotent — safe to re-run. Never touches `post-commit` (reserved for commit-story). Full reference: @~/.claude/rules/hooks-reference.md
 
+## Testing
+
+- All bash hook and script files MUST have bats test coverage. Place tests in `tests/<script-name>.bats`.
+- Bats gotchas and patterns: @~/.claude/rules/bats-bash-testing.md
+
 ## Secrets Management (vals)
 
 This project uses [vals](https://github.com/helmfile/vals) for secrets management, pulling from GCP Secrets Manager.
