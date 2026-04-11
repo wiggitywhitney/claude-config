@@ -35,18 +35,18 @@ write_input() {
     [[ "$output" == *"additionalContext"* ]]
 }
 
-@test "output is valid JSON when hook fires" {
+@test "output is valid JSON with correct hookSpecificOutput schema" {
     write_input '{"tool_name":"Write","tool_input":{"file_path":"/repo/prds/47-my-feature.md"}}'
     run bash -c "\"$SCRIPT\" < \"$TMPDIR/input.json\""
     [ "$status" -eq 0 ]
-    echo "$output" | python3 -m json.tool > /dev/null
+    echo "$output" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d['hookSpecificOutput']['hookEventName']=='PostToolUse'; assert 'additionalContext' in d['hookSpecificOutput']"
 }
 
 @test "additionalContext instructs Claude to cascade-evaluate milestones" {
     write_input '{"tool_name":"Write","tool_input":{"file_path":"/repo/prds/47-my-feature.md"}}'
     run bash -c "\"$SCRIPT\" < \"$TMPDIR/input.json\""
     [ "$status" -eq 0 ]
-    [[ "$output" == *"milestone"* ]]
+    echo "$output" | python3 -c "import json,sys; d=json.load(sys.stdin); ctx=d['hookSpecificOutput']['additionalContext']; assert 'milestone' in ctx"
 }
 
 # ── Negative cases: hook should be silent ────────────────────────────────────

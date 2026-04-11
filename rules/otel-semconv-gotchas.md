@@ -1,6 +1,6 @@
 # OTel JS Semantic Conventions Gotchas
 
-Verified against `@opentelemetry/semantic-conventions` v1.40.0 on 2026-04-11.
+Verified against `@opentelemetry/semantic-conventions` v1.40.0.
 
 ## Two entry-points — stable and incubating are separate
 

@@ -110,7 +110,7 @@
       "Bash(rm *)"
     ]
   },
-  "model": "opus[1m]",
+  "model": "sonnet[1m]",
   "hooks": {
     "PreToolUse": [
       {
