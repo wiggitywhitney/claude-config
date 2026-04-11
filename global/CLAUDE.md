@@ -51,6 +51,7 @@ When you have multiple questions or decisions for the user, present them **one a
 - yt-dlp (format selectors, ffmpeg-absent behavior, mweb stability, Node v20+): @~/.claude/rules/yt-dlp-gotchas.md
 - Weaver (v0.22.1 auto-escaping defaults, definition schema format): @~/.claude/rules/weaver-gotchas.md
 - Micro.blog API (dual auth tokens, editPage param order, feed-based cross-posting): @~/.claude/rules/microblog-api-gotchas.md
+- OTel JS semantic conventions (stable vs incubating entry-points, DB/HTTP attribute renames, deprecated SEMATTRS_*): @~/.claude/rules/otel-semconv-gotchas.md
 
 ## Testing
 
@@ -122,6 +123,7 @@ Feature work is tracked in PRDs (`prds/` directory). Use the PRD skills: `/prd-c
 - Do not invent tasks outside the PRD structure. When a PRD exists, follow it.
 - **Do NOT commit manually during PRD work.** `/prd-update-progress` handles commits, PRD updates, and journaling together.
 - Cross-PRD dependencies block clean merges. Design PRDs so every milestone is completable from main alone. Recovery when one is discovered mid-implementation: @~/.claude/rules/prd-dependency-management.md
+- **Decision cascade**: When a row is added to a PRD's `## Decision Log`, evaluate each remaining milestone in that PRD: does the new decision change its prerequisites, approach, or success criteria? Update any milestone whose plan is affected. Then scan other open PRDs in `prds/` — if the decision is relevant to their scope, open those PRDs and update their affected milestones too.
 
 ## Conflict Resolution
 
