@@ -54,6 +54,21 @@ Complete the PRD implementation workflow including branch management, pull reque
 - [ ] **Clean commit history**: Squash or organize commits for clear history
 - [ ] **Push to remote**: `git push -u origin feature/prd-[issue-id]-[feature-name]`
 
+### 2.5. Pre-PR Verification
+
+- [ ] **Launch verification agent** with the following task:
+
+  > Read the full PRD document from top to bottom — all milestones, objectives, and acceptance criteria. For each milestone:
+  >
+  > 1. List every success criterion or objective stated for that milestone.
+  > 2. For each criterion, locate observable evidence in the codebase: the specific file that exists, the function that is wired to the main code path, the test that covers it.
+  > 3. Apply the three-level check — **Exists** (artifact is present) → **Substantive** (real content, not a stub or placeholder) → **Wired** (connected and reachable from the running system).
+  > 4. If any level fails, mark the criterion as a gap.
+  >
+  > Report a criterion-by-criterion table: one row per criterion, with a column for the evidence found. Rows with no evidence must say "GAP — no evidence found" with a specific description of what is missing. Do not summarize at a milestone level. Every criterion must map to a specific, observable artifact.
+
+- [ ] **Evaluate gaps**: If the agent reports any gaps, implement the missing work and re-run the verification agent before proceeding. If no gaps, proceed to Step 3.
+
 ### 3. Pull Request Creation
 
 **IMPORTANT: Always check for and use PR template if available**
