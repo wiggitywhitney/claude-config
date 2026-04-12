@@ -145,7 +145,7 @@ Document how to use the repo and recommend a backup cadence.
 
 ### M4: Path prefix encoding — derive from HOME, not from `whoami`
 
-**Decision**: Compute the `~/.claude/projects/` path prefix by encoding `$HOME` through `sed 's|[^a-zA-Z0-9]|-|g'`, not by using `$(whoami)`.
+**Decision**: Compute the `~/.claude/projects/` path prefix by encoding `$HOME` through `sed 's|[/.]|-|g'`, not by using `$(whoami)`.
 
 **Rationale**: Claude Code encodes the full absolute path to a project directory by replacing every non-alphanumeric character (including dots) with a hyphen. On a machine where the username contains a dot (e.g., `whitney.lee`), `whoami` returns `whitney.lee` but the actual project directory uses `whitney-lee`. Deriving the prefix from `$HOME` with the same encoding rule produces the correct prefix regardless of special characters in the username.
 

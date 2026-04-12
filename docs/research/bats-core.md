@@ -4,6 +4,7 @@
 **Last Updated:** 2026-04-11
 
 ## Update Log
+
 | Date | Summary |
 |------|---------|
 | 2026-04-11 | Initial research — v1.12/v1.13 changes, run + function visibility, stdin/pipe behavior, macOS issues |
