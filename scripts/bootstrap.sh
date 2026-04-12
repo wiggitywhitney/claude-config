@@ -8,7 +8,7 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
 
 DRY_RUN=0
-CLAUDE_PERSONAL_DIR="$HOME/Documents/Repositories/claude-personal"
+CLAUDE_PERSONAL_DIR="${CLAUDE_PERSONAL_DIR:-$HOME/Documents/Repositories/claude-personal}"
 
 # ── Argument parsing ──────────────────────────────────────────────────────────
 
@@ -95,4 +95,57 @@ else
         ln -s "$SETTINGS_TARGET" "$SETTINGS_LINK"
         ok "settings.json symlink created → $SETTINGS_TARGET"
     fi
+fi
+
+# ── Step 2: Memory file restore ───────────────────────────────────────────────
+
+MEMORY_SRC="$CLAUDE_PERSONAL_DIR/memory"
+# Encode the standard repo prefix once: $HOME/Documents/Repositories → sed 's|[/.]|-|g'
+# Do NOT use $(whoami) — macOS usernames with dots encode as hyphens in project paths.
+HOME_PREFIX=$(echo "$HOME/Documents/Repositories" | sed 's|[/.]|-|g')
+
+if [[ -d "$MEMORY_SRC" ]]; then
+    for project_dir in "$MEMORY_SRC"/*/; do
+        [[ -d "$project_dir" ]] || continue
+        project_name="$(basename "$project_dir")"
+
+        # Names starting with '-' are full encoded paths (fallback for non-standard
+        # repo locations stored during push). Use them as-is without adding the prefix.
+        if [[ "$project_name" == -* ]]; then
+            encoded_path="$project_name"
+        else
+            encoded_path="${HOME_PREFIX}-${project_name}"
+        fi
+
+        target_dir="$CLAUDE_DIR/projects/$encoded_path/memory"
+
+        for src_file in "$project_dir"*.md; do
+            [[ -f "$src_file" ]] || continue
+            filename="$(basename "$src_file")"
+            dst_file="$target_dir/$filename"
+
+            if [[ "$DRY_RUN" -eq 1 ]]; then
+                if [[ -f "$dst_file" ]] && cmp -s "$src_file" "$dst_file"; then
+                    dry_run "Would skip memory: $project_name/$filename (identical)"
+                elif [[ -f "$dst_file" ]]; then
+                    dry_run "Would update memory: $project_name/$filename"
+                else
+                    dry_run "Would restore memory: $project_name/$filename"
+                fi
+            else
+                mkdir -p "$target_dir"
+                if [[ -f "$dst_file" ]]; then
+                    if cmp -s "$src_file" "$dst_file"; then
+                        skipped "memory: $project_name/$filename (identical)"
+                    else
+                        cp "$src_file" "$dst_file"
+                        ok "Updated memory: $project_name/$filename"
+                    fi
+                else
+                    cp "$src_file" "$dst_file"
+                    ok "Restored memory: $project_name/$filename"
+                fi
+            fi
+        done
+    done
 fi

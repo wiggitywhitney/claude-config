@@ -80,7 +80,7 @@ Create `scripts/bootstrap.sh` with argument parsing, prerequisite checks, and th
 - Symlink step is idempotent
 - Tests pass
 
-### Milestone 2: Memory File Restore
+### Milestone 2: Memory File Restore ✅
 **Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
 
 Add the memory file restore step to `scripts/bootstrap.sh`.

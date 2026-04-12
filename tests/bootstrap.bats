@@ -133,3 +133,62 @@ teardown() {
     expected_target="$(cd "$BATS_TEST_DIRNAME/.." && pwd)/config/settings.json"
     [ "$(readlink "$CLAUDE_DIR/settings.json")" = "$expected_target" ]
 }
+
+# ── Memory file restore ───────────────────────────────────────────────────────
+
+@test "fresh restore creates memory file in correct location" {
+    mkdir -p "$CLAUDE_PERSONAL_DIR/memory/test-project"
+    echo "memory content" > "$CLAUDE_PERSONAL_DIR/memory/test-project/notes.md"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+
+    HOME_PREFIX=$(echo "$HOME/Documents/Repositories" | sed 's|[/.]|-|g')
+    expected="$CLAUDE_DIR/projects/${HOME_PREFIX}-test-project/memory/notes.md"
+    [ -f "$expected" ]
+    [ "$(cat "$expected")" = "memory content" ]
+    [[ "$output" == *"[OK] Restored memory: test-project/notes.md"* ]]
+}
+
+@test "memory restore is idempotent with identical content" {
+    mkdir -p "$CLAUDE_PERSONAL_DIR/memory/test-project"
+    echo "memory content" > "$CLAUDE_PERSONAL_DIR/memory/test-project/notes.md"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"[SKIPPED] memory: test-project/notes.md (identical)"* ]]
+}
+
+@test "memory restore overwrites when repo content differs from local" {
+    mkdir -p "$CLAUDE_PERSONAL_DIR/memory/test-project"
+    echo "original content" > "$CLAUDE_PERSONAL_DIR/memory/test-project/notes.md"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+
+    echo "updated content" > "$CLAUDE_PERSONAL_DIR/memory/test-project/notes.md"
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"[OK] Updated memory: test-project/notes.md"* ]]
+
+    HOME_PREFIX=$(echo "$HOME/Documents/Repositories" | sed 's|[/.]|-|g')
+    expected="$CLAUDE_DIR/projects/${HOME_PREFIX}-test-project/memory/notes.md"
+    [ "$(cat "$expected")" = "updated content" ]
+}
+
+@test "memory restore uses HOME-encoding to compute project path" {
+    mkdir -p "$CLAUDE_PERSONAL_DIR/memory/my-project"
+    echo "test" > "$CLAUDE_PERSONAL_DIR/memory/my-project/file.md"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+
+    # Verify encoding rule: $HOME/Documents/Repositories → sed 's|[/.]|-|g'
+    expected_prefix=$(echo "$HOME/Documents/Repositories" | sed 's|[/.]|-|g')
+    expected_dir="$CLAUDE_DIR/projects/${expected_prefix}-my-project/memory"
+    [ -d "$expected_dir" ]
+    [ -f "$expected_dir/file.md" ]
+}
