@@ -29,6 +29,10 @@ if [[ "$1" == "repo" && "$2" == "list" ]]; then
     cat "$MOCK_GH_REPO_LIST"
 elif [[ "$1" == "repo" && "$2" == "clone" ]]; then
     # $3 = owner/repo-name  $4 = destination path
+    if [[ "${MOCK_GH_CLONE_FAIL:-0}" == "1" ]]; then
+        echo "error: repository not found" >&2
+        exit 1
+    fi
     dest="$4"
     mkdir -p "$dest"
     git init "$dest" --quiet
@@ -191,6 +195,19 @@ _write_list() {
     [[ "$output" == *"[OK] cloned flag-repo"* ]]
     [ -d "$custom_dir/flag-repo/.git" ]
     [ ! -d "$REPOS_DIR/flag-repo" ]
+}
+
+# ── Clone error handling ──────────────────────────────────────────────────────
+
+@test "reports error when clone fails" {
+    recent=$(date -d "1 month ago" --iso-8601=seconds)
+    _write_list "owner/fail-repo" "$recent"
+    export MOCK_GH_CLONE_FAIL=1
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"[ERROR] failed to clone fail-repo"* ]]
+    [ ! -d "$REPOS_DIR/fail-repo" ]
 }
 
 # ── Empty repo list ───────────────────────────────────────────────────────────

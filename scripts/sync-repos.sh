@@ -84,8 +84,11 @@ while IFS=$'\t' read -r name_with_owner pushed_at; do
         if [[ "$DRY_RUN" -eq 1 ]]; then
             dry_run "Would clone $repo_name"
         else
-            gh repo clone "$name_with_owner" "$repo_path" > /dev/null 2>&1
-            ok "cloned $repo_name"
+            if gh repo clone "$name_with_owner" "$repo_path" > /dev/null 2>&1; then
+                ok "cloned $repo_name"
+            else
+                echo "[ERROR] failed to clone $repo_name" >&2
+            fi
         fi
     else
         # Repo already present — fast-forward pull
