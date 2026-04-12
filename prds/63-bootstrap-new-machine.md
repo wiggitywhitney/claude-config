@@ -138,7 +138,7 @@ Add per-project `settings.local.json` restore to `scripts/bootstrap.sh`. **Read 
 
 **Dependency**: PRD #62 M2 must be complete (files committed to claude-personal) before this can be tested end-to-end.
 
-### Milestone 5: Repo Sync Script
+### Milestone 5: Repo Sync Script ✅
 
 Add `scripts/sync-repos.sh` — a companion script that clones missing repos and pulls existing ones before bootstrap runs.
 
