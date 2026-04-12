@@ -175,3 +175,54 @@ if [[ -d "$REPOS_DIR" ]]; then
         fi
     done
 fi
+
+# ── Step 4: settings.local.json restore ───────────────────────────────────────
+
+LOCAL_SETTINGS_SRC="$CLAUDE_PERSONAL_DIR/local-settings"
+SKIPPED_REPOS=()
+
+if [[ -d "$LOCAL_SETTINGS_SRC" ]]; then
+    for project_dir in "$LOCAL_SETTINGS_SRC"/*/; do
+        [[ -d "$project_dir" ]] || continue
+        project_name="$(basename "$project_dir")"
+        src_file="$project_dir/settings.local.json"
+        [[ -f "$src_file" ]] || continue
+
+        repo_path="$REPOS_DIR/$project_name"
+        dst_file="$repo_path/.claude/settings.local.json"
+
+        if [[ ! -d "$repo_path/.git" ]]; then
+            skipped "settings.local.json: $project_name — repo not cloned yet"
+            SKIPPED_REPOS+=("$project_name")
+            continue
+        fi
+
+        if [[ "$DRY_RUN" -eq 1 ]]; then
+            if [[ -f "$dst_file" ]] && cmp -s "$src_file" "$dst_file"; then
+                dry_run "Would skip settings.local.json: $project_name (identical)"
+            elif [[ -f "$dst_file" ]]; then
+                dry_run "Would update settings.local.json: $project_name"
+            else
+                dry_run "Would restore settings.local.json: $project_name"
+            fi
+        else
+            mkdir -p "$repo_path/.claude"
+            if [[ -f "$dst_file" ]]; then
+                if cmp -s "$src_file" "$dst_file"; then
+                    skipped "settings.local.json: $project_name (identical)"
+                else
+                    cp "$src_file" "$dst_file"
+                    ok "Updated settings.local.json: $project_name"
+                fi
+            else
+                cp "$src_file" "$dst_file"
+                ok "Restored settings.local.json: $project_name"
+            fi
+        fi
+    done
+fi
+
+if [[ ${#SKIPPED_REPOS[@]} -gt 0 ]]; then
+    echo ""
+    echo "Re-run bootstrap after cloning the above repos to restore their settings."
+fi

@@ -117,7 +117,7 @@ Add git hook installation to `scripts/bootstrap.sh`. **Read Decision A above, th
 - Repos with `.skip-git-hooks` are skipped cleanly
 - Tests pass
 
-### Milestone 4: settings.local.json Restore (Design Decision B)
+### Milestone 4: settings.local.json Restore (Design Decision B) ✅
 **Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
 
 Add per-project `settings.local.json` restore to `scripts/bootstrap.sh`. **Read Decision B above, then present your implementation plan and wait for Whitney to confirm before writing any code.**

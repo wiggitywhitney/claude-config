@@ -6,6 +6,7 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-04-12) Added settings.local.json restore step to bootstrap.sh — reads from claude-personal/local-settings/<project-name>/settings.local.json, restores to present repos, skips with message for unclosed repos, prints trailing re-run reminder when repos were skipped; 8 new bats tests (31 total) (PRD #63, M4)
 - (2026-04-12) Added git hook installation step to bootstrap.sh — auto-discovers git repos one level deep under ~/Documents/Repositories/, skips repos with .skip-git-hooks, calls install-git-hooks.sh idempotently; REPOS_DIR and INSTALL_HOOKS_SCRIPT env vars for test isolation; 5 new bats tests (23 total); added sync-repos.sh as M5 with design decisions captured in PRD decision log (PRD #63, M3)
 - (2026-04-12) Added memory file restore step to bootstrap.sh — reads from claude-personal/memory/<project-name>/, writes to ~/.claude/projects/<encoded-path>/memory/; HOME-prefix encoding via sed 's|[/.]|-|g'; skip-if-identical, overwrite-if-different; [OK]/[SKIPPED]/dry-run output; CLAUDE_PERSONAL_DIR now respects env var for test isolation; 4 new bats tests (18 total) (PRD #63, M2)
 - (2026-04-12) Added bootstrap.sh script skeleton with settings.json symlink step — --dry-run and --claude-personal-dir flags; REPO_ROOT auto-detected; prereq checks for ~/.claude/ and claude-personal git repo; all 4 symlink cases with [OK]/[SKIPPED]/[BACKED UP]/[DRY RUN] output; 13-test bats suite in tests/bootstrap.bats (PRD #63, M1)

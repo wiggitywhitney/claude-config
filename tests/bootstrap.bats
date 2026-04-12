@@ -253,3 +253,89 @@ teardown() {
     [ "$status" -eq 0 ]
     [ ! -f "$HOOK_INSTALL_LOG" ]
 }
+
+# ── settings.local.json restore ───────────────────────────────────────────────
+
+@test "fresh restore creates settings.local.json when repo exists" {
+    mkdir -p "$CLAUDE_PERSONAL_DIR/local-settings/my-project"
+    echo '{"permissions":{}}' > "$CLAUDE_PERSONAL_DIR/local-settings/my-project/settings.local.json"
+    mkdir -p "$REPOS_DIR/my-project/.git"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [ -f "$REPOS_DIR/my-project/.claude/settings.local.json" ]
+    [ "$(cat "$REPOS_DIR/my-project/.claude/settings.local.json")" = '{"permissions":{}}' ]
+    [[ "$output" == *"[OK] Restored settings.local.json: my-project"* ]]
+}
+
+@test "settings.local.json restore is idempotent with identical content" {
+    mkdir -p "$CLAUDE_PERSONAL_DIR/local-settings/my-project"
+    echo '{"permissions":{}}' > "$CLAUDE_PERSONAL_DIR/local-settings/my-project/settings.local.json"
+    mkdir -p "$REPOS_DIR/my-project/.git"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"[SKIPPED] settings.local.json: my-project (identical)"* ]]
+}
+
+@test "settings.local.json restore overwrites when content differs" {
+    mkdir -p "$CLAUDE_PERSONAL_DIR/local-settings/my-project"
+    echo '{"original":true}' > "$CLAUDE_PERSONAL_DIR/local-settings/my-project/settings.local.json"
+    mkdir -p "$REPOS_DIR/my-project/.git"
+    mkdir -p "$REPOS_DIR/my-project/.claude"
+    echo '{"stale":true}' > "$REPOS_DIR/my-project/.claude/settings.local.json"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [ "$(cat "$REPOS_DIR/my-project/.claude/settings.local.json")" = '{"original":true}' ]
+    [[ "$output" == *"[OK] Updated settings.local.json: my-project"* ]]
+}
+
+@test "skips settings.local.json when repo not cloned" {
+    mkdir -p "$CLAUDE_PERSONAL_DIR/local-settings/missing-project"
+    echo '{"permissions":{}}' > "$CLAUDE_PERSONAL_DIR/local-settings/missing-project/settings.local.json"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [ ! -d "$REPOS_DIR/missing-project" ]
+    [[ "$output" == *"[SKIPPED] settings.local.json: missing-project — repo not cloned yet"* ]]
+}
+
+@test "prints re-run reminder when repos were skipped" {
+    mkdir -p "$CLAUDE_PERSONAL_DIR/local-settings/missing-project"
+    echo '{"permissions":{}}' > "$CLAUDE_PERSONAL_DIR/local-settings/missing-project/settings.local.json"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"Re-run bootstrap after cloning the above repos to restore their settings."* ]]
+}
+
+@test "no re-run reminder when no repos were skipped" {
+    mkdir -p "$CLAUDE_PERSONAL_DIR/local-settings/present-project"
+    echo '{"permissions":{}}' > "$CLAUDE_PERSONAL_DIR/local-settings/present-project/settings.local.json"
+    mkdir -p "$REPOS_DIR/present-project/.git"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [[ "$output" != *"Re-run bootstrap"* ]]
+}
+
+@test "dry-run shows settings.local.json restore without writing" {
+    mkdir -p "$CLAUDE_PERSONAL_DIR/local-settings/my-project"
+    echo '{"permissions":{}}' > "$CLAUDE_PERSONAL_DIR/local-settings/my-project/settings.local.json"
+    mkdir -p "$REPOS_DIR/my-project/.git"
+
+    run "$SCRIPT" --dry-run
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"[DRY RUN] Would restore settings.local.json: my-project"* ]]
+    [ ! -f "$REPOS_DIR/my-project/.claude/settings.local.json" ]
+}
+
+@test "no-op when local-settings directory does not exist" {
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [[ "$output" != *"settings.local.json"* ]]
+}
