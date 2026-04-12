@@ -88,6 +88,7 @@ Create the `claude-personal` private GitHub repo and commit the current state of
 - Repo is cloneable to `~/Documents/Repositories/claude-personal`
 
 ### Milestone 3: Push Script (local → repo)
+**Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
 
 Write `scripts/sync-push.sh` in the claude-personal repo that syncs local memory files and `settings.local.json` files to the repo and commits if anything changed.
 
@@ -107,6 +108,7 @@ Write `scripts/sync-push.sh` in the claude-personal repo that syncs local memory
 - Tests pass
 
 ### Milestone 4: Restore Script (repo → local)
+**Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
 
 Write `scripts/sync-restore.sh` in the claude-personal repo that restores memory files and `settings.local.json` files from the repo to the correct local locations on a new machine.
 
@@ -141,4 +143,27 @@ Document how to use the repo and recommend a backup cadence.
 
 ## Decision Log
 
-_(Decisions recorded here as they are made during implementation)_
+### M1: Memory directory naming strategy — Option B (logical project names)
+
+**Decision**: Map memory directories to logical project names rather than preserving absolute path-encoded names.
+
+**Rationale**: Option A (preserving `-Users-whitney-lee-...` directory names) breaks on any machine with a different username or directory layout — exactly the failure mode this backup is designed to survive. Option B survives machine migration, produces a readable repo on GitHub, and the mapping complexity is a one-time implementation cost.
+
+**Mapping rule**: Strip the common prefix encoding (`-Users-<username>-Documents-Repositories-`) from the `~/.claude/projects/` directory name and use the trailing segment as the logical project name. Example: `-Users-whitney-lee-Documents-Repositories-claude-config` → `claude-config`.
+
+**Edge cases**: Projects whose path does not match the `~/Documents/Repositories/<name>` pattern (e.g., paths outside that directory) use the full encoded name as-is as a fallback — this preserves restore correctness for unusual paths without breaking the common case.
+
+**Repo directory layout**:
+```text
+claude-personal/
+├── memory/
+│   ├── claude-config/          # ~/.claude/projects/-Users-...-claude-config/memory/
+│   ├── commit-story-v2-eval/   # ~/.claude/projects/-Users-...-commit-story-v2-eval/memory/
+│   └── ...                     # one directory per project
+├── local-settings/
+│   ├── claude-config/          # ~/Documents/Repositories/claude-config/.claude/settings.local.json
+│   │   └── settings.local.json
+│   └── ...                     # one directory per project with a settings.local.json
+├── .gitignore
+└── README.md
+```
