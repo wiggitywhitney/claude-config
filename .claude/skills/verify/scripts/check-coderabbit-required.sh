@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# ABOUTME: PreToolUse hook that blocks gh pr merge unless a CodeRabbit review exists on the PR.
+# ABOUTME: Checks all three CodeRabbit channels: pull reviews, inline comments, and issue comments.
 # check-coderabbit-required.sh — PreToolUse hook that blocks PR merge without CodeRabbit review
 #
 # Installed as a Claude Code PreToolUse hook on Bash.
@@ -128,10 +130,22 @@ print(json.dumps(result))
   exit 0
 fi
 
-# Check for CodeRabbit review via GitHub API
-CODERABBIT_REVIEW=$(gh api "repos/$REPO_INFO/pulls/$PR_NUMBER/reviews" --jq '[.[] | select(.user.login == "coderabbitai[bot]")] | length' 2>/dev/null || echo "0")
+# Check for CodeRabbit review via all three GitHub API channels.
+# CodeRabbit posts to different channels depending on PR size and timing;
+# missing any one channel means missing findings.
+# --paginate fetches all pages; jq outputs one line per match; wc -l gives total count.
+count_coderabbit_in_channel() {
+  local endpoint="$1"
+  gh api --paginate "repos/$REPO_INFO/$endpoint" \
+    --jq '.[] | select(.user.login == "coderabbitai[bot]") | 1' 2>/dev/null \
+    | wc -l | tr -d ' ' || echo "0"
+}
 
-if [ "$CODERABBIT_REVIEW" -gt 0 ] 2>/dev/null; then
+CODERABBIT_PULL_REVIEWS=$(count_coderabbit_in_channel "pulls/$PR_NUMBER/reviews")
+CODERABBIT_INLINE_COMMENTS=$(count_coderabbit_in_channel "pulls/$PR_NUMBER/comments")
+CODERABBIT_ISSUE_COMMENTS=$(count_coderabbit_in_channel "issues/$PR_NUMBER/comments")
+
+if [ "$CODERABBIT_PULL_REVIEWS" -gt 0 ] || [ "$CODERABBIT_INLINE_COMMENTS" -gt 0 ] || [ "$CODERABBIT_ISSUE_COMMENTS" -gt 0 ]; then
   # CodeRabbit has reviewed — allow merge
   exit 0
 fi
