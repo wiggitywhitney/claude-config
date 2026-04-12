@@ -34,6 +34,12 @@ teardown() {
     [[ "$output" == *"not found"* ]]
 }
 
+@test "fails when --claude-personal-dir has no argument" {
+    run "$SCRIPT" --claude-personal-dir
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"requires a path argument"* ]]
+}
+
 @test "fails when claude-personal dir is not a git repo" {
     mkdir -p "$TMPDIR/not-a-repo"
     run "$SCRIPT" --claude-personal-dir "$TMPDIR/not-a-repo"

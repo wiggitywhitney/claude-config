@@ -19,6 +19,10 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --claude-personal-dir)
+            if [[ -z "${2:-}" ]]; then
+                echo "Error: --claude-personal-dir requires a path argument" >&2
+                exit 1
+            fi
             CLAUDE_PERSONAL_DIR="$2"
             shift 2
             ;;
