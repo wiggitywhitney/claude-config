@@ -87,7 +87,7 @@ Add the memory file restore step to `scripts/bootstrap.sh`.
 
 **To implement:**
 - Read memory files from `<claude-personal-dir>/memory/<project-name>/` (or whatever structure PRD #62 M1 decides)
-- Write to `~/.claude/projects/<encoded-path>/memory/` — requires mapping logical project name back to the encoded directory name (this is the inverse of the push direction in PRD #62). **Path encoding rule (PRD #62 M4 decision):** encode `$HOME` via `sed 's|[^a-zA-Z0-9]|-|g'` — do NOT use `$(whoami)`, because macOS usernames can contain dots that Claude Code encodes as hyphens.
+- Write to `~/.claude/projects/<encoded-path>/memory/` — requires mapping logical project name back to the encoded directory name (this is the inverse of the push direction in PRD #62). **Path encoding rule (PRD #62 M4 decision):** encode `$HOME` via `sed 's|[/.]|-|g'` (replace slashes and dots only) — do NOT use `$(whoami)`, because macOS usernames with dots (e.g. `whitney.lee`) encode as hyphens in project paths. Do NOT use `[^a-zA-Z0-9]`; that is imprecise and would break project names containing hyphens on a round-trip if encoding were ever applied to names rather than just the home prefix.
 - Skip files that already exist and are identical (byte-for-byte); overwrite if different (repo is authoritative on restore)
 - Print per-file status: restored / skipped (identical) / updated
 - Write bats tests: fresh restore creates files, re-run with identical content skips, re-run with updated content in repo overwrites local; **include a test that uses the HOME-encoding approach and verifies the correct encoded path is produced**

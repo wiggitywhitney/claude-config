@@ -149,6 +149,8 @@ Document how to use the repo and recommend a backup cadence.
 
 **Rationale**: Claude Code encodes the full absolute path to a project directory by replacing every non-alphanumeric character (including dots) with a hyphen. On a machine where the username contains a dot (e.g., `whitney.lee`), `whoami` returns `whitney.lee` but the actual project directory uses `whitney-lee`. Deriving the prefix from `$HOME` with the same encoding rule produces the correct prefix regardless of special characters in the username.
 
+**Correct encoding rule**: `sed 's|[/.]|-|g'` — replaces forward slashes and dots only. Do NOT use `[^a-zA-Z0-9]`, which would also replace hyphens, underscores, and digits in project names (though hyphens → hyphens is a no-op in practice, the rule is imprecise). Evidence: directories like `-Users-...-KubeHound-Demo` show hyphens in project names are preserved.
+
 **Impact**: Both `sync-push.sh` and `sync-restore.sh` use this encoding. The bats test files use the same approach for `TEST_PREFIX`.
 
 ### M1: Memory directory naming strategy — Option B (logical project names)
