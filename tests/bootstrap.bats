@@ -12,6 +12,17 @@ setup() {
     mkdir -p "$CLAUDE_PERSONAL_DIR"
     git init "$CLAUDE_PERSONAL_DIR" --quiet
 
+    export REPOS_DIR="$TMPDIR/repos"
+    mkdir -p "$REPOS_DIR"
+
+    export HOOK_INSTALL_LOG="$TMPDIR/hook-install.log"
+    cat > "$TMPDIR/mock-install-hooks.sh" << 'EOF'
+#!/usr/bin/env bash
+echo "$1" >> "$HOOK_INSTALL_LOG"
+EOF
+    chmod +x "$TMPDIR/mock-install-hooks.sh"
+    export INSTALL_HOOKS_SCRIPT="$TMPDIR/mock-install-hooks.sh"
+
     chmod +x "$SCRIPT"
 }
 
@@ -191,4 +202,54 @@ teardown() {
     expected_dir="$CLAUDE_DIR/projects/${expected_prefix}-my-project/memory"
     [ -d "$expected_dir" ]
     [ -f "$expected_dir/file.md" ]
+}
+
+# ── Git hook installation ─────────────────────────────────────────────────────
+
+@test "installs hooks in discovered git repo" {
+    mkdir -p "$REPOS_DIR/my-repo/.git"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"[OK] git hooks installed: my-repo"* ]]
+    [ -f "$HOOK_INSTALL_LOG" ]
+    grep -q "my-repo" "$HOOK_INSTALL_LOG"
+}
+
+@test "skips repo with .skip-git-hooks" {
+    mkdir -p "$REPOS_DIR/my-repo/.git"
+    touch "$REPOS_DIR/my-repo/.skip-git-hooks"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"[SKIPPED] git hooks: my-repo"* ]]
+    [ ! -f "$HOOK_INSTALL_LOG" ]
+}
+
+@test "hook installation is idempotent" {
+    mkdir -p "$REPOS_DIR/my-repo/.git"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"[OK] git hooks installed: my-repo"* ]]
+}
+
+@test "dry-run prints would-install without calling installer" {
+    mkdir -p "$REPOS_DIR/my-repo/.git"
+
+    run "$SCRIPT" --dry-run
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"[DRY RUN] Would install git hooks in my-repo"* ]]
+    [ ! -f "$HOOK_INSTALL_LOG" ]
+}
+
+@test "skips non-git directories under REPOS_DIR" {
+    mkdir -p "$REPOS_DIR/not-a-repo"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [ ! -f "$HOOK_INSTALL_LOG" ]
 }

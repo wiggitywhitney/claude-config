@@ -99,7 +99,7 @@ Add the memory file restore step to `scripts/bootstrap.sh`.
 
 **Dependency**: PRD #62 M1 must be decided (memory directory naming convention) before implementing this milestone.
 
-### Milestone 3: Git Hook Installation (Design Decision A)
+### Milestone 3: Git Hook Installation (Design Decision A) ✅
 **Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
 
 Add git hook installation to `scripts/bootstrap.sh`. **Read Decision A above, then present your implementation plan (which option you'd implement and why) and wait for Whitney to confirm before writing any code.**
@@ -138,24 +138,53 @@ Add per-project `settings.local.json` restore to `scripts/bootstrap.sh`. **Read 
 
 **Dependency**: PRD #62 M2 must be complete (files committed to claude-personal) before this can be tested end-to-end.
 
-### Milestone 5: End-to-End Test and Documentation
-**Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
+### Milestone 5: Repo Sync Script
 
-Validate the full bootstrap flow and document the new-machine setup process.
+Add `scripts/sync-repos.sh` — a companion script that clones missing repos and pulls existing ones before bootstrap runs.
+
+**Design decisions already made (see Decision Log):**
+- Use `gh repo list` filtered by repos pushed within the last N months (Decision 1)
+- `git pull --ff-only` for repos already present; warn and skip on failure (Decision 2)
+- `--months N` flag (default 6), `--dry-run`, `--repos-dir` env var for testability (Decision 3)
 
 **To implement:**
-- Write an end-to-end bats test that: creates a temp `~/.claude/`-like directory, a temp repos directory with two fake git repos, a temp claude-personal with sample memory and settings files, runs `bootstrap.sh`, and asserts all outputs are in place
-- Run `/write-docs` to produce a `docs/bootstrap.md` guide covering: prerequisites (clone claude-config and claude-personal), running bootstrap, what each step does, re-running after cloning more repos
-- If a `README.md` exists at the repo root, add a "Getting Started on a New Machine" section that links to `docs/bootstrap.md`. If no README exists, the guide is sufficient — do not create a README just for this.
+- Script accepts `--months N` (default 6), `--dry-run`, and `--repos-dir <path>` (defaults to `~/Documents/Repositories`)
+- Use `gh repo list --json nameWithOwner,pushedAt --limit 1000` and filter to repos where `pushedAt` is within the last N months
+- For each repo not present under `<repos-dir>/`: clone with `gh repo clone <nameWithOwner> <repos-dir>/<name>`
+- For each repo already present: run `git -C <path> pull --ff-only`; if it fails (local changes or diverged), print `[SKIPPED] <repo> — local changes, run git pull manually` and continue
+- Output format: `[OK] cloned <repo>`, `[OK] pulled <repo> (N commits)`, `[SKIPPED] <repo> — local changes`, `[SKIPPED] <repo> — not active in last N months`
+- Write bats tests: clones missing repo, pulls existing repo, skips repo with local changes, skips repo outside N-month window, dry-run makes no changes
 
 **Success criteria:**
-- End-to-end test passes
-- `docs/bootstrap.md` answers: "I just got a new laptop. How do I restore everything?"
-- No manual steps required beyond cloning the two repos and running one command
+- Running `sync-repos.sh` before `bootstrap.sh` on a fresh machine means bootstrap finds all repos already present
+- Skipped repos produce clear, actionable messages
+- Tests pass
+
+### Milestone 6: End-to-End Test and Documentation
+**Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
+
+Validate the full new-machine setup flow and document both scripts. (Updated per Decision 4: docs must cover `sync-repos.sh` and `bootstrap.sh` as a two-step flow, not bootstrap alone.)
+
+**To implement:**
+- Write an end-to-end bats test for `bootstrap.sh` that: creates a temp `~/.claude/`-like directory, a temp repos directory with two fake git repos, a temp claude-personal with sample memory and settings files, runs `bootstrap.sh`, and asserts all outputs are in place
+- Write an end-to-end bats test for `sync-repos.sh` that: mocks `gh repo list` output, sets up a temp repos directory with one existing repo and one absent, runs `sync-repos.sh`, and asserts the correct clone/pull/skip behavior
+- Run `/write-docs` to produce a `docs/new-machine-setup.md` guide covering: prerequisites (clone claude-config and claude-personal), step 1 (`sync-repos.sh` — clone/pull active repos), step 2 (`bootstrap.sh` — symlink, memory, hooks), re-running after cloning more repos, and what each flag does
+- Update the existing README.md "Setup: Install on a New Machine" section to describe the two-step flow (`sync-repos.sh` then `bootstrap.sh`) and link to `docs/new-machine-setup.md`
+
+**Success criteria:**
+- Both end-to-end tests pass
+- `docs/new-machine-setup.md` answers: "I just got a new laptop. How do I restore everything?"
+- README documents `--months` flag and the two-step sequence
+- No manual steps required beyond cloning claude-config and claude-personal and running two commands
 
 ## Decision Log
 
-_(Decisions recorded here as they are made during implementation)_
+| # | Decision | Rationale | Impact |
+|---|---|---|---|
+| 1 | `sync-repos.sh` uses `gh repo list` filtered to repos active within last N months | Auto-discovery avoids maintaining a repo list; N-month window skips forks and archived projects | Determines which repos are cloned/pulled; window size is user-configurable via `--months` |
+| 2 | `git pull --ff-only` for repos already present on disk; warn and skip on failure | Fast-forward-only prevents silent merge commits; skipping with a warning is safe when local work exists | Repos with local changes or diverged history are surfaced as warnings, not errors |
+| 3 | `--months N` flag (default 6) rather than interactive prompt or hardcoded constant | Consistent with `bootstrap.sh`'s flag style; scriptable/automatable; default covers active projects without requiring configuration | `sync-repos.sh` is non-interactive and can run in pipelines; `--dry-run` and `--repos-dir` follow the same pattern |
+| 4 | `sync-repos.sh` is M5 of PRD #63, not a separate issue | Scope fits the "bootstrap a new machine" problem; script is a prerequisite to `bootstrap.sh` and belongs in the same delivery | M6 (formerly M5) docs milestone must cover both scripts; README "Getting Started" section documents the two-step flow |
 
 ## References
 

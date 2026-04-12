@@ -9,6 +9,8 @@ CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
 
 DRY_RUN=0
 CLAUDE_PERSONAL_DIR="${CLAUDE_PERSONAL_DIR:-$HOME/Documents/Repositories/claude-personal}"
+REPOS_DIR="${REPOS_DIR:-$HOME/Documents/Repositories}"
+INSTALL_HOOKS_SCRIPT="${INSTALL_HOOKS_SCRIPT:-$REPO_ROOT/scripts/install-git-hooks.sh}"
 
 # ── Argument parsing ──────────────────────────────────────────────────────────
 
@@ -147,5 +149,29 @@ if [[ -d "$MEMORY_SRC" ]]; then
                 fi
             fi
         done
+    done
+fi
+
+# ── Step 3: Git hook installation ─────────────────────────────────────────────
+
+if [[ -d "$REPOS_DIR" ]]; then
+    for repo_path in "$REPOS_DIR"/*/; do
+        [[ -d "$repo_path/.git" ]] || continue
+        repo_name="$(basename "$repo_path")"
+
+        if [[ -f "$repo_path/.skip-git-hooks" ]]; then
+            skipped "git hooks: $repo_name — .skip-git-hooks present"
+            continue
+        fi
+
+        if [[ "$DRY_RUN" -eq 1 ]]; then
+            dry_run "Would install git hooks in $repo_name"
+        else
+            if "$INSTALL_HOOKS_SCRIPT" "$repo_path" > /dev/null; then
+                ok "git hooks installed: $repo_name"
+            else
+                echo "[ERROR] git hooks install failed: $repo_name" >&2
+            fi
+        fi
     done
 fi
