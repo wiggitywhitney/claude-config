@@ -57,7 +57,7 @@ This decision gates the sync script design. **Discuss at M1 before writing any c
 
 ## Milestones
 
-### Milestone 1: Design Decision — Memory Directory Structure
+### Milestone 1: Design Decision — Memory Directory Structure ✅
 
 Before writing any code, decide how memory directories are named in the repo (Option A: preserve absolute path names vs Option B: map to logical names). This decision shapes every other milestone.
 
@@ -71,7 +71,7 @@ Before writing any code, decide how memory directories are named in the repo (Op
 - Decision confirmed by Whitney and recorded in the Decision Log with rationale
 - Repo directory layout defined (even if the repo doesn't exist yet)
 
-### Milestone 2: Create Private Repo and Initial Memory Snapshot
+### Milestone 2: Create Private Repo and Initial Memory Snapshot ✅
 
 Create the `claude-personal` private GitHub repo and commit the current state of all memory files using the structure decided in M1.
 
@@ -87,7 +87,7 @@ Create the `claude-personal` private GitHub repo and commit the current state of
 - `.gitignore` prevents accidental secret commits
 - Repo is cloneable to `~/Documents/Repositories/claude-personal`
 
-### Milestone 3: Push Script (local → repo)
+### Milestone 3: Push Script (local → repo) ✅
 **Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
 
 Write `scripts/sync-push.sh` in the claude-personal repo that syncs local memory files and `settings.local.json` files to the repo and commits if anything changed.
