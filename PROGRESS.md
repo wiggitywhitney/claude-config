@@ -6,6 +6,7 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-04-12) Added sync-push.sh to claude-personal — idempotent script syncs ~/.claude/projects/*/memory/ and per-project settings.local.json to backup repo; additive-only (no remote deletions); --dry-run flag; 8-test bats suite; uses M1 logical naming convention (PRD #62, M3)
 - (2026-04-12) Created claude-personal private GitHub repo with initial memory snapshot — 95 files across 11 projects committed using Option B logical naming (memory/<project-name>/); .gitignore blocks *.jsonl, .vals.yaml, secrets (PRD #62, M2)
 - (2026-04-12) Decided memory directory naming strategy for claude-personal backup — Option B (logical project names, stripping common ~/Documents/Repositories/ prefix) chosen; repo layout defined with memory/<project-name>/ and local-settings/<project-name>/settings.local.json structure (PRD #62, M1)
 - (2026-04-08) Recorded M4 rollout decisions — install-git-hooks.sh scope extended to ~/Documents/Journal (Decision 6); explicit approval gate before touching active repos ~/Documents/Journal and spinybacked-orbweaver during rollout (Decision 7) (PRD #47)
