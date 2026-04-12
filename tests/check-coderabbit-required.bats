@@ -27,12 +27,14 @@ make_fake_gh() {
     local issue_comments="${3:-0}"
     cat > "$TMPDIR/bin/gh" <<GHEOF
 #!/usr/bin/env bash
+# Output one line per match so wc -l gives the correct count (matching --paginate behavior)
+emit_lines() { local n="\$1"; for i in \$(seq 1 "\$n" 2>/dev/null); do echo 1; done; }
 if [[ "\$*" == *"pulls/42/reviews"* ]]; then
-    echo "$pull_reviews"
+    emit_lines "$pull_reviews"
 elif [[ "\$*" == *"pulls/42/comments"* ]]; then
-    echo "$inline_comments"
+    emit_lines "$inline_comments"
 elif [[ "\$*" == *"issues/42/comments"* ]]; then
-    echo "$issue_comments"
+    emit_lines "$issue_comments"
 fi
 GHEOF
     chmod +x "$TMPDIR/bin/gh"

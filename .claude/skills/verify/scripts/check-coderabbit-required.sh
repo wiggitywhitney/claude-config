@@ -133,9 +133,17 @@ fi
 # Check for CodeRabbit review via all three GitHub API channels.
 # CodeRabbit posts to different channels depending on PR size and timing;
 # missing any one channel means missing findings.
-CODERABBIT_PULL_REVIEWS=$(gh api "repos/$REPO_INFO/pulls/$PR_NUMBER/reviews" --jq '[.[] | select(.user.login == "coderabbitai[bot]")] | length' 2>/dev/null || echo "0")
-CODERABBIT_INLINE_COMMENTS=$(gh api "repos/$REPO_INFO/pulls/$PR_NUMBER/comments" --jq '[.[] | select(.user.login == "coderabbitai[bot]")] | length' 2>/dev/null || echo "0")
-CODERABBIT_ISSUE_COMMENTS=$(gh api "repos/$REPO_INFO/issues/$PR_NUMBER/comments" --jq '[.[] | select(.user.login == "coderabbitai[bot]")] | length' 2>/dev/null || echo "0")
+# --paginate fetches all pages; jq outputs one line per match; wc -l gives total count.
+count_coderabbit_in_channel() {
+  local endpoint="$1"
+  gh api --paginate "repos/$REPO_INFO/$endpoint" \
+    --jq '.[] | select(.user.login == "coderabbitai[bot]") | 1' 2>/dev/null \
+    | wc -l | tr -d ' ' || echo "0"
+}
+
+CODERABBIT_PULL_REVIEWS=$(count_coderabbit_in_channel "pulls/$PR_NUMBER/reviews")
+CODERABBIT_INLINE_COMMENTS=$(count_coderabbit_in_channel "pulls/$PR_NUMBER/comments")
+CODERABBIT_ISSUE_COMMENTS=$(count_coderabbit_in_channel "issues/$PR_NUMBER/comments")
 
 if [ "$CODERABBIT_PULL_REVIEWS" -gt 0 ] || [ "$CODERABBIT_INLINE_COMMENTS" -gt 0 ] || [ "$CODERABBIT_ISSUE_COMMENTS" -gt 0 ]; then
   # CodeRabbit has reviewed — allow merge
