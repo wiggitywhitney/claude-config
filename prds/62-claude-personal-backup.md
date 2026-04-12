@@ -107,7 +107,7 @@ Write `scripts/sync-push.sh` in the claude-personal repo that syncs local memory
 - Locally-deleted files remain in repo after push
 - Tests pass
 
-### Milestone 4: Restore Script (repo → local)
+### Milestone 4: Restore Script (repo → local) ✅
 **Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
 
 Write `scripts/sync-restore.sh` in the claude-personal repo that restores memory files and `settings.local.json` files from the repo to the correct local locations on a new machine.
@@ -127,7 +127,7 @@ Write `scripts/sync-restore.sh` in the claude-personal repo that restores memory
 - Tests pass
 - Round-trip (push then restore) produces byte-identical files
 
-### Milestone 5: Documentation and Cron Suggestion
+### Milestone 5: Documentation and Cron Suggestion ✅
 
 Document how to use the repo and recommend a backup cadence.
 
@@ -142,6 +142,14 @@ Document how to use the repo and recommend a backup cadence.
 - No secrets or absolute-path assumptions in the docs
 
 ## Decision Log
+
+### M4: Path prefix encoding — derive from HOME, not from `whoami`
+
+**Decision**: Compute the `~/.claude/projects/` path prefix by encoding `$HOME` through `sed 's|[^a-zA-Z0-9]|-|g'`, not by using `$(whoami)`.
+
+**Rationale**: Claude Code encodes the full absolute path to a project directory by replacing every non-alphanumeric character (including dots) with a hyphen. On a machine where the username contains a dot (e.g., `whitney.lee`), `whoami` returns `whitney.lee` but the actual project directory uses `whitney-lee`. Deriving the prefix from `$HOME` with the same encoding rule produces the correct prefix regardless of special characters in the username.
+
+**Impact**: Both `sync-push.sh` and `sync-restore.sh` use this encoding. The bats test files use the same approach for `TEST_PREFIX`.
 
 ### M1: Memory directory naming strategy — Option B (logical project names)
 

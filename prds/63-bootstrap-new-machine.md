@@ -59,6 +59,7 @@ Steps 4 and 5 may partially succeed on a fresh machine where not all repos are c
 ## Milestones
 
 ### Milestone 1: Script Skeleton and Settings Symlink
+**Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
 
 Create `scripts/bootstrap.sh` with argument parsing, prerequisite checks, and the settings.json symlink step.
 
@@ -80,15 +81,16 @@ Create `scripts/bootstrap.sh` with argument parsing, prerequisite checks, and th
 - Tests pass
 
 ### Milestone 2: Memory File Restore
+**Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
 
 Add the memory file restore step to `scripts/bootstrap.sh`.
 
 **To implement:**
 - Read memory files from `<claude-personal-dir>/memory/<project-name>/` (or whatever structure PRD #62 M1 decides)
-- Write to `~/.claude/projects/<encoded-path>/memory/` — requires mapping logical project name back to the encoded directory name (this is the inverse of the push direction in PRD #62)
+- Write to `~/.claude/projects/<encoded-path>/memory/` — requires mapping logical project name back to the encoded directory name (this is the inverse of the push direction in PRD #62). **Path encoding rule (PRD #62 M4 decision):** encode `$HOME` via `sed 's|[^a-zA-Z0-9]|-|g'` — do NOT use `$(whoami)`, because macOS usernames can contain dots that Claude Code encodes as hyphens.
 - Skip files that already exist and are identical (byte-for-byte); overwrite if different (repo is authoritative on restore)
 - Print per-file status: restored / skipped (identical) / updated
-- Write bats tests: fresh restore creates files, re-run with identical content skips, re-run with updated content in repo overwrites local
+- Write bats tests: fresh restore creates files, re-run with identical content skips, re-run with updated content in repo overwrites local; **include a test that uses the HOME-encoding approach and verifies the correct encoded path is produced**
 
 **Success criteria:**
 - Memory files land in the correct `~/.claude/projects/*/memory/` locations
@@ -98,6 +100,7 @@ Add the memory file restore step to `scripts/bootstrap.sh`.
 **Dependency**: PRD #62 M1 must be decided (memory directory naming convention) before implementing this milestone.
 
 ### Milestone 3: Git Hook Installation (Design Decision A)
+**Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
 
 Add git hook installation to `scripts/bootstrap.sh`. **Read Decision A above, then present your implementation plan (which option you'd implement and why) and wait for Whitney to confirm before writing any code.**
 
@@ -115,6 +118,7 @@ Add git hook installation to `scripts/bootstrap.sh`. **Read Decision A above, th
 - Tests pass
 
 ### Milestone 4: settings.local.json Restore (Design Decision B)
+**Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
 
 Add per-project `settings.local.json` restore to `scripts/bootstrap.sh`. **Read Decision B above, then present your implementation plan and wait for Whitney to confirm before writing any code.**
 
@@ -135,6 +139,7 @@ Add per-project `settings.local.json` restore to `scripts/bootstrap.sh`. **Read 
 **Dependency**: PRD #62 M2 must be complete (files committed to claude-personal) before this can be tested end-to-end.
 
 ### Milestone 5: End-to-End Test and Documentation
+**Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
 
 Validate the full bootstrap flow and document the new-machine setup process.
 
