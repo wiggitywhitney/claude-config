@@ -58,7 +58,7 @@ Steps 4 and 5 may partially succeed on a fresh machine where not all repos are c
 
 ## Milestones
 
-### Milestone 1: Script Skeleton and Settings Symlink
+### Milestone 1: Script Skeleton and Settings Symlink ✅
 **Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
 
 Create `scripts/bootstrap.sh` with argument parsing, prerequisite checks, and the settings.json symlink step.
