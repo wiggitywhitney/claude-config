@@ -34,6 +34,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M1: Config sync script
+**Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
 
 **What**: A `scripts/config-sync.sh` that detects drift between live `~/.claude/` and the claude-config repo using `rsync --dry-run`. Supports `--apply live` (update repo from live) and `--apply repo` (adopt repo into live).
 
@@ -72,6 +73,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M3: Stop hook — auto-test on response
+**Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
 
 **What**: A `Stop` event hook that runs the project's test suite after every Claude response. Non-blocking (always exits 0). Only runs if a test command is detectable.
 

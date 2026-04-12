@@ -57,7 +57,7 @@ This decision gates the sync script design. **Discuss at M1 before writing any c
 
 ## Milestones
 
-### Milestone 1: Design Decision — Memory Directory Structure
+### Milestone 1: Design Decision — Memory Directory Structure ✅
 
 Before writing any code, decide how memory directories are named in the repo (Option A: preserve absolute path names vs Option B: map to logical names). This decision shapes every other milestone.
 
@@ -71,7 +71,7 @@ Before writing any code, decide how memory directories are named in the repo (Op
 - Decision confirmed by Whitney and recorded in the Decision Log with rationale
 - Repo directory layout defined (even if the repo doesn't exist yet)
 
-### Milestone 2: Create Private Repo and Initial Memory Snapshot
+### Milestone 2: Create Private Repo and Initial Memory Snapshot ✅
 
 Create the `claude-personal` private GitHub repo and commit the current state of all memory files using the structure decided in M1.
 
@@ -87,7 +87,8 @@ Create the `claude-personal` private GitHub repo and commit the current state of
 - `.gitignore` prevents accidental secret commits
 - Repo is cloneable to `~/Documents/Repositories/claude-personal`
 
-### Milestone 3: Push Script (local → repo)
+### Milestone 3: Push Script (local → repo) ✅
+**Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
 
 Write `scripts/sync-push.sh` in the claude-personal repo that syncs local memory files and `settings.local.json` files to the repo and commits if anything changed.
 
@@ -106,7 +107,8 @@ Write `scripts/sync-push.sh` in the claude-personal repo that syncs local memory
 - Locally-deleted files remain in repo after push
 - Tests pass
 
-### Milestone 4: Restore Script (repo → local)
+### Milestone 4: Restore Script (repo → local) ✅
+**Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
 
 Write `scripts/sync-restore.sh` in the claude-personal repo that restores memory files and `settings.local.json` files from the repo to the correct local locations on a new machine.
 
@@ -125,7 +127,7 @@ Write `scripts/sync-restore.sh` in the claude-personal repo that restores memory
 - Tests pass
 - Round-trip (push then restore) produces byte-identical files
 
-### Milestone 5: Documentation and Cron Suggestion
+### Milestone 5: Documentation and Cron Suggestion ✅
 
 Document how to use the repo and recommend a backup cadence.
 
@@ -141,4 +143,37 @@ Document how to use the repo and recommend a backup cadence.
 
 ## Decision Log
 
-_(Decisions recorded here as they are made during implementation)_
+### M4: Path prefix encoding — derive from HOME, not from `whoami`
+
+**Decision**: Compute the `~/.claude/projects/` path prefix by encoding `$HOME` through `sed 's|[/.]|-|g'`, not by using `$(whoami)`.
+
+**Rationale**: Claude Code encodes the full absolute path to a project directory by replacing every non-alphanumeric character (including dots) with a hyphen. On a machine where the username contains a dot (e.g., `whitney.lee`), `whoami` returns `whitney.lee` but the actual project directory uses `whitney-lee`. Deriving the prefix from `$HOME` with the same encoding rule produces the correct prefix regardless of special characters in the username.
+
+**Correct encoding rule**: `sed 's|[/.]|-|g'` — replaces forward slashes and dots only. Do NOT use `[^a-zA-Z0-9]`, which would also replace hyphens, underscores, and digits in project names (though hyphens → hyphens is a no-op in practice, the rule is imprecise). Evidence: directories like `-Users-...-KubeHound-Demo` show hyphens in project names are preserved.
+
+**Impact**: Both `sync-push.sh` and `sync-restore.sh` use this encoding. The bats test files use the same approach for `TEST_PREFIX`.
+
+### M1: Memory directory naming strategy — Option B (logical project names)
+
+**Decision**: Map memory directories to logical project names rather than preserving absolute path-encoded names.
+
+**Rationale**: Option A (preserving `-Users-whitney-lee-...` directory names) breaks on any machine with a different username or directory layout — exactly the failure mode this backup is designed to survive. Option B survives machine migration, produces a readable repo on GitHub, and the mapping complexity is a one-time implementation cost.
+
+**Mapping rule**: Strip the common prefix encoding (`-Users-<username>-Documents-Repositories-`) from the `~/.claude/projects/` directory name and use the trailing segment as the logical project name. Example: `-Users-whitney-lee-Documents-Repositories-claude-config` → `claude-config`.
+
+**Edge cases**: Projects whose path does not match the `~/Documents/Repositories/<name>` pattern (e.g., paths outside that directory) use the full encoded name as-is as a fallback — this preserves restore correctness for unusual paths without breaking the common case.
+
+**Repo directory layout**:
+```text
+claude-personal/
+├── memory/
+│   ├── claude-config/          # ~/.claude/projects/-Users-...-claude-config/memory/
+│   ├── commit-story-v2-eval/   # ~/.claude/projects/-Users-...-commit-story-v2-eval/memory/
+│   └── ...                     # one directory per project
+├── local-settings/
+│   ├── claude-config/          # ~/Documents/Repositories/claude-config/.claude/settings.local.json
+│   │   └── settings.local.json
+│   └── ...                     # one directory per project with a settings.local.json
+├── .gitignore
+└── README.md
+```
