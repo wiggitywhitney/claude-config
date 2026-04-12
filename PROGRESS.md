@@ -6,6 +6,7 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-04-12) Completed claude-personal backup repo — sync-restore.sh restores memory files and settings.local.json from repo to correct local paths on a new machine; idempotent; warns on newer-local files; per-file status output; 9-test bats suite; README via /write-docs with validated commands; bug fix: path prefix encoding uses sed 's|[/.]|-|g' on $HOME (not whoami) to correctly handle macOS usernames with dots (PRD #62, M4+M5)
 - (2026-04-12) Added sync-push.sh to claude-personal — idempotent script syncs ~/.claude/projects/*/memory/ and per-project settings.local.json to backup repo; additive-only (no remote deletions); --dry-run flag; 8-test bats suite; uses M1 logical naming convention (PRD #62, M3)
 - (2026-04-12) Created claude-personal private GitHub repo with initial memory snapshot — 95 files across 11 projects committed using Option B logical naming (memory/<project-name>/); .gitignore blocks *.jsonl, .vals.yaml, secrets (PRD #62, M2)
 - (2026-04-12) Decided memory directory naming strategy for claude-personal backup — Option B (logical project names, stripping common ~/Documents/Repositories/ prefix) chosen; repo layout defined with memory/<project-name>/ and local-settings/<project-name>/settings.local.json structure (PRD #62, M1)
