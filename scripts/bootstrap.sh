@@ -222,7 +222,46 @@ if [[ -d "$LOCAL_SETTINGS_SRC" ]]; then
     done
 fi
 
+# ── Step 5: Private file restore ─────────────────────────────────────────────
+
+PRIVATE_FILES_SRC="$CLAUDE_PERSONAL_DIR/private-files"
+
+if [[ -d "$PRIVATE_FILES_SRC" ]]; then
+    for repo_backup_dir in "$PRIVATE_FILES_SRC"/*/; do
+        [[ -d "$repo_backup_dir" ]] || continue
+        repo_name="$(basename "$repo_backup_dir")"
+        repo_path="$REPOS_DIR/$repo_name"
+
+        if [[ ! -d "$repo_path/.git" ]]; then
+            skipped "private files: $repo_name — repo not cloned yet"
+            SKIPPED_REPOS+=("$repo_name")
+            continue
+        fi
+
+        while IFS= read -r src_file; do
+            rel_path="${src_file#$repo_backup_dir}"
+            dst="$repo_path/$rel_path"
+
+            if [[ "$DRY_RUN" -eq 1 ]]; then
+                dry_run "Would restore private file: $repo_name/$rel_path"
+                continue
+            fi
+
+            if [[ -f "$dst" ]] && cmp -s "$src_file" "$dst"; then
+                skipped "private file: $repo_name/$rel_path (identical)"
+            elif [[ -f "$dst" ]]; then
+                cp "$src_file" "$dst"
+                echo "[UPDATED] private file: $repo_name/$rel_path"
+            else
+                mkdir -p "$(dirname "$dst")"
+                cp "$src_file" "$dst"
+                ok "private file: $repo_name/$rel_path"
+            fi
+        done < <(find "$repo_backup_dir" -type f)
+    done
+fi
+
 if [[ ${#SKIPPED_REPOS[@]} -gt 0 ]]; then
     echo ""
-    echo "Re-run bootstrap after cloning the above repos to restore their settings."
+    echo "Re-run bootstrap after cloning the above repos to restore their files and settings."
 fi

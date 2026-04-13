@@ -6,6 +6,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-04-13) Added backup-private-files.sh — a standalone script that captures gitignored files (journal entries, design notes, and anything listed in a per-repo .private-sync file) from active repos and stores them in claude-personal, so they survive a machine switch and are automatically restored by bootstrap.sh on a new machine
+- (2026-04-13) Extended bootstrap.sh to restore per-repo private files from claude-personal — skips repos not yet cloned, skips files that are already identical, overwrites files that have changed, and prints a re-run reminder for any repos that were skipped
 - (2026-04-12) Added sync-repos.sh — companion script to bootstrap.sh that clones missing repos and fast-forward-pulls existing ones; filters by --months N (default 6) activity window using gh repo list; gh and jq prerequisites; [OK]/[SKIPPED]/[DRY RUN] output; --repos-dir and REPOS_DIR env var for testability; 10-test bats suite in tests/sync-repos.bats (PRD #63, M5)
 - (2026-04-12) Added settings.local.json restore step to bootstrap.sh — reads from claude-personal/local-settings/<project-name>/settings.local.json, restores to present repos, skips with message for uncloned repos, prints trailing re-run reminder when repos were skipped; 8 new bats tests (31 total) (PRD #63, M4)
 - (2026-04-12) Added git hook installation step to bootstrap.sh — auto-discovers git repos one level deep under ~/Documents/Repositories/, skips repos with .skip-git-hooks, calls install-git-hooks.sh idempotently; REPOS_DIR and INSTALL_HOOKS_SCRIPT env vars for test isolation; 5 new bats tests (23 total); added sync-repos.sh as M5 with design decisions captured in PRD decision log (PRD #63, M3)

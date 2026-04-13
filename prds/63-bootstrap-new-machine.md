@@ -13,7 +13,13 @@ There is no script to do this. Steps get missed, done out of order, or forgotten
 
 ## Solution
 
-An idempotent `scripts/bootstrap.sh` in claude-config that restores a full Claude development environment in a single run. The script coordinates between claude-config (hook logic, settings symlink) and claude-personal (memory files, `settings.local.json` backups). Running it on an already-configured machine is safe — it skips anything already in place.
+Three companion scripts that together restore a full Claude development environment when switching to a new machine:
+
+1. **`scripts/backup-private-files.sh`** — run on the *current* machine before switching; pushes per-repo gitignored files (`journal/`, `.claude/design-decisions.md`, and any repo-specific additions via `.private-sync`) into claude-personal
+2. **`scripts/sync-repos.sh`** — run on the *new* machine first; clones missing repos and pulls existing ones using `gh repo list`
+3. **`scripts/bootstrap.sh`** — run on the *new* machine after sync; restores the settings.json symlink, memory files, `settings.local.json`, private files, and git hooks across all discovered repos
+
+All three scripts are idempotent — running them on an already-configured machine produces no errors and no unintended changes.
 
 ## Key Design Decisions (Discuss at Implementation)
 
@@ -45,15 +51,17 @@ Bootstrap must run in this order:
 2. Create settings.json symlink (no deps)
 3. Restore memory files (no deps)
 4. Restore `settings.local.json` files (requires repos already cloned — see Decision B)
-5. Install git hooks (requires repos already cloned)
+5. Restore private files from `private-files/` in claude-personal (requires repos already cloned — see M7)
+6. Install git hooks (requires repos already cloned)
 
 Steps 4 and 5 may partially succeed on a fresh machine where not all repos are cloned yet. The script should complete the steps it can and print a clear summary of what was skipped, so the user can re-run after cloning the remaining repos.
 
 ## Success Criteria
 
-- Running `scripts/bootstrap.sh` on a fresh machine with claude-config and claude-personal cloned restores all memory files, creates the settings symlink, and installs hooks in all discovered repos
-- Running on an already-configured machine produces no errors and no unintended changes
-- Skipped steps (repos not cloned yet) produce clear, actionable output
+- Running `scripts/backup-private-files.sh` on the current machine pushes all per-repo private files (journal entries, design decisions, and any `.private-sync` additions) into claude-personal
+- Running `scripts/sync-repos.sh` then `scripts/bootstrap.sh` on a fresh machine with claude-config and claude-personal cloned restores: the settings.json symlink, all memory files, all `settings.local.json` files, all private files, and git hooks in all discovered repos
+- Running any script on an already-configured machine produces no errors and no unintended changes
+- Skipped steps (repos not yet cloned) produce clear, actionable output and a re-run reminder
 - All bats tests pass
 
 ## Milestones
@@ -163,19 +171,58 @@ Add `scripts/sync-repos.sh` — a companion script that clones missing repos and
 ### Milestone 6: End-to-End Test and Documentation
 **Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
 
-Validate the full new-machine setup flow and document both scripts. (Updated per Decision 4: docs must cover `sync-repos.sh` and `bootstrap.sh` as a two-step flow, not bootstrap alone.)
+**Updated per Decision 5: deferred until M7 is complete.** End-to-end tests and documentation must cover the full feature set — including `backup-private-files.sh` and the private-file restore step — so they are written once over everything rather than twice.
+
+Validate the full new-machine setup flow and document all three scripts. (Updated per Decision 4: docs must cover `sync-repos.sh` and `bootstrap.sh` as a two-step flow, not bootstrap alone. Updated per Decision 5: docs must also cover `backup-private-files.sh` as a prerequisite step run on the old machine.)
 
 **To implement:**
-- Write an end-to-end bats test for `bootstrap.sh` that: creates a temp `~/.claude/`-like directory, a temp repos directory with two fake git repos, a temp claude-personal with sample memory and settings files, runs `bootstrap.sh`, and asserts all outputs are in place
+- Write an end-to-end bats test for `bootstrap.sh` that: creates a temp `~/.claude/`-like directory, a temp repos directory with two fake git repos, a temp claude-personal with sample memory, settings files, and private-files backup, runs `bootstrap.sh`, and asserts all outputs are in place (including restored private files)
 - Write an end-to-end bats test for `sync-repos.sh` that: mocks `gh repo list` output, sets up a temp repos directory with one existing repo and one absent, runs `sync-repos.sh`, and asserts the correct clone/pull/skip behavior
-- Run `/write-docs` to produce a `docs/new-machine-setup.md` guide covering: prerequisites (clone claude-config and claude-personal), step 1 (`sync-repos.sh` — clone/pull active repos), step 2 (`bootstrap.sh` — symlink, memory, hooks), re-running after cloning more repos, and what each flag does
-- Update the existing README.md "Setup: Install on a New Machine" section to describe the two-step flow (`sync-repos.sh` then `bootstrap.sh`) and link to `docs/new-machine-setup.md`
+- Write an end-to-end bats test for `backup-private-files.sh` that: sets up a temp repos directory with sample `journal/` and `.claude/design-decisions.md` files (and one repo with a `.private-sync` listing an extra path), runs the script, and asserts all expected files land in claude-personal
+- Run `/write-docs` to produce a `docs/new-machine-setup.md` guide covering: prerequisites (clone claude-config and claude-personal), step 0 (`backup-private-files.sh` — run on old machine to push private files to claude-personal), step 1 (`sync-repos.sh` — clone/pull active repos on new machine), step 2 (`bootstrap.sh` — symlink, memory, hooks, private files), re-running after cloning more repos, and all flags: `--dry-run` (all three scripts), `--months N` (sync-repos.sh), `--repos-dir` (all three scripts), `--claude-personal-dir` (backup-private-files.sh and bootstrap.sh)
+- Update the existing README.md "Setup: Install on a New Machine" section to describe the full flow and link to `docs/new-machine-setup.md`
 
 **Success criteria:**
-- Both end-to-end tests pass
+- All three end-to-end tests pass
 - `docs/new-machine-setup.md` answers: "I just got a new laptop. How do I restore everything?"
-- README documents `--months` flag and the two-step sequence
-- No manual steps required beyond cloning claude-config and claude-personal and running two commands
+- README documents the three-script sequence and key flags
+- No manual steps required beyond cloning claude-config and claude-personal and running three commands
+
+### Milestone 7: Private File Backup and Restore ✅
+**Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
+
+**Context:** Research confirmed that `prds/` directories are committed (not gitignored) in all active repos — they travel with the repo on clone and need no special handling. The gitignored items worth syncing are `journal/` (gitignored in 10+ repos) and `.claude/design-decisions.md` (gitignored in 5+ repos). See Decision 6, 7, 8.
+
+**Implement two components in this order:**
+
+**`scripts/backup-private-files.sh`** (run on current machine; pushes private files to claude-personal):
+- Accepts `--dry-run`, `--repos-dir <path>` (defaults to `~/Documents/Repositories`), and `--claude-personal-dir <path>` (defaults to `~/Documents/Repositories/claude-personal`)
+- For each repo under repos-dir:
+  - Build sync list: hardcoded defaults (`journal/`, `.claude/design-decisions.md`) plus any paths listed in `.private-sync` at the repo root (one path per line; paths are relative to the repo root)
+  - For each path in the sync list that exists in the repo:
+    - If it is a directory: use `cp -r` to copy into claude-personal under `private-files/<repo-name>/<path>`, creating intermediate directories as needed
+    - If it is a file: use `cp` to copy, creating intermediate directories as needed
+  - Skip paths that do not exist in the repo with `[SKIPPED] <repo>/<path> — not found`
+- If any files were copied: commit changes to claude-personal with message `chore: back up private files from <repo>`
+- If nothing changed: exit silently (no commit, no output)
+- Output format: `[OK] backed up <repo>/<path>`, `[SKIPPED] <repo>/<path> — not found`, `[DRY RUN] Would back up <repo>/<path>`
+- Write bats tests: backs up `journal/` from repo, backs up `.claude/design-decisions.md`, reads additional paths from `.private-sync` (including a path that does not exist in the repo, which should be skipped), dry-run makes no changes, no-op when nothing to back up produces no output and no commit
+
+**New restore step in `scripts/bootstrap.sh`** (run on new machine; pulls from claude-personal; this is step 5 in the order of operations from Decision C):
+- For each repo directory under `<claude-personal-dir>/private-files/`:
+  - If the repo is not cloned locally: print `[SKIPPED] <repo> — not cloned yet` and continue
+  - If cloned: for each item (file or directory) in the backup:
+    - If a directory: compare file-by-file; skip files that are byte-for-byte identical, restore files that are missing or different
+    - If a file: skip if byte-for-byte identical; restore if missing or different
+    - Print `[OK] restored <repo>/<path>` for new items, `[UPDATED] <repo>/<path>` for overwrites, `[SKIPPED] <repo>/<path> — identical` for unchanged
+- At end of script, if any repos were skipped, print: "Re-run bootstrap after cloning the above repos to restore their private files."
+- Write bats tests: restores `journal/` directory tree to cloned repo, restores `.claude/design-decisions.md` file to cloned repo, skips uncloned repo with message, idempotent when content matches, overwrites when content differs, prints re-run reminder when repos skipped, dry-run shows would-restore without writing
+
+**Success criteria:**
+- Running `backup-private-files.sh` on current machine captures all private files to claude-personal
+- Running `bootstrap.sh` on a new machine restores them to the correct repos
+- `.private-sync` additions are picked up in both backup and restore
+- Tests pass
 
 ## Decision Log
 
@@ -185,6 +232,10 @@ Validate the full new-machine setup flow and document both scripts. (Updated per
 | 2 | `git pull --ff-only` for repos already present on disk; warn and skip on failure | Fast-forward-only prevents silent merge commits; skipping with a warning is safe when local work exists | Repos with local changes or diverged history are surfaced as warnings, not errors |
 | 3 | `--months N` flag (default 6) rather than interactive prompt or hardcoded constant | Consistent with `bootstrap.sh`'s flag style; scriptable/automatable; default covers active projects without requiring configuration | `sync-repos.sh` is non-interactive and can run in pipelines; `--dry-run` and `--repos-dir` follow the same pattern |
 | 4 | `sync-repos.sh` is M5 of PRD #63, not a separate issue | Scope fits the "bootstrap a new machine" problem; script is a prerequisite to `bootstrap.sh` and belongs in the same delivery | M6 (formerly M5) docs milestone must cover both scripts; README "Getting Started" section documents the two-step flow |
+| 5 | Defer M6 (end-to-end tests + docs) until M7 is complete | Writing tests and docs twice — once after M5, once after M7 — wastes effort; better to verify and document the complete feature set in one pass | M6 expanded to cover `backup-private-files.sh` end-to-end test and a three-script flow in docs |
+| 6 | Default private sync targets: `journal/` and `.claude/design-decisions.md` | Research across all active repos confirmed `journal/` is gitignored in 10+ repos and `.claude/design-decisions.md` in 5+ repos; `prds/` is NOT gitignored anywhere — it is committed and travels with the repo on clone | Determines what M7 backs up and restores by default with zero per-repo config |
+| 7 | Hardcoded defaults + per-repo `.private-sync` opt-in for additional paths | Hardcoded list covers the common case with no per-repo config; `.private-sync` handles exceptions without changing core logic | M7 backup and restore both read `.private-sync` (one path per line at repo root) to extend the default list |
+| 8 | `backup-private-files.sh` is a standalone script | Runs on the current (old) machine as an outbound operation; `sync-repos.sh` and `bootstrap.sh` run on the new machine as inbound operations — different phases of a handoff; standalone makes periodic backup easy without triggering the full bootstrap flow | Adds a third companion script; M6 docs describe a three-step workflow: backup on old machine, then sync-repos + bootstrap on new machine |
 
 ## References
 

@@ -310,7 +310,7 @@ teardown() {
 
     run "$SCRIPT"
     [ "$status" -eq 0 ]
-    [[ "$output" == *"Re-run bootstrap after cloning the above repos to restore their settings."* ]]
+    [[ "$output" == *"Re-run bootstrap after cloning the above repos to restore their files and settings."* ]]
 }
 
 @test "no re-run reminder when no repos were skipped" {
@@ -338,4 +338,83 @@ teardown() {
     run "$SCRIPT"
     [ "$status" -eq 0 ]
     [[ "$output" != *"settings.local.json"* ]]
+}
+
+# ── Step 5: Private file restore ──────────────────────────────────────────────
+
+@test "restores journal/ directory tree to cloned repo" {
+    mkdir -p "$CLAUDE_PERSONAL_DIR/private-files/my-project/journal/entries"
+    echo "entry" > "$CLAUDE_PERSONAL_DIR/private-files/my-project/journal/entries/2026-04-13.md"
+    mkdir -p "$REPOS_DIR/my-project/.git"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [ -f "$REPOS_DIR/my-project/journal/entries/2026-04-13.md" ]
+}
+
+@test "restores private file to cloned repo" {
+    mkdir -p "$CLAUDE_PERSONAL_DIR/private-files/my-project/.claude"
+    echo "# Decisions" > "$CLAUDE_PERSONAL_DIR/private-files/my-project/.claude/design-decisions.md"
+    mkdir -p "$REPOS_DIR/my-project/.git"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [ -f "$REPOS_DIR/my-project/.claude/design-decisions.md" ]
+    [[ "$output" == *"[OK] private file: my-project/.claude/design-decisions.md"* ]]
+}
+
+@test "skips private file restore when repo not cloned" {
+    mkdir -p "$CLAUDE_PERSONAL_DIR/private-files/missing-project/journal"
+    echo "entry" > "$CLAUDE_PERSONAL_DIR/private-files/missing-project/journal/2026-04-13.md"
+    # No $REPOS_DIR/missing-project
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"[SKIPPED] private files: missing-project — repo not cloned yet"* ]]
+}
+
+@test "private file restore is idempotent when content matches" {
+    mkdir -p "$CLAUDE_PERSONAL_DIR/private-files/my-project/.claude"
+    echo "# Decisions" > "$CLAUDE_PERSONAL_DIR/private-files/my-project/.claude/design-decisions.md"
+    mkdir -p "$REPOS_DIR/my-project/.git"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"[SKIPPED] private file: my-project/.claude/design-decisions.md (identical)"* ]]
+}
+
+@test "private file restore overwrites when content differs" {
+    mkdir -p "$CLAUDE_PERSONAL_DIR/private-files/my-project/.claude"
+    echo "new content" > "$CLAUDE_PERSONAL_DIR/private-files/my-project/.claude/design-decisions.md"
+    mkdir -p "$REPOS_DIR/my-project/.git"
+    mkdir -p "$REPOS_DIR/my-project/.claude"
+    echo "old content" > "$REPOS_DIR/my-project/.claude/design-decisions.md"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"[UPDATED] private file: my-project/.claude/design-decisions.md"* ]]
+    [[ "$(cat "$REPOS_DIR/my-project/.claude/design-decisions.md")" == "new content" ]]
+}
+
+@test "prints re-run reminder when private file repos were skipped" {
+    mkdir -p "$CLAUDE_PERSONAL_DIR/private-files/missing-project/journal"
+    echo "entry" > "$CLAUDE_PERSONAL_DIR/private-files/missing-project/journal/2026-04-13.md"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"Re-run bootstrap"* ]]
+}
+
+@test "dry-run shows would-restore private files without writing" {
+    mkdir -p "$CLAUDE_PERSONAL_DIR/private-files/my-project/.claude"
+    echo "# Decisions" > "$CLAUDE_PERSONAL_DIR/private-files/my-project/.claude/design-decisions.md"
+    mkdir -p "$REPOS_DIR/my-project/.git"
+
+    run "$SCRIPT" --dry-run
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"[DRY RUN] Would restore private file: my-project/.claude/design-decisions.md"* ]]
+    [ ! -f "$REPOS_DIR/my-project/.claude/design-decisions.md" ]
 }
