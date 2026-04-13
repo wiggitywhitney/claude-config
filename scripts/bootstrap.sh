@@ -154,6 +154,8 @@ fi
 
 # ── Step 3: Git hook installation ─────────────────────────────────────────────
 
+HOOK_INSTALL_FAILED=0
+
 if [[ -d "$REPOS_DIR" ]]; then
     for repo_path in "$REPOS_DIR"/*/; do
         [[ -d "$repo_path/.git" ]] || continue
@@ -171,6 +173,7 @@ if [[ -d "$REPOS_DIR" ]]; then
                 ok "git hooks installed: $repo_name"
             else
                 echo "[ERROR] git hooks install failed: $repo_name" >&2
+                HOOK_INSTALL_FAILED=1
             fi
         fi
     done
@@ -239,7 +242,7 @@ if [[ -d "$PRIVATE_FILES_SRC" ]]; then
         fi
 
         while IFS= read -r src_file; do
-            rel_path="${src_file#$repo_backup_dir}"
+            rel_path="${src_file#"$repo_backup_dir"}"
             dst="$repo_path/$rel_path"
 
             if [[ "$DRY_RUN" -eq 1 ]]; then
@@ -264,4 +267,8 @@ fi
 if [[ ${#SKIPPED_REPOS[@]} -gt 0 ]]; then
     echo ""
     echo "Re-run bootstrap after cloning the above repos to restore their files and settings."
+fi
+
+if [[ "$HOOK_INSTALL_FAILED" -ne 0 ]]; then
+    exit 1
 fi

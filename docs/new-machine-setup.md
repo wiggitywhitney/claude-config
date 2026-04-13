@@ -19,7 +19,10 @@ git clone git@github.com:wiggitywhitney/claude-config.git ~/Documents/Repositori
 git clone git@github.com:wiggitywhitney/claude-personal.git ~/Documents/Repositories/claude-personal
 ```
 
-You also need the [GitHub CLI](https://cli.github.com/) (`gh`) installed and authenticated on the new machine — `sync-repos.sh` uses it to list and clone your repos.
+You also need the following installed and authenticated on the new machine:
+
+- [GitHub CLI](https://cli.github.com/) (`gh`) — `sync-repos.sh` uses it to list and clone your repos
+- [GNU coreutils](https://formulae.brew.sh/formula/coreutils) (`brew install coreutils`) — `sync-repos.sh` uses GNU `date` for date arithmetic, which is not available in macOS's built-in BSD `date`
 
 ---
 

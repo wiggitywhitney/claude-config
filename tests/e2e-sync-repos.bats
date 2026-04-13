@@ -49,8 +49,8 @@ GHEOF
     # repo-old: not on disk, pushed 12 months ago (should be skipped)
 
     # Build the gh repo list JSON with all three repos
-    recent=$(date -d "1 month ago" --iso-8601=seconds)
-    old=$(date -d "12 months ago" --iso-8601=seconds)
+    recent=$(python3 -c "from datetime import datetime, timedelta, timezone; print((datetime.now(timezone.utc) - timedelta(days=30)).isoformat(timespec='seconds'))")
+    old=$(python3 -c "from datetime import datetime, timedelta, timezone; print((datetime.now(timezone.utc) - timedelta(days=365)).isoformat(timespec='seconds'))")
     printf '[{"nameWithOwner":"owner/repo-present","pushedAt":"%s"},{"nameWithOwner":"owner/repo-new","pushedAt":"%s"},{"nameWithOwner":"owner/repo-old","pushedAt":"%s"}]\n' \
         "$recent" "$recent" "$old" > "$MOCK_GH_LIST"
 

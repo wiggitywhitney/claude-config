@@ -70,9 +70,19 @@ for repo_path in "$REPOS_DIR"/*/; do
     sync_paths=("${DEFAULT_SYNC_PATHS[@]}")
     if [[ -f "$repo_path/.private-sync" ]]; then
         while IFS= read -r line || [[ -n "$line" ]]; do
-            [[ -n "$line" ]] && sync_paths+=("$line")
+            [[ -n "$line" ]] || continue
+            # Reject paths that could escape the repo root
+            case "$line" in
+                /*|../*|*/../*|..)
+                    echo "Error: refusing path outside repo in $repo_path/.private-sync: $line" >&2
+                    exit 1
+                    ;;
+            esac
+            sync_paths+=("$line")
         done < "$repo_path/.private-sync"
     fi
+
+    repo_root="$(cd "$repo_path" && pwd -P)"
 
     for rel_path in "${sync_paths[@]}"; do
         src="$repo_path/$rel_path"
@@ -82,6 +92,20 @@ for repo_path in "$REPOS_DIR"/*/; do
             skipped "$repo_name/$rel_path"
             continue
         fi
+
+        # Verify resolved source is inside the repo root (guards against symlinks)
+        if [[ -d "$src" ]]; then
+            resolved_src="$(cd "$src" && pwd -P)"
+        else
+            resolved_src="$(cd "$(dirname "$src")" && pwd -P)/$(basename "$src")"
+        fi
+        case "$resolved_src" in
+            "$repo_root"/*) ;;
+            *)
+                echo "Error: refusing symlinked path outside repo: $repo_name/$rel_path" >&2
+                exit 1
+                ;;
+        esac
 
         if [[ "$DRY_RUN" -eq 1 ]]; then
             dry_run "$repo_name/$rel_path"
@@ -102,8 +126,14 @@ done
 # ── Commit to claude-personal ─────────────────────────────────────────────────
 
 if [[ "$DRY_RUN" -eq 0 ]] && [[ -d "$CLAUDE_PERSONAL_DIR/private-files" ]]; then
-    git -C "$CLAUDE_PERSONAL_DIR" add private-files/
+    # Fail if there are pre-existing staged changes to avoid committing unrelated work
     if ! git -C "$CLAUDE_PERSONAL_DIR" diff --cached --quiet; then
+        echo "Error: claude-personal has staged changes; commit or unstage them before running backup-private-files.sh" >&2
+        exit 1
+    fi
+
+    git -C "$CLAUDE_PERSONAL_DIR" add private-files/
+    if ! git -C "$CLAUDE_PERSONAL_DIR" diff --cached --quiet -- private-files/; then
         git -C "$CLAUDE_PERSONAL_DIR" commit -m "chore: back up private files from local repos"
     fi
 fi
