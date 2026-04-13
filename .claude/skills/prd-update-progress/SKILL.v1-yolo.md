@@ -271,7 +271,14 @@ Before staging and committing, check if `PROGRESS.md` exists in the repository r
    - Good: "- (2026-03-11) Added contributor-aware PROGRESS.md creation to `/prd-start`"
    - Bad: "- Updated `.claude/skills/prd-start/SKILL.md`"
    - Bad: "- Added feature X" (missing date)
-4. **Stage PROGRESS.md** with the rest of the commit
+4. **Write for an external reader** — someone unfamiliar with the project who has no prior context:
+   - Use concrete, conversational language that explains the real problem solved and why it matters
+   - Avoid abstract buzzwords and corporate speak
+   - Skip internal references like PRD numbers, milestone codes, and task IDs — these are meaningless outside the project
+   - Describe the capability gained, not the files changed
+   - Good: "- (2026-04-13) Added a script that backs up gitignored journal files and design notes from active repos to claude-personal, so they survive a machine switch"
+   - Bad: "- (2026-04-13) Implemented M7 private file restore step for PRD #63"
+5. **Stage PROGRESS.md** with the rest of the commit
 
 ### Commit Implementation Work
 ```bash

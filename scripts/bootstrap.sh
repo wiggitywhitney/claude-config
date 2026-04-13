@@ -1,0 +1,274 @@
+#!/usr/bin/env bash
+# ABOUTME: Idempotent bootstrap script for restoring a full Claude development environment
+# ABOUTME: on a new machine. Run after cloning claude-config and claude-personal.
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
+
+DRY_RUN=0
+CLAUDE_PERSONAL_DIR="${CLAUDE_PERSONAL_DIR:-$HOME/Documents/Repositories/claude-personal}"
+REPOS_DIR="${REPOS_DIR:-$HOME/Documents/Repositories}"
+INSTALL_HOOKS_SCRIPT="${INSTALL_HOOKS_SCRIPT:-$REPO_ROOT/scripts/install-git-hooks.sh}"
+
+# ── Argument parsing ──────────────────────────────────────────────────────────
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --dry-run)
+            DRY_RUN=1
+            shift
+            ;;
+        --claude-personal-dir)
+            if [[ -z "${2:-}" ]]; then
+                echo "Error: --claude-personal-dir requires a path argument" >&2
+                exit 1
+            fi
+            CLAUDE_PERSONAL_DIR="$2"
+            shift 2
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            exit 1
+            ;;
+    esac
+done
+
+# ── Output helpers ────────────────────────────────────────────────────────────
+
+ok()        { echo "[OK] $*"; }
+skipped()   { echo "[SKIPPED] $*"; }
+backed_up() { echo "[BACKED UP] $*"; }
+dry_run()   { echo "[DRY RUN] $*"; }
+
+# ── Prerequisite checks ───────────────────────────────────────────────────────
+
+if [[ ! -d "$CLAUDE_DIR" ]]; then
+    echo "Error: $CLAUDE_DIR does not exist. Cannot bootstrap." >&2
+    exit 1
+fi
+
+if [[ ! -d "$CLAUDE_PERSONAL_DIR" ]]; then
+    echo "Error: claude-personal directory not found at $CLAUDE_PERSONAL_DIR" >&2
+    echo "Clone it first: git clone git@github.com:wiggitywhitney/claude-personal.git \"$CLAUDE_PERSONAL_DIR\"" >&2
+    exit 1
+fi
+
+if [[ ! -d "$CLAUDE_PERSONAL_DIR/.git" ]]; then
+    echo "Error: $CLAUDE_PERSONAL_DIR exists but is not a git repository." >&2
+    exit 1
+fi
+
+# ── Step 1: settings.json symlink ─────────────────────────────────────────────
+
+SETTINGS_TARGET="$REPO_ROOT/config/settings.json"
+SETTINGS_LINK="$CLAUDE_DIR/settings.json"
+
+if [[ -L "$SETTINGS_LINK" ]]; then
+    current_target="$(readlink "$SETTINGS_LINK")"
+    if [[ "$current_target" == "$SETTINGS_TARGET" ]]; then
+        skipped "settings.json symlink already correct"
+    else
+        if [[ "$DRY_RUN" -eq 1 ]]; then
+            dry_run "Would back up $SETTINGS_LINK → ${SETTINGS_LINK}.pre-bootstrap-backup"
+            dry_run "Would create symlink $SETTINGS_LINK → $SETTINGS_TARGET"
+        else
+            mv "$SETTINGS_LINK" "${SETTINGS_LINK}.pre-bootstrap-backup"
+            ln -s "$SETTINGS_TARGET" "$SETTINGS_LINK"
+            backed_up "settings.json (was pointing to $current_target)"
+            ok "settings.json symlink created → $SETTINGS_TARGET"
+        fi
+    fi
+elif [[ -e "$SETTINGS_LINK" ]]; then
+    if [[ "$DRY_RUN" -eq 1 ]]; then
+        dry_run "Would back up $SETTINGS_LINK → ${SETTINGS_LINK}.pre-bootstrap-backup"
+        dry_run "Would create symlink $SETTINGS_LINK → $SETTINGS_TARGET"
+    else
+        mv "$SETTINGS_LINK" "${SETTINGS_LINK}.pre-bootstrap-backup"
+        ln -s "$SETTINGS_TARGET" "$SETTINGS_LINK"
+        backed_up "settings.json (was a regular file)"
+        ok "settings.json symlink created → $SETTINGS_TARGET"
+    fi
+else
+    if [[ "$DRY_RUN" -eq 1 ]]; then
+        dry_run "Would create symlink $SETTINGS_LINK → $SETTINGS_TARGET"
+    else
+        ln -s "$SETTINGS_TARGET" "$SETTINGS_LINK"
+        ok "settings.json symlink created → $SETTINGS_TARGET"
+    fi
+fi
+
+# ── Step 2: Memory file restore ───────────────────────────────────────────────
+
+MEMORY_SRC="$CLAUDE_PERSONAL_DIR/memory"
+# Encode the standard repo prefix once: $HOME/Documents/Repositories → sed 's|[/.]|-|g'
+# Do NOT use $(whoami) — macOS usernames with dots encode as hyphens in project paths.
+HOME_PREFIX=$(echo "$HOME/Documents/Repositories" | sed 's|[/.]|-|g')
+
+if [[ -d "$MEMORY_SRC" ]]; then
+    for project_dir in "$MEMORY_SRC"/*/; do
+        [[ -d "$project_dir" ]] || continue
+        project_name="$(basename "$project_dir")"
+
+        # Names starting with '-' are full encoded paths (fallback for non-standard
+        # repo locations stored during push). Use them as-is without adding the prefix.
+        if [[ "$project_name" == -* ]]; then
+            encoded_path="$project_name"
+        else
+            encoded_path="${HOME_PREFIX}-${project_name}"
+        fi
+
+        target_dir="$CLAUDE_DIR/projects/$encoded_path/memory"
+
+        for src_file in "$project_dir"*.md; do
+            [[ -f "$src_file" ]] || continue
+            filename="$(basename "$src_file")"
+            dst_file="$target_dir/$filename"
+
+            if [[ "$DRY_RUN" -eq 1 ]]; then
+                if [[ -f "$dst_file" ]] && cmp -s "$src_file" "$dst_file"; then
+                    dry_run "Would skip memory: $project_name/$filename (identical)"
+                elif [[ -f "$dst_file" ]]; then
+                    dry_run "Would update memory: $project_name/$filename"
+                else
+                    dry_run "Would restore memory: $project_name/$filename"
+                fi
+            else
+                mkdir -p "$target_dir"
+                if [[ -f "$dst_file" ]]; then
+                    if cmp -s "$src_file" "$dst_file"; then
+                        skipped "memory: $project_name/$filename (identical)"
+                    else
+                        cp "$src_file" "$dst_file"
+                        ok "Updated memory: $project_name/$filename"
+                    fi
+                else
+                    cp "$src_file" "$dst_file"
+                    ok "Restored memory: $project_name/$filename"
+                fi
+            fi
+        done
+    done
+fi
+
+# ── Step 3: Git hook installation ─────────────────────────────────────────────
+
+HOOK_INSTALL_FAILED=0
+
+if [[ -d "$REPOS_DIR" ]]; then
+    for repo_path in "$REPOS_DIR"/*/; do
+        [[ -d "$repo_path/.git" ]] || continue
+        repo_name="$(basename "$repo_path")"
+
+        if [[ -f "$repo_path/.skip-git-hooks" ]]; then
+            skipped "git hooks: $repo_name — .skip-git-hooks present"
+            continue
+        fi
+
+        if [[ "$DRY_RUN" -eq 1 ]]; then
+            dry_run "Would install git hooks in $repo_name"
+        else
+            if "$INSTALL_HOOKS_SCRIPT" "$repo_path" > /dev/null; then
+                ok "git hooks installed: $repo_name"
+            else
+                echo "[ERROR] git hooks install failed: $repo_name" >&2
+                HOOK_INSTALL_FAILED=1
+            fi
+        fi
+    done
+fi
+
+# ── Step 4: settings.local.json restore ───────────────────────────────────────
+
+LOCAL_SETTINGS_SRC="$CLAUDE_PERSONAL_DIR/local-settings"
+SKIPPED_REPOS=()
+
+if [[ -d "$LOCAL_SETTINGS_SRC" ]]; then
+    for project_dir in "$LOCAL_SETTINGS_SRC"/*/; do
+        [[ -d "$project_dir" ]] || continue
+        project_name="$(basename "$project_dir")"
+        src_file="$project_dir/settings.local.json"
+        [[ -f "$src_file" ]] || continue
+
+        repo_path="$REPOS_DIR/$project_name"
+        dst_file="$repo_path/.claude/settings.local.json"
+
+        if [[ ! -d "$repo_path/.git" ]]; then
+            skipped "settings.local.json: $project_name — repo not cloned yet"
+            SKIPPED_REPOS+=("$project_name")
+            continue
+        fi
+
+        if [[ "$DRY_RUN" -eq 1 ]]; then
+            if [[ -f "$dst_file" ]] && cmp -s "$src_file" "$dst_file"; then
+                dry_run "Would skip settings.local.json: $project_name (identical)"
+            elif [[ -f "$dst_file" ]]; then
+                dry_run "Would update settings.local.json: $project_name"
+            else
+                dry_run "Would restore settings.local.json: $project_name"
+            fi
+        else
+            mkdir -p "$repo_path/.claude"
+            if [[ -f "$dst_file" ]]; then
+                if cmp -s "$src_file" "$dst_file"; then
+                    skipped "settings.local.json: $project_name (identical)"
+                else
+                    cp "$src_file" "$dst_file"
+                    ok "Updated settings.local.json: $project_name"
+                fi
+            else
+                cp "$src_file" "$dst_file"
+                ok "Restored settings.local.json: $project_name"
+            fi
+        fi
+    done
+fi
+
+# ── Step 5: Private file restore ─────────────────────────────────────────────
+
+PRIVATE_FILES_SRC="$CLAUDE_PERSONAL_DIR/private-files"
+
+if [[ -d "$PRIVATE_FILES_SRC" ]]; then
+    for repo_backup_dir in "$PRIVATE_FILES_SRC"/*/; do
+        [[ -d "$repo_backup_dir" ]] || continue
+        repo_name="$(basename "$repo_backup_dir")"
+        repo_path="$REPOS_DIR/$repo_name"
+
+        if [[ ! -d "$repo_path/.git" ]]; then
+            skipped "private files: $repo_name — repo not cloned yet"
+            SKIPPED_REPOS+=("$repo_name")
+            continue
+        fi
+
+        while IFS= read -r src_file; do
+            rel_path="${src_file#"$repo_backup_dir"}"
+            dst="$repo_path/$rel_path"
+
+            if [[ "$DRY_RUN" -eq 1 ]]; then
+                dry_run "Would restore private file: $repo_name/$rel_path"
+                continue
+            fi
+
+            if [[ -f "$dst" ]] && cmp -s "$src_file" "$dst"; then
+                skipped "private file: $repo_name/$rel_path (identical)"
+            elif [[ -f "$dst" ]]; then
+                cp "$src_file" "$dst"
+                echo "[UPDATED] private file: $repo_name/$rel_path"
+            else
+                mkdir -p "$(dirname "$dst")"
+                cp "$src_file" "$dst"
+                ok "private file: $repo_name/$rel_path"
+            fi
+        done < <(find "$repo_backup_dir" -type f)
+    done
+fi
+
+if [[ ${#SKIPPED_REPOS[@]} -gt 0 ]]; then
+    echo ""
+    echo "Re-run bootstrap after cloning the above repos to restore their files and settings."
+fi
+
+if [[ "$HOOK_INSTALL_FAILED" -ne 0 ]]; then
+    exit 1
+fi
