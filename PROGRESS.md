@@ -6,6 +6,7 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-04-13) Evaluated the official code-review plugin from the Claude plugin registry and wired it into the PR workflow as a permanent complement to CodeRabbit — the two tools find different issue classes (plugin catches convention gaps and historical context; CodeRabbit catches security and correctness issues), so running both on every PR gives better combined coverage than either alone; plugin installed globally, research findings written up in research/code-review-plugin-evaluation.md
 - (2026-04-13) Added end-to-end bats tests for all three new-machine scripts (backup-private-files.sh, sync-repos.sh, bootstrap.sh) — each test runs a full multi-repo scenario rather than isolated unit cases, covering the realistic mix of present repos, absent repos, and skipped paths in a single run; 25 new tests, all passing
 - (2026-04-13) Added docs/new-machine-setup.md — step-by-step guide answering "I just got a new laptop, how do I restore everything?"; covers the three-script sequence, sample output for every command including error cases, dry-run examples, and a flags reference table; all examples validated with real command output
 - (2026-04-13) Updated README new-machine setup section to lead with the three-script restore workflow (backup-private-files.sh → sync-repos.sh → bootstrap.sh) and link to the new setup guide

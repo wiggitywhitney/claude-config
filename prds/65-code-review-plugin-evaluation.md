@@ -2,23 +2,24 @@
 
 ## Problem
 
-CodeRabbit rate limits block the review cycle. When limits are hit, there is no fallback — work stalls waiting for the limit to reset. A supplemental code review capability is needed for these gaps.
+CodeRabbit rate limits block the review cycle. When limits are hit, there is no fallback — work stalls waiting for the limit to reset. A supplemental code review capability is needed.
 
-A Code Review plugin already exists in the Claude Code plugin ecosystem. The right first step is to evaluate whether it covers the use case as-is, before building anything new.
+Beyond the rate-limit gap: research (Decision 2) showed that CodeRabbit and the `code-review` plugin find *different* issue classes. On a real PR, CodeRabbit caught security and correctness issues; the plugin caught forward-compatibility gaps, convention inconsistencies, and historical context issues that CodeRabbit missed. Running both provides genuinely complementary coverage, not redundancy.
 
 ## Solution
 
-Run a research spike to evaluate the Code Review plugin. Based on findings, either:
-- **Use the plugin as-is** — install it and wire it into the workflow
-- **Build a custom `/review-pr` skill** — drawing on the plugin's patterns where useful
+~~Run a research spike to evaluate the Code Review plugin. Based on findings, either:~~
+~~- **Use the plugin as-is** — install it and wire it into the workflow~~
+~~- **Build a custom `/review-pr` skill** — drawing on the plugin's patterns where useful~~
 
-The research spike decides. Implementation follows the decision.
+Research spike complete (Milestone 1). Decision: integrate the `code-review` plugin as a permanent part of the PR review workflow — running on every PR alongside CodeRabbit, not just as a rate-limit fallback. No custom skill needed.
 
 ## Success Criteria (Global)
 
-- A clear decision is made: plugin vs. custom skill
-- Whichever path is chosen is implemented and usable when CodeRabbit is rate-limited
-- The workflow for invoking the supplement is documented
+- ~~A clear decision is made: plugin vs. custom skill~~ ✓ (Decision 2: plugin as-is)
+- `/code-review` is wired into the standard PR workflow and runs on every PR
+- When CodeRabbit is rate-limited, `/code-review` provides full review coverage with no workflow stall
+- Both `rules/git-workflow.md` and `rules/hooks-reference.md` document the updated workflow
 
 ## Milestones
 
@@ -39,44 +40,44 @@ The research spike decides. Implementation follows the decision.
 6. Route based on recommendation: plugin as-is → Milestone 2a; build custom → Milestone 2b
 
 **Success Criteria:**
-- `research/code-review-plugin-evaluation.md` exists with all four sections complete
-- Recommendation names the tradeoff, not just the conclusion
+- `research/code-review-plugin-evaluation.md` exists with all four sections complete ✓
+- Recommendation names the tradeoff, not just the conclusion ✓
 
-### Milestone 2a: Wire Up the Plugin (if research recommends as-is)
+### Milestone 2a: Integrate Plugin Into Standard PR Workflow
 
-Install and integrate the Code Review plugin into the workflow.
-
-**Process:**
-1. Install the plugin following its documented installation process
-2. Verify it works against a real PR diff in this repo
-3. Add a "Supplemental Review" section to `rules/hooks-reference.md` documenting: when to invoke it, the invocation command, and what to expect in the output
-
-**Do NOT edit existing sections of hooks-reference.md** — add only.
-
-**Success Criteria:**
-- Plugin is installed and produces output against a real PR
-- "Supplemental Review" section added to hooks-reference.md
-
-### Milestone 2b: Build a Custom `/review-pr` Skill (if research recommends custom)
-
-Build a custom skill using patterns learned from the plugin study.
+Install and document `/code-review` as a permanent step in the PR review workflow — running on every PR, not just as a rate-limit fallback. (Decision 4)
 
 **Process:**
-1. Read existing skills in `.claude/skills/` to understand the SKILL.md authoring conventions used in this repo before writing anything
-2. Design the skill around the patterns from the Code Review plugin that are worth reusing — do not start from scratch
-3. Write `SKILL.md` with: input (branch or PR number), process (read diff, produce findings), output format (file-grouped findings with severity: high/medium/low)
-4. Run `/write-prompt` on the SKILL.md before finalizing
-5. Test against a real PR diff in this repo
-6. Document invocation in `rules/hooks-reference.md`
+1. ~~Install the plugin~~ — **already done** (`claude plugin install code-review`, 2026-04-13, user-scoped = global) (Decision 2)
+2. ~~Verify it works against a real PR diff~~ — **already done** during Milestone 1; PR #79 diff, 3 real findings (Decision 2)
+3. Update `rules/git-workflow.md` — insert a new bullet immediately before the existing "After creating a PR, start a background sleep timer (7 minutes)..." line. The new bullet should say: after creating a PR, immediately run `/code-review` in the session. Note that `/code-review` and CodeRabbit find different issue classes (CLAUDE.md compliance / bugs / historical context vs. security / correctness) — address both finding sets before merging. If CodeRabbit is rate-limited and never posts, `/code-review` provides full coverage; do not block the merge indefinitely waiting for CodeRabbit. (Decision 4)
+4. Add a `## Supplemental Code Review` section at the end of `rules/hooks-reference.md` (after the existing `## PostToolUse hooks` section) documenting: the plugin name and install status (user-scoped, available in all sessions), when it runs (every PR, immediately after creation — not pre-push, which requires an open PR), the invocation command (`/code-review`), what to expect in the output (confidence-scored findings ≥80 threshold, grouped by: CLAUDE.md compliance, bugs, historical context, code comments; GitHub permalink with full SHA per finding), and rate-limit behavior (if CodeRabbit is rate-limited, `/code-review` provides full coverage — do not block indefinitely on CodeRabbit). (Decision 4)
 
-**Do NOT build a full CodeRabbit replacement.** Scope is: supplement when rate-limited, not parity.
+**Do NOT edit existing sections of either rules file** — add only.
+
+**Note on `pr-review-toolkit`:** A second plugin runs 6 agents in-conversation for local pre-PR review (no GitHub posting). Not in scope for this milestone — `/code-review` only. (Decision 3)
+
+**Note on pre-push hook:** The plugin requires an open PR and cannot run pre-push. The pre-push CodeRabbit CLI step is unchanged.
 
 **Success Criteria:**
-- `/review-pr` skill exists and has passed `/write-prompt` review
-- Produces findings with file grouping and severity levels against a real PR
-- Invocation documented in hooks-reference.md
+- Plugin is installed and produces output against a real PR ✓ (completed in Milestone 1)
+- `rules/git-workflow.md` includes "run `/code-review` immediately after PR creation" in the standard PR workflow
+- `rules/hooks-reference.md` has a "Supplemental Code Review" section documenting invocation, output format, and rate-limit behavior
+
+### Milestone 2b: ~~Build a Custom `/review-pr` Skill~~ — ELIMINATED
+
+> **NOT THE CHOSEN PATH** — Eliminated by Decision 2 (plugin as-is) and Decision 4 (always-run-both). Do not implement.
 
 ## Decision Log
 
 ### Decision 1: Research Spike Before Implementation (2026-04-09)
 The Code Review plugin already exists — evaluating it before building anything avoids duplicating work. The research spike is a hard gate: no code is written until the spike produces a written recommendation. This prevents premature commitment to either path.
+
+### Decision 2: Use Plugin As-Is → Milestone 2a (2026-04-13)
+Milestone 1 research spike complete. Recommendation: use the `code-review` plugin as-is rather than building a custom skill. The plugin was tested against PR #79 diff and found 3 real issues above the 80-confidence threshold — findings that were different from (not duplicates of) CodeRabbit's findings on the same PR. Key tradeoff: manual invocation via `/code-review` vs. CodeRabbit's automatic pre-push triggering, but manual invocation is acceptable for a fallback tool. The plugin is already installed (`claude plugin install code-review`, 2026-04-13). Full findings in `research/code-review-plugin-evaluation.md`.
+
+### Decision 3: `pr-review-toolkit` Is Complementary, Not a Substitute (2026-04-13)
+A second plugin discovered during research, `pr-review-toolkit`, runs 6 specialized agents in-conversation for local pre-PR review. It does not post GitHub comments. It is a different tool for a different use case (local pre-commit review vs. post-push PR supplement) and is not part of this PRD's scope. The `hooks-reference.md` documentation should focus on `/code-review`; `pr-review-toolkit` may be mentioned as a footnote if useful context.
+
+### Decision 4: Run `/code-review` on Every PR, Always — Not Just as Fallback (2026-04-13)
+The original framing treated `/code-review` as a rate-limit fallback. Research showed CodeRabbit and the plugin find different issue classes (CodeRabbit: security/correctness; plugin: forward-compatibility, convention consistency, historical context) — making them genuinely complementary, not redundant. The updated workflow: after creating a PR, immediately run `/code-review` in the session, then start the 7-minute CodeRabbit timer as before. Both sets of findings are addressed before merge. If CodeRabbit is rate-limited, `/code-review` provides full coverage and work does not stall. The pre-push CodeRabbit CLI step is unchanged (plugin requires an open PR and cannot run pre-push). Milestone 2b (custom skill) is eliminated — it was only needed if the plugin was rejected, which it was not.
