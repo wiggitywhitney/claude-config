@@ -2,6 +2,8 @@
 
 Evaluated 2026-04-13 against real PR diff (#79) in this repo.
 
+> **Update (2026-04-13):** Initial evaluation recommended the plugin as a CodeRabbit rate-limit fallback. PRD Decision 4 subsequently adopted an always-run-both workflow after findings showed the tools find different issue classes — complementary coverage rather than redundancy. The plugin now runs on every PR alongside CodeRabbit, not just when CodeRabbit is rate-limited.
+
 ## What the Plugin Does
 
 **Source:** `~/.claude/plugins/marketplaces/claude-plugins-official/plugins/code-review/`
