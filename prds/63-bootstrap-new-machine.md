@@ -168,7 +168,7 @@ Add `scripts/sync-repos.sh` — a companion script that clones missing repos and
 - Skipped repos produce clear, actionable messages
 - Tests pass
 
-### Milestone 6: End-to-End Test and Documentation
+### Milestone 6: End-to-End Test and Documentation ✅
 **Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
 
 **Updated per Decision 5: deferred until M7 is complete.** End-to-end tests and documentation must cover the full feature set — including `backup-private-files.sh` and the private-file restore step — so they are written once over everything rather than twice.

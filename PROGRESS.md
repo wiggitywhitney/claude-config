@@ -6,6 +6,9 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-04-13) Added end-to-end bats tests for all three new-machine scripts (backup-private-files.sh, sync-repos.sh, bootstrap.sh) — each test runs a full multi-repo scenario rather than isolated unit cases, covering the realistic mix of present repos, absent repos, and skipped paths in a single run; 25 new tests, all passing
+- (2026-04-13) Added docs/new-machine-setup.md — step-by-step guide answering "I just got a new laptop, how do I restore everything?"; covers the three-script sequence, sample output for every command including error cases, dry-run examples, and a flags reference table; all examples validated with real command output
+- (2026-04-13) Updated README new-machine setup section to lead with the three-script restore workflow (backup-private-files.sh → sync-repos.sh → bootstrap.sh) and link to the new setup guide
 - (2026-04-13) Added backup-private-files.sh — a standalone script that captures gitignored files (journal entries, design notes, and anything listed in a per-repo .private-sync file) from active repos and stores them in claude-personal, so they survive a machine switch and are automatically restored by bootstrap.sh on a new machine
 - (2026-04-13) Extended bootstrap.sh to restore per-repo private files from claude-personal — skips repos not yet cloned, skips files that are already identical, overwrites files that have changed, and prints a re-run reminder for any repos that were skipped
 - (2026-04-12) Added sync-repos.sh — companion script to bootstrap.sh that clones missing repos and fast-forward-pulls existing ones; filters by --months N (default 6) activity window using gh repo list; gh and jq prerequisites; [OK]/[SKIPPED]/[DRY RUN] output; --repos-dir and REPOS_DIR env var for testability; 10-test bats suite in tests/sync-repos.bats (PRD #63, M5)

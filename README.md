@@ -34,6 +34,27 @@ Shared Claude Code testing infrastructure, safety config, and developer tooling.
 
 ## Setup: Install on a New Machine
 
+### Switching to a new laptop
+
+If you're moving to a new machine and want to restore your full Claude environment — memory files, `settings.local.json`, git hooks, and private files like journal entries — use the three-script restore workflow:
+
+1. **On the old machine:** push private files to `claude-personal`
+   ```bash
+   scripts/backup-private-files.sh
+   ```
+2. **On the new machine:** clone repos
+   ```bash
+   scripts/sync-repos.sh
+   ```
+3. **On the new machine:** restore settings, memory, hooks, and private files
+   ```bash
+   scripts/bootstrap.sh
+   ```
+
+See [docs/new-machine-setup.md](docs/new-machine-setup.md) for the full walkthrough, including all flags and how to fill in gaps after cloning more repos.
+
+### First-time setup (settings.json and symlinks only)
+
 Clone this repo and run the install script to set up your Claude Code environment:
 
 ```bash
