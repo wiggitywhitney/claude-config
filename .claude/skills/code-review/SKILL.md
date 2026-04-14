@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(gh issue view:*), Bash(gh search:*), Bash(gh issue list:*), Bash(gh pr comment:*), Bash(gh pr diff:*), Bash(gh pr view:*), Bash(gh pr list:*)
+allowed-tools: Bash(gh issue view:*), Bash(gh search:*), Bash(gh issue list:*), Bash(gh pr comment:*), Bash(gh pr diff:*), Bash(gh pr view:*), Bash(gh pr list:*), Bash(git log:*), Bash(git blame:*), Bash(git show:*)
 description: Code review a pull request
 disable-model-invocation: false
 ---
@@ -71,13 +71,15 @@ Found 3 issues:
 
 ---
 
-- Or, if you found no issues:
+- Or, if you found no issues (substitute the actual HEAD SHA from step 1 and the actual repo owner/name into the commit link below — do NOT write the placeholders literally):
 
 ---
 
 ### Code review
 
 No issues found. Checked for bugs and CLAUDE.md compliance.
+
+<sub>Reviewed commit: [&lt;full-sha&gt;](https://github.com/&lt;owner&gt;/&lt;repo&gt;/commit/&lt;full-sha&gt;)</sub>
 
 ---
 
