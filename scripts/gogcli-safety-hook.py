@@ -34,7 +34,7 @@ from pathlib import Path
 # Sheets allowed for writes (all others blocked)
 ALLOWED_SHEET_IDS = {
     "1eatUotHm4YOin1_rsqRSb71wY4S-lh5SsGInJVznBts",  # Staging sheet (Thunder workflow)
-    "14SKb5lOhlOznUTx7gJhH4KHidFOaxNwF5dx4cXNssz4",  # Datadog Illuminated tracker
+    "13dtP9_WXPtiikYj2bxrzV2uon2sxSUlb2JaxSPiCOXE",  # Datadog Illuminated tracker (Guest Pipeline, Episodes, Shorts tabs)
 }
 
 DEBUG = os.getenv("CLAUDE_HOOK_DEBUG") == "1"

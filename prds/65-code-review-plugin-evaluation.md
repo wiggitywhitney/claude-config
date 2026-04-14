@@ -20,6 +20,7 @@ Research spike complete (Milestone 1). Decision: integrate the `code-review` plu
 - `/code-review` is wired into the standard PR workflow and runs on every PR
 - When CodeRabbit is rate-limited, `/code-review` provides full review coverage with no workflow stall
 - Both `rules/git-workflow.md` and `rules/hooks-reference.md` document the updated workflow
+- `/prd-done` SKILL.md and SKILL.v1-yolo.md each include a step to run `/code-review` immediately after PR creation
 
 ## Milestones
 
@@ -48,10 +49,13 @@ Research spike complete (Milestone 1). Decision: integrate the `code-review` plu
 Install and document `/code-review` as a permanent step in the PR review workflow — running on every PR, not just as a rate-limit fallback. (Decision 4)
 
 **Process:**
-1. ~~Install the plugin~~ — **already done** (`claude plugin install code-review`, 2026-04-13, user-scoped = global) (Decision 2)
-2. ~~Verify it works against a real PR diff~~ — **already done** during Milestone 1; PR #79 diff, 3 real findings (Decision 2)
-3. Update `rules/git-workflow.md` — insert a new bullet immediately before the existing "After creating a PR, start a background sleep timer (7 minutes)..." line. The new bullet should say: after creating a PR, immediately run `/code-review` in the session. Note that `/code-review` and CodeRabbit find different issue classes (CLAUDE.md compliance / bugs / historical context vs. security / correctness) — address both finding sets before merging. If CodeRabbit is rate-limited and never posts, `/code-review` provides full coverage; do not block the merge indefinitely waiting for CodeRabbit. (Decision 4)
-4. Add a `## Supplemental Code Review` section at the end of `rules/hooks-reference.md` (after the existing `## PostToolUse hooks` section) documenting: the plugin name and install status (user-scoped, available in all sessions), when it runs (every PR, immediately after creation — not pre-push, which requires an open PR), the invocation command (`/code-review`), what to expect in the output (confidence-scored findings ≥80 threshold, grouped by: CLAUDE.md compliance, bugs, historical context, code comments; GitHub permalink with full SHA per finding), and rate-limit behavior (if CodeRabbit is rate-limited, `/code-review` provides full coverage — do not block indefinitely on CodeRabbit). (Decision 4)
+1. ~~Install the plugin~~ — **already done** (`claude plugin install code-review`, 2026-04-13) (Decision 2). Note: user-scoped plugin installs are NOT globally accessible across all repos — the skill must also be created in claude-config and symlinked globally (Decision 7).
+2. Create `.claude/skills/code-review/SKILL.md` in claude-config. Copy the content from `~/.claude/plugins/cache/claude-plugins-official/code-review/unknown/commands/code-review.md` verbatim (including the frontmatter). Then add `~/.claude/skills/code-review` as a symlink pointing to `claude-config/.claude/skills/code-review`, following the same pattern as anki, research, write-docs, etc. (Decision 7)
+3. ~~Verify it works against a real PR diff~~ — **already done** during Milestone 1; PR #79 diff, 3 real findings (Decision 2)
+4. Update `rules/git-workflow.md` — insert a new bullet immediately before the existing "After creating a PR, start a background sleep timer (7 minutes)..." line. The new bullet should say: after creating a PR, immediately run `/code-review` in the session. Note that `/code-review` and CodeRabbit find different issue classes (CLAUDE.md compliance / bugs / historical context vs. security / correctness) — address both finding sets before merging. If CodeRabbit is rate-limited and never posts, `/code-review` provides full coverage; do not block the merge indefinitely waiting for CodeRabbit. (Decision 4)
+5. Add a `## Supplemental Code Review` section at the end of `rules/hooks-reference.md` (after the existing `## PostToolUse hooks` section). Frame it as an instruction to the implementing AI, not passive documentation: "Immediately after creating a PR, run `/code-review` in the session." Include: the plugin name and install status (available in all sessions via skill symlink), when it runs (every PR, immediately after creation — not pre-push, which requires an open PR), what to expect in the output (confidence-scored findings ≥80 threshold, grouped by: CLAUDE.md compliance, bugs, historical context, code comments; GitHub permalink with full SHA per finding), and rate-limit behavior (if CodeRabbit is rate-limited, `/code-review` provides full coverage — do not block indefinitely on CodeRabbit). (Decisions 4, 6)
+6. Update `.claude/skills/prd-done/SKILL.md` — locate the section where `gh pr create` is run and add a new step immediately after it: run `/code-review` using the Skill tool; review the findings and address any at or above the 80-confidence threshold before continuing; then start the 7-minute CodeRabbit timer as usual. Use the same phrasing and framing as the bullet added to `rules/git-workflow.md` in step 4. (Decision 5)
+7. Apply the identical addition from step 6 to `.claude/skills/prd-done/SKILL.v1-yolo.md`. (Decision 5)
 
 **Do NOT edit existing sections of either rules file** — add only.
 
@@ -61,6 +65,7 @@ Install and document `/code-review` as a permanent step in the PR review workflo
 
 **Success Criteria:**
 - Plugin is installed and produces output against a real PR ✓ (completed in Milestone 1)
+- `.claude/skills/code-review/SKILL.md` exists in claude-config and `~/.claude/skills/code-review` is symlinked to it (Decision 7)
 - `rules/git-workflow.md` includes "run `/code-review` immediately after PR creation" in the standard PR workflow
 - `rules/hooks-reference.md` has a "Supplemental Code Review" section documenting invocation, output format, and rate-limit behavior
 
@@ -81,3 +86,12 @@ A second plugin discovered during research, `pr-review-toolkit`, runs 6 speciali
 
 ### Decision 4: Run `/code-review` on Every PR, Always — Not Just as Fallback (2026-04-13)
 The original framing treated `/code-review` as a rate-limit fallback. Research showed CodeRabbit and the plugin find different issue classes (CodeRabbit: security/correctness; plugin: forward-compatibility, convention consistency, historical context) — making them genuinely complementary, not redundant. The updated workflow: after creating a PR, immediately run `/code-review` in the session, then start the 7-minute CodeRabbit timer as before. Both sets of findings are addressed before merge. If CodeRabbit is rate-limited, `/code-review` provides full coverage and work does not stall. The pre-push CodeRabbit CLI step is unchanged (plugin requires an open PR and cannot run pre-push). Milestone 2b (custom skill) is eliminated — it was only needed if the plugin was rejected, which it was not.
+
+### Decision 5: `/prd-done` Skill Must Include a Run `/code-review` Step (2026-04-13)
+Skills are where the implementing AI receives procedural step-by-step instructions. Rules files are passive context that Claude reads but does not act on procedurally. Updating only `rules/git-workflow.md` would inform Claude that `/code-review` should run but would not reliably trigger it during the `/prd-done` workflow. The fix: add an explicit step in both `SKILL.md` and `SKILL.v1-yolo.md` immediately after `gh pr create`, instructing Claude to run `/code-review` before starting the CodeRabbit timer.
+
+### Decision 6: `hooks-reference.md` Addition Must Be Instructional, Not Documentary (2026-04-13)
+The original plan framed the `hooks-reference.md` section as passive documentation (what the plugin is, what it outputs). Passive framing does not produce the behavior — the implementing AI reads it as reference and may not act. The section must be written as an imperative instruction: "Immediately after creating a PR, run `/code-review` in the session." Documentation detail (output format, rate-limit behavior) follows as supporting context, not the primary frame.
+
+### Decision 7: User-Scoped Plugin Installs Are Not Globally Accessible — Use Skill Symlink Pattern (2026-04-13)
+Confirmed via live test: `/code-review` fails with "Unknown Skill: code-review" in repos other than claude-config (observed in spinybacked-orbweaver). The PRD's assumption in Decision 2 that user-scoped = globally available was incorrect. Fix: create `.claude/skills/code-review/SKILL.md` in claude-config with the plugin command content verbatim, then add `~/.claude/skills/code-review` as a symlink pointing to it. This follows the identical pattern used for anki, research, write-docs, and other globally available skills. The plugin install (`claude plugin install code-review`) is retained as-is; the skill file is the access mechanism.
