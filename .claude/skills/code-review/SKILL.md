@@ -71,7 +71,7 @@ Notes:
 
 | # | Finding | Score | Disposition |
 |---|---------|-------|-------------|
-| 2 | <brief description> (some/other/CLAUDE.md says "<...>") — [link](...) | 72 | **Skip** — real but low severity; fix complexity outweighs benefit |
+| 2 | <brief description> (some/other/CLAUDE.md says "<...>") — [link](...) | 72 | **Fix** — must address before merge |
 | 3 | <brief description> (bug due to <file and code snippet>) — [link](...) | 55 | **Skip** — misunderstands intentional design |
 
 <sub>- If this code review was useful, please react with 👍. Otherwise, react with 👎.</sub>
