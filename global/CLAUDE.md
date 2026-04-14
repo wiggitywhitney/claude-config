@@ -2,7 +2,7 @@
 
 ## Dates and Times
 
-Before discussing any date, time, day of the week, or scheduling topic with the user, run `date` first to get the current date, time, and day of the week. Do not rely on context injections or training data — use the deterministic output. This applies to any conversation involving deadlines, "today", "tomorrow", days of the week, or relative time references.
+Before discussing any date, time, day of the week, or scheduling topic with the user, run `date` first to get the current date, time, and day of the week. Do not rely on context injections or training data — use the deterministic output. This applies to any conversation involving deadlines, "today", "tomorrow", days of the week, or relative time references. Do NOT compute a specific future date's day of the week from memory or mental arithmetic — always verify with a deterministic method: `python3 -c "from datetime import date; print(date(YYYY,MM,DD).strftime('%A'))"`.
 
 ## Writing Style
 

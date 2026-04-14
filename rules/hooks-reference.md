@@ -38,3 +38,15 @@ Install with `bash scripts/install-git-hooks.sh [repo-path]`. The installer is i
 - **post-write-codeblock-check.sh** (PostToolUse: Write|Edit) — checks markdown files for bare code blocks missing language specifiers
 - **suggest-write-prompt.sh** (PostToolUse: Write|Edit, Bash) — advisory reminder to run `/write-prompt` when SKILL.md or CLAUDE.md files are edited, or when `gh issue create` succeeds; explains that any AI-consumed document is a prompt
 - **cascade-decision-check.sh** (PostToolUse: Write|Edit) — advisory reminder to cascade-evaluate downstream milestones when a PRD file in `prds/` is edited; prompts Claude to check for new Decision Log rows and update affected milestones in the current and other open PRDs
+
+## Supplemental Code Review
+
+Immediately after creating a PR, run `/code-review` in the session using the Skill tool.
+
+**Plugin**: `code-review` — available in all sessions via `~/.claude/skills/code-review` symlink (no per-repo install needed).
+
+**When it runs**: Every PR, immediately after `gh pr create` — not pre-push. The plugin requires an open PR and cannot run before one exists. The pre-push CodeRabbit CLI step is unchanged.
+
+**What to expect**: Five parallel Sonnet agents independently review the diff, then parallel Haiku agents score each finding (0–100 confidence). Findings below 80 are filtered out. Results are posted as a GitHub PR comment as a flat numbered list, each with an inline label indicating issue type (CLAUDE.md compliance, bug, historical context, etc.). Each finding includes a GitHub permalink with the full commit SHA.
+
+**Rate-limit behavior**: If CodeRabbit is rate-limited and never posts a review, `/code-review` provides full coverage. Do not block the merge indefinitely waiting for CodeRabbit — once `/code-review` findings are addressed and human has reviewed, merging is unblocked.

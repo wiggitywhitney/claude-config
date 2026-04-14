@@ -276,6 +276,7 @@ Please review and respond:
   - If no release.yml or no matching label: `gh pr create --title "[title]" --body "[body]"`
 - [ ] **Verify PR created**: Confirm PR was created successfully, template populated correctly, and label applied (if applicable)
 - [ ] **Request reviews**: Assign appropriate team members for code review if specified
+- [ ] **Run `/code-review`**: Immediately after PR creation, invoke `/code-review` using the Skill tool. Review all findings at or above the 80-confidence threshold and fix them before merging. The CodeRabbit timer and Anki capture (steps 4.0–4.1) proceed in parallel — only the merge is gated on `/code-review` findings being addressed. `/code-review` and CodeRabbit find different issue classes — `/code-review` catches CLAUDE.md compliance, bugs, and historical context issues; CodeRabbit catches security and correctness issues. If CodeRabbit is rate-limited and never posts, `/code-review` provides full coverage; do not block indefinitely waiting for CodeRabbit.
 
 #### 3.8. Fallback for Projects Without Templates
 If no PR template is found, create a sensible default structure:
