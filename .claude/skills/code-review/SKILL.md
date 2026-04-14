@@ -23,7 +23,15 @@ To do this, follow these steps precisely:
    c. 50: Moderately confident. The agent was able to verify this is a real issue, but it might be a nitpick or not happen very often in practice. Relative to the rest of the PR, it's not very important.
    d. 75: Highly confident. The agent double checked the issue, and verified that it is very likely it is a real issue that will be hit in practice. The existing approach in the PR is insufficient. The issue is very important and will directly impact the code's functionality, or it is an issue that is directly mentioned in the relevant CLAUDE.md.
    e. 100: Absolutely certain. The agent double checked the issue, and confirmed that it is definitely a real issue, that will happen frequently in practice. The evidence directly confirms this.
-6. Filter out any issues with a score less than 80. If there are no issues that meet this criteria, skip step 7 and go directly to step 8 to post the "no issues found" result. Otherwise, continue to step 7.
+6. Apply a two-tier confidence filter and automatic triage to all findings:
+   a. Filter out any issues with a score below 50. If all issues fall below 50, skip step 7 and go directly to step 8 to post the "no issues found" result. Otherwise, continue.
+   b. Group the remaining issues (score ≥ 50) into two tiers:
+      - **High confidence** (score ≥ 80)
+      - **Medium confidence** (score 50–79)
+   c. For each issue in both tiers, apply the triage rubric and assign a disposition:
+      - **Fix** — the finding is real and the only reason not to act is effort. Effort alone is not a reason to skip. Flag as a required fix before merge.
+      - **Skip** — the suggestion misunderstands the code, or fix complexity genuinely outweighs the benefit and the finding is not worth tracking at all. To distinguish Fix from Skip, ask: would a senior engineer require this addressed before approving the PR? If yes → Fix. If no → Skip.
+   d. Apply dispositions automatically and continue to step 7.
 7. Use a Haiku agent to repeat the eligibility check from #1, to make sure that the pull request is still eligible for code review.
 8. Finally, use the gh bash command to comment back on the pull request with the result. When writing your comment, keep in mind to:
    a. Keep your output brief
@@ -47,25 +55,24 @@ Notes:
 - Use `gh` to interact with Github (eg. to fetch a pull request, or to create inline comments), rather than web fetch
 - Make a todo list first
 - You must cite and link each bug (eg. if referring to a CLAUDE.md, you must link it)
-- For your final comment, follow the following format precisely (assuming for this example that you found 3 issues):
+- For your final comment, follow the following format precisely (assuming for this example that you found 1 high-confidence and 2 medium-confidence issues). Omit a section entirely if it has no findings:
 
 ---
 
 ### Code review
 
-Found 3 issues:
+#### High confidence (score ≥ 80)
 
-1. <brief description of bug> (CLAUDE.md says "<...>")
+| # | Finding | Score | Disposition |
+|---|---------|-------|-------------|
+| 1 | <brief description> (CLAUDE.md says "<...>") — [link](https://github.com/anthropics/claude-code/blob/1d54823877c4de72b2316a64032a54afc404e619/README.md#L13-L17) | 85 | **Fix** — must address before merge |
 
-<link to file and line with full sha1 + line range for context, note that you MUST provide the full sha and not use bash here, eg. https://github.com/anthropics/claude-code/blob/1d54823877c4de72b2316a64032a54afc404e619/README.md#L13-L17>
+#### Medium confidence (score 50–79)
 
-2. <brief description of bug> (some/other/CLAUDE.md says "<...>")
-
-<link to file and line with full sha1 + line range for context>
-
-3. <brief description of bug> (bug due to <file and code snippet>)
-
-<link to file and line with full sha1 + line range for context>
+| # | Finding | Score | Disposition |
+|---|---------|-------|-------------|
+| 2 | <brief description> (some/other/CLAUDE.md says "<...>") — [link](...) | 72 | **Skip** — real but low severity; fix complexity outweighs benefit |
+| 3 | <brief description> (bug due to <file and code snippet>) — [link](...) | 55 | **Skip** — misunderstands intentional design |
 
 <sub>- If this code review was useful, please react with 👍. Otherwise, react with 👎.</sub>
 
