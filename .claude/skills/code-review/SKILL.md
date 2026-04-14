@@ -55,7 +55,7 @@ Notes:
 - Use `gh` to interact with Github (eg. to fetch a pull request, or to create inline comments), rather than web fetch
 - Make a todo list first
 - You must cite and link each bug (eg. if referring to a CLAUDE.md, you must link it)
-- For your final comment, follow the following format precisely (assuming for this example that you found 1 high-confidence and 2 medium-confidence issues). Omit a section entirely if it has no findings:
+- For your final comment, follow this format precisely (assuming for this example that you found 1 high-confidence and 2 medium-confidence issues). Omit a section entirely if it has no findings:
 
 ---
 
