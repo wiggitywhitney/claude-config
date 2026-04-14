@@ -47,6 +47,6 @@ Immediately after creating a PR, run `/code-review` in the session using the Ski
 
 **When it runs**: Every PR, immediately after `gh pr create` — not pre-push. The plugin requires an open PR and cannot run before one exists. The pre-push CodeRabbit CLI step is unchanged.
 
-**What to expect**: Five parallel Sonnet agents independently review the diff, then parallel Haiku agents score each finding (0–100 confidence). Findings below 80 are filtered out. Results are posted as a GitHub PR comment grouped by issue type: CLAUDE.md compliance, bugs, historical context, and code comments. Each finding includes a GitHub permalink with the full commit SHA.
+**What to expect**: Five parallel Sonnet agents independently review the diff, then parallel Haiku agents score each finding (0–100 confidence). Findings below 80 are filtered out. Results are posted as a GitHub PR comment as a flat numbered list, each with an inline label indicating issue type (CLAUDE.md compliance, bug, historical context, etc.). Each finding includes a GitHub permalink with the full commit SHA.
 
 **Rate-limit behavior**: If CodeRabbit is rate-limited and never posts a review, `/code-review` provides full coverage. Do not block the merge indefinitely waiting for CodeRabbit — once `/code-review` findings are addressed and human has reviewed, merging is unblocked.
