@@ -8,7 +8,7 @@ Provide a code review for the given pull request.
 
 To do this, follow these steps precisely:
 
-1. Use a Haiku agent to check if the pull request (a) is closed, (b) is a draft, (c) does not need a code review (eg. because it is an automated pull request, or is very simple and obviously ok), or (d) already has a code review from Claude Code from earlier — specifically, a comment containing "### Code review" posted by `claude[bot]`. Note: a CodeRabbit review does NOT count as a Claude Code review; they are separate tools. If any of (a)–(d) apply, do not proceed.
+1. Use a Haiku agent to check if the pull request (a) is closed, (b) is a draft, (c) does not need a code review (eg. because it is an automated pull request, or is very simple and obviously ok), or (d) already has a code review from Claude Code that covers the current HEAD commit — specifically, a comment containing "### Code review" posted by `claude[bot]` whose GitHub permalink links contain the current HEAD SHA (use `gh pr view --json headRefOid` to get it). Note: a CodeRabbit review does NOT count as a Claude Code review; they are separate tools. If new commits have been pushed since the last Claude Code review, treat the PR as not yet reviewed and proceed. If any of (a)–(d) apply, do not proceed.
 2. Use another Haiku agent to give you a list of file paths to (but not the contents of) any relevant CLAUDE.md files from the codebase: the root CLAUDE.md file (if one exists), as well as any CLAUDE.md files in the directories whose files the pull request modified
 3. Use a Haiku agent to view the pull request, and ask the agent to return a summary of the change
 4. Then, launch 5 parallel Sonnet agents to independently code review the change. The agents should do the following, then return a list of issues and the reason each issue was flagged (eg. CLAUDE.md adherence, bug, historical git context, etc.):
@@ -27,7 +27,7 @@ To do this, follow these steps precisely:
 7. Use a Haiku agent to repeat the eligibility check from #1, to make sure that the pull request is still eligible for code review.
 8. Finally, use the gh bash command to comment back on the pull request with the result. When writing your comment, keep in mind to:
    a. Keep your output brief
-   b. Avoid emojis
+   b. Avoid decorative emojis in the review body — but preserve the 👍/👎 reaction prompt in the footer exactly as shown in the template below
    c. Link and cite relevant code, files, and URLs
 
 Examples of false positives, for steps 4 and 5:

@@ -76,12 +76,12 @@ Yes. The analysis on PR #79 found 3 real issues above the 80-confidence threshol
 Yes. The plugin uses the `gh` CLI and Claude agents. There is no external service dependency beyond GitHub itself. No subscription, rate limits, or API keys beyond what's already configured.
 
 **Does invocation fit naturally into the existing git workflow?**
-Mostly. The plugin is invoked manually as `/code-review` in a Claude Code session on an open PR branch. This differs from CodeRabbit, which runs automatically via the pre-push hook. For the target use case — a supplement when CodeRabbit is rate-limited — manual invocation is acceptable. The natural workflow becomes: push, see CodeRabbit is rate-limited, run `/code-review` as fallback.
+Mostly. The plugin is invoked manually as `/code-review` in a Claude Code session on an open PR branch. This differs from CodeRabbit, which runs automatically via the pre-push hook. At the time of this evaluation, the target use case was rate-limit fallback — manual invocation was acceptable for that framing. Decision 4 subsequently adopted an always-run-both workflow after testing showed the tools find different issue classes. The natural workflow is now: create a PR, immediately run `/code-review`, then start the CodeRabbit timer.
 
 ## Recommendation
 
 **Use plugin as-is** (proceed to Milestone 2a).
 
-**Key tradeoff that drove the decision:** The plugin's findings are real and complementary to CodeRabbit's — it finds different issue classes rather than duplicating them. Building a custom skill would mean writing, testing, and maintaining something that already exists and demonstrably works. The manual invocation model is a minor friction cost that is acceptable for a fallback tool. The alternative (building custom) has higher upfront cost and would likely converge on the same architecture anyway, since the plugin's 5-agent design with confidence scoring is already the right approach.
+**Key tradeoff that drove the decision:** The plugin's findings are real and complementary to CodeRabbit's — it finds different issue classes rather than duplicating them. Building a custom skill would mean writing, testing, and maintaining something that already exists and demonstrably works. At the time of this decision, the manual invocation model was considered acceptable for a fallback tool (Decision 4 later updated this to always-run-both). The alternative (building custom) has higher upfront cost and would likely converge on the same architecture anyway, since the plugin's 5-agent design with confidence scoring is already the right approach.
 
 **Note on `pr-review-toolkit`:** A second plugin in the registry (`pr-review-toolkit`) runs 6 specialized agents in-conversation rather than posting to GitHub. It is complementary to `/code-review` (pre-commit local review vs. post-push PR review) but is not a substitute for the CodeRabbit fallback use case since it does not post GitHub comments.
