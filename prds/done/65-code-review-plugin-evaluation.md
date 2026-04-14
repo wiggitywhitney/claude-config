@@ -1,5 +1,7 @@
 # PRD #65: Code Review Plugin Evaluation
 
+**Status: Complete** (2026-04-14)
+
 ## Problem
 
 CodeRabbit rate limits block the review cycle. When limits are hit, there is no fallback — work stalls waiting for the limit to reset. A supplemental code review capability is needed.
