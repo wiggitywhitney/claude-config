@@ -3,7 +3,7 @@
 **Status**: Not Started
 **Created**: 2026-04-07
 **Issue**: https://github.com/wiggitywhitney/claude-config/issues/58
-**Research**: [Michael Forrester's workflow](../docs/research/michael-forrester-workflow.md) and [update doc](../docs/research/michael-forrester-workflow-update.md) (produced by Step 0) — repo at `~/Documents/Repositories/forrester-workflow`
+**Research**: [Michael Forrester's workflow](../docs/research/michael-forrester-workflow.md) — repo at `~/Documents/Repositories/forrester-workflow`
 
 ## Problem
 
@@ -33,13 +33,13 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 3. For each milestone's reference file, check if it has changed and note any differences
 4. Document findings (new patterns, changed implementations, anything that would affect a milestone) in `docs/research/michael-forrester-workflow-update.md`
 
-**Output**: `docs/research/michael-forrester-workflow-update.md` — each milestone's Step 0 references this file. Organize by milestone: one section per affected milestone, describing what changed in the reference file and what that means for the planned implementation. Milestones unaffected by repo changes can be omitted or noted as "no changes."
+**Output**: Findings merged inline into `docs/research/michael-forrester-workflow.md` as "As of [date]:" notes under each affected section. Each milestone's Step 0 references this doc alongside the relevant reference implementation file.
 
 ---
 
 ## Milestones
 
-- [ ] Step 0: Re-research Michael's workflow repo
+- [x] Step 0: Re-research Michael's workflow repo
 - [ ] M1: Config sync script
 - [ ] M2: Post-compact skill and auto-reanchor hook
 - [ ] M3: Stop hook — auto-test on response
@@ -51,7 +51,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M1: Config sync script
-**Step 0:** Read related research before starting: [bats-core research](../docs/research/bats-core.md) and [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
+**Step 0:** Read before starting: (1) [Michael's workflow research](../docs/research/michael-forrester-workflow.md) — see the "config-sync.sh" section for implementation notes and Whitney-specific adaptations; (2) `~/Documents/Repositories/forrester-workflow/scripts/config-sync.sh` and `~/Documents/Repositories/forrester-workflow/scripts/config-sync-excludes.txt` for full implementation patterns; (3) [bats-core research](../docs/research/bats-core.md)
 
 **What**: A `scripts/config-sync.sh` that detects drift between live `~/.claude/` and the claude-config repo using `rsync --dry-run`. Supports `--apply live` (update repo from live) and `--apply repo` (adopt repo into live).
 
@@ -68,7 +68,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M2: Post-compact skill and auto-reanchor hook
-**Step 0:** Read related research before starting: [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
+**Step 0:** Read before starting: (1) [Michael's workflow research](../docs/research/michael-forrester-workflow.md) — see the "/post-compact skill" and "auto-reanchor.sh" sections for implementation notes and Whitney-specific adaptations; (2) `~/Documents/Repositories/forrester-workflow/claude-config/skills/post-compact/SKILL.md` and `~/Documents/Repositories/forrester-workflow/claude-config/hooks/auto-reanchor.sh` for full implementation patterns
 
 **What**: Two parts that work together:
 1. `/post-compact` skill — a manually-invokable skill that re-reads CLAUDE.md, PRD state, and git state, then reports orientation
@@ -91,7 +91,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M3: Stop hook — auto-test on response
-**Step 0:** Read related research before starting: [bats-core research](../docs/research/bats-core.md) and [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
+**Step 0:** Read before starting: (1) [Michael's workflow research](../docs/research/michael-forrester-workflow.md) — see the "Stop hook: auto-test" section for implementation notes and Whitney-specific adaptations (bats and vitest detection); (2) `~/Documents/Repositories/forrester-workflow/claude-config/hooks/auto-test-on-stop.sh` for full implementation patterns; (3) [bats-core research](../docs/research/bats-core.md)
 
 **What**: A `Stop` event hook that runs the project's test suite after every Claude response. Non-blocking (always exits 0). Only runs if a test command is detectable.
 
@@ -108,7 +108,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M4: `/continue` skill — session resume
-**Step 0:** Read related research before starting: [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
+**Step 0:** Read before starting: (1) [Michael's workflow research](../docs/research/michael-forrester-workflow.md) — see the "/continue skill" section for implementation notes and Whitney-specific adaptations; (2) `~/Documents/Repositories/forrester-workflow/claude-config/skills/continue/SKILL.md` for full implementation patterns
 
 **What**: A skill that reads PRD state, git log, git status, and task list to summarize where work left off and suggest the next step.
 
@@ -128,7 +128,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M5: `/plan-execute` skill — compaction-resilient execution
-**Step 0:** Read related research before starting: [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
+**Step 0:** Read before starting: (1) [Michael's workflow research](../docs/research/michael-forrester-workflow.md) — see the "/plan-execute skill" section; (2) `~/Documents/Repositories/forrester-workflow/claude-config/skills/plan-execute/SKILL.md` for full implementation patterns
 
 **What**: A skill that persists plan execution state to `_execution-state.md` on disk, re-reads it before every task, and handles compaction recovery gracefully.
 
@@ -151,7 +151,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M6: Ralph loop detection in SessionStart hook
-**Step 0:** Read related research before starting: [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
+**Step 0:** Read before starting: (1) [Michael's workflow research](../docs/research/michael-forrester-workflow.md) — see the "Ralph loop detection" section for implementation notes and Whitney-specific adaptations (stdin JSON input, opt-out dotfile, PRD check); (2) `~/Documents/Repositories/forrester-workflow/claude-config/hooks/session-start.sh` for full implementation patterns
 
 **What**: Add Ralph loop detection to the existing `session-start` hook behavior. A "Ralph loop" is Claude repeating the same failing approach in a cycle. Detect it via a `.claude/ralph-loop.local.md` state file in the repo.
 
@@ -172,7 +172,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M7: `/cost-tracker` skill
-**Step 0:** Read related research before starting: [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
+**Step 0:** Read before starting: (1) [Michael's workflow research](../docs/research/michael-forrester-workflow.md) — see the "/cost-tracker equivalent" section for implementation notes (Whitney uses bash/jq, not the Observatory CLI); (2) `~/Documents/Repositories/forrester-workflow/claude-config/skills/cost-tracker/SKILL.md` for full implementation patterns
 
 **What**: A skill that parses Claude Code session JSONL files in `~/.claude/projects/` to show token usage and cost per session and per repo.
 
