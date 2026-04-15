@@ -3,7 +3,7 @@
 **Status**: Not Started
 **Created**: 2026-04-07
 **Issue**: https://github.com/wiggitywhitney/claude-config/issues/58
-**Research**: [Michael Forrester's workflow](../docs/research/michael-forrester-workflow.md) — repo at `~/Documents/Repositories/forrester-workflow`
+**Research**: [Michael Forrester's workflow](../docs/research/michael-forrester-workflow.md) and [update doc](../docs/research/michael-forrester-workflow-update.md) (produced by Step 0) — repo at `~/Documents/Repositories/forrester-workflow`
 
 ## Problem
 
@@ -21,8 +21,25 @@ Claude Code sessions have several recurring failure modes that this repo does no
 
 Add seven targeted improvements, all drawn from Michael Forrester's workflow. Each has a working implementation in `~/Documents/Repositories/forrester-workflow/` to read before implementing.
 
+## Step 0: Re-research Michael's Workflow Repo (Do Before Any Milestone)
+
+**What**: Pull the latest from `~/Documents/Repositories/forrester-workflow`, review changes since this PRD was written (2026-04-07), and document findings.
+
+**Why**: The milestones were designed from a snapshot of Michael's repo taken in early April. He may have added improvements, refactored implementations, or introduced new patterns since then. Starting without checking risks implementing an outdated approach.
+
+**Process**:
+1. `cd ~/Documents/Repositories/forrester-workflow && git pull`
+2. `git log --since="2026-04-07" --oneline` to see what changed
+3. For each milestone's reference file, check if it has changed and note any differences
+4. Document findings (new patterns, changed implementations, anything that would affect a milestone) in `docs/research/michael-forrester-workflow-update.md`
+
+**Output**: `docs/research/michael-forrester-workflow-update.md` — each milestone's Step 0 references this file. Organize by milestone: one section per affected milestone, describing what changed in the reference file and what that means for the planned implementation. Milestones unaffected by repo changes can be omitted or noted as "no changes."
+
+---
+
 ## Milestones
 
+- [ ] Step 0: Re-research Michael's workflow repo
 - [ ] M1: Config sync script
 - [ ] M2: Post-compact skill and auto-reanchor hook
 - [ ] M3: Stop hook — auto-test on response
@@ -34,7 +51,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M1: Config sync script
-**Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
+**Step 0:** Read related research before starting: [bats-core research](../docs/research/bats-core.md) and [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
 
 **What**: A `scripts/config-sync.sh` that detects drift between live `~/.claude/` and the claude-config repo using `rsync --dry-run`. Supports `--apply live` (update repo from live) and `--apply repo` (adopt repo into live).
 
@@ -51,6 +68,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M2: Post-compact skill and auto-reanchor hook
+**Step 0:** Read related research before starting: [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
 
 **What**: Two parts that work together:
 1. `/post-compact` skill — a manually-invokable skill that re-reads CLAUDE.md, PRD state, and git state, then reports orientation
@@ -73,7 +91,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M3: Stop hook — auto-test on response
-**Step 0:** Read related research before starting: [Research: bats-core v1.12/v1.13 Changes and run Behavior](../docs/research/bats-core.md)
+**Step 0:** Read related research before starting: [bats-core research](../docs/research/bats-core.md) and [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
 
 **What**: A `Stop` event hook that runs the project's test suite after every Claude response. Non-blocking (always exits 0). Only runs if a test command is detectable.
 
@@ -90,6 +108,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M4: `/continue` skill — session resume
+**Step 0:** Read related research before starting: [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
 
 **What**: A skill that reads PRD state, git log, git status, and task list to summarize where work left off and suggest the next step.
 
@@ -109,6 +128,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M5: `/plan-execute` skill — compaction-resilient execution
+**Step 0:** Read related research before starting: [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
 
 **What**: A skill that persists plan execution state to `_execution-state.md` on disk, re-reads it before every task, and handles compaction recovery gracefully.
 
@@ -131,6 +151,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M6: Ralph loop detection in SessionStart hook
+**Step 0:** Read related research before starting: [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
 
 **What**: Add Ralph loop detection to the existing `session-start` hook behavior. A "Ralph loop" is Claude repeating the same failing approach in a cycle. Detect it via a `.claude/ralph-loop.local.md` state file in the repo.
 
@@ -151,6 +172,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M7: `/cost-tracker` skill
+**Step 0:** Read related research before starting: [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
 
 **What**: A skill that parses Claude Code session JSONL files in `~/.claude/projects/` to show token usage and cost per session and per repo.
 
@@ -172,7 +194,9 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 
 ## Design Decisions
 
-_Record decisions here as they are made during implementation._
+| # | Date | Decision | Rationale | Downstream Impact |
+|---|------|----------|-----------|-------------------|
+| 1 | 2026-04-15 | Add a PRD-level Step 0 to re-research Michael's workflow repo before starting any milestone | PRD was designed from a snapshot taken in early April; re-examining before implementation prevents building from stale patterns | All milestones — each now references the research doc produced by Step 0 |
 
 ---
 

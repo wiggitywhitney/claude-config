@@ -6,6 +6,7 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-04-15) Redesigned PRD #58 (session hygiene improvements) to include an upfront research phase — before implementing any of the 7 milestones, pull the latest from Michael Forrester's workflow repo and document what changed since the PRD was designed in early April, so implementations aren't based on a stale snapshot; each milestone's Step 0 now references the research doc that phase produces
 - (2026-04-14) Wired the `code-review` plugin into the standard PR workflow so it runs on every PR alongside CodeRabbit — the two tools find different issue classes (plugin: CLAUDE.md compliance, bugs, historical context; CodeRabbit: security, correctness), making them genuinely complementary; plugin content copied to `.claude/skills/code-review/SKILL.md` and symlinked globally so it works in every repo; `rules/git-workflow.md` and `rules/hooks-reference.md` updated with instructions to run `/code-review` immediately after PR creation; `/prd-done` skill updated with an explicit step so the workflow is reliable and not just advisory
 - (2026-04-13) Evaluated the official code-review plugin from the Claude plugin registry and found it finds different issue classes than CodeRabbit (plugin catches convention gaps and historical context; CodeRabbit catches security and correctness issues) — decided to run both on every PR for complementary coverage; plugin installed globally; research findings in research/code-review-plugin-evaluation.md; workflow documentation (git-workflow.md and hooks-reference.md updates) coming in next step
 - (2026-04-13) Added end-to-end bats tests for all three new-machine scripts (backup-private-files.sh, sync-repos.sh, bootstrap.sh) — each test runs a full multi-repo scenario rather than isolated unit cases, covering the realistic mix of present repos, absent repos, and skipped paths in a single run; 25 new tests, all passing
@@ -73,6 +74,7 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Changed
 
+- (2026-04-15) Updated the /code-review description in hooks-reference.md to reflect the current two-tier output format (High confidence ≥ 80 and Medium confidence 50–79 in a table, each with score and Fix/Skip disposition), replacing the old flat-list description with an 80-confidence hard cutoff
 - (2026-03-11) Softened infrastructure safety rule in global CLAUDE.md — replaced mandatory teardown gates with awareness-based approach via SessionStart hook (PRD #39, M3)
 
 - (2026-03-11) Added `(YYYY-MM-DD)` date prefix to PROGRESS.md entry format in prd-update-progress and prd-start skills (both yolo and careful variants)
