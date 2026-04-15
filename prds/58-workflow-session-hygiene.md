@@ -1,6 +1,6 @@
 # PRD #58: Workflow Session Hygiene Improvements
 
-**Status**: Not Started
+**Status**: In Progress
 **Created**: 2026-04-07
 **Issue**: https://github.com/wiggitywhitney/claude-config/issues/58
 **Research**: [Michael Forrester's workflow](../docs/research/michael-forrester-workflow.md) — repo at `~/Documents/Repositories/forrester-workflow`
@@ -40,7 +40,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ## Milestones
 
 - [x] Step 0: Re-research Michael's workflow repo
-- [ ] M1: Config sync script
+- [~] M1: Config sync script — skipped (Decision 5)
 - [ ] M2: Post-compact skill and auto-reanchor hook
 - [ ] M3: Stop hook — auto-test on response
 - [ ] M4: `/continue` skill — session resume
@@ -55,7 +55,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 
 **What**: A `scripts/config-sync.sh` that detects drift between live `~/.claude/` and the claude-config repo using `rsync --dry-run`. Supports `--apply live` (update repo from live) and `--apply repo` (adopt repo into live).
 
-**Why**: Today we edited both `~/.claude/rules/git-workflow.md` and the repo's `rules/git-workflow.md` as separate files. Without a sync script, these will diverge over time.
+**Why**: ~~Today we edited both `~/.claude/rules/git-workflow.md` and the repo's `rules/git-workflow.md` as separate files. Without a sync script, these will diverge over time.~~ *(Decision 2: this example was inaccurate — `~/.claude/rules/` is a directory symlink, so drift there is impossible.)* The actual drift surface is `~/.claude/hooks/` and `~/.claude/scripts/` — files that live outside the repo with no symlink back. During the session that added Decisions 2–4, most of these were either deleted (Kunal's hooks) or eliminated (EPCAT hook project-scoped). **Before starting M1, re-evaluate whether the remaining drift surface justifies the script.** Run `ls -la ~/.claude/hooks/ ~/.claude/scripts/` and compare against the repo — if everything untracked is either intentionally local or already gone, M1 may be a low-value milestone. (Updated per Decisions 2 and 4)
 
 **Reference implementation**: `~/Documents/Repositories/forrester-workflow/scripts/config-sync.sh` — **before writing any code, read this file and summarize the key patterns to yourself.** Do NOT implement without reading it first. It uses `rsync --itemize-changes` to detect drift and shows colored diffs for modified files. Also has a `config-sync-excludes.txt` file to skip ephemeral files (memory, projects/, etc.) — read that too to understand what to exclude in Whitney's version.
 
@@ -81,6 +81,8 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 - Hook: `~/Documents/Repositories/forrester-workflow/claude-config/hooks/auto-reanchor.sh` — outputs an orientation block to stderr (so it lands in `additionalContext`). Includes repo, branch, last 3 commits, dirty files, next step from PROJECT_STATE.md, and whether `_execution-state.md` is active.
 
 **Note**: Whitney uses PRDs instead of PROJECT_STATE.md. Adapt the hook and skill to read from the active PRD (check `prds/` for any file with `Status: In Progress`) rather than PROJECT_STATE.md.
+
+**Note**: Kunal's `post-compact-inject.sh` PostCompact hook was removed from `settings.json` and deleted during the session that added Decision 3. No existing PostCompact hook needs to be cleaned up before installing `auto-reanchor.sh` — the slot is empty. (Updated per Decision 3)
 
 **Acceptance criteria**:
 - `/post-compact` skill exists and re-anchors context when invoked
@@ -197,6 +199,10 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 | # | Date | Decision | Rationale | Downstream Impact |
 |---|------|----------|-----------|-------------------|
 | 1 | 2026-04-15 | Add a PRD-level Step 0 to re-research Michael's workflow repo before starting any milestone | PRD was designed from a snapshot taken in early April; re-examining before implementation prevents building from stale patterns | All milestones — each now references the research doc produced by Step 0 |
+| 2 | 2026-04-15 | The PRD's motivating drift example was inaccurate — `~/.claude/rules/`, `CLAUDE.md`, `settings.json`, and `skills/` are all symlinked to the repo; the referenced git-workflow.md drift could not have happened as described | Discovered by inspecting actual filesystem layout. Real drift surface is only `~/.claude/hooks/` and `~/.claude/scripts/` for files that live outside the repo entirely. | M1: problem statement needs rewriting; scope narrows significantly. See M1 note. |
+| 3 | 2026-04-15 | Kunal's pre-compact/post-compact hooks (`pre-compact-decisions.py`, `post-compact-inject.sh`) removed from `settings.json` and deleted | Whitney did not want these hooks installed by a coworker; they represented unsolicited global configuration | M2: no existing PostCompact hook to clean up before installing auto-reanchor.sh — starts with a clean slate |
+| 4 | 2026-04-15 | EPCAT safety hook project-scoped from global `settings.json` to `Journal/.claude/settings.json`; Journal's hook script replaced with advocacy version | Global hook was running on every Bash call in every repo; only Journal uses EPCAT. Project-scoped model (from advocacy repo) is strictly better — self-contained, no manual setup. | M1: further reduces the drift surface that M1 was meant to address; the one non-symlinked script being actively used is now eliminated from global scope |
+| 5 | 2026-04-15 | Skip M1 (config sync script) — the drift surface is too small to justify building the script | After Decisions 2–4's cleanup (Kunal's hooks deleted, EPCAT hook project-scoped, orphaned scripts deleted), virtually nothing remains untracked in `~/.claude/`. The problem M1 was designed to solve no longer exists at meaningful scale. Symlinks and project-scoping solved it more directly than detection-and-repair. | M1 removed from active milestones |
 
 ---
 
