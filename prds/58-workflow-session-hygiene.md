@@ -42,7 +42,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 - [x] Step 0: Re-research Michael's workflow repo
 - [~] M1: Config sync script — skipped (Decision 5)
 - [x] M2: Post-compact skill and auto-reanchor hook
-- [ ] M3: Stop hook — auto-test on response
+- [~] M3: Stop hook — auto-test on response — skipped (Decision 6)
 - [ ] M4: `/continue` skill — session resume
 - [ ] M5: `/plan-execute` skill — compaction-resilient execution
 - [ ] M6: Ralph loop detection in SessionStart hook
@@ -203,6 +203,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 | 3 | 2026-04-15 | Kunal's pre-compact/post-compact hooks (`pre-compact-decisions.py`, `post-compact-inject.sh`) removed from `settings.json` and deleted | Whitney did not want these hooks installed by a coworker; they represented unsolicited global configuration | M2: no existing PostCompact hook to clean up before installing auto-reanchor.sh — starts with a clean slate |
 | 4 | 2026-04-15 | EPCAT safety hook project-scoped from global `settings.json` to `Journal/.claude/settings.json`; Journal's hook script replaced with advocacy version | Global hook was running on every Bash call in every repo; only Journal uses EPCAT. Project-scoped model (from advocacy repo) is strictly better — self-contained, no manual setup. | M1: further reduces the drift surface that M1 was meant to address; the one non-symlinked script being actively used is now eliminated from global scope |
 | 5 | 2026-04-15 | Skip M1 (config sync script) — the drift surface is too small to justify building the script | After Decisions 2–4's cleanup (Kunal's hooks deleted, EPCAT hook project-scoped, orphaned scripts deleted), virtually nothing remains untracked in `~/.claude/`. The problem M1 was designed to solve no longer exists at meaningful scale. Symlinks and project-scoping solved it more directly than detection-and-repair. | M1 removed from active milestones |
+| 6 | 2026-04-16 | Skip M3 (Stop hook — auto-test on response) — the pattern is designed for autonomous workflows, not interactive ones | Michael's hook feeds test results into Claude's `additionalContext` so an autonomous agent can self-correct on the next turn. Whitney's workflow is interactive — she's at the keyboard making those judgment calls herself. The latency cost per response outweighs the benefit. | M3 removed from active milestones |
 
 ---
 
