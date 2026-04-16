@@ -41,7 +41,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 
 - [x] Step 0: Re-research Michael's workflow repo
 - [~] M1: Config sync script — skipped (Decision 5)
-- [ ] M2: Post-compact skill and auto-reanchor hook
+- [x] M2: Post-compact skill and auto-reanchor hook
 - [ ] M3: Stop hook — auto-test on response
 - [ ] M4: `/continue` skill — session resume
 - [ ] M5: `/plan-execute` skill — compaction-resilient execution

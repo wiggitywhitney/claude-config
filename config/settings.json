@@ -177,6 +177,16 @@
           }
         ]
       }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/scripts/auto-reanchor.sh"
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
