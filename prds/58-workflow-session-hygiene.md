@@ -43,7 +43,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 - [~] M1: Config sync script — skipped (Decision 5)
 - [x] M2: Post-compact skill and auto-reanchor hook
 - [~] M3: Stop hook — auto-test on response — skipped (Decision 6)
-- [ ] M4: `/continue` skill — session resume
+- [x] M4: `/continue` skill — session resume
 - [ ] M5: `/plan-execute` skill — compaction-resilient execution
 - [ ] M6: Ralph loop detection in SessionStart hook
 - [ ] M7: `/cost-tracker` skill
@@ -120,9 +120,12 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 
 **Note**: Read the active PRD (any file in `prds/` with `Status: In Progress`) instead of PROJECT_STATE.md.
 
+**Note**: Also read PROGRESS.md (narrative complement to PRD checkbox state — captures what was done and why, not just what's pending), and journal context files for session-level context that git log doesn't capture: today's raw journal entries (`journal/entries/YYYY-MM-DD.md` for current date), yesterday's daily summary (`journal/summaries/daily/YYYY-MM-DD.md`), and the most recent weekly summary (`journal/summaries/weekly/`). Raw journal entries for prior days should be skipped — use summaries for those. This layered approach handles both same-day resumes and longer absences. (Updated per Decision 7)
+
 **Acceptance criteria**:
 - `/continue` skill exists
-- Reads active PRD, git log, git status, and task list
+- Reads active PRD, PROGRESS.md, git log, git status, and task list
+- Reads journal context: today's raw entries, yesterday's daily summary, most recent weekly summary
 - Outputs: last activity, current branch, pending PRD milestones, suggested next step
 - Asks user to confirm before starting work
 - Skill reviewed with `/write-prompt` before committing
@@ -204,6 +207,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 | 4 | 2026-04-15 | EPCAT safety hook project-scoped from global `settings.json` to `Journal/.claude/settings.json`; Journal's hook script replaced with advocacy version | Global hook was running on every Bash call in every repo; only Journal uses EPCAT. Project-scoped model (from advocacy repo) is strictly better — self-contained, no manual setup. | M1: further reduces the drift surface that M1 was meant to address; the one non-symlinked script being actively used is now eliminated from global scope |
 | 5 | 2026-04-15 | Skip M1 (config sync script) — the drift surface is too small to justify building the script | After Decisions 2–4's cleanup (Kunal's hooks deleted, EPCAT hook project-scoped, orphaned scripts deleted), virtually nothing remains untracked in `~/.claude/`. The problem M1 was designed to solve no longer exists at meaningful scale. Symlinks and project-scoping solved it more directly than detection-and-repair. | M1 removed from active milestones |
 | 6 | 2026-04-16 | Skip M3 (Stop hook — auto-test on response) — the pattern is designed for autonomous workflows, not interactive ones | Michael's hook feeds test results into Claude's `additionalContext` so an autonomous agent can self-correct on the next turn. Whitney's workflow is interactive — she's at the keyboard making those judgment calls herself. The latency cost per response outweighs the benefit. | M3 removed from active milestones |
+| 7 | 2026-04-16 | `/continue` skill should read PROGRESS.md and a layered set of journal context files in addition to the sources in the reference implementation | PROGRESS.md is the narrative complement to PRD checkbox state — it captures what was done and why, not just what's pending. Journal files provide session-level context git log doesn't capture. Layer: today's raw entries (current-day sessions), yesterday's daily summary (distilled prior-day context), most recent weekly summary (broader arc for longer absences). Raw entries for prior days are too noisy — use summaries. | M4 acceptance criteria and notes updated to include these sources |
 
 ---
 
