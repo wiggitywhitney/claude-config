@@ -43,7 +43,7 @@ Present a concise summary in this format:
 ```text
 --- SESSION RESUME ---
 Repo: <name> | Branch: <branch> | Working tree: <clean | N files changed>
-Recent commits: <last 3-5 oneline entries>
+Recent commits: <last 5 oneline entries>
 
 Active PRD: <filename | "none">
   Last completed: <most recent [x] milestone | "none">

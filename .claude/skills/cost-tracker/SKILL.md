@@ -8,6 +8,7 @@ triggers:
   - "cost breakdown"
   - "cache hit rate"
   - "which repo is most expensive"
+  - "billing"
 ---
 
 # /cost-tracker — Token & Cost Visibility
@@ -41,7 +42,7 @@ Quick cost breakdown from Claude Code session data. The underlying script is det
      1. Keep system prompts long and stable across turns (they become the cache anchor)
      2. Place the large, stable content (rules, docs, context) at the top of the prompt, before the dynamic per-turn content
 
-5. **Flag cost outliers** if any single repo exceeds 2× the per-repo average cost. Name the repo and note it as worth investigating.
+5. **Flag cost outliers** if any single repo exceeds 2× the mean cost-per-repo across all repos shown in the script output. Name the repo and note it as worth investigating.
 
 ## Constraints
 

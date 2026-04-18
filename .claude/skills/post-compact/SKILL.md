@@ -31,15 +31,16 @@ This is lighter than `/continue` — designed for mid-session use, not session s
    ```text
    --- CONTEXT RE-ANCHORED ---
    Repo: <name> | Branch: <branch>
-   Last 3 commits: <oneline log>
+   Last 5 commits: <oneline log>
    Working tree: <clean | dirty files listed>
    Active PRD: <filename> | Next: <first unchecked milestone>  (or "none" if absent)
+   CLAUDE.md constraints noted: <any key constraints or conventions from Step 1, or "none">
    <_execution-state.md summary if present>
    Ready to continue.
    ---
    ```
 
-6. **Flag anything unexpected** before continuing — wrong branch, unexpected dirty state, PRD milestone marked done but no corresponding commit. Do not proceed silently if something looks wrong.
+6. **Flag anything unexpected** before continuing — unexpected dirty state, PRD milestone marked `[x]` with no corresponding commit, or branch mismatch (current branch differs from the branch referenced in the most recent PRD commit). Do not proceed silently if something looks wrong.
 
 ## Constraints
 
