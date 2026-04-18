@@ -31,7 +31,7 @@ Quick cost breakdown from Claude Code session data. The underlying script is det
    ```bash
    bash ~/Documents/Repositories/claude-config/scripts/cost-tracker.sh [DAYS] [--repo NAME]
    ```
-   The script reads `~/.claude/projects/` JSONL files and outputs a formatted report. If the script fails or produces no output, report the error verbatim and stop.
+   The script reads `~/.claude/projects/` JSONL files and outputs a formatted report. **Note:** the script lives in the `claude-config` repo — this path assumes it is cloned at `~/Documents/Repositories/claude-config`. If the script is not found there, check where the repo is cloned and adjust accordingly. If the script fails or produces no output, report the error verbatim and stop.
 
 3. **Present the output** from the script verbatim — do not reformat or summarize it.
 

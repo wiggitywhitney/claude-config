@@ -15,6 +15,9 @@ make_record() {
 setup() {
     PROJECTS_DIR=$(mktemp -d)
     chmod +x "$SCRIPT"
+    # Dynamic timestamps — avoids hardcoded dates becoming stale
+    RECENT_TS=$(date -u +"%Y-%m-%dT10:00:00Z")
+    OLD_TS="2025-01-01T00:00:00Z"
 }
 
 teardown() {
@@ -44,7 +47,7 @@ teardown() {
 @test "calculates correct cost for 1M Sonnet 4.6 input tokens" {
     # $3.00/MTok input → $3.00
     mkdir -p "$PROJECTS_DIR/proj-a"
-    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 1000000 0 0 0 "2026-04-18T10:00:00Z" \
+    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 1000000 0 0 0 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-a/s1.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\""
     [ "$status" -eq 0 ]
@@ -54,7 +57,7 @@ teardown() {
 @test "calculates correct cost for 1M Opus 4.7 input tokens" {
     # $5.00/MTok input → $5.00 (not $15 — pricing updated since forrester sessions.py)
     mkdir -p "$PROJECTS_DIR/proj-a"
-    make_record "s1" "/repos/proj-a" "claude-opus-4-7" 1000000 0 0 0 "2026-04-18T10:00:00Z" \
+    make_record "s1" "/repos/proj-a" "claude-opus-4-7" 1000000 0 0 0 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-a/s1.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\""
     [ "$status" -eq 0 ]
@@ -64,7 +67,7 @@ teardown() {
 @test "calculates correct cost for 1M Opus 4.6 input tokens" {
     # $5.00/MTok input → $5.00
     mkdir -p "$PROJECTS_DIR/proj-a"
-    make_record "s1" "/repos/proj-a" "claude-opus-4-6" 1000000 0 0 0 "2026-04-18T10:00:00Z" \
+    make_record "s1" "/repos/proj-a" "claude-opus-4-6" 1000000 0 0 0 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-a/s1.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\""
     [ "$status" -eq 0 ]
@@ -74,7 +77,7 @@ teardown() {
 @test "calculates correct cost for 1M Haiku 4.5 input tokens" {
     # $1.00/MTok input → $1.00 (not $0.80 — pricing updated since forrester sessions.py)
     mkdir -p "$PROJECTS_DIR/proj-a"
-    make_record "s1" "/repos/proj-a" "claude-haiku-4-5-20251001" 1000000 0 0 0 "2026-04-18T10:00:00Z" \
+    make_record "s1" "/repos/proj-a" "claude-haiku-4-5-20251001" 1000000 0 0 0 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-a/s1.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\""
     [ "$status" -eq 0 ]
@@ -85,7 +88,7 @@ teardown() {
     # Two messages in one session: 500k + 500k = 1M input → $3.00 Sonnet
     mkdir -p "$PROJECTS_DIR/proj-a"
     {
-        make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 500000 0 0 0 "2026-04-18T10:00:00Z"
+        make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 500000 0 0 0 "$RECENT_TS"
         make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 500000 0 0 0 "2026-04-18T10:01:00Z"
     } > "$PROJECTS_DIR/proj-a/s1.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\""
@@ -96,7 +99,7 @@ teardown() {
 @test "calculates cache create cost at correct rate for Sonnet 4.6" {
     # $3.75/MTok cache create → $3.75
     mkdir -p "$PROJECTS_DIR/proj-a"
-    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 0 1000000 0 0 "2026-04-18T10:00:00Z" \
+    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 0 1000000 0 0 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-a/s1.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\""
     [ "$status" -eq 0 ]
@@ -106,7 +109,7 @@ teardown() {
 @test "calculates output token cost at correct rate for Sonnet 4.6" {
     # $15.00/MTok output → $15.00
     mkdir -p "$PROJECTS_DIR/proj-a"
-    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 0 0 0 1000000 "2026-04-18T10:00:00Z" \
+    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 0 0 0 1000000 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-a/s1.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\""
     [ "$status" -eq 0 ]
@@ -118,8 +121,8 @@ teardown() {
 @test "shows correct session count" {
     mkdir -p "$PROJECTS_DIR/proj-a"
     {
-        make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 100 0 0 50 "2026-04-18T10:00:00Z"
-        make_record "s2" "/repos/proj-a" "claude-sonnet-4-6" 100 0 0 50 "2026-04-18T11:00:00Z"
+        make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 100 0 0 50 "$RECENT_TS"
+        make_record "s2" "/repos/proj-a" "claude-sonnet-4-6" 100 0 0 50 "$RECENT_TS"
     } > "$PROJECTS_DIR/proj-a/sessions.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\""
     [ "$status" -eq 0 ]
@@ -130,7 +133,7 @@ teardown() {
 
 @test "shows by-repo section" {
     mkdir -p "$PROJECTS_DIR/proj-a"
-    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 100 0 0 50 "2026-04-18T10:00:00Z" \
+    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 100 0 0 50 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-a/s1.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\""
     [ "$status" -eq 0 ]
@@ -140,9 +143,9 @@ teardown() {
 
 @test "lists multiple repos in by-repo section" {
     mkdir -p "$PROJECTS_DIR/proj-a" "$PROJECTS_DIR/proj-b"
-    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 100 0 0 50 "2026-04-18T10:00:00Z" \
+    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 100 0 0 50 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-a/s1.jsonl"
-    make_record "s2" "/repos/proj-b" "claude-sonnet-4-6" 100 0 0 50 "2026-04-18T10:00:00Z" \
+    make_record "s2" "/repos/proj-b" "claude-sonnet-4-6" 100 0 0 50 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-b/s2.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\""
     [ "$status" -eq 0 ]
@@ -154,7 +157,7 @@ teardown() {
 
 @test "shows by-model section" {
     mkdir -p "$PROJECTS_DIR/proj-a"
-    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 100 0 0 50 "2026-04-18T10:00:00Z" \
+    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 100 0 0 50 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-a/s1.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\""
     [ "$status" -eq 0 ]
@@ -167,7 +170,7 @@ teardown() {
 @test "shows cache hit ratio" {
     mkdir -p "$PROJECTS_DIR/proj-a"
     # 300k cache_read, 700k input → 30% cache ratio
-    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 700000 0 300000 0 "2026-04-18T10:00:00Z" \
+    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 700000 0 300000 0 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-a/s1.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\""
     [ "$status" -eq 0 ]
@@ -178,7 +181,7 @@ teardown() {
 @test "flags low cache ratio when below 70 percent" {
     mkdir -p "$PROJECTS_DIR/proj-a"
     # 0% cache read → 0% ratio, should show warning
-    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 1000000 0 0 0 "2026-04-18T10:00:00Z" \
+    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 1000000 0 0 0 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-a/s1.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\""
     [ "$status" -eq 0 ]
@@ -188,7 +191,7 @@ teardown() {
 @test "shows good indicator when cache ratio is 70 percent or above" {
     mkdir -p "$PROJECTS_DIR/proj-a"
     # 800k cache_read, 200k input → 80% cache ratio
-    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 200000 0 800000 0 "2026-04-18T10:00:00Z" \
+    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 200000 0 800000 0 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-a/s1.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\""
     [ "$status" -eq 0 ]
@@ -203,7 +206,7 @@ teardown() {
         # Old record: 2025-01-01 — well outside any reasonable --days window
         make_record "s-old" "/repos/proj-a" "claude-sonnet-4-6" 1000000 0 0 0 "2025-01-01T00:00:00Z"
         # Recent record: today
-        make_record "s-new" "/repos/proj-a" "claude-sonnet-4-6" 1000 0 0 0 "2026-04-18T10:00:00Z"
+        make_record "s-new" "/repos/proj-a" "claude-sonnet-4-6" 1000 0 0 0 "$RECENT_TS"
     } > "$PROJECTS_DIR/proj-a/sessions.jsonl"
     # With --days 7 only the recent session should count; total cost << $3.00
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\" 7"
@@ -214,7 +217,7 @@ teardown() {
 
 @test "includes sessions within the requested day range" {
     mkdir -p "$PROJECTS_DIR/proj-a"
-    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 1000000 0 0 0 "2026-04-18T10:00:00Z" \
+    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 1000000 0 0 0 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-a/s1.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\" 7"
     [ "$status" -eq 0 ]
@@ -225,9 +228,9 @@ teardown() {
 
 @test "--repo filter shows only the specified repo" {
     mkdir -p "$PROJECTS_DIR/proj-a" "$PROJECTS_DIR/proj-b"
-    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 1000000 0 0 0 "2026-04-18T10:00:00Z" \
+    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 1000000 0 0 0 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-a/s1.jsonl"
-    make_record "s2" "/repos/proj-b" "claude-sonnet-4-6" 1000000 0 0 0 "2026-04-18T10:00:00Z" \
+    make_record "s2" "/repos/proj-b" "claude-sonnet-4-6" 1000000 0 0 0 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-b/s2.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\" --repo proj-a"
     [ "$status" -eq 0 ]
@@ -237,7 +240,7 @@ teardown() {
 
 @test "--repo filter with no matching sessions shows no-data message" {
     mkdir -p "$PROJECTS_DIR/proj-a"
-    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 1000000 0 0 0 "2026-04-18T10:00:00Z" \
+    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 1000000 0 0 0 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-a/s1.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\" --repo nonexistent"
     [ "$status" -eq 0 ]
@@ -248,7 +251,7 @@ teardown() {
 
 @test "report header includes the day range" {
     mkdir -p "$PROJECTS_DIR/proj-a"
-    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 100 0 0 50 "2026-04-18T10:00:00Z" \
+    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 100 0 0 50 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-a/s1.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\" 14"
     [ "$status" -eq 0 ]
@@ -260,20 +263,26 @@ teardown() {
 @test "skips non-assistant record types without error" {
     mkdir -p "$PROJECTS_DIR/proj-a"
     {
-        printf '{"type":"user","sessionId":"s1","cwd":"/repos/proj-a","timestamp":"2026-04-18T10:00:00Z","message":{"content":[]}}\n'
+        printf '{"type":"user","sessionId":"s1","cwd":"/repos/proj-a","timestamp":"$RECENT_TS","message":{"content":[]}}\n'
         printf '{"type":"permission-mode","permissionMode":"default","sessionId":"s1"}\n'
-        make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 1000000 0 0 0 "2026-04-18T10:01:00Z"
+        make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 1000000 0 0 0 "$RECENT_TS"
     } > "$PROJECTS_DIR/proj-a/s1.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\""
     [ "$status" -eq 0 ]
     [[ "$output" == *'$3.00'* ]]
 }
 
+@test "--repo without a value prints error and exits non-zero" {
+    run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\" --repo"
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"requires a value"* ]]
+}
+
 @test "handles JSONL files across multiple project subdirectories" {
     mkdir -p "$PROJECTS_DIR/proj-a" "$PROJECTS_DIR/proj-b"
-    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 1000000 0 0 0 "2026-04-18T10:00:00Z" \
+    make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 1000000 0 0 0 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-a/s1.jsonl"
-    make_record "s2" "/repos/proj-b" "claude-sonnet-4-6" 1000000 0 0 0 "2026-04-18T10:00:00Z" \
+    make_record "s2" "/repos/proj-b" "claude-sonnet-4-6" 1000000 0 0 0 "$RECENT_TS" \
         > "$PROJECTS_DIR/proj-b/s2.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\""
     [ "$status" -eq 0 ]

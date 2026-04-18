@@ -10,7 +10,7 @@ PROJECTS_DIR="${CLAUDE_PROJECTS_DIR:-$HOME/.claude/projects}"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --repo) REPO_FILTER="$2"; shift 2 ;;
+        --repo) [[ $# -lt 2 ]] && { echo "Error: --repo requires a value" >&2; exit 1; }; REPO_FILTER="$2"; shift 2 ;;
         [0-9]*) DAYS="$1"; shift ;;
         *) echo "Usage: cost-tracker.sh [DAYS] [--repo NAME]" >&2; exit 1 ;;
     esac
