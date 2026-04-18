@@ -1,6 +1,6 @@
 # PRD #58: Workflow Session Hygiene Improvements
 
-**Status**: In Progress
+**Status**: Done
 **Created**: 2026-04-07
 **Issue**: https://github.com/wiggitywhitney/claude-config/issues/58
 **Research**: [Michael Forrester's workflow](../docs/research/michael-forrester-workflow.md) — repo at `~/Documents/Repositories/forrester-workflow`
@@ -46,7 +46,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 - [x] M4: `/continue` skill — session resume
 - [~] M5: `/plan-execute` skill — superseded by PRD #84 (Decision 8)
 - [~] M6: Ralph loop detection in SessionStart hook — moved to PRD #84 (Decision 9)
-- [ ] M7: `/cost-tracker` skill
+- [x] M7: `/cost-tracker` skill
 
 ---
 
