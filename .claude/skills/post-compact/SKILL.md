@@ -40,7 +40,7 @@ This is lighter than `/continue` — designed for mid-session use, not session s
    ---
    ```
 
-6. **Flag anything unexpected** before continuing — unexpected dirty state, PRD milestone marked `[x]` with no corresponding commit, or branch mismatch (current branch differs from the branch referenced in the most recent PRD commit). Do not proceed silently if something looks wrong.
+6. **Flag anything unexpected** before continuing — unexpected dirty state (staged or unstaged changes you didn't expect), or current branch is `main`/`master` despite an active PRD (active PRD work should be on a feature branch). Do not proceed silently if something looks wrong.
 
 ## Constraints
 
