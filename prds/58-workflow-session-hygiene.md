@@ -44,7 +44,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 - [x] M2: Post-compact skill and auto-reanchor hook
 - [~] M3: Stop hook — auto-test on response — skipped (Decision 6)
 - [x] M4: `/continue` skill — session resume
-- [ ] M5: `/plan-execute` skill — compaction-resilient execution
+- [~] M5: `/plan-execute` skill — superseded by PRD #84 (Decision 8)
 - [ ] M6: Ralph loop detection in SessionStart hook
 - [ ] M7: `/cost-tracker` skill
 
@@ -208,6 +208,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 | 5 | 2026-04-15 | Skip M1 (config sync script) — the drift surface is too small to justify building the script | After Decisions 2–4's cleanup (Kunal's hooks deleted, EPCAT hook project-scoped, orphaned scripts deleted), virtually nothing remains untracked in `~/.claude/`. The problem M1 was designed to solve no longer exists at meaningful scale. Symlinks and project-scoping solved it more directly than detection-and-repair. | M1 removed from active milestones |
 | 6 | 2026-04-16 | Skip M3 (Stop hook — auto-test on response) — the pattern is designed for autonomous workflows, not interactive ones | Michael's hook feeds test results into Claude's `additionalContext` so an autonomous agent can self-correct on the next turn. Whitney's workflow is interactive — she's at the keyboard making those judgment calls herself. The latency cost per response outweighs the benefit. | M3 removed from active milestones |
 | 7 | 2026-04-16 | `/continue` skill should read PROGRESS.md and a layered set of journal context files in addition to the sources in the reference implementation | PROGRESS.md is the narrative complement to PRD checkbox state — it captures what was done and why, not just what's pending. Journal files provide session-level context git log doesn't capture. Layer: today's raw entries (current-day sessions), yesterday's daily summary (distilled prior-day context), most recent weekly summary (broader arc for longer absences). Raw entries for prior days are too noisy — use summaries. | M4 acceptance criteria and notes updated to include these sources |
+| 8 | 2026-04-18 | Skip M5 (`/plan-execute`) — superseded by PRD #84 | The autonomous PRD execution workflow moved to its own PRD (#84), which takes a different architectural approach: milestone-grain unit of work with the PRD file itself as the state file, not a separate `_execution-state.md`. The compaction-resilience goals of M5 are addressed within PRD #84's design. | M5 removed from active milestones |
 
 ---
 
