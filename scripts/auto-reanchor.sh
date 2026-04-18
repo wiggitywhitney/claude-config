@@ -21,7 +21,7 @@ RECENT=$(git -C "$REPO_ROOT" log --oneline -3 2>/dev/null || echo "no commits")
 ACTIVE_PRD=""
 PRD_NEXT_STEP=""
 if [[ -d "$REPO_ROOT/prds" ]]; then
-    ACTIVE_PRD=$(grep -rl -- "Status.*In Progress" "$REPO_ROOT/prds/" 2>/dev/null | head -1 || true)
+    ACTIVE_PRD=$(grep -rl -- "Status.*In Progress" "$REPO_ROOT/prds/"*.md 2>/dev/null | head -1 || true)
     if [[ -n "$ACTIVE_PRD" ]]; then
         PRD_NAME=$(basename "$ACTIVE_PRD")
         # Find the first unchecked milestone
@@ -50,7 +50,11 @@ fi
     [[ -n "$ACTIVE_PRD" ]] && echo "Active PRD: $ACTIVE_PRD" || echo "Active PRD: none"
     [[ -n "$PRD_NEXT_STEP" ]] && echo "Next milestone: $PRD_NEXT_STEP"
     [[ -n "$EXEC_STATE" ]] && echo "$EXEC_STATE"
-    echo "ACTION: Re-read CLAUDE.md and the active PRD now to restore full context."
+    if [[ -n "$EXEC_STATE" ]]; then
+        echo "ACTION: Re-read CLAUDE.md, the active PRD, and _execution-state.md now to restore full context."
+    else
+        echo "ACTION: Re-read CLAUDE.md and the active PRD now to restore full context."
+    fi
     echo "---"
 } >&2
 

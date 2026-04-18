@@ -9,6 +9,7 @@ triggers:
   - "cache hit rate"
   - "which repo is most expensive"
   - "billing"
+  - "how much am I spending"
 ---
 
 # /cost-tracker — Token & Cost Visibility

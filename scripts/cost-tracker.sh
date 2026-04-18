@@ -49,7 +49,7 @@ find "$PROJECTS_DIR" -name "*.jsonl" -print0 2>/dev/null \
     | awk -v repo_filter="$REPO_FILTER" -v days="$DAYS" '
         BEGIN {
             # Pricing per million tokens (input, cache_create, cache_read, output)
-            # Rates verified against https://docs.anthropic.com/en/docs/about-claude/models/all-models (2026-04-18)
+            # Rates sourced from https://docs.anthropic.com/en/docs/about-claude/models/all-models
             ir["claude-opus-4-7"]            = 5.00
             ccr["claude-opus-4-7"]           = 6.25
             crr["claude-opus-4-7"]           = 0.50

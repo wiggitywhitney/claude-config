@@ -86,10 +86,11 @@ teardown() {
 
 @test "accumulates tokens from multiple messages in the same session" {
     # Two messages in one session: 500k + 500k = 1M input → $3.00 Sonnet
+    RECENT_TS2=$(date -u +"%Y-%m-%dT10:01:00Z")
     mkdir -p "$PROJECTS_DIR/proj-a"
     {
         make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 500000 0 0 0 "$RECENT_TS"
-        make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 500000 0 0 0 "2026-04-18T10:01:00Z"
+        make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 500000 0 0 0 "$RECENT_TS2"
     } > "$PROJECTS_DIR/proj-a/s1.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\""
     [ "$status" -eq 0 ]
@@ -99,10 +100,11 @@ teardown() {
 @test "applies correct rates when session uses two different models" {
     # Sonnet 4.6: 500k input → $1.50; Opus 4.7: 500k input → $2.50; total $4.00
     # Bug: old code used first model's rate for all tokens → $3.00 (wrong)
+    RECENT_TS2=$(date -u +"%Y-%m-%dT10:01:00Z")
     mkdir -p "$PROJECTS_DIR/proj-a"
     {
         make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 500000 0 0 0 "$RECENT_TS"
-        make_record "s1" "/repos/proj-a" "claude-opus-4-7"   500000 0 0 0 "2026-04-18T10:01:00Z"
+        make_record "s1" "/repos/proj-a" "claude-opus-4-7"   500000 0 0 0 "$RECENT_TS2"
     } > "$PROJECTS_DIR/proj-a/s1.jsonl"
     run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\""
     [ "$status" -eq 0 ]
@@ -276,7 +278,7 @@ teardown() {
 @test "skips non-assistant record types without error" {
     mkdir -p "$PROJECTS_DIR/proj-a"
     {
-        printf '{"type":"user","sessionId":"s1","cwd":"/repos/proj-a","timestamp":"$RECENT_TS","message":{"content":[]}}\n'
+        printf '{"type":"user","sessionId":"s1","cwd":"/repos/proj-a","timestamp":"%s","message":{"content":[]}}\n' "$RECENT_TS"
         printf '{"type":"permission-mode","permissionMode":"default","sessionId":"s1"}\n'
         make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 1000000 0 0 0 "$RECENT_TS"
     } > "$PROJECTS_DIR/proj-a/s1.jsonl"
