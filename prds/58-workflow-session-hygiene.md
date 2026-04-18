@@ -45,7 +45,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 - [~] M3: Stop hook — auto-test on response — skipped (Decision 6)
 - [x] M4: `/continue` skill — session resume
 - [~] M5: `/plan-execute` skill — superseded by PRD #84 (Decision 8)
-- [ ] M6: Ralph loop detection in SessionStart hook
+- [~] M6: Ralph loop detection in SessionStart hook — moved to PRD #84 (Decision 9)
 - [ ] M7: `/cost-tracker` skill
 
 ---
@@ -209,6 +209,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 | 6 | 2026-04-16 | Skip M3 (Stop hook — auto-test on response) — the pattern is designed for autonomous workflows, not interactive ones | Michael's hook feeds test results into Claude's `additionalContext` so an autonomous agent can self-correct on the next turn. Whitney's workflow is interactive — she's at the keyboard making those judgment calls herself. The latency cost per response outweighs the benefit. | M3 removed from active milestones |
 | 7 | 2026-04-16 | `/continue` skill should read PROGRESS.md and a layered set of journal context files in addition to the sources in the reference implementation | PROGRESS.md is the narrative complement to PRD checkbox state — it captures what was done and why, not just what's pending. Journal files provide session-level context git log doesn't capture. Layer: today's raw entries (current-day sessions), yesterday's daily summary (distilled prior-day context), most recent weekly summary (broader arc for longer absences). Raw entries for prior days are too noisy — use summaries. | M4 acceptance criteria and notes updated to include these sources |
 | 8 | 2026-04-18 | Skip M5 (`/plan-execute`) — superseded by PRD #84 | The autonomous PRD execution workflow moved to its own PRD (#84), which takes a different architectural approach: milestone-grain unit of work with the PRD file itself as the state file, not a separate `_execution-state.md`. The compaction-resilience goals of M5 are addressed within PRD #84's design. | M5 removed from active milestones |
+| 9 | 2026-04-18 | Move M6 (Ralph loop detection in SessionStart hook) to PRD #84 | Original M6 used "Ralph loop" in the stuck-cycle sense (per Michael Forrester's `ralph-loop.local.md` marker pattern). The term actually refers to Geoffrey Huntley's autonomous iteration technique — a while-loop feeding the same prompt to an agent in fresh contexts. Rewritten correctly, the milestone becomes: detect whether an autonomous Ralph loop (PRD 84's orchestrator) is currently running in the repo and warn interactive sessions to avoid collision. Because detection is two halves of one mechanism with PRD 84 M3's marker-writing, bundling into PRD 84 eliminates a cross-PRD dependency and keeps the correctly-used terminology in the PRD that uses it properly. | M6 removed from active milestones; the same functionality ships as PRD #84 M4 (detection) plus M3 extension (marker-writing). PRD 58 now has one open milestone: M7 `/cost-tracker`, which is a prerequisite to safe PRD 84 adoption (cost visibility for unattended autonomous runs). |
 
 ---
 

@@ -32,10 +32,11 @@ The adaptation is load-bearing, not cosmetic. Michael's system assumes a shared 
 
 - [ ] M1: Extend `/make-autonomous` allowlist for headless `claude -p`
 - [ ] M2: Run tests on every push (`pre-push-verify.sh` enhancement)
-- [ ] M3: Orchestrator script `scripts/autonomous-prd.sh`
-- [ ] M4: Pause-handling rule + YOLO skill updates for headless mode
-- [ ] M5: End-to-end validation
-- [ ] M6: User-facing documentation
+- [ ] M3: Orchestrator script `scripts/autonomous-prd.sh` (writes active-run marker)
+- [ ] M4: SessionStart detection of active autonomous Ralph loop
+- [ ] M5: Pause-handling rule + YOLO skill updates for headless mode
+- [ ] M6: End-to-end validation
+- [ ] M7: User-facing documentation
 
 ---
 
@@ -102,6 +103,7 @@ The adaptation is load-bearing, not cosmetic. Michael's system assumes a shared 
 - Create `scripts/autonomous-prd.sh` with:
   - Usage: `scripts/autonomous-prd.sh <prd-number> [--dry-run] [--max-attempts N]` (default `max-attempts=5`, tunable from real usage per M5 findings)
   - **Pre-flight check**: grep `.claude/settings.local.json` for a distinctive entry added by `/make-autonomous` (e.g., `TaskCreate`); if missing, exit with a message instructing the user to run `/make-autonomous` first and why
+  - **Active-run marker** (per Decision 6): on startup, write `.claude/autonomous-run.local` containing `PID=<pid>` / `STARTED=<ISO8601 timestamp>` / `PRD=<number>`. Install SIGINT and SIGTERM traps that remove the marker on exit. On clean completion, remove the marker as part of the final exit path. This marker is the signal M4's SessionStart hook reads to detect collisions with interactive sessions.
   - **Pre-spawn check before each iteration**: `grep -n '^\*\*Paused' prds/<N>-*.md`; if found, print the full pause block and exit cleanly with a reminder that the marker must be removed (after addressing the underlying cause) before resuming
   - **Main loop**:
     - Read the active PRD; if all milestones are `[x]`, break to the completion branch
@@ -127,11 +129,55 @@ The adaptation is load-bearing, not cosmetic. Michael's system assumes a shared 
 - `scripts/autonomous-prd.sh --dry-run 84` (against PRD 84 itself, after its milestones are written) produces a sensible plan output
 - Each failure mode (missing `/make-autonomous`, active pause marker, iteration cap reached) produces a clear, actionable message to the user
 - The child prompt template exists at its decided location (e.g., `scripts/autonomous-prd-child-prompt.md`) and has passed `/write-prompt` review
-- Mode-detection mechanism (the file marker path OR env var name that signals "autonomous mode" to YOLO skills) is documented in a comment block at the top of `scripts/autonomous-prd.sh`, so M4 has an unambiguous reference for what to detect
+- Mode-detection mechanism (the file marker path OR env var name that signals "autonomous mode" to YOLO skills) is documented in a comment block at the top of `scripts/autonomous-prd.sh`, so M5 has an unambiguous reference for what to detect
+- `.claude/autonomous-run.local` is written on startup with `PID` / `STARTED` / `PRD` fields and removed on clean exit. SIGINT and SIGTERM both trigger marker removal. Manually verified: start a run, send `Ctrl-C`, confirm the marker is gone.
 
 ---
 
-### M4: Pause-handling rule + YOLO skill updates for headless mode
+### M4: SessionStart detection of active autonomous Ralph loop
+
+**Step 0:** Read before starting: Decision 6 in the Decision Log below (why this milestone exists and the marker format); `scripts/auto-reanchor.sh` for a working example of a hook that writes orientation to stderr so it lands in `additionalContext`; `config/settings.json` SessionStart entries to understand where and how to register the new hook.
+
+**What:** Add a SessionStart hook that detects whether `.claude/autonomous-run.local` exists in the current repo and whether the PID it contains is still alive. Surfaces a clear warning to an interactive Claude Code session opened in a repo with a live or stale autonomous run, so the user doesn't collide with the orchestrator.
+
+**Why:** PRD 84 spawns `claude -p` children via `scripts/autonomous-prd.sh` that may run unattended — potentially overnight. If a user opens a regular Claude Code session in the same repo during an active run, they could manually edit files, invoke `/prd-next`, or create state that conflicts with the orchestrator. SessionStart-level detection is the one reliable place to surface this collision risk before any damage is done. This is the "detection" half of the marker protocol; M3 ships the "writing" half.
+
+**Terminology**: "Ralph loop" here follows the correct community usage (Geoffrey Huntley's term for the autonomous iteration technique — a while-loop feeding the same prompt to an agent in fresh contexts with state on disk). The detection surfaces when a Ralph loop is *running*, not when Claude is *stuck* (stuck-detection is handled by M3's iteration cap and pause marker).
+
+**To implement:**
+- Create `scripts/check-autonomous-run.sh` (or add the check to an existing SessionStart dispatcher if one exists — verify first during Step 0):
+  - If `.claude/autonomous-run.local` does not exist in the current repo → exit 0 silently (no output)
+  - If it exists, read `PID` from the file and check liveness with `kill -0 $PID 2>/dev/null`:
+    - **PID alive** → print to stderr (so it lands in Claude's `additionalContext`):
+      ```text
+      ⚠️ Autonomous Ralph loop running
+      PID: <pid>   Started: <timestamp>   PRD: #<number>
+      Check `_autonomous-run.log` for status.
+      Avoid manual edits or `/prd-next` invocations until the run completes.
+      ```
+    - **PID dead** (stale marker — process gone but file not cleaned up, e.g., after `kill -9` or reboot) → print to stderr:
+      ```text
+      ⚠️ Stale autonomous-run marker detected (PID <pid> is not running)
+      Previous run may have crashed. Inspect `_autonomous-run.log` for the last iteration.
+      Remove `.claude/autonomous-run.local` manually if the run is no longer needed.
+      ```
+  - Do not auto-remove stale markers — the user may want to inspect `_autonomous-run.log` first. Surface and let the user decide.
+  - Always exit 0 (this is advisory, not a gate)
+- Register the script as a SessionStart hook in `config/settings.json`
+- Add `.claude/autonomous-run.local` to `.gitignore` at the repo root
+- Add bats tests in `tests/check-autonomous-run.bats` covering all three states: file absent (silent), file present with live PID (running warning), file present with dead PID (stale warning). Use a dummy PID of the current shell's `$$` to simulate "alive"; use a PID known not to exist (e.g., `99999999`) to simulate "dead" — but verify first that `kill -0 99999999` fails cleanly on the test system.
+
+**Success criteria:**
+- SessionStart hook registered in `config/settings.json` and fires on every session start in the repo
+- All three states produce the expected output (silent when absent / running warning when PID alive / stale warning when PID dead)
+- Bats tests pass
+- `.gitignore` includes `.claude/autonomous-run.local`
+- Warnings land in Claude's `additionalContext` (same stderr mechanism as `auto-reanchor.sh`)
+- Manual verification: start an autonomous run in one terminal, open a new Claude Code session in the same repo in another terminal, confirm the running warning appears at SessionStart
+
+---
+
+### M5: Pause-handling rule + YOLO skill updates for headless mode
 
 **Step 0:** Read before starting: Decisions 1, 2, 3 in the Decision Log below; the current `.claude/skills/prd-next/SKILL.v1-yolo.md` (Step 8 has a `/clear` loop that won't work in headless mode; the Autonomous Decision Protocol's "stop and surface" criteria need adapting to pause-marker writing); `.claude/skills/prd-update-progress/SKILL.v1-yolo.md` (Step 9's "Next steps" message assumes a human reader); `scripts/auto-reanchor.sh` lines 38–42 (dead `_execution-state.md` block that Decision 1 rules out).
 
@@ -164,13 +210,13 @@ The adaptation is load-bearing, not cosmetic. Michael's system assumes a shared 
 
 ---
 
-### M5: End-to-end validation
+### M6: End-to-end validation
 
-**Step 0:** Read before starting: the actually shipped M2, M3, M4 artifacts (the code on disk, not the milestone text); [Claude Code autonomous capabilities](../docs/research/claude-code-autonomous-capabilities.md) §4 (stuck detection expected behavior) for framing what legitimate stuck-vs-slow looks like.
+**Step 0:** Read before starting: the actually shipped M2, M3, M4, M5 artifacts (the code on disk, not the milestone text); [Claude Code autonomous capabilities](../docs/research/claude-code-autonomous-capabilities.md) §4 (stuck detection expected behavior) for framing what legitimate stuck-vs-slow looks like.
 
-**What:** Create a scratch test PRD with three milestones designed to exercise each orchestrator behavior — happy path, iteration cap, human-in-the-loop pause. Run the orchestrator against each scenario and verify correct behavior end-to-end. Capture any tuning needs (iteration cap value, prompt wording, pause-marker format) as new Decision Log rows.
+**What:** Create a scratch test PRD with three milestones designed to exercise each orchestrator behavior — happy path, iteration cap, human-in-the-loop pause. Run the orchestrator against each scenario and verify correct behavior end-to-end. Use `/cost-tracker` to capture actual token usage and cost per scenario. Capture any tuning needs (iteration cap value, prompt wording, pause-marker format) as new Decision Log rows.
 
-**Why:** Unit tests from M2 and M3 cover plumbing in isolation. Only end-to-end runs against a real `claude -p` chain prove the full system works — skills, hooks, permissions, pause mechanism all together. Tuning parameters are best set from observed behavior; guessing up front wastes implementation time that can be spent iterating on real data.
+**Why:** Unit tests from M2, M3, and M4 cover plumbing in isolation. Only end-to-end runs against a real `claude -p` chain prove the full system works — skills, hooks, permissions, pause mechanism, SessionStart detection all together. Tuning parameters are best set from observed behavior; guessing up front wastes implementation time that can be spent iterating on real data. Cost data from `/cost-tracker` (per Decision 7) provides a concrete baseline for what autonomous runs actually cost, which is essential input for trusting unattended overnight runs.
 
 **To implement:**
 - Create a scratch test PRD (e.g., `prds/test-autonomous-smoke.md` — not a numbered production PRD) with three milestones:
@@ -178,24 +224,28 @@ The adaptation is load-bearing, not cosmetic. Michael's system assumes a shared 
   - **Iteration cap**: a milestone whose success criteria are intentionally impossible or require resources not present (e.g., "connect to a service that doesn't exist")
   - **Human-in-the-loop**: a milestone whose description explicitly instructs the child to pause for Whitney's decision (no attempt to implement first)
 - Run `scripts/autonomous-prd.sh` against each scenario, resetting state between runs; observe behavior
-- Document observations: iteration counts, elapsed time per milestone, pause-marker format and placement, log file structure
-- If tuning is needed, add new Decision Log rows in PRD 84 (e.g., "Decision 6: Max-attempts set to 4 based on observation that most milestones need 1–2 attempts") and adjust the orchestrator or prompt accordingly
-- Delete or archive the scratch test PRD after validation; record a short validation-run summary in PRD 84's Progress section
+- After each scenario run, invoke `/cost-tracker` to capture the token usage and cost attributable to that scenario. Record as a validation data point (happy-path cost, iteration-cap cost, human-in-loop cost).
+- Verify the M4 SessionStart detection path manually: while a run is active, open a new Claude Code session in the same repo and confirm the running warning appears. After a scenario crashes or is killed with `kill -9`, open a new session and confirm the stale-marker warning appears.
+- Document observations: iteration counts, elapsed time per milestone, pause-marker format and placement, log file structure, per-scenario cost from `/cost-tracker`
+- If tuning is needed, add new Decision Log rows in PRD 84 (e.g., "Decision 8: Max-attempts set to 4 based on observation that most milestones need 1–2 attempts") and adjust the orchestrator or prompt accordingly
+- Delete or archive the scratch test PRD after validation; record a short validation-run summary in PRD 84's Progress section including the observed costs
 
 **Success criteria:**
 - Happy path: the orchestrator completes the scratch PRD end-to-end and creates a real PR
 - Iteration cap: the orchestrator writes the cap pause marker after `--max-attempts` and exits; a subsequent re-run exits cleanly on the pre-spawn check
 - Human-in-the-loop: the child writes the needs-Whitney marker and exits cleanly; the orchestrator's next iteration detects the marker and exits; removing the marker and restarting resumes the loop
+- SessionStart detection: running warning and stale warning both surface correctly in a second session opened during or after a run (manual verification)
+- Per-scenario cost is captured via `/cost-tracker` and recorded in the validation notes
 - Any discovered tuning needs are captured as Decision Log rows before the milestone is marked complete
 - Scratch test PRD is cleaned up after validation
 
 ---
 
-### M6: User-facing documentation
+### M7: User-facing documentation
 
-**Step 0:** Read before starting: all three research docs in `docs/research/` for context on why the system is shaped the way it is; this PRD (problem, solution, all decisions, all milestones); the final shipped `scripts/autonomous-prd.sh` and `rules/autonomous-pause-handling.md` so the documentation describes actual behavior rather than aspirational behavior.
+**Step 0:** Read before starting: all three research docs in `docs/research/` for context on why the system is shaped the way it is; this PRD (problem, solution, all decisions, all milestones); the final shipped `scripts/autonomous-prd.sh`, `scripts/check-autonomous-run.sh`, and `rules/autonomous-pause-handling.md` so the documentation describes actual behavior rather than aspirational behavior.
 
-**What:** Invoke `/write-docs` to produce `docs/autonomous-prd-execution.md` — a user-facing guide covering prerequisites, invocation, monitoring, pause handling, resume flow, and troubleshooting. Update `README.md` to link to the new doc.
+**What:** Invoke `/write-docs` to produce `docs/autonomous-prd-execution.md` — a user-facing guide covering prerequisites, invocation, monitoring (including `/cost-tracker` usage per Decision 7), pause handling, session-collision detection, resume flow, and troubleshooting. Update `README.md` to link to the new doc.
 
 **Why:** Without documentation, only a reader of PRD 84 can use the feature. The intended user is Whitney herself (future-Whitney after this session's context is gone) and any collaborator who encounters an autonomous-mode run. Per the global CLAUDE.md rule, `/write-docs` (not hand-written documentation) is used because it validates every documented command by running it and capturing real output — preventing docs drift as the orchestrator evolves.
 
@@ -203,17 +253,20 @@ The adaptation is load-bearing, not cosmetic. Michael's system assumes a shared 
 - Invoke `/write-docs` to produce `docs/autonomous-prd-execution.md` covering:
   - **Prerequisites**: `/make-autonomous` applied to the target repo; a PRD started via `/prd-start`; the repo's `test` command excludes e2e and external-service-calling tests (reference Decision 5 convention)
   - **Invocation**: `scripts/autonomous-prd.sh <prd-number>` with `--dry-run` and `--max-attempts` flag examples
-  - **Monitoring during a run**: `_autonomous-run.log` structure, reading `git log`, reading the PRD's checkbox state, reading PROGRESS.md for narrative progress
+  - **Monitoring during a run**: `_autonomous-run.log` structure, reading `git log`, reading the PRD's checkbox state, reading PROGRESS.md for narrative progress, and running `/cost-tracker` to see per-session and per-repo token usage and cost (the recommended way to watch autonomous-run spend in real time and after)
+  - **Session-collision detection**: what the M4 SessionStart warning looks like (running vs. stale marker); what to do in each case — never edit or run `/prd-next` while the running warning is up; for a stale-marker warning, inspect `_autonomous-run.log` and remove `.claude/autonomous-run.local` manually once it's clear the run is truly dead
   - **Pause handling**: examples of both marker types (cap-reached and needs-human); link to `rules/autonomous-pause-handling.md` for the full protocol
   - **Resume flow**: address the pause cause, commit through normal PRD flow, remove the marker, restart the orchestrator
-  - **Stopping**: Ctrl-C behavior and explicit kill instructions
-  - **Troubleshooting**: common failure modes — missing `/make-autonomous`, malformed PRD, iteration cap on a legitimately large milestone, tests failing with no obvious cause
+  - **Stopping**: Ctrl-C behavior (SIGINT traps clean up the active-run marker), `kill` behavior, and the special case of `kill -9` / reboot / power loss (marker left stale → M4 detects on next SessionStart)
+  - **Troubleshooting**: common failure modes — missing `/make-autonomous`, malformed PRD, iteration cap on a legitimately large milestone, tests failing with no obvious cause, stale `.claude/autonomous-run.local` blocking you from opening a session without the warning
 - Update `README.md` to add an "Autonomous PRD Execution" section linking to the new doc under a discoverable heading
 - `/write-docs` validates every example command by running it against a test environment and capturing real output
 
 **Success criteria:**
 - `docs/autonomous-prd-execution.md` answers the question "I want to work through PRD X autonomously — how?" end to end
 - Every command shown in the doc is validated by `/write-docs` (real commands, real output captured)
+- The `/cost-tracker` monitoring path is documented with a concrete example of post-run cost inspection
+- Session-collision detection behavior (running warning, stale warning) is documented with example output
 - `README.md` references the new doc under a discoverable heading
 
 ## Alternatives Considered
@@ -238,7 +291,7 @@ The following approaches were discussed during design and deliberately not adopt
 
 - **Stop hook (`auto-test-on-stop`) adopted for autonomous mode**: declined. Originally skipped for interactive mode in [PRD 58 Decision 6](./58-workflow-session-hygiene.md) (latency cost per response outweighed benefit). For autonomous mode the rationale initially flipped ("no Whitney at keyboard to run tests manually"), but Decision 5 here (tests on every push) closes the actual coverage gap without per-response test latency. The `/prd-next` YOLO prompt already mandates TDD, so children run tests themselves via `Bash(bats*)` etc. between changes.
 
-- **PostCompact hook auto-invoking the `/post-compact` skill via an `additionalContext` nudge**: initially proposed as a separate decision, retracted when we discovered `scripts/auto-reanchor.sh` (shipped under PRD 58 M2) is already a PostCompact hook whose output includes the line *"ACTION: Re-read CLAUDE.md and the active PRD now to restore full context."* The nudge mechanism is already in place; no new decision or implementation needed. M4 includes a small cleanup to remove the hook's dead `_execution-state.md` reference.
+- **PostCompact hook auto-invoking the `/post-compact` skill via an `additionalContext` nudge**: initially proposed as a separate decision, retracted when we discovered `scripts/auto-reanchor.sh` (shipped under PRD 58 M2) is already a PostCompact hook whose output includes the line *"ACTION: Re-read CLAUDE.md and the active PRD now to restore full context."* The nudge mechanism is already in place; no new decision or implementation needed. M5 includes a small cleanup to remove the hook's dead `_execution-state.md` reference.
 
 - **Adding a new `unit_test` slot to `verify.json` schema**: considered for Decision 5, rejected in favor of reusing the existing `test` / `acceptance_test` split. The existing schema already expresses "fast safe" vs. "expensive"; the burden is on each repo to use the slots correctly rather than on the schema to add a third tier.
 
@@ -251,6 +304,8 @@ The following approaches were discussed during design and deliberately not adopt
 | 3 | 2026-04-18 | Pause mechanism: both stuck detection and human-in-the-loop handoff use a single marker (`**Paused — <reason>:** <detail>`) written directly into the active milestone section of the PRD. The orchestrator greps the PRD before each iteration; if `**Paused` is found, it exits and reports the reason without spawning the next child. | Consolidates two failure modes into one mechanism, consistent with Decision 1 (PRD is the state file). No separate state files, no dedicated skill, no extra notification channel. The child writes the marker when it needs a decision (milestone text instructs it to); the orchestrator writes the marker when the per-milestone iteration cap is reached. Community consensus (snarktank/ralph, frankbria/ralph-claude-code, Michael's analyzer) is that robust automated stuck detection is unsolved — start with a hard iteration cap and tune from usage, don't over-engineer. | Implementation must include: (1) pre-spawn `grep '\*\*Paused'` in `scripts/autonomous-prd.sh`; (2) a child-side convention documented in the milestone prompt — "if you need a human decision, write `**Paused — needs Whitney:** <analysis/question>` into the active milestone and exit"; (3) **a global rule (in `~/.claude/CLAUDE.md` or a new `rules/autonomous-pause-handling.md`) documenting the pause-handling protocol — the pause marker MUST be removed before restarting the orchestrator or the loop will refuse to resume**; (4) iteration cap threshold (e.g., 3–5) TBD at implementation time, tunable from real usage. |
 | 4 | 2026-04-18 | Permission model: extend the existing `/make-autonomous` skill's allowlist to cover the tools and commands an autonomous `claude -p` child needs for a full PRD milestone. The orchestrator does a pre-flight check — if `/make-autonomous` has not been run in the target repo, it exits and tells the user to run it first. | Audit of `/make-autonomous` found that ~85% of what's needed is already in its allowlist (git ops, gh CLI, PRD skills, Read/Edit/Write). The remaining gaps are trivial JSON additions — no structural change, no new CLI flags, no separate permission infrastructure. `/make-autonomous` already exists as the designated autonomous-mode on-switch; leveraging it is consistent with the rest of the design (lean on existing infrastructure, don't reinvent). | Extension is a milestone within this PRD. Exact entries to add to `permissions.allow` in `/make-autonomous`'s configuration: `Bash(npm test*)`, `Bash(npm run build*)`, `Bash(npm run *)`, `Bash(npx vitest*)`, `Bash(pytest*)`, `Bash(bats*)`, `TaskCreate`, `TaskUpdate`, `TaskGet`, `TaskList`, `Agent`, `ScheduleWakeup`. Without these, `claude -p` stalls on permission prompts for test runs, task tracking, and sub-agent spawning. `/make-careful` may need symmetric removals but probably does not — careful mode keeps most things off by design. |
 | 5 | 2026-04-18 | Pre-push git hook runs the `test` command unconditionally, not only when a PR exists. Each repo's verify.json convention (`test` = fast/safe, `acceptance_test` = expensive/API-calling) is the mechanism for excluding e2e and external-service-calling tests from push-time runs. | Reading the actual hook files revealed `pre-commit-verify.sh` runs build/typecheck/lint only (no tests) and `pre-push-verify.sh` runs tests only when an open PR already exists. For autonomous mode before PR creation, no hook-level test enforcement exists — broken tests could accumulate across many committed milestones before CI catches them. Running tests on every push closes the gap without adding mode-detection logic, leveraging the existing verify.json schema's `test`/`acceptance_test` split. Spinybacked-orbweaver audit confirmed its `test` command already excludes acceptance-gate and API-calling tests via vitest config exclusions — the change is safe without per-repo cleanup there. | Adds a milestone to PRD 84 for the `pre-push-verify.sh` change and its bats test. Convention for new repos opting into autonomous mode: `test` command must exclude e2e and external-service-calling tests; put those in `acceptance_test` instead. Other existing repos may need verify.json audits when first used autonomously — case-by-case, not blocking for this PRD. |
+| 6 | 2026-04-18 | Bundle the rewritten M6 from PRD 58 (SessionStart detection of active autonomous Ralph loop) into PRD 84 as a new milestone. Extend M3 to include marker-writing (`.claude/autonomous-run.local` with PID / timestamp / PRD number); insert new M4 for the detection side; renumber existing M4–M6 to M5–M7. | Original PRD 58 M6 used "Ralph loop" in the stuck-cycle sense; rewritten per Geoffrey Huntley's correct autonomous-technique definition (ghuntley.com/loop). Detection (originally in PRD 58) and marker-writing (in PRD 84 M3) are two halves of one mechanism — splitting them across PRDs created an unnecessary cross-PRD dependency and a risk window where PRD 84 could ship without its companion collision-detection. Bundling eliminates both problems and keeps "Ralph loop" terminology in the PRD that uses it correctly. Implementation should keep stale-handling simple (surface and let the user decide; don't auto-remove stale markers) — the community has not solved stale-process detection either, and over-engineering adds more failure modes than it prevents. | M3 extended to write `.claude/autonomous-run.local` on startup (PID, ISO8601 timestamp, PRD number) and remove it via SIGINT/SIGTERM traps + clean-exit path. New M4 adds the SessionStart hook `scripts/check-autonomous-run.sh` that reads the marker, checks PID liveness via `kill -0`, and surfaces running / stale warnings on stderr. Existing M4–M6 renumbered to M5–M7. M3's success-criteria cross-reference updated from "M4" to "M5" (pause-handling). M6 (end-to-end validation) now includes manual verification of the SessionStart detection path. `.claude/autonomous-run.local` added to `.gitignore`. PRD 58 cascade: M6 marked `[~]` with new Decision 9 in PRD 58 pointing to PRD 84. |
+| 7 | 2026-04-18 | PRD 84 references `/cost-tracker` as an existing tool in its monitoring and validation milestones. Language assumes `/cost-tracker` is already shipped (via PRD 58 M7, sequenced before PRD 84 implementation). | Autonomous runs can burn unexpected money if iteration caps fire repeatedly across milestones. Cost visibility is essential for safely trusting unattended execution. `/cost-tracker` was considered for bundling into PRD 84 but rejected: it has substantial independent scope (own skill + own bats suite), is useful outside autonomous mode (interactive cost visibility), and loosely couples with the orchestrator (doesn't share a mechanism the way M4 marker-detection shares the marker written by M3). Sequencing `/cost-tracker` before PRD 84 implementation means autonomous runs have cost visibility from run #1. | M6 (end-to-end validation) invokes `/cost-tracker` after each test scenario to capture per-scenario token usage and cost as a validation data point. M7 (user-facing documentation) references `/cost-tracker` in the Monitoring section so users know how to watch cost during and after autonomous runs. No new milestones added in PRD 84; this is cross-reference language only. Hard prerequisite: PRD 58 M7 must ship before PRD 84 implementation begins, or M6 and M7 of PRD 84 are partially unshippable as written. |
 
 ## Progress
 
