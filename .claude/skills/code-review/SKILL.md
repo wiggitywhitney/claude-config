@@ -30,8 +30,9 @@ To do this, follow these steps precisely:
       - **Medium confidence** (score 50–79)
    c. For each issue in both tiers, apply the triage rubric and assign a disposition:
       - **Fix** — the finding is real and the only reason not to act is effort. Effort alone is not a reason to skip. Flag as a required fix before merge.
-      - **Skip** — the suggestion misunderstands the code, or fix complexity genuinely outweighs the benefit and the finding is not worth tracking at all. To distinguish Fix from Skip, ask: would a senior engineer require this addressed before approving the PR? If yes → Fix. If no → Skip.
-   d. Apply dispositions automatically and continue to step 7.
+      - **Defer** — the finding is real and worth addressing, but complexity or scope makes it better suited to a dedicated issue than an inline fix. Create a GitHub issue now (in this step, before step 7) via `gh issue create`; run `/write-prompt` on the issue body before creating it. Record the issue number so it can be linked in the PR comment at step 8.
+      - **Skip** — the suggestion misunderstands the code, or fix complexity genuinely outweighs the benefit and the finding is not worth tracking at all.
+   d. Apply dispositions automatically and continue to step 7. For any Defer findings, the GitHub issue must already be created before proceeding.
 7. Use a Haiku agent to repeat the eligibility check from #1, to make sure that the pull request is still eligible for code review.
 8. Finally, use the gh bash command to comment back on the pull request with the result. When writing your comment, keep in mind to:
    a. Keep your output brief
@@ -72,7 +73,8 @@ Notes:
 | # | Finding | Score | Disposition |
 |---|---------|-------|-------------|
 | 2 | <brief description> (some/other/CLAUDE.md says "<...>") — [link](...) | 72 | **Fix** — must address before merge |
-| 3 | <brief description> (bug due to <file and code snippet>) — [link](...) | 55 | **Skip** — misunderstands intentional design |
+| 3 | <brief description> (architectural refactor needed across N files) — [link](...) | 68 | **Defer** — tracked in #XXX |
+| 4 | <brief description> (bug due to <file and code snippet>) — [link](...) | 55 | **Skip** — misunderstands intentional design |
 
 <sub>- If this code review was useful, please react with 👍. Otherwise, react with 👎.</sub>
 

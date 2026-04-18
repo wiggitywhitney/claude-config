@@ -1,9 +1,9 @@
 # PRD #58: Workflow Session Hygiene Improvements
 
-**Status**: Not Started
+**Status**: Done
 **Created**: 2026-04-07
 **Issue**: https://github.com/wiggitywhitney/claude-config/issues/58
-**Research**: [Michael Forrester's workflow](../docs/research/michael-forrester-workflow.md) and [update doc](../docs/research/michael-forrester-workflow-update.md) (produced by Step 0) — repo at `~/Documents/Repositories/forrester-workflow`
+**Research**: [Michael Forrester's workflow](../docs/research/michael-forrester-workflow.md) — repo at `~/Documents/Repositories/forrester-workflow`
 
 ## Problem
 
@@ -33,29 +33,29 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 3. For each milestone's reference file, check if it has changed and note any differences
 4. Document findings (new patterns, changed implementations, anything that would affect a milestone) in `docs/research/michael-forrester-workflow-update.md`
 
-**Output**: `docs/research/michael-forrester-workflow-update.md` — each milestone's Step 0 references this file. Organize by milestone: one section per affected milestone, describing what changed in the reference file and what that means for the planned implementation. Milestones unaffected by repo changes can be omitted or noted as "no changes."
+**Output**: Findings merged inline into `docs/research/michael-forrester-workflow.md` as "As of [date]:" notes under each affected section. Each milestone's Step 0 references this doc alongside the relevant reference implementation file.
 
 ---
 
 ## Milestones
 
-- [ ] Step 0: Re-research Michael's workflow repo
-- [ ] M1: Config sync script
-- [ ] M2: Post-compact skill and auto-reanchor hook
-- [ ] M3: Stop hook — auto-test on response
-- [ ] M4: `/continue` skill — session resume
-- [ ] M5: `/plan-execute` skill — compaction-resilient execution
-- [ ] M6: Ralph loop detection in SessionStart hook
-- [ ] M7: `/cost-tracker` skill
+- [x] Step 0: Re-research Michael's workflow repo
+- [~] M1: Config sync script — skipped (Decision 5)
+- [x] M2: Post-compact skill and auto-reanchor hook
+- [~] M3: Stop hook — auto-test on response — skipped (Decision 6)
+- [x] M4: `/continue` skill — session resume
+- [~] M5: `/plan-execute` skill — superseded by PRD #84 (Decision 8)
+- [~] M6: Ralph loop detection in SessionStart hook — moved to PRD #84 (Decision 9)
+- [x] M7: `/cost-tracker` skill
 
 ---
 
 ## M1: Config sync script
-**Step 0:** Read related research before starting: [bats-core research](../docs/research/bats-core.md) and [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
+**Step 0:** Read before starting: (1) [Michael's workflow research](../docs/research/michael-forrester-workflow.md) — see the "config-sync.sh" section for implementation notes and Whitney-specific adaptations; (2) `~/Documents/Repositories/forrester-workflow/scripts/config-sync.sh` and `~/Documents/Repositories/forrester-workflow/scripts/config-sync-excludes.txt` for full implementation patterns; (3) [bats-core research](../docs/research/bats-core.md)
 
 **What**: A `scripts/config-sync.sh` that detects drift between live `~/.claude/` and the claude-config repo using `rsync --dry-run`. Supports `--apply live` (update repo from live) and `--apply repo` (adopt repo into live).
 
-**Why**: Today we edited both `~/.claude/rules/git-workflow.md` and the repo's `rules/git-workflow.md` as separate files. Without a sync script, these will diverge over time.
+**Why**: ~~Today we edited both `~/.claude/rules/git-workflow.md` and the repo's `rules/git-workflow.md` as separate files. Without a sync script, these will diverge over time.~~ *(Decision 2: this example was inaccurate — `~/.claude/rules/` is a directory symlink, so drift there is impossible.)* The actual drift surface is `~/.claude/hooks/` and `~/.claude/scripts/` — files that live outside the repo with no symlink back. During the session that added Decisions 2–4, most of these were either deleted (Kunal's hooks) or eliminated (EPCAT hook project-scoped). **Before starting M1, re-evaluate whether the remaining drift surface justifies the script.** Run `ls -la ~/.claude/hooks/ ~/.claude/scripts/` and compare against the repo — if everything untracked is either intentionally local or already gone, M1 may be a low-value milestone. (Updated per Decisions 2 and 4)
 
 **Reference implementation**: `~/Documents/Repositories/forrester-workflow/scripts/config-sync.sh` — **before writing any code, read this file and summarize the key patterns to yourself.** Do NOT implement without reading it first. It uses `rsync --itemize-changes` to detect drift and shows colored diffs for modified files. Also has a `config-sync-excludes.txt` file to skip ephemeral files (memory, projects/, etc.) — read that too to understand what to exclude in Whitney's version.
 
@@ -68,7 +68,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M2: Post-compact skill and auto-reanchor hook
-**Step 0:** Read related research before starting: [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
+**Step 0:** Read before starting: (1) [Michael's workflow research](../docs/research/michael-forrester-workflow.md) — see the "/post-compact skill" and "auto-reanchor.sh" sections for implementation notes and Whitney-specific adaptations; (2) `~/Documents/Repositories/forrester-workflow/claude-config/skills/post-compact/SKILL.md` and `~/Documents/Repositories/forrester-workflow/claude-config/hooks/auto-reanchor.sh` for full implementation patterns
 
 **What**: Two parts that work together:
 1. `/post-compact` skill — a manually-invokable skill that re-reads CLAUDE.md, PRD state, and git state, then reports orientation
@@ -82,6 +82,8 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 
 **Note**: Whitney uses PRDs instead of PROJECT_STATE.md. Adapt the hook and skill to read from the active PRD (check `prds/` for any file with `Status: In Progress`) rather than PROJECT_STATE.md.
 
+**Note**: Kunal's `post-compact-inject.sh` PostCompact hook was removed from `settings.json` and deleted during the session that added Decision 3. No existing PostCompact hook needs to be cleaned up before installing `auto-reanchor.sh` — the slot is empty. (Updated per Decision 3)
+
 **Acceptance criteria**:
 - `/post-compact` skill exists and re-anchors context when invoked
 - PostCompact hook fires automatically and outputs an orientation block
@@ -91,7 +93,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M3: Stop hook — auto-test on response
-**Step 0:** Read related research before starting: [bats-core research](../docs/research/bats-core.md) and [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
+**Step 0:** Read before starting: (1) [Michael's workflow research](../docs/research/michael-forrester-workflow.md) — see the "Stop hook: auto-test" section for implementation notes and Whitney-specific adaptations (bats and vitest detection); (2) `~/Documents/Repositories/forrester-workflow/claude-config/hooks/auto-test-on-stop.sh` for full implementation patterns; (3) [bats-core research](../docs/research/bats-core.md)
 
 **What**: A `Stop` event hook that runs the project's test suite after every Claude response. Non-blocking (always exits 0). Only runs if a test command is detectable.
 
@@ -108,7 +110,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M4: `/continue` skill — session resume
-**Step 0:** Read related research before starting: [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
+**Step 0:** Read before starting: (1) [Michael's workflow research](../docs/research/michael-forrester-workflow.md) — see the "/continue skill" section for implementation notes and Whitney-specific adaptations; (2) `~/Documents/Repositories/forrester-workflow/claude-config/skills/continue/SKILL.md` for full implementation patterns
 
 **What**: A skill that reads PRD state, git log, git status, and task list to summarize where work left off and suggest the next step.
 
@@ -118,9 +120,12 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 
 **Note**: Read the active PRD (any file in `prds/` with `Status: In Progress`) instead of PROJECT_STATE.md.
 
+**Note**: Also read PROGRESS.md (narrative complement to PRD checkbox state — captures what was done and why, not just what's pending), and journal context files for session-level context that git log doesn't capture: today's raw journal entries (`journal/entries/YYYY-MM-DD.md` for current date), yesterday's daily summary (`journal/summaries/daily/YYYY-MM-DD.md`), and the most recent weekly summary (`journal/summaries/weekly/`). Raw journal entries for prior days should be skipped — use summaries for those. This layered approach handles both same-day resumes and longer absences. (Updated per Decision 7)
+
 **Acceptance criteria**:
 - `/continue` skill exists
-- Reads active PRD, git log, git status, and task list
+- Reads active PRD, PROGRESS.md, git log, git status, and task list
+- Reads journal context: today's raw entries, yesterday's daily summary, most recent weekly summary
 - Outputs: last activity, current branch, pending PRD milestones, suggested next step
 - Asks user to confirm before starting work
 - Skill reviewed with `/write-prompt` before committing
@@ -128,7 +133,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M5: `/plan-execute` skill — compaction-resilient execution
-**Step 0:** Read related research before starting: [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
+**Step 0:** Read before starting: (1) [Michael's workflow research](../docs/research/michael-forrester-workflow.md) — see the "/plan-execute skill" section; (2) `~/Documents/Repositories/forrester-workflow/claude-config/skills/plan-execute/SKILL.md` for full implementation patterns
 
 **What**: A skill that persists plan execution state to `_execution-state.md` on disk, re-reads it before every task, and handles compaction recovery gracefully.
 
@@ -151,7 +156,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M6: Ralph loop detection in SessionStart hook
-**Step 0:** Read related research before starting: [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
+**Step 0:** Read before starting: (1) [Michael's workflow research](../docs/research/michael-forrester-workflow.md) — see the "Ralph loop detection" section for implementation notes and Whitney-specific adaptations (stdin JSON input, opt-out dotfile, PRD check); (2) `~/Documents/Repositories/forrester-workflow/claude-config/hooks/session-start.sh` for full implementation patterns
 
 **What**: Add Ralph loop detection to the existing `session-start` hook behavior. A "Ralph loop" is Claude repeating the same failing approach in a cycle. Detect it via a `.claude/ralph-loop.local.md` state file in the repo.
 
@@ -172,7 +177,7 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 ---
 
 ## M7: `/cost-tracker` skill
-**Step 0:** Read related research before starting: [Michael's workflow update](../docs/research/michael-forrester-workflow-update.md)
+**Step 0:** Read before starting: (1) [Michael's workflow research](../docs/research/michael-forrester-workflow.md) — see the "/cost-tracker equivalent" section for implementation notes (Whitney uses bash/jq, not the Observatory CLI); (2) `~/Documents/Repositories/forrester-workflow/claude-config/skills/cost-tracker/SKILL.md` for full implementation patterns
 
 **What**: A skill that parses Claude Code session JSONL files in `~/.claude/projects/` to show token usage and cost per session and per repo.
 
@@ -197,6 +202,14 @@ Add seven targeted improvements, all drawn from Michael Forrester's workflow. Ea
 | # | Date | Decision | Rationale | Downstream Impact |
 |---|------|----------|-----------|-------------------|
 | 1 | 2026-04-15 | Add a PRD-level Step 0 to re-research Michael's workflow repo before starting any milestone | PRD was designed from a snapshot taken in early April; re-examining before implementation prevents building from stale patterns | All milestones — each now references the research doc produced by Step 0 |
+| 2 | 2026-04-15 | The PRD's motivating drift example was inaccurate — `~/.claude/rules/`, `CLAUDE.md`, `settings.json`, and `skills/` are all symlinked to the repo; the referenced git-workflow.md drift could not have happened as described | Discovered by inspecting actual filesystem layout. Real drift surface is only `~/.claude/hooks/` and `~/.claude/scripts/` for files that live outside the repo entirely. | M1: problem statement needs rewriting; scope narrows significantly. See M1 note. |
+| 3 | 2026-04-15 | Kunal's pre-compact/post-compact hooks (`pre-compact-decisions.py`, `post-compact-inject.sh`) removed from `settings.json` and deleted | Whitney did not want these hooks installed by a coworker; they represented unsolicited global configuration | M2: no existing PostCompact hook to clean up before installing auto-reanchor.sh — starts with a clean slate |
+| 4 | 2026-04-15 | EPCAT safety hook project-scoped from global `settings.json` to `Journal/.claude/settings.json`; Journal's hook script replaced with advocacy version | Global hook was running on every Bash call in every repo; only Journal uses EPCAT. Project-scoped model (from advocacy repo) is strictly better — self-contained, no manual setup. | M1: further reduces the drift surface that M1 was meant to address; the one non-symlinked script being actively used is now eliminated from global scope |
+| 5 | 2026-04-15 | Skip M1 (config sync script) — the drift surface is too small to justify building the script | After Decisions 2–4's cleanup (Kunal's hooks deleted, EPCAT hook project-scoped, orphaned scripts deleted), virtually nothing remains untracked in `~/.claude/`. The problem M1 was designed to solve no longer exists at meaningful scale. Symlinks and project-scoping solved it more directly than detection-and-repair. | M1 removed from active milestones |
+| 6 | 2026-04-16 | Skip M3 (Stop hook — auto-test on response) — the pattern is designed for autonomous workflows, not interactive ones | Michael's hook feeds test results into Claude's `additionalContext` so an autonomous agent can self-correct on the next turn. Whitney's workflow is interactive — she's at the keyboard making those judgment calls herself. The latency cost per response outweighs the benefit. | M3 removed from active milestones |
+| 7 | 2026-04-16 | `/continue` skill should read PROGRESS.md and a layered set of journal context files in addition to the sources in the reference implementation | PROGRESS.md is the narrative complement to PRD checkbox state — it captures what was done and why, not just what's pending. Journal files provide session-level context git log doesn't capture. Layer: today's raw entries (current-day sessions), yesterday's daily summary (distilled prior-day context), most recent weekly summary (broader arc for longer absences). Raw entries for prior days are too noisy — use summaries. | M4 acceptance criteria and notes updated to include these sources |
+| 8 | 2026-04-18 | Skip M5 (`/plan-execute`) — superseded by PRD #84 | The autonomous PRD execution workflow moved to its own PRD (#84), which takes a different architectural approach: milestone-grain unit of work with the PRD file itself as the state file, not a separate `_execution-state.md`. The compaction-resilience goals of M5 are addressed within PRD #84's design. | M5 removed from active milestones |
+| 9 | 2026-04-18 | Move M6 (Ralph loop detection in SessionStart hook) to PRD #84 | Original M6 used "Ralph loop" in the stuck-cycle sense (per Michael Forrester's `ralph-loop.local.md` marker pattern). The term actually refers to Geoffrey Huntley's autonomous iteration technique — a while-loop feeding the same prompt to an agent in fresh contexts. Rewritten correctly, the milestone becomes: detect whether an autonomous Ralph loop (PRD 84's orchestrator) is currently running in the repo and warn interactive sessions to avoid collision. Because detection is two halves of one mechanism with PRD 84 M3's marker-writing, bundling into PRD 84 eliminates a cross-PRD dependency and keeps the correctly-used terminology in the PRD that uses it properly. | M6 removed from active milestones; the same functionality ships as PRD #84 M4 (detection) plus M3 extension (marker-writing). PRD 58 now has one open milestone: M7 `/cost-tracker`, which is a prerequisite to safe PRD 84 adoption (cost visibility for unattended autonomous runs). |
 
 ---
 
