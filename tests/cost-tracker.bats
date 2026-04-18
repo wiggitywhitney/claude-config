@@ -96,6 +96,19 @@ teardown() {
     [[ "$output" == *'$3.00'* ]]
 }
 
+@test "applies correct rates when session uses two different models" {
+    # Sonnet 4.6: 500k input → $1.50; Opus 4.7: 500k input → $2.50; total $4.00
+    # Bug: old code used first model's rate for all tokens → $3.00 (wrong)
+    mkdir -p "$PROJECTS_DIR/proj-a"
+    {
+        make_record "s1" "/repos/proj-a" "claude-sonnet-4-6" 500000 0 0 0 "$RECENT_TS"
+        make_record "s1" "/repos/proj-a" "claude-opus-4-7"   500000 0 0 0 "2026-04-18T10:01:00Z"
+    } > "$PROJECTS_DIR/proj-a/s1.jsonl"
+    run bash -c "CLAUDE_PROJECTS_DIR=\"$PROJECTS_DIR\" \"$SCRIPT\""
+    [ "$status" -eq 0 ]
+    [[ "$output" == *'$4.00'* ]]
+}
+
 @test "calculates cache create cost at correct rate for Sonnet 4.6" {
     # $3.75/MTok cache create → $3.75
     mkdir -p "$PROJECTS_DIR/proj-a"

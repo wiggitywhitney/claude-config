@@ -99,15 +99,17 @@ find "$PROJECTS_DIR" -name "*.jsonl" -print0 2>/dev/null \
             if (repo_filter != "" && repo != repo_filter) next
             if (sid == "") next
 
-            if (!(sid in sess_repo)) {
-                sess_repo[sid] = repo
-                sess_model[sid] = model
+            if (!(sid in seen_sid)) {
+                seen_sid[sid] = 1
                 session_count++
             }
-            sess_input[sid]  += inp
-            sess_cc[sid]     += cc
-            sess_cr[sid]     += cr
-            sess_output[sid] += out
+            pair = sid SUBSEP model
+            pair_repo[pair]    = repo
+            pair_model[pair]   = model
+            pair_input[pair]  += inp
+            pair_cc[pair]     += cc
+            pair_cr[pair]     += cr
+            pair_output[pair] += out
         }
 
         END {
@@ -116,17 +118,17 @@ find "$PROJECTS_DIR" -name "*.jsonl" -print0 2>/dev/null \
                 exit 0
             }
 
-            # Compute per-session costs and accumulate totals
+            # Compute per-(session, model) costs and accumulate totals
             total_cost = 0
             total_inp = 0; total_cc = 0; total_cr = 0; total_out = 0
 
-            for (sid in sess_repo) {
-                repo  = sess_repo[sid]
-                model = sess_model[sid]
-                inp   = sess_input[sid]
-                cc    = sess_cc[sid]
-                cr    = sess_cr[sid]
-                out   = sess_output[sid]
+            for (pair in pair_model) {
+                repo  = pair_repo[pair]
+                model = pair_model[pair]
+                inp   = pair_input[pair]
+                cc    = pair_cc[pair]
+                cr    = pair_cr[pair]
+                out   = pair_output[pair]
 
                 _ir   = (model in ir)   ? ir[model]   : default_ir
                 _ccr  = (model in ccr)  ? ccr[model]  : default_ccr
