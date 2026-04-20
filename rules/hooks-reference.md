@@ -41,11 +41,11 @@ Install with `bash scripts/install-git-hooks.sh [repo-path]`. The installer is i
 
 ## Supplemental Code Review
 
-Immediately after creating a PR, run `/code-review` in the session using the Skill tool.
+Immediately after creating a PR, run `/code-review` in the session using the Skill tool — **except** for docs-only PRs (markdown, SKILL.md, CLAUDE.md, rules files) or small/obvious code changes, where CodeRabbit coverage is sufficient.
 
 **Plugin**: `code-review` — available in all sessions via `~/.claude/skills/code-review` symlink (no per-repo install needed).
 
-**When it runs**: Every PR, immediately after `gh pr create` — not pre-push. The plugin requires an open PR and cannot run before one exists. The pre-push CodeRabbit CLI step is unchanged.
+**When it runs**: Every non-trivial PR, immediately after `gh pr create` — not pre-push. The plugin requires an open PR and cannot run before one exists. The pre-push CodeRabbit CLI step is unchanged.
 
 **What to expect**: Five parallel Sonnet agents independently review the diff, then parallel Haiku agents score each finding (0–100 confidence). Findings below 50 are filtered out. Findings are grouped into two tiers — High confidence (≥ 80) and Medium confidence (50–79) — and posted as a two-tier markdown table in the PR comment. Each finding includes a score, a Fix or Skip disposition, and a GitHub permalink with the full commit SHA.
 
