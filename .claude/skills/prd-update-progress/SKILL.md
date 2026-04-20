@@ -337,6 +337,20 @@ If `coderabbit` is not installed, skip this step with a note: "CodeRabbit CLI no
 
 If this work is part of a PRD, assess whether any design decisions emerged during this implementation session — architecture changes, scope adjustments, technical discoveries, or approach pivots. If any did, run `/prd-update-decisions` to capture them before moving on. This ensures decisions are recorded and propagated to downstream milestones while context is fresh.
 
+## Step 8.9: Handoff Readiness Check
+
+Before suggesting `/clear`, answer honestly: **will the next AI instance have everything it needs to pick up where this session left off?**
+
+Walk through these explicitly — don't answer reflexively:
+
+- **Decisions** — are non-obvious choices (pivots, rejected alternatives, constraints discovered) captured in the PRD or a comment? If they live only in this conversation, write them down now.
+- **PROGRESS.md** — if this repo has one, does it reflect today's changes?
+- **Open questions** — is anything you paused on or deferred captured in the PRD, a code TODO, or a GitHub issue?
+- **Next task's entry point** — is the next PRD task concretely described, or does it rely on context only you currently hold? If the latter, add the missing context to the PRD.
+- **Workarounds and gotchas** — did you discover something non-obvious (a failed approach, a tooling quirk) that the next instance would re-learn the hard way? Document it in the PRD, a rule file, or a code comment.
+
+If any answer is "no," fix it before the next-steps summary. Only suggest `/clear` when the answer is genuinely yes.
+
 ## Step 9: Next Steps Based on PRD Status
 
 After completing the PRD update, committing changes, and addressing any CodeRabbit findings, guide the user based on completion status:

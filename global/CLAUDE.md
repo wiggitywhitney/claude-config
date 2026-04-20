@@ -30,7 +30,7 @@ When drafting emails or written communication:
 - **You MUST ask permission** before reimplementing features or systems from scratch.
 - Prefer deterministic scripts/code over AI for operational tasks. Use AI for content understanding, narrative synthesis, and semantic analysis.
 - When creating prompts for AI agents, emphasize the process to follow rather than stating the goal upfront.
-- When creating or modifying any SKILL.md file, system prompt, or AI agent instruction, use `/write-prompt` to review the result before committing.
+- When creating or modifying any SKILL.md file, system prompt, AI agent instruction, or PRD, use `/write-prompt` to review the result before committing. PRDs are prompts — future agents read and act on them.
 - **ALWAYS add progress indicators** for any operation that might cause the user to wait. This includes downloading files, processing large datasets, network requests, and any computation that takes more than 1-2 seconds.
 - **MANDATORY**: When writing user-facing documentation (README, guides, PRD milestones), invoke `/write-docs`. Do not skip this step. Excludes CLAUDE.md and rule files.
 
@@ -75,6 +75,28 @@ When you have multiple questions or decisions for the user, present them **one a
 ## GitHub Issues
 
 When creating a GitHub issue: draft the body, then use the Skill tool to invoke `/write-prompt` passing the draft as input — ask it to organize the unstructured content into a clear, polished version without adding, removing, or changing meaning. Use the polished result when calling `gh issue create`.
+
+Every GitHub issue body must end with a checklist item that updates the project's `PROGRESS.md` (style rules below). Without this, non-PRD work accumulates without a durable record.
+
+## PROGRESS.md
+
+When a repo has a `PROGRESS.md` at its root, write entries in this style:
+
+- **Format**: `- (YYYY-MM-DD) [Prose description of what changed and why].` under the appropriate section heading (Added, Changed, Deprecated, Removed, Fixed, Security).
+- **Convention**: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Entries are for external readers of the repo, not internal workflow tracking.
+- **Include**: what changed, why, and the reasoning behind the decision. User-facing identifiers (rule IDs, API names, paths like `docs/rules-reference.md`) are fine — but **briefly explain each on first use**, e.g., "CDQ-007 (PII attribute names, filesystem paths, nullable access)" rather than bare "CDQ-007".
+- **Omit**: GitHub issue numbers, PRD numbers, milestone IDs ("M1", "B3"), test counts, internal file paths, commit SHAs. The closing commit handles ticket linkage.
+
+Narrative issue references in prose ("Closed issue #493 as working as intended") are fine — that's context, not metadata. Avoid trailing `Closes #NNN.` lines; those belong in commit messages.
+
+## ROADMAP.md
+
+When a repo has a `docs/ROADMAP.md`, update it on PRD lifecycle events:
+
+- **On PRD creation**: add an entry to the appropriate timeframe tier (Short-term / Medium-term / Long-term by PRD priority): `- [Brief description] ([PRD #NNN](issue-url)) — [1-line rationale or blocked-by]`. If a placeholder exists ("new PRD, to be created"), update in place — don't duplicate.
+- **On PRD closure**: remove the entry. ROADMAP is forward-looking; completed work lives in `PROGRESS.md`.
+
+Link to the GitHub issue, not the PRD file path — issues are stable across renames.
 
 ## Issue Juggling
 
