@@ -52,11 +52,18 @@ TODAY="$(date +%Y-%m-%d)"
 DRAFT=""
 
 if command -v claude &>/dev/null; then
+    timeout_cmd=()
+    if command -v timeout &>/dev/null; then
+        timeout_cmd=(timeout 30)
+    elif command -v gtimeout &>/dev/null; then
+        timeout_cmd=(gtimeout 30)
+    fi
+
     PROMPT="Generate a single PROGRESS.md entry for these git commits. Output exactly one line formatted as: - (${TODAY}) [prose description of what changed and why, written for external readers unfamiliar with the project; describe the capability gained, not files changed; omit issue numbers, PRD references, and internal identifiers]. Output only the entry line — no other text.
 
 Commits:
 ${COMMIT_MESSAGES}"
-    DRAFT="$(timeout 30 env -u ANTHROPIC_CUSTOM_HEADERS -u ANTHROPIC_BASE_URL claude -p "$PROMPT" 2>/dev/null || true)"
+    DRAFT="$("${timeout_cmd[@]+"${timeout_cmd[@]}"}" env -u ANTHROPIC_CUSTOM_HEADERS -u ANTHROPIC_BASE_URL claude -p "$PROMPT" 2>/dev/null || true)"
 fi
 
 # Show prompt on /dev/tty
@@ -128,10 +135,13 @@ case "${CHOICE,,}" in
             exit 1
         fi
         _insert_progress_entry "$REPO_ROOT/PROGRESS.md" "$DRAFT"
-        git -C "$REPO_ROOT" add PROGRESS.md
-        git -C "$REPO_ROOT" commit -m "docs: add PROGRESS.md entry for branch changes" --quiet
-        echo "" >&2
-        echo "Committed PROGRESS.md update. Push again to include it." >&2
+        if git -C "$REPO_ROOT" add PROGRESS.md && git -C "$REPO_ROOT" commit -m "docs: add PROGRESS.md entry for branch changes" --quiet; then
+            echo "" >&2
+            echo "Committed PROGRESS.md update. Push again to include it." >&2
+        else
+            echo "" >&2
+            echo "Push blocked. Failed to commit PROGRESS.md — commit it manually and push again." >&2
+        fi
         exit 1
         ;;
     e|edit)
@@ -142,10 +152,13 @@ case "${CHOICE,,}" in
         rm -f "$TMPFILE"
         if [[ -n "${EDITED//[[:space:]]/}" ]]; then
             _insert_progress_entry "$REPO_ROOT/PROGRESS.md" "$EDITED"
-            git -C "$REPO_ROOT" add PROGRESS.md
-            git -C "$REPO_ROOT" commit -m "docs: add PROGRESS.md entry for branch changes" --quiet
-            echo "" >&2
-            echo "Committed PROGRESS.md update. Push again to include it." >&2
+            if git -C "$REPO_ROOT" add PROGRESS.md && git -C "$REPO_ROOT" commit -m "docs: add PROGRESS.md entry for branch changes" --quiet; then
+                echo "" >&2
+                echo "Committed PROGRESS.md update. Push again to include it." >&2
+            else
+                echo "" >&2
+                echo "Push blocked. Failed to commit PROGRESS.md — commit it manually and push again." >&2
+            fi
             exit 1
         else
             echo "" >&2
