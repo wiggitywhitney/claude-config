@@ -35,6 +35,7 @@ run_check() {
 exit_code=0
 
 run_check "$CHECKS_DIR/test-tiers.sh"        || exit_code=$?
+run_check "$CHECKS_DIR/progress-md-pr.sh"  || exit_code=$?
 run_check "$CHECKS_DIR/pre-push-verify.sh" || exit_code=$?
 
 exit "$exit_code"
