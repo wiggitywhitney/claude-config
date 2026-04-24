@@ -28,7 +28,7 @@ if [[ -z "$BASE_REF" ]]; then
 fi
 
 # Skip if branch has no commits vs base (nothing to push)
-COMMIT_COUNT="$(git rev-list "${BASE_REF}...HEAD" --count 2>/dev/null || echo "0")"
+COMMIT_COUNT="$(git rev-list "${BASE_REF}..HEAD" --count 2>/dev/null || echo "0")"
 if [[ "$COMMIT_COUNT" -eq 0 ]]; then
     exit 0
 fi
@@ -94,10 +94,24 @@ with open(progress_file) as f:
     content = f.read()
 
 import re
-match = re.search(r'### Added\n+', content)
-if match:
-    insert_at = match.end()
-    content = content[:insert_at] + entry + "\n" + content[insert_at:]
+unreleased = re.search(r'^## \[Unreleased\]\s*$', content, re.MULTILINE)
+if unreleased:
+    tail = content[unreleased.end():]
+    next_h2 = re.search(r'^## \[', tail, re.MULTILINE)
+    section_end = unreleased.end() + (next_h2.start() if next_h2 else len(tail))
+    section = content[unreleased.end():section_end]
+    added = re.search(r'^### Added\s*\n+', section, re.MULTILINE)
+    if added:
+        insert_at = unreleased.end() + added.end()
+        content = content[:insert_at] + entry + "\n" + content[insert_at:]
+    else:
+        content = (
+            content[:section_end].rstrip()
+            + "\n\n### Added\n"
+            + entry
+            + "\n\n"
+            + content[section_end:].lstrip("\n")
+        )
 else:
     content = content.rstrip() + "\n\n" + entry + "\n"
 
@@ -108,6 +122,11 @@ PYEOF
 
 case "${CHOICE,,}" in
     a|accept)
+        if [[ -z "${DRAFT//[[:space:]]/}" ]]; then
+            echo "" >&2
+            echo "Push blocked. Auto-draft was empty. Update PROGRESS.md and push again." >&2
+            exit 1
+        fi
         _insert_progress_entry "$REPO_ROOT/PROGRESS.md" "$DRAFT"
         git -C "$REPO_ROOT" add PROGRESS.md
         git -C "$REPO_ROOT" commit -m "docs: add PROGRESS.md entry for branch changes" --quiet
@@ -121,7 +140,7 @@ case "${CHOICE,,}" in
         "${EDITOR:-vi}" "$TMPFILE" < /dev/tty > /dev/tty
         EDITED="$(< "$TMPFILE")"
         rm -f "$TMPFILE"
-        if [[ -n "$EDITED" ]]; then
+        if [[ -n "${EDITED//[[:space:]]/}" ]]; then
             _insert_progress_entry "$REPO_ROOT/PROGRESS.md" "$EDITED"
             git -C "$REPO_ROOT" add PROGRESS.md
             git -C "$REPO_ROOT" commit -m "docs: add PROGRESS.md entry for branch changes" --quiet
