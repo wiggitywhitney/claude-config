@@ -47,7 +47,7 @@ if [[ "${PROGRESS_MD_PR_NO_TTY:-}" == "1" ]] || ! { : > /dev/tty; } 2>/dev/null;
 fi
 
 # Draft a PROGRESS.md entry using claude -p
-COMMIT_MESSAGES="$(git log "${BASE_REF}...HEAD" --pretty=format:"%s" 2>/dev/null)"
+COMMIT_MESSAGES="$(git log "${BASE_REF}..HEAD" --pretty=format:"%s" 2>/dev/null)"
 TODAY="$(date +%Y-%m-%d)"
 DRAFT=""
 
