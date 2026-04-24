@@ -330,19 +330,21 @@ If `coderabbit` is not installed, skip this step with a note: "CodeRabbit CLI no
 
 If this work is part of a PRD, assess whether any design decisions emerged during this implementation session — architecture changes, scope adjustments, technical discoveries, or approach pivots. If any did, run `/prd-update-decisions` to capture them before moving on. This ensures decisions are recorded and propagated to downstream milestones while context is fresh.
 
-## Step 8.9: Handoff Readiness Check
+## Step 8.9: Handoff Verification
 
-Before suggesting `/clear`, answer honestly: **will the next AI instance have everything it needs to pick up where this session left off?**
+The next AI instance reads the PRD cold — no memory of this session. Before suggesting `/clear`, complete each of the following. This step is not a self-assessment; it is work.
 
-Walk through these explicitly — don't answer reflexively:
+**Decisions** — Scan this conversation for non-obvious choices: pivots, rejected alternatives, constraints discovered mid-implementation. For each one not yet in the PRD decision log or a code comment, write it there now.
 
-- **Decisions** — are non-obvious choices (pivots, rejected alternatives, constraints discovered) captured in the PRD or a comment? If they live only in this conversation, write them down now.
-- **PROGRESS.md** — if this repo has one, does it reflect today's changes?
-- **Open questions** — is anything you paused on or deferred captured in the PRD, a code TODO, or a GitHub issue?
-- **Next task's entry point** — is the next PRD task concretely described, or does it rely on context only you currently hold? If the latter, add the missing context to the PRD.
-- **Workarounds and gotchas** — did you discover something non-obvious (a failed approach, a tooling quirk) that the next instance would re-learn the hard way? Document it in the PRD, a rule file, or a code comment.
+**PROGRESS.md** — Check PROGRESS.md. If today's changes aren't reflected, add the entry now.
 
-If any answer is "no," fix it before the next-steps summary. Only suggest `/clear` when the answer is genuinely yes.
+**Open questions** — Scan this conversation for anything deferred or unresolved. Each must exist in the PRD, a code TODO, or a GitHub issue before `/clear`. Create it now if it doesn't.
+
+**Next task's entry point** — Read the next unchecked PRD milestone. Could a cold AI instance start it with only the PRD and the codebase? If the milestone relies on context from this session — an approach to avoid, an API quirk, a file that must be read first — add that context to the milestone description now.
+
+**Workarounds and gotchas** — Scan this conversation for tooling quirks, failed approaches, or non-obvious constraints. For each one not yet in a rule file, PRD comment, or code comment, write it there now.
+
+Step 8.9 is done when all five actions are complete, not when they have been assessed.
 
 ## Step 9: Next Steps Based on PRD Status
 

@@ -14,7 +14,7 @@ triggers:
 
 ## Step 1: Get Today's Date
 
-Run `date +%Y-%m-%d` to get today's date. Derive yesterday's date with `date -v-1d +%Y-%m-%d`. You will need both for journal file paths.
+Run `date +%Y-%m-%d` to get today's date. Derive yesterday's date with `python3 -c "from datetime import date, timedelta; print(date.today() - timedelta(1))"` — this works on any platform. Alternatives if python3 is unavailable: macOS `date -v-1d +%Y-%m-%d`, GNU/Linux `date -d yesterday +%Y-%m-%d`. You will need both dates for journal file paths.
 
 ## Step 2: Read State Sources
 
