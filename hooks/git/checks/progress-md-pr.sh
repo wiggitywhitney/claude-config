@@ -56,7 +56,7 @@ if command -v claude &>/dev/null; then
 
 Commits:
 ${COMMIT_MESSAGES}"
-    DRAFT="$(env -u ANTHROPIC_CUSTOM_HEADERS -u ANTHROPIC_BASE_URL claude -p "$PROMPT" 2>/dev/null || true)"
+    DRAFT="$(timeout 30 env -u ANTHROPIC_CUSTOM_HEADERS -u ANTHROPIC_BASE_URL claude -p "$PROMPT" 2>/dev/null || true)"
 fi
 
 # Show prompt on /dev/tty
@@ -93,10 +93,10 @@ entry = os.environ['PROGRESS_ENTRY']
 with open(progress_file) as f:
     content = f.read()
 
-marker = "### Added\n\n"
-idx = content.find(marker)
-if idx != -1:
-    insert_at = idx + len(marker)
+import re
+match = re.search(r'### Added\n+', content)
+if match:
+    insert_at = match.end()
     content = content[:insert_at] + entry + "\n" + content[insert_at:]
 else:
     content = content.rstrip() + "\n\n" + entry + "\n"
