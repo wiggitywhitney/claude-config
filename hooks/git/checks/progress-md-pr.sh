@@ -80,9 +80,35 @@ fi
 
 read -r CHOICE < /dev/tty
 
+# Insert ENTRY under "### Added" within "## [Unreleased]"; fall back to appending
+_insert_progress_entry() {
+    local progress_file="$1"
+    local entry="$2"
+    PROGRESS_ENTRY="$entry" python3 - "$progress_file" <<'PYEOF'
+import sys, os
+
+progress_file = sys.argv[1]
+entry = os.environ['PROGRESS_ENTRY']
+
+with open(progress_file) as f:
+    content = f.read()
+
+marker = "### Added\n\n"
+idx = content.find(marker)
+if idx != -1:
+    insert_at = idx + len(marker)
+    content = content[:insert_at] + entry + "\n" + content[insert_at:]
+else:
+    content = content.rstrip() + "\n\n" + entry + "\n"
+
+with open(progress_file, 'w') as f:
+    f.write(content)
+PYEOF
+}
+
 case "${CHOICE,,}" in
     a|accept)
-        printf '%s\n' "$DRAFT" >> "$REPO_ROOT/PROGRESS.md"
+        _insert_progress_entry "$REPO_ROOT/PROGRESS.md" "$DRAFT"
         git -C "$REPO_ROOT" add PROGRESS.md
         git -C "$REPO_ROOT" commit -m "docs: add PROGRESS.md entry for branch changes" --quiet
         echo "" >&2
@@ -96,7 +122,7 @@ case "${CHOICE,,}" in
         EDITED="$(< "$TMPFILE")"
         rm -f "$TMPFILE"
         if [[ -n "$EDITED" ]]; then
-            printf '%s\n' "$EDITED" >> "$REPO_ROOT/PROGRESS.md"
+            _insert_progress_entry "$REPO_ROOT/PROGRESS.md" "$EDITED"
             git -C "$REPO_ROOT" add PROGRESS.md
             git -C "$REPO_ROOT" commit -m "docs: add PROGRESS.md entry for branch changes" --quiet
             echo "" >&2
