@@ -52,6 +52,8 @@ When you have multiple questions or decisions for the user, present them **one a
 - Weaver (v0.22.1 auto-escaping defaults, definition schema format): @~/.claude/rules/weaver-gotchas.md
 - Micro.blog API (dual auth tokens, editPage param order, feed-based cross-posting): @~/.claude/rules/microblog-api-gotchas.md
 - OTel JS semantic conventions (stable vs incubating entry-points, DB/HTTP attribute renames, deprecated SEMATTRS_*): @~/.claude/rules/otel-semconv-gotchas.md
+- mmdc/mermaid-cli (Puppeteer peer dep, Apple Silicon Chrome path, npx -p flag, PNG scaling): @~/.claude/rules/mmdc-gotchas.md
+- Social platform video upload (Bluesky separate service token, Mastodon async 202 poll, LinkedIn 4-step init/upload/finalize/poll + ETag stripping): @~/.claude/rules/social-video-upload-gotchas.md
 
 ## Testing
 
@@ -70,7 +72,9 @@ When you have multiple questions or decisions for the user, present them **one a
 ## Git Workflow
 
 - Feature branches only. PRs require CodeRabbit review approved by human before merge.
+- After merging a PR, delete the feature branch locally and from the remote.
 - Full workflow, CodeRabbit process, and triage rubric: @~/.claude/rules/git-workflow.md
+- GitHub CLI fork gotchas (gh pr create targets upstream by default): @~/.claude/rules/gh-fork-gotchas.md
 
 ## GitHub Issues
 
@@ -146,6 +150,11 @@ Feature work is tracked in PRDs (`prds/` directory). Use the PRD skills: `/prd-c
 - **Do NOT commit manually during PRD work.** `/prd-update-progress` handles commits, PRD updates, and journaling together.
 - Cross-PRD dependencies block clean merges. Design PRDs so every milestone is completable from main alone. Recovery when one is discovered mid-implementation: @~/.claude/rules/prd-dependency-management.md
 - **Decision cascade**: When a row is added to a PRD's `## Decision Log`, evaluate each remaining milestone in that PRD: does the new decision change its prerequisites, approach, or success criteria? Update any milestone whose plan is affected. Then scan other open PRDs in `prds/` — if the decision is relevant to their scope, open those PRDs and update their affected milestones too.
+
+## Eval Run Setup (spinybacked-orbweaver-eval)
+
+When setting up a new spiny-orb evaluation target or running `spiny-orb instrument`:
+- GitHub PAT setup, dry-run verification, and failure modes: @~/.claude/rules/eval-github-pat.md
 
 ## Conflict Resolution
 
