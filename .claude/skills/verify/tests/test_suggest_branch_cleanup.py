@@ -79,9 +79,10 @@ def run_tests():
     t.assert_equal("empty command produces no advisory", has_advisory(stdout), False)
 
     t.summary()
-    return t.failed == 0
+    return t.passed, t.failed, t.passed + t.failed
 
 
 if __name__ == "__main__":
-    success = run_tests()
+    passed, failed, _ = run_tests()
+    success = failed == 0
     sys.exit(0 if success else 1)
