@@ -164,6 +164,10 @@
           {
             "type": "command",
             "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/suggest-write-prompt.sh"
+          },
+          {
+            "type": "command",
+            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/suggest-branch-cleanup.sh"
           }
         ]
       }
