@@ -6,7 +6,7 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
-- (2026-04-25) Added a PostToolUse hook (`suggest-branch-cleanup.sh`) that fires after every `gh pr merge` command and injects an advisory reminding Claude to delete the feature branch locally and from the remote, and to confirm the linked GitHub issue was closed — addressing a recurring problem where branches and issues were left open after PRs merged; also added a matching rule to global CLAUDE.md
+- (2026-04-25) Added a post-merge advisory that prompts branch deletion locally and from the remote, and confirmation that any linked GitHub issue is closed — addressing a recurring pattern where merged PRs left follow-up cleanup incomplete; also added several missing technology gotcha references to the global development guide
 
 - (2026-04-24) Made the date command in the `/continue` skill platform-portable — replaced the macOS-only `date -v-1d` with `python3` as the primary fallback (works everywhere), with platform-specific alternatives listed for environments without python3
 - (2026-04-24) Rewrote Step 8.9 in `/prd-update-progress` (both standard and YOLO variants) from a self-assessment checklist to an enforcement-based step — each item is now an action to complete before suggesting `/clear`, not a question to answer; the final line makes the contract explicit: done when all five actions are complete, not when they have been assessed

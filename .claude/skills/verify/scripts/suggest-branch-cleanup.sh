@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ABOUTME: PostToolUse hook — reminds Claude to delete branches and close linked issues after gh pr merge.
-# ABOUTME: Fires on Bash tool calls containing "gh pr merge". Advisory only (exit 0 always).
+# ABOUTME: Fires only on successful Bash tool calls that invoke gh pr merge. Advisory only (exit 0 always).
 
 set -uo pipefail
 
@@ -16,7 +16,14 @@ import json, sys, re
 data = json.load(sys.stdin)
 command = data.get('tool_input', {}).get('command', '')
 
-if not re.search(r'(^|\s|&&\s*|;\s*)gh\s+pr\s+merge\b', command):
+# Require gh pr merge at string start or immediately after a shell command separator.
+# Using ^\s* / &&\s* / ||\s* / ;\s* avoids false positives from 'echo gh pr merge' etc.
+if not re.search(r'(^\s*|&&\s*|\|\|\s*|;\s*)gh\s+pr\s+merge\b', command):
+    sys.exit(0)
+
+# Only fire if the merge succeeded — tool_response contains the success message.
+response = str(data.get('tool_response', ''))
+if 'merged' not in response.lower():
     sys.exit(0)
 
 msg = (
