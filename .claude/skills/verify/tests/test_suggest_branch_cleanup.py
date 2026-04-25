@@ -93,6 +93,7 @@ def run_tests():
 
     exit_code, stdout = run_hook(HOOK, "{invalid json}")
     t.assert_equal("invalid JSON exits 0", exit_code, 0)
+    t.assert_equal("invalid JSON produces no advisory", stdout.strip(), "")
 
     exit_code, stdout = run_hook(HOOK, make_hook_input(""))
     t.assert_equal("empty command exits 0", exit_code, 0)

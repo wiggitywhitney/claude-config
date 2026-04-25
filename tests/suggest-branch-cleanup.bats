@@ -71,4 +71,5 @@ write_input() {
     write_input 'not valid json'
     run bash -c "\"$SCRIPT\" < \"$TMPDIR/input.json\""
     [ "$status" -eq 0 ]
+    [ -z "$output" ]
 }
