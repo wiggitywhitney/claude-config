@@ -18,7 +18,7 @@ write_input() {
 }
 
 @test "fires advisory for successful gh pr merge" {
-    write_input '{"tool_name":"Bash","tool_input":{"command":"gh pr merge 42 --merge"},"cwd":"/tmp","tool_response":"Merged pull request #42 (title)\n"}'
+    write_input '{"tool_name":"Bash","tool_input":{"command":"gh pr merge 42 --merge"},"cwd":"/tmp","tool_response":"Merged pull request #42 (title)"}'
     run bash -c "\"$SCRIPT\" < \"$TMPDIR/input.json\""
     [ "$status" -eq 0 ]
     [[ "$output" == *"additionalContext"* ]]
@@ -27,6 +27,13 @@ write_input() {
 
 @test "silent for failed gh pr merge" {
     write_input '{"tool_name":"Bash","tool_input":{"command":"gh pr merge 42"},"cwd":"/tmp","tool_response":"error: pull request is not mergeable"}'
+    run bash -c "\"$SCRIPT\" < \"$TMPDIR/input.json\""
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "silent when response contains 'was not merged'" {
+    write_input '{"tool_name":"Bash","tool_input":{"command":"gh pr merge 42"},"cwd":"/tmp","tool_response":"error: pull request was not merged"}'
     run bash -c "\"$SCRIPT\" < \"$TMPDIR/input.json\""
     [ "$status" -eq 0 ]
     [ -z "$output" ]

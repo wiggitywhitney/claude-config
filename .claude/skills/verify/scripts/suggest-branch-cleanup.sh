@@ -21,9 +21,11 @@ command = data.get('tool_input', {}).get('command', '')
 if not re.search(r'(^\s*|&&\s*|\|\|\s*|;\s*)gh\s+pr\s+merge\b', command):
     sys.exit(0)
 
-# Only fire if the merge succeeded — tool_response contains the success message.
+# Only fire if the merge succeeded — check tool_response for the gh success phrase.
+# Matching 'merged pull request' avoids false positives from failure messages
+# like 'was not merged' that also contain the word 'merged'.
 response = str(data.get('tool_response', ''))
-if 'merged' not in response.lower():
+if 'merged pull request' not in response.lower():
     sys.exit(0)
 
 msg = (

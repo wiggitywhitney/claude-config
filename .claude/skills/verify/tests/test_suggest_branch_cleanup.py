@@ -10,7 +10,7 @@ from test_harness import TestResults, hook_path, make_hook_input, run_hook
 
 HOOK = hook_path("suggest-branch-cleanup.sh")
 
-SUCCESS_RESPONSE = "✓ Merged pull request #42 (title)\n"
+SUCCESS_RESPONSE = "Merged pull request #42 (title)\n"
 FAILURE_RESPONSE = "error: pull request is not mergeable"
 
 
@@ -58,6 +58,10 @@ def run_tests():
     exit_code, stdout = run_hook(HOOK, make_merge_input("gh pr merge 42", FAILURE_RESPONSE))
     t.assert_equal("failed merge exits 0", exit_code, 0)
     t.assert_equal("failed merge produces no advisory", has_advisory(stdout), False)
+
+    exit_code, stdout = run_hook(HOOK, make_merge_input("gh pr merge 42", "error: pull request was not merged"))
+    t.assert_equal("'was not merged' response exits 0", exit_code, 0)
+    t.assert_equal("'was not merged' response produces no advisory", has_advisory(stdout), False)
 
     exit_code, stdout = run_hook(HOOK, make_hook_input("gh pr merge 42"))
     t.assert_equal("no tool_response exits 0", exit_code, 0)
