@@ -43,11 +43,13 @@ Install with `bash scripts/install-git-hooks.sh [repo-path]`. The installer is i
 
 ## Supplemental Code Review
 
-Immediately after creating a PR, run `/code-review` in the session using the Skill tool — **except** for docs-only PRs (markdown, SKILL.md, CLAUDE.md, rules files) or small/obvious code changes, where CodeRabbit coverage is sufficient.
+Immediately after creating a PR, run `/code-review` in the session using the Skill tool — **except** for: docs-only PRs (markdown, SKILL.md, CLAUDE.md, rules files); standalone issue fixes where ≤2 non-test source files changed, the changes are self-contained (each file independently modified with no complex cross-file interactions), new tests directly cover the changed logic, and CodeRabbit CLI found no blocking findings; or other small/obvious code changes where CodeRabbit coverage is sufficient.
+
+**IMPORTANT**: Never run `/code-review` in the background or in parallel with other skills. It must run as a foreground, blocking Skill tool call so its findings are returned and visible in the conversation. Parallel invocation causes results to be lost.
 
 **Plugin**: `code-review` — available in all sessions via `~/.claude/skills/code-review` symlink (no per-repo install needed).
 
-**When it runs**: Every non-trivial PR, immediately after `gh pr create` — not pre-push. The plugin requires an open PR and cannot run before one exists. The pre-push CodeRabbit CLI step is unchanged.
+**When it runs**: Every non-trivial PR, immediately after `gh pr create` — not pre-push. The plugin requires an open PR and cannot run before one exists. The pre-push CodeRabbit CLI step is unchanged. **Never run `/code-review` on GitHub issues** — it is too expensive and only applies to PRs.
 
 **What to expect**: Five parallel Sonnet agents independently review the diff, then parallel Haiku agents score each finding (0–100 confidence). Findings below 50 are filtered out. Findings are grouped into two tiers — High confidence (≥ 80) and Medium confidence (50–79) — and posted as a two-tier markdown table in the PR comment. Each finding includes a score, a Fix or Skip disposition, and a GitHub permalink with the full commit SHA.
 

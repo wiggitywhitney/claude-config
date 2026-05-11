@@ -29,6 +29,31 @@ What the slide tech stack can do. Use these features when building presentation 
 - **Video**: `## {background-video="video.mp4" background-video-loop="true" background-video-muted="true"}`
 - **Interactive iframe**: `## {background-iframe="https://example.com" background-interactive="true"}` — embeds a live webpage as the slide background. You can click and interact. Use for live Datadog dashboards or APM trace views.
 
+## Progressive Reveal: White-Out Technique
+
+**When building a progressive Mermaid diagram, put the full diagram on every slide and hide unrevealed elements by coloring them to match their background.** Never add or remove nodes between slides — dagre recomputes the layout whenever the structure changes, causing nodes to jump.
+
+**How it works:** Every slide has identical nodes and edges. Hidden elements are painted to blend in; visible elements have their real colors. Only colors change slide to slide, so the layout is computed once and stays frozen. Applies to `mermaid-format: svg` (server-side render, which is the standard setup).
+
+**Coloring hidden elements — match the visual background behind the element:**
+- Node on the white slide background: `fill:white,stroke:white,color:white`
+- Node with `fill:none` (transparent): switch to `fill:white,stroke:white,color:white` — transparent lets whatever is behind show through
+- Node inside a colored subgraph: use the subgraph's fill color, e.g. `fill:#e8f5f3,stroke:#e8f5f3,color:#e8f5f3` — a white fill on a teal background is still visible
+- Edge: `linkStyle N stroke:white,fill:white,color:white` — `fill:white` covers the arrowhead marker; `color:white` hides the label text
+- Edge crossing a colored subgraph: use the subgraph fill color for `stroke`, not white
+- `linkStyle` indices are 0-based and match the order edges are declared in the source
+
+**Multiline node labels — use markdown string syntax, not `\n`:**
+
+```mermaid
+NODE["`Line one
+Line two`"]
+```
+
+The backtick after `["` starts a Mermaid v11 markdown string; a literal newline in the source becomes a visible line break. Do NOT use `\n` — it silently drops the entire node text in `mermaid-format: svg` mode. Also: long single-line labels (>~18 chars) trigger `white-space: break-spaces` rendering which clips text in the fixed-height foreignObject. Markdown strings let you control the line break explicitly, fixing both issues at once.
+
+**Cycles in `flowchart LR` cause layout instability:** A true cycle (A → B → A) causes dagre to place one node on the wrong side — the back-edge becomes the bottom curved arrow and you cannot reliably control which arrow appears on top. Accept this behavior or redesign the diagram to avoid the cycle. Attempts to work around it (invisible anchor nodes, separate same-label nodes) are fragile and may not render as expected.
+
 ## Mermaid Diagrams (bundled v11.6.0)
 
 All diagram types work in `{mermaid}` code blocks:

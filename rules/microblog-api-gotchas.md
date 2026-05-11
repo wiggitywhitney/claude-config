@@ -19,6 +19,32 @@ Using the Micropub token for XML-RPC returns `403 User not authorized` with no h
 
 Getting the order wrong produces `"Page title can't be blank"` (500) — not a parameter order error.
 
+## getPages blogID must be the username string, not integer 1
+
+Standard Blogger XML-RPC uses an integer blog ID. Micro.blog uses the **username string** as the blogId:
+
+```javascript
+xmlrpcRequest('microblog.getPages', [username, username, token, 100, 0])
+//                                   ^^^^^^^^ blogId = username, not 1
+```
+
+Passing `1` returns: `"Blog not found with ID 1"`. Passing the username works.
+
+## getPages response uses `id` not `pageID`, and `<i4>` not `<int>`
+
+The standard Blogger API uses `pageID` for the page identifier. Micro.blog uses `id`. If you parse the XML-RPC response and look for `pageID`, you'll silently get null and every page will be skipped.
+
+Also, integer values in the response use the `<i4>` type tag (a valid XML-RPC alias for `<int>`). Parsers that only handle `<int>` will miss these.
+
+```xml
+<member><name>id</name><value><i4>849042</i4></value></member>
+<!-- NOT: <name>pageID</name> or <int> -->
+```
+
+## About page is NOT is_template: true
+
+The `About` page has `is_template: false` in the `getPages` response — it renders the `description` field directly, not via a Hugo template. This means Markdown and HTML both work as-is in the description field. The documentation saying template pages have `is_template: true` applies to Archive, Photos, and Replies — not About.
+
 ## Micropub page creation requires array format for mp-channel
 
 When creating pages via Micropub JSON, `mp-channel` must be `["pages"]` (array), not `"pages"` (string). The `mp-navigation` boolean goes at root level, not inside `properties`.

@@ -6,11 +6,29 @@ Before discussing any date, time, day of the week, or scheduling topic with the 
 
 ## Writing Style
 
-When drafting emails or written communication:
-- Use complete sentences. Never drop subjects.
-- **Do**: "I am happy to answer any questions." / "I am just bubbling this back up."
-- **Don't**: "Happy to answer any questions." / "Just bubbling this back up."
-- Kind but direct, with full sentences.
+@~/.claude/rules/writing-voice.md
+
+When drafting any written communication (Slack, email, social posts, blog content, talk descriptions, or anything Whitney will put her name on), apply the rules in that file.
+
+- When Whitney edits a draft in-line, corrects specific wording, or pastes what she actually sent, treat it as a correction event: extract the principle and update `~/.claude/rules/writing-voice.md` immediately — no asking required.
+- If her real sent version contradicts a rule in that file, remove the rule.
+
+## Journal Entries
+
+**NEVER** delete, discard, or lose journal files (any file under `journal/` directories). This applies in all situations including branch cleanup.
+
+- Before deleting any branch: run `git log --oneline HEAD..<branch>` to check for journal commits not yet in main. If any exist, cherry-pick them to main and push before deleting the branch.
+- Never use `git branch -D` (force delete) on a branch that has journal commits not yet in main.
+- When a checkout conflict involves a journal file: commit the journal entry to the destination branch — never discard it with `git restore` or `git checkout --`.
+
+## Docker
+
+Whitney uses **Colima** instead of Docker Desktop (Datadog policy — Docker Desktop is not licensed for DevEng). The Docker CLI and Docker Compose work identically; only the runtime changed.
+
+- Before running any Docker command in a session, check if Colima is running: `colima status`
+- If not running, start it: `colima start`
+- To start automatically at login: `brew services start colima`
+- Docker context is `colima` — set automatically on first start.
 
 ## Shell Commands
 
@@ -54,6 +72,9 @@ When you have multiple questions or decisions for the user, present them **one a
 - OTel JS semantic conventions (stable vs incubating entry-points, DB/HTTP attribute renames, deprecated SEMATTRS_*): @~/.claude/rules/otel-semconv-gotchas.md
 - mmdc/mermaid-cli (Puppeteer peer dep, Apple Silicon Chrome path, npx -p flag, PNG scaling): @~/.claude/rules/mmdc-gotchas.md
 - Social platform video upload (Bluesky separate service token, Mastodon async 202 poll, LinkedIn 4-step init/upload/finalize/poll + ETag stripping): @~/.claude/rules/social-video-upload-gotchas.md
+- TypeScript tsc CLI (TS5112 hard error in 6.x, --ignoreConfig version-gate, stdout not stderr, new 6.x defaults): @~/.claude/rules/typescript-cli-gotchas.md
+- LinkedIn REST API (commentary silent truncation on unescaped reserved chars, content.media not the cause, refresh token partner approval): @~/.claude/rules/linkedin-api-gotchas.md
+- IS scoring / OTel Collector (binary preferred over Docker, Docker needs --user+--workdir+abs-path, port 4318 conflict with DD Agent, OTel SDK devDeps for target app): @~/.claude/rules/is-scoring-gotchas.md
 
 ## Testing
 
@@ -63,6 +84,19 @@ When you have multiple questions or decisions for the user, present them **one a
 - Full testing rules: @~/.claude/rules/testing-rules.md
 - Bats gotchas and patterns: @~/.claude/rules/bats-bash-testing.md
 - Project-type strategies: @~/Documents/Repositories/claude-config/guides/testing-decision-guide.md
+
+## Acceptance Gate Failures
+
+Whenever an acceptance gate run fails — even for tests outside the current PR's scope — before merging, complete this triage:
+
+1. **Diagnose** what failed and why (read logs; download debug artifacts using the project's artifact download command if available; check the test file, test name, assertion error, and run ID).
+2. **Check open PRDs and issues, plus issues closed within the last 60 days**, to see if the failure is already captured.
+3. **If tracked in an open PRD/issue**: at minimum, update it with the new failing run (test file, test name, error, run ID). Also assess whether the issue fully represents the problem — if it only partially covers what needs to be fixed, update the content so the full scope is clear to a future implementor. **If the open item is a PRD, use `/prd-update-decisions` rather than editing directly.**
+4. **If tracked only in a recently closed PRD/issue** (closed within 60 days): closed work won't be revisited. Create a new issue referencing both the closed PRD/issue (for context) and the specific failing acceptance test (test file path, test name, assertion error, run ID). Run `/write-prompt` on the issue body before calling `gh issue create`.
+5. **If not tracked anywhere**: create a new issue including the specific failing acceptance test (test file path, test name, assertion error, run ID). Run `/write-prompt` on the issue body before calling `gh issue create`.
+6. **Only merge** once every failure in the run has a home in an open issue or PRD.
+
+The key principle: "pre-existing" and "unrelated to our changes" are not reasons to dismiss a failure — they are reasons to confirm the tracking is correct. Every active failure must live in the open backlog, and that item must fully describe what needs to be fixed.
 
 ## Development Workflow
 

@@ -28,7 +28,7 @@ You are helping Whitney create Anki cards from a conversation she just had.
 2. Extract the key concepts that are worth remembering
 3. Before structuring cards: outline the narrative arc of the topic (why it exists, what it is, how it connects, what was surprising) — see Story-First Framing in Card Rules. Only then organize concepts into card-ready format by theme.
 4. Score each card candidate using the Card Quality Scoring rubric below
-5. For any card scoring below 9/15: rewrite it once to improve the weakest dimensions, then re-score. If still below 9 after rewriting, accept it and note why it couldn't reach the threshold (e.g., "Memory anchor limited: no project experience with this technology yet")
+5. For any card scoring below 12/15: rewrite it once to improve the weakest dimensions, then re-score. If still below 12 after rewriting, accept it and note why it couldn't reach the threshold (e.g., "Memory anchor limited: no project experience with this technology yet")
 6. **Glossary Index Check** — scan the conversation for newly introduced technologies, APIs, frameworks, and coined project terms. Read the index at `~/Documents/Journal/anki/glossary-index.md` and cross-reference. Add a "## Missing Glossary Cards" section in the Phase 1 output listing any terms with no index entry — these will be included as Pattern 1 cards in Phase 2 automatically.
 7. **Image Bank Check** — read `~/Documents/Journal/anki/images/concept-map.md` and check concepts from this conversation. Add an "## Image Bank Status" section to the Phase 1 output:
    - **Known concepts** (in the map): list them with their mapped filename — images will be auto-embedded in Phase 2
@@ -209,10 +209,10 @@ Score every card candidate on 3 dimensions before generating the final card bloc
 
 **Total score = sum of 3 dimensions (max 15)**
 
-- **9–15**: Card passes. Include in the batch as-is.
-- **Below 9**: Rewrite the card once, targeting the weakest dimension(s). Re-score after rewriting.
-  - If the rewritten card reaches 9+, use the rewritten version and note the improvement.
-  - If still below 9, accept the card and add a parenthetical note explaining why it couldn't reach the threshold.
+- **12–15**: Card passes. Include in the batch as-is.
+- **Below 12**: Rewrite the card once, targeting the weakest dimension(s). Re-score after rewriting.
+  - If the rewritten card reaches 12+, use the rewritten version and note the improvement.
+  - If still below 12, accept the card and add a parenthetical note explaining why it couldn't reach the threshold.
 
 ### Score Table Format
 
@@ -626,7 +626,7 @@ Before presenting cards:
 - [ ] Arguments framed as arguments, not facts
 - [ ] Code blocks have language identifiers (typescript, yaml, bash, etc.)
 - [ ] Every card has at least one hierarchical tag (`project::`, `tech::`, `concept::`, or `source::`)
-- [ ] Every card scored; cards that were rewritten show original→revised score; cards that couldn't reach 9 have a threshold note
+- [ ] Every card scored; cards that were rewritten show original→revised score; cards that couldn't reach 12 have a threshold note
 - [ ] Glossary index checked; Missing Glossary Cards section included in Phase 1 output; missing terms queued as Pattern 1 cards for Phase 2
 - [ ] Pattern 1 cards include `concept::glossary` tag; new terms appended to glossary-index.md after saving
 - [ ] Image Bank checked in Phase 1; known concepts have images embedded; new concepts prompted individually in Phase 2
