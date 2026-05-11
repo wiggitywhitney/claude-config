@@ -59,4 +59,6 @@ Short labels (≤ ~18 characters) use `display: table-cell; white-space: nowrap`
 
 When `htmlLabels: false` is set via `%%{init}%%`, Mermaid uses SVG `<text>` elements instead of HTML `<foreignObject>`. Any `\n` in a node label causes the entire label text to be silently dropped — the box renders with correct fill/stroke but empty. No error.
 
+Note: Quarto's `mermaid-format: svg` sets `htmlLabels: false` internally — this is the same condition. See `rules/quarto-revealjs-capabilities.md` for the Quarto-specific guidance (use markdown string syntax with backtick instead of `\n`).
+
 **Fix:** Use `—` or another separator instead of `\n`: `GW["Kyverno — no seriously"]`. With default `htmlLabels: true`, `\n` works as a line break via HTML in the foreignObject.

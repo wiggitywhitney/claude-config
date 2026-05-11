@@ -12,7 +12,7 @@ gh pr create --repo wiggitywhitney/REPO --base main --head BRANCH --title "..." 
 
 This applies to every forked repo in the workspace, not just release-it. Any repo cloned from a fork will have this behavior. Symptoms: the PR URL shows the upstream org/owner instead of `wiggitywhitney`, and the PR may be inappropriate for the upstream project.
 
-**Affected repos (known forks):** `release-it` (fork of `release-it/release-it`). Add others here as discovered.
+**Affected repos (known forks, illustrative — not exhaustive):** `release-it` (fork of `release-it/release-it`). Add others here as discovered; use the detection check above rather than relying on this list.
 
 ## Checking whether a repo is a fork before creating a PR
 
