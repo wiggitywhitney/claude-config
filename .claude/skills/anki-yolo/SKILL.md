@@ -25,7 +25,7 @@ Make cards and save them immediately. No two-phase workflow, no approval gate.
 3. Outline the narrative arc (why it exists, what it is, how it connects, what was surprising)
 4. **Glossary Index Check** — read `~/Documents/Journal/anki/glossary-index.md` and scan the conversation for newly introduced technologies, APIs, frameworks, and coined project terms. Identify any with no index entry — these will be generated as Pattern 1 cards in the next step.
 5. Generate cards following all rules below. Include Pattern 1 cards for any terms identified in the Glossary Index Check (no deferral — make them in this session). For any concept with a mapping in `~/Documents/Journal/anki/images/concept-map.md`, embed the mapped image at the top of the card front using `![[filename.png]]`.
-6. Score every card using the Card Quality Scoring rubric below. For any card scoring below 9/15, rewrite it once targeting the weakest dimensions and re-score. If still below 9, accept it with a threshold note.
+6. Score every card using the Card Quality Scoring rubric below. For any card scoring below 12/15, rewrite it once targeting the weakest dimensions and re-score. If still below 12, accept it with a threshold note.
 7. Save directly to: `ANKI_FINISHED_DIR/CARDS MADE - [topic].md`
 8. Run `python3 ~/Documents/Journal/anki/tag-cards.py --apply` to ensure all saved cards have hierarchical tags
 9. **Image Bank** — complete image assignments and update the concept map. During card generation (step 5), known concepts already had their images embedded using the concept map. This step handles new concepts:
@@ -200,10 +200,10 @@ Score every card on 3 dimensions before saving. Include the score table in the f
 
 **Total score = sum of 3 dimensions (max 15)**
 
-- **9–15**: Card passes. Save as-is.
-- **Below 9**: Rewrite the card once, targeting the weakest dimension(s). Re-score after rewriting.
-  - If the rewritten card reaches 9+, use the rewritten version and note the improvement.
-  - If still below 9, accept the card and add a parenthetical note explaining why it couldn't reach the threshold.
+- **12–15**: Card passes. Save as-is.
+- **Below 12**: Rewrite the card once, targeting the weakest dimension(s). Re-score after rewriting.
+  - If the rewritten card reaches 12+, use the rewritten version and note the improvement.
+  - If still below 12, accept the card and add a parenthetical note explaining why it couldn't reach the threshold.
 
 ### Score Table Format (in final summary)
 
@@ -605,7 +605,7 @@ Before saving cards:
 - [ ] Arguments framed as arguments, not facts
 - [ ] Code blocks have language identifiers (typescript, yaml, bash, etc.)
 - [ ] Every card has at least one hierarchical tag (`project::`, `tech::`, `concept::`, or `source::`)
-- [ ] Every card scored; cards that were rewritten show original→revised score; cards that couldn't reach 9 have a threshold note
+- [ ] Every card scored; cards that were rewritten show original→revised score; cards that couldn't reach 12 have a threshold note
 - [ ] Glossary index checked; missing terms generated as Pattern 1 cards in this session (no deferral)
 - [ ] Pattern 1 cards include `concept::glossary` tag; new terms appended to glossary-index.md after saving
 - [ ] Summary includes New Glossary Cards note for any Pattern 1 cards made for previously unindexed terms

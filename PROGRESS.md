@@ -6,6 +6,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-05-11) Committed accumulated agent-made changes: added 8 new technology gotcha rule files (TypeScript tsc CLI, LinkedIn REST API, IS scoring, mmdc/mermaid-cli, social video upload, gh fork, eval GitHub PAT, writing voice); expanded Kyverno gotchas with 5 new sections covering Crossplane/GKE instability patterns; expanded Weaver gotchas with 7 sections covering 0.21.2 and 0.22.1 breaking changes; expanded Micro.blog gotchas with 3 sections; added Quarto progressive reveal white-out technique; raised Anki card quality threshold to 12/15; updated global CLAUDE.md with journal preservation rules, Colima/Docker section, acceptance gate failure triage, and writing-voice.md reference; tightened /code-review skip criteria and added foreground-only constraint; added April 2026 journal entries and summaries
+
 - (2026-04-25) Added a post-merge advisory that prompts branch deletion locally and from the remote, and confirmation that any linked GitHub issue is closed — addressing a recurring pattern where merged PRs left follow-up cleanup incomplete; also added several missing technology gotcha references to the global development guide
 
 - (2026-04-24) Made the date command in the `/continue` skill platform-portable — replaced the macOS-only `date -v-1d` with `python3` as the primary fallback (works everywhere), with platform-specific alternatives listed for environments without python3
