@@ -17,7 +17,7 @@ When drafting any written communication (Slack, email, social posts, blog conten
 
 **NEVER** delete, discard, or lose journal files (any file under `journal/` directories). This applies in all situations including branch cleanup.
 
-- Before deleting any branch: run `git log --oneline HEAD..<branch>` to check for journal commits not yet in main. If any exist, cherry-pick them to main and push before deleting the branch.
+- Before deleting any branch: run `git log --oneline main..<branch>` to check for journal commits not yet in main. If any exist, cherry-pick them to main and push before deleting the branch. (Journal entries are `.md`-only files, which are exempt from the feature-branch requirement under the docs-only branch-protection rule.)
 - Never use `git branch -D` (force delete) on a branch that has journal commits not yet in main.
 - When a checkout conflict involves a journal file: commit the journal entry to the destination branch — never discard it with `git restore` or `git checkout --`.
 
