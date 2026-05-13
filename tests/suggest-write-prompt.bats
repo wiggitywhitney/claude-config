@@ -103,6 +103,22 @@ write_input() {
     [[ "$output" == *"additionalContext"* ]]
 }
 
+# ── Relative path triggers ────────────────────────────────────────────────────
+
+@test "fires for Write on relative prds/ path (no leading slash)" {
+    write_input '{"tool_name":"Write","tool_input":{"file_path":"prds/93-my-feature.md"}}'
+    run bash -c "\"$SCRIPT\" < \"$TMPDIR/input.json\""
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"additionalContext"* ]]
+}
+
+@test "fires for Edit on relative rules/ path (no leading slash)" {
+    write_input '{"tool_name":"Edit","tool_input":{"file_path":"rules/testing-rules.md"}}'
+    run bash -c "\"$SCRIPT\" < \"$TMPDIR/input.json\""
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"additionalContext"* ]]
+}
+
 # ── Output format ─────────────────────────────────────────────────────────────
 
 @test "output is valid JSON with correct hookSpecificOutput schema" {
