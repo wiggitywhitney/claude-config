@@ -34,7 +34,7 @@ if [[ "$TOOL_NAME" == "Write" ]]; then
   FILE_PATH=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('file_path',''))" 2>/dev/null || echo "")
   [ -z "$FILE_PATH" ] && exit 0
 
-  if [[ "$FILE_PATH" == */prds/* ]]; then
+  if [[ "$FILE_PATH" == */prds/* || "$FILE_PATH" == prds/* ]]; then
     emit_advisory
   fi
   exit 0

@@ -75,6 +75,13 @@ assert 'additionalContext' in d['hookSpecificOutput']
     [[ "$output" == *"additionalContext"* ]]
 }
 
+@test "fires after Write on relative prds/ path (no leading slash)" {
+    write_input '{"tool_name":"Write","tool_input":{"file_path":"prds/94-my-feature.md"}}'
+    run bash -c "\"$SCRIPT\" < \"$TMPDIR/input.json\""
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"additionalContext"* ]]
+}
+
 # ── Negative: Edit on prds/ must NOT fire ────────────────────────────────────
 
 @test "silent for Edit on a prds/ file" {
