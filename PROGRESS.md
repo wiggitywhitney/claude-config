@@ -6,6 +6,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-05-13) Added `suggest-planning-handoff` hook — fires after `gh issue create` succeeds or a new PRD file is written; prompts the AI to check whether decisions, open questions, and cold-AI-actionability are captured before the planning session ends; solves the recurring problem of important planning conversation context not making it into the issue or PRD, requiring the conversation to happen again; 18-test bats suite
+
 - (2026-05-11) Committed accumulated agent-made changes: added 8 new technology gotcha rule files (TypeScript tsc CLI, LinkedIn REST API, IS scoring, mmdc/mermaid-cli, social video upload, gh fork, eval GitHub PAT, writing voice); expanded Kyverno gotchas with 5 new sections covering Crossplane/GKE instability patterns; expanded Weaver gotchas with 7 sections covering 0.21.2 and 0.22.1 breaking changes; expanded Micro.blog gotchas with 3 sections; added Quarto progressive reveal white-out technique; raised Anki card quality threshold to 12/15; updated global CLAUDE.md with journal preservation rules, Colima/Docker section, acceptance gate failure triage, and writing-voice.md reference; tightened /code-review skip criteria and added foreground-only constraint; added April 2026 journal entries and summaries
 
 - (2026-04-25) Added a post-merge advisory that prompts branch deletion locally and from the remote, and confirmation that any linked GitHub issue is closed — addressing a recurring pattern where merged PRs left follow-up cleanup incomplete; also added several missing technology gotcha references to the global development guide
