@@ -1,6 +1,7 @@
 # PRD #52: Add /write-prompt Review Step to prd-create Skills
 
-**Status**: Active
+**Status**: Complete
+**Completed**: 2026-05-14
 **Priority**: Medium
 **Created**: 2026-04-05
 **GitHub Issue**: [#52](https://github.com/wiggitywhitney/claude-config/issues/52)
@@ -30,12 +31,21 @@ Add a mandatory `/write-prompt` review step to both `prd-create` skill files (CL
 ### Decision 3 — `/skill-creator eval` excluded from suggest-write-prompt hook (2026-04-05)
 **Decision:** The `suggest-write-prompt.sh` hook only recommends `/write-prompt`. It does NOT recommend `/skill-creator eval`.
 **Rationale:** The hook fires on every Write|Edit to a SKILL.md or CLAUDE.md — including typo fixes, wording tweaks, and code block label additions. Recommending eval on every edit would (1) create noise that trains the implementing agent to ignore the recommendation, (2) incur real cost for trivial changes, and (3) dilute the value of the `/write-prompt` reminder. Eval is appropriate for significant behavioral changes, attached to milestone completion events — not every file save.
-**Impact:** M3 implemented without eval recommendation. Future work: add `/skill-creator eval` advisory to `/prd-done` and/or `/prd-update-progress` skills, triggered after milestone completion rather than individual file edits. This is a separate PRD or enhancement, not in scope for PRD #52.
+**Impact:** M3 implemented without eval recommendation. ~~Future work: add `/skill-creator eval` advisory to `/prd-done` and/or `/prd-update-progress` skills.~~ Superseded by Decision 7 — `/skill-creator eval` is never recommended.
 
-### Decision 5 — /skill-creator eval advisory in /prd-done when SKILL.md files were modified (2026-04-05)
-**Decision:** After merging a PRD branch, if any `SKILL.md` or `SKILL.v1-yolo.md` files were modified (new skills or significant updates to existing ones), `/prd-done` should surface an advisory recommending `/skill-creator eval` on the changed skills.
-**Rationale:** Eval is appropriate for significant skill changes — behavioral regressions and quality regressions are the primary risk. But eval belongs at milestone/PRD completion granularity (once per meaningful unit of work), not at individual file-edit granularity (where it would fire too often and be ignored). `/prd-done` is the natural completion checkpoint. Detection: scan the merged branch diff for `SKILL.md` matches.
-**Impact:** Adds Milestone 4. Both `/prd-done` SKILL.md and SKILL.v1-yolo.md need the advisory step. No changes to M1–M3.
+### Decision 5 — /skill-creator eval advisory in /prd-done when SKILL.md files were modified (2026-04-05) ⚠️ Superseded by Decision 7
+**Decision:** ~~After merging a PRD branch, `/prd-done` should surface an advisory recommending `/skill-creator eval` on changed skills.~~
+**Superseded:** Decision 7 (2026-05-14) reverses this — `/skill-creator eval` is never recommended. Milestone 4 was dropped as a result.
+
+### Decision 7 — Never recommend /skill-creator eval (2026-05-14)
+**Decision:** Do not recommend `/skill-creator eval` to Whitney, ever. Drop Milestone 4 entirely — the advisory should not be added to `/prd-done`.
+**Rationale:** The eval process is too heavyweight — it spawns 6+ parallel agents, consumes hundreds of thousands of tokens, and takes several minutes. Whitney does not want to use it or be reminded it exists.
+**Impact:** Milestone 4 is dropped. `/prd-done` will not receive a skill-creator eval advisory step.
+
+### Decision 6 — Skill-creator eval advisory should guide the decision, not make it (2026-05-14) ⚠️ Superseded by Decision 7
+**Decision:** The advisory in `/prd-done` for SKILL.md changes should help the user decide whether eval is worth running, rather than recommending it unconditionally. Running `/skill-creator eval` is a heavyweight process — it spawns 6+ parallel agents, uses ~300K+ tokens, and takes several minutes of wall time. For minor skill changes (wording tweaks, examples, clarifications), the cost outweighs the benefit. The advisory should surface the changed skill names and provide criteria for when eval is warranted: new skills and significant behavioral changes, yes; minor updates, no.
+**Rationale:** Observed during PRD #52 implementation: running eval on `/write-prompt` consumed ~310K tokens and 1–2 minutes per agent run. Recommending this after every SKILL.md modification — including trivial changes — would create a reflexive pattern that is either ignored (noise) or expensive (real cost for no real benefit). Decision 3 already captures this reasoning for the per-file-edit hook; this extends the same logic to the PRD-completion checkpoint.
+**Impact:** Milestone 4 advisory text changes from a blanket "Consider running..." to guidance that distinguishes cases where eval is worth it from cases where it is not. Detection logic (scan diff for SKILL.md matches) is unchanged.
 
 ### Decision 4 — Research-explicit milestone characteristic added to both skill files (2026-04-05)
 **Decision:** Both `SKILL.md` and `SKILL.v1-yolo.md` received an additional milestone characteristic: "Research-explicit: when a milestone requires researching a technology or API before implementing, direct the implementing AI to run `/research <topic>` explicitly — do not leave it as 'investigate X' or 'look into Y'."
@@ -114,22 +124,26 @@ Apply the identical changes as Milestone 1:
 - Registered correctly in `~/.claude/settings.json`
 - Run `/write-prompt` on the hook script after implementation
 
-### Milestone 4: Add /skill-creator eval advisory to /prd-done when SKILL.md files were modified ⬜
+### Milestone 4: Add /skill-creator eval advisory to /prd-done when SKILL.md files were modified 🚫 Dropped (Decision 7)
 
 **Location:** `.claude/skills/prd-done/SKILL.md` and `.claude/skills/prd-done/SKILL.v1-yolo.md`
 
-**Change — Add eval advisory step after merge:**
+**Change — Add eval advisory step after merge (Updated per Decision 6: advisory must guide the decision, not make it unconditionally):**
 
 In the merge/completion section of both `/prd-done` skill files, after the branch is merged, add a step that:
 1. Scans the merged branch diff for any files matching `*/SKILL.md` or `*/SKILL.v1-yolo.md`
-2. If any were modified: surface an advisory — "This PRD modified SKILL.md files: [list changed skills]. Consider running `/skill-creator eval` on the changed skills to validate behavioral correctness."
+2. If any were modified: surface an advisory listing the specific changed files and helping the user decide whether eval is warranted — see advisory text below
 3. If none were modified: skip silently
 
-**Detection approach:** Use `git diff main...[branch-name] --name-only` (or equivalent) to get the list of changed files, then filter for SKILL.md matches.
+**Advisory text (per Decision 6 — cost-aware guidance, not unconditional recommendation):**
+> This PRD modified SKILL.md files: [list the specific paths]. Consider running `/skill-creator eval` on the changed skills if: (1) a new skill was created, or (2) the skill's behavior was significantly changed. Skip eval for minor updates such as wording tweaks, adding examples, or clarifying existing steps — the eval process spawns multiple parallel agents and uses substantial tokens.
+
+**Detection approach:** Use `gh pr diff [PR-number] --name-only | grep -E '(SKILL\.md|SKILL\.v1-yolo\.md)$'` to get the list of changed files from the merged PR.
 
 **Success Criteria:**
 - Both `/prd-done` SKILL.md and SKILL.v1-yolo.md contain the eval advisory step
 - Advisory lists the specific skill files that were changed (not a generic message)
+- Advisory includes decision criteria (new skill / behavioral change = run eval; minor updates = skip)
 - Advisory fires only when SKILL.md files were in the diff; silent otherwise
 - Run `/write-prompt` on both modified skill files after changes are complete
 

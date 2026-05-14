@@ -1,5 +1,13 @@
 # mmdc (Mermaid CLI) Gotchas
 
+## Quarto revealjs: `%%{init}%%` in `{mermaid}` blocks causes slide nesting when many blocks are present
+
+When a Quarto revealjs deck has many `{mermaid}` code blocks (observed at ~15+), adding `%%{init: {'flowchart': {...}}}%%` inside a later block causes Quarto/Pandoc to leave `<div>` wrappers unclosed around the rendered SVG. This causes subsequent `##` slide headers to be treated as nested sections (Reveal.js vertical slides) rather than top-level horizontal slides. Symptoms: navigation loops back to the beginning after a certain slide, and all slides from that point onward become sub-slides accessible only via the down-arrow.
+
+**Fix:** Do not use `%%{init}%%` in `{mermaid}` blocks inside Quarto revealjs when many Mermaid blocks are present. Use Mermaid defaults instead. The `wrappingWidth`, `rankSpacing`, and `nodeSpacing` settings that `%%{init}%%` provides are not worth the nesting breakage.
+
+**Diagnosis:** If slides disappear and navigation loops, check rendered HTML for maximum `<section>` nesting depth (not just total count). Example: `awk 'BEGIN{d=0;m=0} /<section/{d++; if(d>m)m=d} /<\/section>/{d--} END{print m}' index.html` — if max depth is unexpectedly > 1, this issue is present.
+
 ## Puppeteer is NOT included — install both together
 
 `npm install -g @mermaid-js/mermaid-cli` alone will silently fail on render. Always install together:

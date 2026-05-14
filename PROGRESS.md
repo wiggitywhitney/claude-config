@@ -6,6 +6,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-05-14) Added a mandatory `/write-prompt` quality review step to the `/prd-create` skill (both the standard and autonomous variants) — PRD milestones are instructions that future AI implementors execute directly, so they now get reviewed for prompt anti-patterns (vague directives, missing specifics, missing operationalization plans) before the PRD is committed; also added a PostToolUse advisory hook that fires whenever SKILL.md, CLAUDE.md, PRD, or rules files are edited, reminding the author to run `/write-prompt` since any AI-consumed document is a prompt
+
 - (2026-05-13) Added `suggest-planning-handoff` hook — fires after `gh issue create` succeeds or a new PRD file is written; prompts the AI to check whether decisions, open questions, and cold-AI-actionability are captured before the planning session ends; solves the recurring problem of important planning conversation context not making it into the issue or PRD, requiring the conversation to happen again; 19-test bats suite
 
 - (2026-05-13) Extended the `suggest-write-prompt` hook to fire for PRD files, rules files, and non-standard prompt filenames (`*-prompt.md`, `*-spec.md`) — previously it only reminded about `/write-prompt` for `SKILL.md` and `CLAUDE.md`, missing the many other file types that AI agents read and act on; added a 24-test bats suite covering all trigger and non-trigger cases

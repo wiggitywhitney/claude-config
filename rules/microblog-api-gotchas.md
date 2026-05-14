@@ -68,3 +68,40 @@ Changing a scheduled post's publication date can cause it to appear at ALL previ
 ## Cross-posting has no per-post API control
 
 9 platforms supported (LinkedIn image cross-posting is reportedly planned but not yet implemented). There is no API to selectively cross-post a single post — it's all or nothing per feed.
+
+## Micropub `?q=source` response does not return a `photo` property
+
+When querying a post's source via `GET /micropub?q=source&url=<postUrl>`, micro.blog does NOT include a separate `photo` key in `properties` — even for posts that have photos attached. Photos are embedded as `<img src="...">` tags inside `properties.content[0]`.
+
+To check whether a post already has a photo:
+
+```javascript
+const data = await res.json();
+const content = data.properties?.content?.[0] ?? '';
+return content.includes('<img');
+```
+
+Do NOT check `data.properties?.photo` — it will always be `undefined`, even on posts with photos.
+
+## Micropub `delete: ["photo"]` returns 500 — use content-replace instead
+
+Sending `{ action: "update", url, delete: ["photo"] }` to remove a photo from an existing post returns a 500 error from micro.blog. Because photos are stored as `<img>` tags in `properties.content[0]` (not as a separate property), there is nothing to delete at the property level.
+
+To remove a photo from an existing post, fetch the content and replace it with the `<img>` tags stripped:
+
+```javascript
+// GET current content
+const sourceRes = await fetch(`https://micro.blog/micropub?q=source&url=${encodeURIComponent(postUrl)}`, {
+  headers: { Authorization: `Bearer ${token}` },
+});
+const data = await sourceRes.json();
+const content = data.properties?.content?.[0] ?? '';
+const stripped = content.replace(/<img[^>]*>/g, '').trimEnd();
+
+// Replace content with photos removed
+await fetch('https://micro.blog/micropub', {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ action: 'update', url: postUrl, replace: { content: [stripped] } }),
+});
+```
