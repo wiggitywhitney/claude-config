@@ -6,7 +6,7 @@ When a Quarto revealjs deck has many `{mermaid}` code blocks (observed at ~15+),
 
 **Fix:** Do not use `%%{init}%%` in `{mermaid}` blocks inside Quarto revealjs when many Mermaid blocks are present. Use Mermaid defaults instead. The `wrappingWidth`, `rankSpacing`, and `nodeSpacing` settings that `%%{init}%%` provides are not worth the nesting breakage.
 
-**Diagnosis:** If slides disappear and navigation loops, check rendered HTML section nesting depth with `grep -c '<section' index.html` and compare to expected slide count. A nesting depth > 1 confirms this issue.
+**Diagnosis:** If slides disappear and navigation loops, check rendered HTML for maximum `<section>` nesting depth (not just total count). Example: `awk 'BEGIN{d=0;m=0} /<section/{d++; if(d>m)m=d} /<\/section>/{d--} END{print m}' index.html` — if max depth is unexpectedly > 1, this issue is present.
 
 ## Puppeteer is NOT included — install both together
 
