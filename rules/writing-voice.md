@@ -78,8 +78,8 @@ Reads as generic AI output. Replace with direct statements.
 **Never use "actually" as emphasis or hedge** ("what it actually looks like", "what actually changed").
 Filler word that weakens the sentence. Cut it entirely.
 
-**Use `\(^-^)/` when greeting a new contact — internal Datadog or external warm intro.**
-Skip it for cold external email or formal context.
+**Use `(^-^)/` when greeting a new contact — internal Datadog or external warm intro.**
+One hand, a wave hello. No backslash before the opening parenthesis. Skip it for cold external email or formal context.
 
 **"Soon please" signals urgency without a hard deadline in sensitive contexts.** More human than "by Friday" when the recipient is dealing with something difficult. Pair with a clear out: "Just let me know soon please and we'll find another path."
 
@@ -153,7 +153,7 @@ Always specify "US Central" (or whichever applies) when putting time on someone'
 **What she actually sent:**
 > Thank you for the introduction, David!
 >
-> \(^-^)/ Tanya, it is so nice to meet you. David tells me that you are a new Datadog Ambassador - welcome!
+> (^-^)/ Tanya, it is so nice to meet you. David tells me that you are a new Datadog Ambassador - welcome!
 >
 > Ajuna (cc'd here) and I are putting together the Women in Tech Lunch Panel at DASH 2026. Would you like to participate as a panelist? I'm interested to hear about how AI has reshaped your job as a cloud engineer. The panel is called "Engineering with AI in the Stack" and takes place during lunch on Wednesday June 10.
 >
