@@ -6,7 +6,9 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
-- (2026-05-13) Added `suggest-planning-handoff` hook — fires after `gh issue create` succeeds or a new PRD file is written; prompts the AI to check whether decisions, open questions, and cold-AI-actionability are captured before the planning session ends; solves the recurring problem of important planning conversation context not making it into the issue or PRD, requiring the conversation to happen again; 18-test bats suite
+- (2026-05-13) Added `suggest-planning-handoff` hook — fires after `gh issue create` succeeds or a new PRD file is written; prompts the AI to check whether decisions, open questions, and cold-AI-actionability are captured before the planning session ends; solves the recurring problem of important planning conversation context not making it into the issue or PRD, requiring the conversation to happen again; 19-test bats suite
+
+- (2026-05-13) Extended the `suggest-write-prompt` hook to fire for PRD files, rules files, and non-standard prompt filenames (`*-prompt.md`, `*-spec.md`) — previously it only reminded about `/write-prompt` for `SKILL.md` and `CLAUDE.md`, missing the many other file types that AI agents read and act on; added a 24-test bats suite covering all trigger and non-trigger cases
 
 - (2026-05-11) Committed accumulated agent-made changes: added 8 new technology gotcha rule files (TypeScript tsc CLI, LinkedIn REST API, IS scoring, mmdc/mermaid-cli, social video upload, gh fork, eval GitHub PAT, writing voice); expanded Kyverno gotchas with 5 new sections covering Crossplane/GKE instability patterns; expanded Weaver gotchas with 7 sections covering 0.21.2 and 0.22.1 breaking changes; expanded Micro.blog gotchas with 3 sections; added Quarto progressive reveal white-out technique; raised Anki card quality threshold to 12/15; updated global CLAUDE.md with journal preservation rules, Colima/Docker section, acceptance gate failure triage, and writing-voice.md reference; tightened /code-review skip criteria and added foreground-only constraint; added April 2026 journal entries and summaries
 
