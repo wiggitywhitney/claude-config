@@ -155,6 +155,10 @@
           {
             "type": "command",
             "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/cascade-decision-check.sh"
+          },
+          {
+            "type": "command",
+            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/suggest-planning-handoff.sh"
           }
         ]
       },
@@ -168,6 +172,10 @@
           {
             "type": "command",
             "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/suggest-branch-cleanup.sh"
+          },
+          {
+            "type": "command",
+            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/suggest-planning-handoff.sh"
           }
         ]
       }

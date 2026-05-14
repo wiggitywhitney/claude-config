@@ -37,7 +37,8 @@ Install with `bash scripts/install-git-hooks.sh [repo-path]`. The installer is i
 ## PostToolUse hooks (fire after tool execution)
 
 - **post-write-codeblock-check.sh** (PostToolUse: Write|Edit) — checks markdown files for bare code blocks missing language specifiers
-- **suggest-write-prompt.sh** (PostToolUse: Write|Edit, Bash) — advisory reminder to run `/write-prompt` when SKILL.md or CLAUDE.md files are edited, or when `gh issue create` succeeds; explains that any AI-consumed document is a prompt
+- **suggest-write-prompt.sh** (PostToolUse: Write|Edit, Bash) — advisory reminder to run `/write-prompt` when SKILL.md, CLAUDE.md, PRD files (`prds/`), rules files (`rules/`), or files named `*-prompt.md`/`*-spec.md` are edited, or when `gh issue create` succeeds; explains that any AI-consumed document is a prompt
+- **suggest-planning-handoff.sh** (PostToolUse: Write, Bash) — advisory prompt after `gh issue create` succeeds or a new PRD file is written (Write tool only, not Edit); asks three questions: were decisions captured, were open questions captured, could a cold AI act on this document alone; addresses context loss when planning conversations produce issues/PRDs that miss key discussion context
 - **suggest-branch-cleanup.sh** (PostToolUse: Bash) — advisory reminder to delete the feature branch locally and from the remote, and confirm the linked GitHub issue is closed, after `gh pr merge` commands
 - **cascade-decision-check.sh** (PostToolUse: Write|Edit) — advisory reminder to cascade-evaluate downstream milestones when a PRD file in `prds/` is edited; prompts Claude to check for new Decision Log rows and update affected milestones in the current and other open PRDs
 
