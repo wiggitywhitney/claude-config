@@ -15,7 +15,10 @@ if [[ "$TOOL_NAME" == "Write" || "$TOOL_NAME" == "Edit" ]]; then
   [ -z "$FILE_PATH" ] && exit 0
 
   BASENAME=$(basename "$FILE_PATH")
-  if [[ "$BASENAME" == "SKILL.md" || "$BASENAME" == "SKILL.v1-yolo.md" || "$BASENAME" == "CLAUDE.md" ]]; then
+  if [[ "$BASENAME" == "SKILL.md" || "$BASENAME" == "SKILL.v1-yolo.md" || "$BASENAME" == "CLAUDE.md" || \
+        "$FILE_PATH" == */prds/* || "$FILE_PATH" == prds/* || \
+        "$FILE_PATH" == */rules/* || "$FILE_PATH" == rules/* || \
+        "$BASENAME" == *-prompt.md || "$BASENAME" == *-spec.md ]]; then
     SUGGEST_FILE_PATH="$FILE_PATH" python3 -c "
 import json, os
 path = os.environ['SUGGEST_FILE_PATH']
