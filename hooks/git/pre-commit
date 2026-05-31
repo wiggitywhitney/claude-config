@@ -28,8 +28,9 @@ run_check() {
 
 exit_code=0
 
-run_check "$CHECKS_DIR/branch-protection.sh" || exit_code=$?
-run_check "$CHECKS_DIR/progress-md.sh"       || exit_code=$?
-run_check "$CHECKS_DIR/pre-commit-verify.sh" || exit_code=$?
+run_check "$CHECKS_DIR/branch-protection.sh"        || exit_code=$?
+run_check "$CHECKS_DIR/progress-md.sh"             || exit_code=$?
+run_check "$CHECKS_DIR/pre-commit-verify.sh"       || exit_code=$?
+run_check "$CHECKS_DIR/check-prompt-generality.sh" || exit_code=$?
 
 exit "$exit_code"
