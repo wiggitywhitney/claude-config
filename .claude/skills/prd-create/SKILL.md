@@ -58,7 +58,8 @@ Work through the PRD template focusing on project management, milestone tracking
 - **Testable**: Clear success criteria that can be validated
 - **User-focused**: Relates to user value or feature capability
 - **Manageable**: Can be completed in reasonable timeframe
-- **Research-explicit**: When a milestone requires researching a technology or API before implementing, direct the implementing AI to run `/research <topic>` explicitly — do not leave it as "investigate X" or "look into Y"
+- **Research-explicit**: When a milestone requires researching a technology, API, or community standard, direct the implementing AI to run `/research <specific question>` explicitly — do not leave it as "investigate X" or "look into Y". The `/research` skill produces source links and confidence scores; instruct the implementer to include all output without summarizing.
+- **Research output propagation**: When a milestone is a research spike that produces a Decision Log entry or written finding, every downstream milestone that depends on it must begin with "Step 0: Read [prior milestone's output]. This entry must exist before this milestone begins — [prior milestone name] gates this milestone." Do not assume the implementer will know to check prior milestone output.
 
 ## GitHub Issue Template (Keep Short & Stable)
 
