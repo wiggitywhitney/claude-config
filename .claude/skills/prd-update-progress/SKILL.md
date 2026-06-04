@@ -323,7 +323,7 @@ After committing, run a local CodeRabbit CLI review to catch issues before they 
 # Run CodeRabbit CLI review against the full feature branch diff
 # NOTE: Start with `coderabbit` so it matches Bash(coderabbit *) allowlist.
 # Do NOT use BASE_BRANCH=$(...) — subshell parens break Bash(...) permission patterns.
-coderabbit review --plain --type committed --base origin/main --no-color
+coderabbit review --plain --type committed --base origin/main
 ```
 
 If `coderabbit` is not installed, skip this step with a note: "CodeRabbit CLI not installed — skipping local review."
