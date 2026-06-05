@@ -10,6 +10,9 @@ Core rules are in `~/.claude/CLAUDE.md` under "Writing Style." This file extends
 
 ## Rules (with reasons)
 
+**Quoted text must be verbatim — word for word, nothing rearranged.**
+Quotation marks mean those are someone's actual words. Never rearrange word order, combine two sentences into one, or paraphrase inside quotes. If a verbatim sentence is too long or awkward for the context, offer it without quotes — or offer multiple verbatim options for Whitney to choose from. Obvious transcription errors in auto-captions (e.g., "K native" → "Knative") may still be corrected since those are caption artifacts, not the speaker's words.
+
 **Go-live posts are short and punchy — no guest credentials, no time details.**
 The "going live NOW" moment is about urgency and immediacy. Drop the bio. Use "NOW!" not a time. Put the guest first: "Join Lin Sun and me" not "Join me and Lin Sun."
 
@@ -127,6 +130,42 @@ When a reply confirms a scheduled meeting or completed task, state that first �
 
 **Include timezone when scheduling across potential time zones.**
 Always specify "US Central" (or whichever applies) when putting time on someone's calendar by email.
+
+**Slack DMs to daily working colleagues: open warmly, no sign-off.**
+For close colleagues like Ajuna, the opener can be more effusive than email — "Good morning! Happy Monday!" is right; don't default to just "Hi [Name]!" (that rule applies to email). Energy matches the moment. No closing signature on Slack DMs — the message just ends; no "Warmly, Whitney."
+
+**In follow-up messages within an existing Slack thread, skip the opener entirely.**
+Just start with a transition — "Also fyi", "One more thing", etc. No "Hi [Name]!" when continuing an existing conversation.
+
+**When asking for guidance with two clear options, state both explicitly.**
+Don't ask an open-ended "what should I do?" — give the two options you're choosing between so the recipient can just pick one. "Do I ask them to submit the right forms? Or do I just ask for a link and put it in EPCAT myself?" is better than "What's the process here?"
+
+**Use "I think I want to" when genuinely uncertain, not "I'm planning to."**
+Match the actual level of certainty. "I think I want to do it" is honest; "I'm planning to do it" claims a decision that hasn't been made.
+
+**Personal reasons for professional decisions go in Slack to your manager — stated warmly, not stripped out.**
+"I can't resist a trip to see my son" is the real reason and belongs in the message. Don't sanitize personal warmth into corporate rationale ("fits the advocacy scope"). Ajuna is a close colleague; the human reason is appropriate and builds trust.
+
+**"Do you see any problem with this?" is more natural than "Is there any reason I shouldn't?"**
+Use simpler, more conversational phrasing in Slack. The formal construction reads stiff.
+
+**Never abbreviate show names in social posts.** Always write the full name: "Software Defined Interviews" not "SDI", "Datadog Illuminated" not "DI", etc. Readers who don't already know the show have no idea what the abbreviation means.
+
+**Every platform gets a CTA, including Mastodon and Bluesky.** Short-form posts need a call to action too. After the post body, add a short warm CTA (e.g., "Give it a listen!" or "Listen here:"), then a blank line, the URL on its own line, and hashtags on the next line.
+
+**Micro.blog does not support hashtags — omit them entirely.** Micro.blog ignores hashtags; they clutter the post and don't provide discovery value. Never include a hashtag block in Micro.blog posts.
+
+**Social posts about episodes: one direct insight sentence, not a "We cover" list.**
+Strip any "We cover..." or bullet-list-of-topics structure. After the episode context sentence, state the core takeaway as a single direct fact — no hedging, no qualifiers. "AI amplifies what's already there, good or bad." is right; five bullets explaining what the episode covers is not.
+
+**Every episode post gets a short warm CTA between the insight sentence and the URL.**
+The phrasing varies naturally by format — "Give it a listen!" for podcasts, "Give it a watch!" for video, or similar. Do not hardcode a single phrase. Do not skip the CTA for any episode type.
+
+**Bluesky and Mastodon: embed the @handle in the sentence as the subject, not as a parenthetical.**
+The handle is how the platform notifies the person — it belongs where their name would go, not appended in parentheses after it.
+- Do: "In this episode of SDI, @nathenharvey.bsky.social, who leads the DORA research program at Google, explains..."
+- Don't: "Nathen Harvey (@nathenharvey.bsky.social) on Software Defined Interviews..."
+LinkedIn doesn't have this convention — use their full name there.
 
 ---
 
