@@ -6,6 +6,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-06-05) Added rule to global CLAUDE.md requiring PROGRESS.md to be updated in the same commit as the work — never pushed first and fixed in a follow-up. The pre-push hook warning is now documented as a blocker, not advisory.
+
 - (2026-05-31) Added `check-prompt-generality.sh` pre-commit advisory check — fires when `src/agent/prompt.ts` is staged in any repo; prints three diagnostic questions asking whether guidance is project-general, root-cause-based, and using synthetic namespaces (`my_service`, `acme`) rather than real eval-target namespaces; always exits 0 (advisory only); registered in the pre-commit dispatcher; 9-test bats suite
 
 - (2026-05-14) Added a mandatory `/write-prompt` quality review step to the `/prd-create` skill (both the standard and autonomous variants) — PRD milestones are instructions that future AI implementors execute directly, so they now get reviewed for prompt anti-patterns (vague directives, missing specifics, missing operationalization plans) before the PRD is committed; also added a PostToolUse advisory hook that fires whenever SKILL.md, CLAUDE.md, PRD, or rules files are edited, reminding the author to run `/write-prompt` since any AI-consumed document is a prompt
