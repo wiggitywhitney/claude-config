@@ -118,6 +118,8 @@ Every GitHub issue body must end with a checklist item that updates the project'
 
 ## PROGRESS.md
 
+**Always update `PROGRESS.md` as part of any commit that changes skills, rules, docs, or code.** Do not push first and update it in a follow-up commit. The pre-push hook warns when PROGRESS.md is missing from a push — treat this as a blocker and update it before pushing.
+
 When a repo has a `PROGRESS.md` at its root, write entries in this style:
 
 - **Format**: `- (YYYY-MM-DD) [Prose description of what changed and why].` under the appropriate section heading (Added, Changed, Deprecated, Removed, Fixed, Security).
