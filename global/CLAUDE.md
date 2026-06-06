@@ -75,6 +75,7 @@ When you have multiple questions or decisions for the user, present them **one a
 - TypeScript tsc CLI (TS5112 hard error in 6.x, --ignoreConfig version-gate, stdout not stderr, new 6.x defaults): @~/.claude/rules/typescript-cli-gotchas.md
 - LinkedIn REST API (commentary silent truncation on unescaped reserved chars, content.media not the cause, refresh token partner approval): @~/.claude/rules/linkedin-api-gotchas.md
 - IS scoring / OTel Collector (binary preferred over Docker, Docker needs --user+--workdir+abs-path, port 4318 conflict with DD Agent, OTel SDK devDeps for target app): @~/.claude/rules/is-scoring-gotchas.md
+- Datadog MCP server (official plugin install, OAuth vs key-based auth, APM trace tools, vals exec incompatibility, env block bug): @~/.claude/rules/datadog-mcp-gotchas.md
 
 ## Testing
 
@@ -124,6 +125,7 @@ When a repo has a `PROGRESS.md` at its root, write entries in this style:
 
 - **Format**: `- (YYYY-MM-DD) [Prose description of what changed and why].` under the appropriate section heading (Added, Changed, Deprecated, Removed, Fixed, Security).
 - **Convention**: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Entries are for external readers of the repo, not internal workflow tracking.
+- **No duplicate sections**: Before adding an entry, check whether the target section heading (`### Added`, `### Fixed`, etc.) already exists under `## [Unreleased]`. Add to the existing section — never create a second one.
 - **Include**: what changed, why, and the reasoning behind the decision. User-facing identifiers (rule IDs, API names, paths like `docs/rules-reference.md`) are fine — but **briefly explain each on first use**, e.g., "CDQ-007 (PII attribute names, filesystem paths, nullable access)" rather than bare "CDQ-007".
 - **Omit**: GitHub issue numbers, PRD numbers, milestone IDs ("M1", "B3"), test counts, internal file paths, commit SHAs. The closing commit handles ticket linkage.
 
