@@ -7,17 +7,21 @@ Relevant when implementing video embedding for short posts in content-manager.
 
 ### Video goes to a separate service, not the PDS
 
-The video upload endpoint is `https://video.bsky.app/xrpc/app.bsky.video.uploadVideo` — NOT the user's PDS. The regular session JWT is rejected. Must acquire a short-lived (30 min) scoped token first:
+The video upload endpoint is `https://video.bsky.app/xrpc/app.bsky.video.uploadVideo` — NOT the user's PDS. The regular session JWT is rejected. Must acquire a short-lived (30 min) scoped token first.
+
+**The `aud` must be the user's PDS DID, NOT `did:web:video.bsky.app`.** The video service saves the processed video to your PDS on your behalf, so the PDS is the intended audience. Using `did:web:video.bsky.app` returns a 401 with the error: `"invalid token audience, should be the user's PDS DID"`.
 
 ```javascript
+// agent.pdsUrl is populated after agent.login() — use it to derive the PDS DID
+const pdsDid = `did:web:${new URL(agent.pdsUrl).hostname}`;
 const { data: serviceAuth } = await agent.com.atproto.server.getServiceAuth({
-  aud: 'did:web:video.bsky.app',   // hardcode — this is the video service's DID
+  aud: pdsDid,
   lxm: 'com.atproto.repo.uploadBlob',
   exp: Math.floor(Date.now() / 1000) + 60 * 30,
 });
 ```
 
-**Do NOT use `agent.dispatchUrl.host`** — `dispatchUrl` is `undefined` in `@atproto/api` ≥ 0.13.x. Hardcode `'did:web:video.bsky.app'` instead.
+**Do NOT use `agent.dispatchUrl.host`** — `dispatchUrl` is `undefined` in `@atproto/api` ≥ 0.13.x. Use `agent.pdsUrl` instead (available after `agent.login()`). The official docs use `dispatchUrl` but it was removed; `pdsUrl` is the current equivalent.
 
 ### `@atproto/api` has no `app.bsky.video` namespace — use `fetch()` directly
 

@@ -29,8 +29,9 @@ description: Git workflow rules including branching, CodeRabbit reviews, and com
   ```
   - `/pulls/{n}/reviews` — full review bodies including "outside diff range" findings (most content lives here)
   - `/pulls/{n}/comments` — inline comments attached to specific diff lines
-  - `/issues/{n}/comments` — conversation-level notices (e.g., "reviews paused")
+  - `/issues/{n}/comments` — conversation-level notices (e.g., "reviews paused") and rate-limit notices
   Present all findings to the user.
+- **CodeRabbit PR rate limit:** When the issues/comments channel shows a rate-limit notice, CodeRabbit does NOT auto-retry — it stops entirely. You must manually trigger a re-review by posting `@coderabbitai review` as a PR comment (`gh pr comment PR_NUMBER --body "@coderabbitai review"`), then start another 7-minute timer to poll for the result.
 - After pushing fixes for CodeRabbit feedback, start another 7-minute timer to check for the re-review before merging.
 - **CodeRabbit triage rubric** for non-critical findings:
   - **Fix** if the finding is real and the only reason not to fix it is effort — effort alone is not a reason to skip.

@@ -27,6 +27,20 @@ Do NOT apply this to text that intentionally uses `little` format syntax (`@[Nam
 
 **Source:** ["When a left or right parenthesis appears anywhere in the commentary, all text from that parenthesis onwards gets silently dropped from the post (no error returned)."](https://learn.microsoft.com/en-us/answers/questions/5741122/issues-when-mentioning-urns-with-special-character) — Microsoft Learn Q&A, confirmed by LinkedIn Support.
 
+## Image alt text goes in `content.media.altText` on the post — NOT during upload
+
+Alt text for images is set in the `POST /rest/posts` body, not during the `initializeUpload` or binary upload steps. Add it as `content.media.altText`. Omit the field entirely (or set `undefined`) when no alt text is available — do not send an empty string.
+
+```json
+"content": { "media": { "altText": "Description here", "id": "urn:li:image:..." } }
+```
+
+- Maximum 4,086 characters; recommended under 120.
+- **GET responses do not return `altText`** — it is write-only in the API. LinkedIn renders it server-side and does not echo it back.
+- LinkedIn auto-generates alt text via AI when the field is omitted — so posts without alt text are not inaccessible, but the AI-generated text is generic.
+
+**Source:** [LinkedIn Posts API](https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api?view=li-lms-2026-05), [LinkedIn Image API](https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/images-api?view=li-lms-2026-05)
+
 ## `content.media` does NOT cause text truncation
 
 The single-image `content.media` format does not impose a lower character limit on `commentary` than text-only posts. The same `little` text field applies to all post types. Apparent truncation on image posts is the reserved-character escaping issue above.

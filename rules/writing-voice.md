@@ -151,15 +151,17 @@ Use simpler, more conversational phrasing in Slack. The formal construction read
 
 **Never abbreviate show names in social posts.** Always write the full name: "Software Defined Interviews" not "SDI", "Datadog Illuminated" not "DI", etc. Readers who don't already know the show have no idea what the abbreviation means.
 
-**Every platform gets a CTA, including Mastodon and Bluesky.** Short-form posts need a call to action too. After the post body, add a short warm CTA (e.g., "Give it a listen!" or "Listen here:"), then a blank line, the URL on its own line, and hashtags on the next line.
+**Every platform gets a CTA, including Mastodon and Bluesky.** Short-form posts need a call to action too. After the post body, add a CTA (format and spacing depend on episode type — see rule below), then the URL and hashtags. Do not skip the CTA for any platform.
 
 **Micro.blog does not support hashtags — omit them entirely.** Micro.blog ignores hashtags; they clutter the post and don't provide discovery value. Never include a hashtag block in Micro.blog posts.
 
 **Social posts about episodes: one direct insight sentence, not a "We cover" list.**
 Strip any "We cover..." or bullet-list-of-topics structure. After the episode context sentence, state the core takeaway as a single direct fact — no hedging, no qualifiers. "AI amplifies what's already there, good or bad." is right; five bullets explaining what the episode covers is not.
 
-**Every episode post gets a short warm CTA between the insight sentence and the URL.**
-The phrasing varies naturally by format — "Give it a listen!" for podcasts, "Give it a watch!" for video, or similar. Do not hardcode a single phrase. Do not skip the CTA for any episode type.
+**Every episode post gets a CTA between the insight sentence and the URL — phrasing depends on format.**
+For audio/podcast episodes: "Give it a listen!" followed by a blank line, then the URL on its own line.
+For video episodes (Datadog Illuminated, Thunder, and other video shows): "Watch here:" followed immediately by the URL on the very next line — no blank line between "Watch here:" and the URL.
+Do not skip the CTA for any episode type.
 
 **Bluesky and Mastodon: embed the @handle in the sentence as the subject, not as a parenthetical.**
 The handle is how the platform notifies the person — it belongs where their name would go, not appended in parentheses after it.
