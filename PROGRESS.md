@@ -6,6 +6,20 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-06-06) Added `datadog-mcp-gotchas.md` global rule file covering the official Claude Code plugin install process (plugin vs. manual config), OAuth-preferred auth, two `/reload-plugins` calls required, known `env` block bug where API keys aren't reliably passed to the subprocess, `DD_MCP_DOMAIN` format (`mcp.datadoghq.com` not a URL), and `DD_MCP_TOOLSETS` env-var override behavior; referenced from `CLAUDE.md` under "Adopting New Technologies"
+
+- (2026-06-06) Added `scripts/check-contributing-freshness.sh` (SessionStart hook — warns when CONTRIBUTING.md or pr-checklist.md has changed since the last recorded review SHA) and `scripts/vale-on-edit.sh` (PostToolUse hook — runs vale on .md files after Write/Edit in repos with a `.vale.ini`)
+
+- (2026-06-06) Extended `yt-dlp-gotchas.md` with CI bot detection section — GitHub Actions shared IPs are flagged by YouTube; `yt-dlp -U` does not fix it; recommended fix is `bgutil-ytdlp-pot-provider` (per-video PO tokens via a spawned Node process, no persistent service); added Chrome 127+ app-bound cookie encryption gotcha (no browser-based extraction works) and PO token per-video expiry constraint
+
+- (2026-06-06) Extended `linkedin-api-gotchas.md` with image alt text placement — `content.media.altText` goes on the post body, not during upload; GET responses do not return alt text (write-only in the API); LinkedIn auto-generates alt text via AI when omitted
+
+- (2026-06-06) Added `otelcol-config.yaml` shared-config note to `is-scoring-gotchas.md` — the config at `spinybacked-orbweaver-eval/evaluation/is/` is used for all eval targets, both file and Datadog exporters must run in parallel, and changes apply globally across all target repos
+
+- (2026-06-06) Added CodeRabbit rate-limit recovery instruction to `git-workflow.md` — when rate-limited, CodeRabbit does not auto-retry; must post `@coderabbitai review` comment to trigger a re-review, then wait another 7 minutes for results
+
+- (2026-06-06) Enabled Datadog plugin (`datadog@claude-plugins-official`) in `config/settings.json` and added `skipWorkflowUsageWarning: true` to suppress the workflow orchestration warning on startup
+
 - (2026-06-05) Added rule to global CLAUDE.md requiring PROGRESS.md to be updated in the same commit as the work — never pushed first and fixed in a follow-up. The pre-push hook warning is now documented as a blocker, not advisory.
 
 - (2026-05-31) Added `check-prompt-generality.sh` pre-commit advisory check — fires when `src/agent/prompt.ts` is staged in any repo; prints three diagnostic questions asking whether guidance is project-general, root-cause-based, and using synthetic namespaces (`my_service`, `acme`) rather than real eval-target namespaces; always exits 0 (advisory only); registered in the pre-commit dispatcher; 9-test bats suite
@@ -102,12 +116,18 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Changed
 
+- (2026-06-06) Updated `is-scoring-gotchas.md` Docker and binary startup sections to reflect Datadog exporter integration — binary startup now wraps with `vals exec` to inject `DD_API_KEY` and captures `COLLECTOR_PID`; adds port-readiness poll (`until lsof -i :4318`) before proceeding; Docker section updated from three to four required flags (`vals exec` wrap and `-e DD_API_KEY`); cleanup now uses `kill $COLLECTOR_PID` instead of `kill %1`
+
+- (2026-06-06) Updated `writing-voice.md` CTA format rules to distinguish audio vs. video episodes — audio/podcast: "Give it a listen!" followed by a blank line then URL; video (Datadog Illuminated, Thunder, other video shows): "Watch here:" followed immediately by the URL on the next line with no blank line between them
+
 - (2026-04-15) Updated the /code-review description in hooks-reference.md to reflect the current two-tier output format (High confidence ≥ 80 and Medium confidence 50–79 in a table, each with score and Fix/Skip disposition), replacing the old flat-list description with an 80-confidence hard cutoff
 - (2026-03-11) Softened infrastructure safety rule in global CLAUDE.md — replaced mandatory teardown gates with awareness-based approach via SessionStart hook (PRD #39, M3)
 
 - (2026-03-11) Added `(YYYY-MM-DD)` date prefix to PROGRESS.md entry format in prd-update-progress and prd-start skills (both yolo and careful variants)
 
 ### Fixed
+
+- (2026-06-06) Corrected Bluesky `aud` DID in `social-video-upload-gotchas.md` — was incorrectly documented as `did:web:video.bsky.app`; the video service saves processed video to your PDS on your behalf, so the correct `aud` is the user's PDS DID derived from `agent.pdsUrl`; using the video service DID returns a 401
 
 - Contributor detection counts unique names instead of name+email pairs (same person with multiple emails no longer inflates count)
 - (2026-03-11) Restored all 8 careful skill variants as real files — were incorrectly replaced with symlinks to yolo variants in commit 21a0d6c

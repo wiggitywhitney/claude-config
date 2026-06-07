@@ -1,27 +1,29 @@
 # IS Scoring — OTel Collector Setup Gotchas
 
-IS scoring runs the target app against an OTel Collector (file exporter) to capture OTLP traces, then scores them with `evaluation/is/score-is.js`.
+IS scoring runs the target app against an OTel Collector to capture OTLP traces, then scores them with `evaluation/is/score-is.js`. The Collector writes traces to `eval-traces.json` for IS scoring **and** forwards them to Datadog APM via the Datadog exporter — both exporters run in parallel.
 
 ## Preferred: Binary download (no Docker required)
 
-Download `otelcol-contrib` for macOS ARM64 from the [releases page](https://github.com/open-telemetry/opentelemetry-collector-contrib/releases). Place on PATH (e.g., `~/.local/bin/`). Then run from the eval repo's `evaluation/is/` directory:
+Download `otelcol-contrib` for macOS ARM64 from the [releases page](https://github.com/open-telemetry/opentelemetry-collector-contrib/releases). Place on PATH (e.g., `~/.local/bin/`). Run from the eval repo root with `vals exec` to inject `DD_API_KEY`:
 
 ```bash
-otelcol-contrib --config otelcol-config.yaml
+vals exec -f .vals.yaml -- bash -c 'export PATH="/opt/homebrew/bin:$PATH" && otelcol-contrib --config evaluation/is/otelcol-config.yaml > /tmp/otelcol.log 2>&1' &
 ```
 
-This writes traces to `./eval-traces.json` relative to the working directory.
+This writes traces to `evaluation/is/eval-traces.json` and forwards them to Datadog APM. After the run, query `service:<target>` in Datadog MCP to retrieve `service.instance.id` for trace verification.
 
 ## Fallback: Docker via Colima
 
 **Always check Colima is running first** — Claude Code sessions don't start it automatically.
 
-Three flags are all required together or the container crashes:
+Four flags are all required together or the container crashes / Datadog export fails:
 
 ```bash
-docker run -d --name eval-collector -p 4318:4318 --user "$(id -u):$(id -g)" -w /etc/otelcol -v /absolute/path/to/evaluation/is:/etc/otelcol otel/opentelemetry-collector-contrib:latest --config /etc/otelcol/otelcol-config.yaml
+vals exec -f .vals.yaml -- bash -c 'docker run -d --name eval-collector -p 4318:4318 -e DD_API_KEY=$DD_API_KEY --user "$(id -u):$(id -g)" -w /etc/otelcol -v /absolute/path/to/evaluation/is:/etc/otelcol otel/opentelemetry-collector-contrib:latest --config /etc/otelcol/otelcol-config.yaml'
 ```
 
+- `vals exec` — injects `DD_API_KEY` into the environment; without it the Datadog exporter starts but sends nothing (empty API key, silent failure)
+- `-e DD_API_KEY=$DD_API_KEY` — passes the injected key into the container
 - `--user $(id -u):$(id -g)` — container runs as host user; without it, root can't write to host-owned mount
 - `-w /etc/otelcol` — sets working dir inside container so `./eval-traces.json` resolves to the mounted volume; without it, the file exporter tries to write to the container root (`/eval-traces.json`) and fails with permission denied
 - **Absolute path for the volume mount** — `$(pwd)` expansion is unreliable in some shell contexts; use the full path
@@ -31,6 +33,10 @@ docker run -d --name eval-collector -p 4318:4318 --user "$(id -u):$(id -g)" -w /
 ```bash
 touch evaluation/is/eval-traces.json
 ```
+
+## `otelcol-config.yaml` is the single shared config for all eval targets
+
+`spinybacked-orbweaver-eval/evaluation/is/otelcol-config.yaml` is used for every IS scoring run, regardless of the target repo (commit-story-v2, taze, any future target). Changes to this file apply globally — fix it once, it applies everywhere. Do not remove or replace the file exporter when adding new exporters — both must run in parallel.
 
 ## Port 4318 Conflict with Datadog Agent
 
@@ -62,14 +68,16 @@ These are not committed — install only for the IS scoring run, then restore th
 datadog-agent stop
 ```
 
-Start the Collector (binary preferred):
+Start the Collector (binary preferred) — use `vals exec` to inject `DD_API_KEY`:
 ```bash
-cd evaluation/is && otelcol-contrib --config otelcol-config.yaml &
+vals exec -f ~/Documents/Repositories/spinybacked-orbweaver-eval/.vals.yaml -- bash -c 'export PATH="/opt/homebrew/bin:$PATH" && otelcol-contrib --config ~/Documents/Repositories/spinybacked-orbweaver-eval/evaluation/is/otelcol-config.yaml > /tmp/otelcol.log 2>&1' &
+COLLECTOR_PID=$!
+until lsof -i :4318 >/dev/null 2>&1; do sleep 0.5; done
 ```
 
-Or via Docker (see flags above):
+Or via Docker (see flags above) with `DD_API_KEY` injected:
 ```bash
-docker run -d --name eval-collector -p 4318:4318 --user "$(id -u):$(id -g)" -w /etc/otelcol -v /absolute/path/to/evaluation/is:/etc/otelcol otel/opentelemetry-collector-contrib:latest --config /etc/otelcol/otelcol-config.yaml
+vals exec -f ~/Documents/Repositories/spinybacked-orbweaver-eval/.vals.yaml -- bash -c 'docker run -d --name eval-collector -p 4318:4318 -e DD_API_KEY=$DD_API_KEY --user "$(id -u):$(id -g)" -w /etc/otelcol -v /absolute/path/to/evaluation/is:/etc/otelcol otel/opentelemetry-collector-contrib:latest --config /etc/otelcol/otelcol-config.yaml'
 ```
 
 Checkout instrument branch and install SDK:
@@ -90,12 +98,12 @@ node evaluation/is/score-is.js evaluation/is/eval-traces.json > evaluation/<targ
 
 Clean up:
 ```bash
-kill %1
+if [ -n "${COLLECTOR_PID:-}" ]; then kill "$COLLECTOR_PID"; fi
 git -C ~/Documents/Repositories/<target> checkout main
 datadog-agent start
 ```
 
-For Docker cleanup instead: `docker stop eval-collector && docker rm eval-collector`
+If you used Docker instead of the binary collector, run: `docker stop eval-collector && docker rm eval-collector`
 
 ## What the score means
 
