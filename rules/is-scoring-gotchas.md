@@ -98,12 +98,12 @@ node evaluation/is/score-is.js evaluation/is/eval-traces.json > evaluation/<targ
 
 Clean up:
 ```bash
-kill $COLLECTOR_PID
+if [ -n "${COLLECTOR_PID:-}" ]; then kill "$COLLECTOR_PID"; fi
 git -C ~/Documents/Repositories/<target> checkout main
 datadog-agent start
 ```
 
-For Docker cleanup instead: `docker stop eval-collector && docker rm eval-collector`
+If you used Docker instead of the binary collector, run: `docker stop eval-collector && docker rm eval-collector`
 
 ## What the score means
 

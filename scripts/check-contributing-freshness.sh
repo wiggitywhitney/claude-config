@@ -13,5 +13,5 @@ current_sha=$(git -C "$repo_root" log -1 --format="%H" -- CONTRIBUTING.md docs/l
 [[ -n "$current_sha" && "$current_sha" != "$stored_sha" ]] || exit 0
 
 echo "⚠️  CONTRIBUTING.md or pr-checklist.md has changed since CLAUDE.local.md was last reviewed."
-echo "   Run: git -C $repo_root log --oneline $stored_sha..HEAD -- CONTRIBUTING.md docs/lab-development/pr-checklist.md"
-echo "   Update CLAUDE.local.md if needed, then: echo \$new_sha > $sha_file"
+echo "   Run: git -C \"$repo_root\" log --oneline \"$stored_sha\"..HEAD -- CONTRIBUTING.md docs/lab-development/pr-checklist.md"
+echo "   Update CLAUDE.local.md if needed, then: echo \$new_sha > \"$sha_file\""
