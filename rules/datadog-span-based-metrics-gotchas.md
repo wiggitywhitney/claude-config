@@ -1,6 +1,6 @@
 # Datadog Span-Based Metrics Gotchas
 
-Verified 2026-06-16 against Datadog docs: Generate Metrics from Spans, Trace Metrics Namespace. Applies when using Datadog's "Generate Metrics from Spans" feature or relying on auto-generated Trace Metrics.
+Verify against Datadog docs: Generate Metrics from Spans, Trace Metrics Namespace. Applies when using Datadog's "Generate Metrics from Spans" feature or relying on auto-generated Trace Metrics.
 
 ## Two distinct systems — auto-generated Trace Metrics vs custom span-based metrics
 
@@ -53,6 +53,6 @@ If the OTel SDK's native sampler runs before spans reach the Datadog Collector, 
 
 Fix: move sampling from the OTel SDK to the OTel Collector level. When all spans arrive at the Collector before any are dropped, the Datadog Connector can compute Trace Metrics from 100% of traffic. Place the Datadog Connector upstream of any tail sampler in the Collector pipeline.
 
-## Infinite Cardinality Metrics coverage of span-based custom metrics is unconfirmed (as of 2026-06-16)
+## Infinite Cardinality Metrics coverage of span-based custom metrics is unconfirmed
 
 Datadog's Infinite Cardinality Metrics (GA June 9, 2026) prices metrics per metric name rather than per time series. Whether span-based custom metrics from "Generate Metrics from Spans" fall under this pricing model is not confirmed in the docs. The "Generate Metrics from Spans" docs still say "billed as custom metrics" with no mention of Infinite Cardinality. Do NOT assume high-cardinality group-by dimensions are cost-free under this model until Datadog confirms it.
