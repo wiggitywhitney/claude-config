@@ -57,7 +57,7 @@ category: project-management
   - **Defer** if the fix warrants its own issue — create one and run `/write-prompt` on the body before `gh issue create`
   - **Skip** if the suggestion misunderstands the code, or fix cost genuinely outweighs benefit
 - [ ] **Address and push fixes**: Commit and push any changes made in response to findings.
-- [ ] **Re-review after pushing fixes**: Start another 7-minute timer. Re-run the three `gh api` calls. Repeat until no new blocking findings remain.
+- [ ] **Re-review after pushing fixes**: Start another 7-minute timer. Re-run the three `gh api` calls. Repeat the triage loop until no new **Fix** findings remain (Defer and Skip findings do not block merge).
 - [ ] **If CodeRabbit rate-limited**: Post `@coderabbitai review` as a comment (`gh pr comment PR_NUMBER --body "@coderabbitai review"`), start another 7-minute timer. If CodeRabbit never posts, `/code-review` provides full coverage — do not block indefinitely.
 - [ ] **Human approval**: Wait for explicit human approval before proceeding to merge.
 
