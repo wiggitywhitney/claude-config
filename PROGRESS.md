@@ -6,6 +6,20 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-06-16) Installed global symlinks in `~/.claude/skills/` for all six issue workflow skills (`/issue-create`, `/issue-start`, `/issue-update-progress`, `/issue-next`, `/issue-update-decisions`, `/issue-done`), making the full suite available in any repo without requiring a switch to claude-config; opened issue #103 to track the same gap for the PRD skill suite
+
+- (2026-06-16) Added `/issue-done` skill — sixth of six in the GitHub issue workflow suite; closes out issue work end-to-end: identifies all issues from the branch name, ensures a PR exists, runs the full CodeRabbit + `/code-review` gate, updates PROGRESS.md, merges, closes all issues in the working set, and cleans local and remote branches; built by identifying the minimal diff from the battle-tested `prd-done` skill
+
+- (2026-06-16) Added `/issue-update-decisions` skill — fifth of six in the GitHub issue workflow suite; records design decisions in the active issue's Decision Log and cascades impact to all open issues and PRD files, presenting one finding at a time per the single-question rule; uses `--body-file` for reliable multi-line issue body updates; built by identifying the minimal diff from the battle-tested `prd-update-decisions` skill
+
+- (2026-06-16) Added `/issue-next` skill — fourth of six in the GitHub issue workflow suite; reconstructs working context at the start of a fresh session by reading the most recent checkpoint comment (sentinel: `## Progress Checkpoint`) from the active issue and supplementing with recent git log; falls back gracefully to git log only when no checkpoint exists; built by identifying the minimal diff from the battle-tested `prd-next` skill
+
+- (2026-06-16) Strengthened the implementation guidance in the issue skill PRD — added Decision 11 (the work of writing each issue skill is identifying the minimal diff from its PRD counterpart, not composing a new skill) and updated the Step 0 instructions in M3–M6 to lead with the battle-tested-copy framing so a cold AI starts from the right mental model
+
+- (2026-06-16) Added `/issue-update-progress` skill — third of six in the GitHub issue workflow suite; synthesizes what got done and what comes next from conversation context and git history, proposes a structured checkpoint comment for the relevant GitHub issue, posts it, and commits current code state; the checkpoint comment format it defines (`## Progress Checkpoint` with Branch/Done/Next step/Open questions fields) is the parsing contract that `/issue-next` reads; built by identifying the minimal diff from the battle-tested `prd-update-progress` skill
+
+- (2026-06-16) Added `/issue-start` skill — second of six in the GitHub issue workflow suite; analyzes open issues to recommend juggling pairs before creating a branch, waits for the user to confirm the working set, then creates a branch whose name encodes all issue numbers (`feature/<numbers>-<description>`) so that `/issue-done` can later identify which issues to close; includes contributor-aware PROGRESS.md creation matching the behavior of `/prd-start`
+
 - (2026-06-16) Added `/issue-create` skill — first of six skills in a GitHub issue workflow suite that mirrors the PRD skill suite; guides the user through gathering a problem statement, drafting a well-formed issue body (Problem, Solution, optional Acceptance Criteria, mandatory PROGRESS.md checkbox), running `/write-prompt` review, creating the issue via `gh issue create`, and optionally updating `docs/ROADMAP.md`; built by duplicating the battle-tested `prd-create` skill structure and editing minimally
 
 - (2026-06-06) Added `datadog-mcp-gotchas.md` global rule file covering the official Claude Code plugin install process (plugin vs. manual config), OAuth-preferred auth, two `/reload-plugins` calls required, known `env` block bug where API keys aren't reliably passed to the subprocess, `DD_MCP_DOMAIN` format (`mcp.datadoghq.com` not a URL), and `DD_MCP_TOOLSETS` env-var override behavior; referenced from `CLAUDE.md` under "Adopting New Technologies"

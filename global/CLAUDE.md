@@ -76,6 +76,9 @@ When you have multiple questions or decisions for the user, present them **one a
 - LinkedIn REST API (commentary silent truncation on unescaped reserved chars, content.media not the cause, refresh token partner approval): @~/.claude/rules/linkedin-api-gotchas.md
 - IS scoring / OTel Collector (binary preferred over Docker, Docker needs --user+--workdir+abs-path, port 4318 conflict with DD Agent, OTel SDK devDeps for target app): @~/.claude/rules/is-scoring-gotchas.md
 - Datadog MCP server (official plugin install, OAuth vs key-based auth, APM trace tools, vals exec incompatibility, env block bug): @~/.claude/rules/datadog-mcp-gotchas.md
+- OTel Span Metrics Connector (cardinality limit default=0, ms→s unit change gate, Exemplars not TraceId, sampler placement, v0.95.0 Datadog Exporter change): @~/.claude/rules/otel-span-metrics-connector-gotchas.md
+- Datadog span-based metrics (auto vs custom distinction, fixed tag set on Trace Metrics, trace.* namespace collision, filter vs group-by cardinality, trace completion emission delay): @~/.claude/rules/datadog-span-based-metrics-gotchas.md
+- DDOT / Datadog Distribution of OTel Collector (Agent-embedded not standalone, curated component list, routingprocessor removed v7.71.0, spanmetricsconnector YAML key unconfirmed, Fleet Automation Preview): @~/.claude/rules/ddot-gotchas.md
 
 ## Testing
 
