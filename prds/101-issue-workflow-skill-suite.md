@@ -28,7 +28,7 @@ All six skills are globally available via symlinks from `~/.claude/skills/` poin
 - [x] M1: `/issue-create` skill
 - [x] M2: `/issue-start` skill
 - [x] M3: `/issue-update-progress` skill (defines checkpoint comment format)
-- [ ] M4: `/issue-next` skill
+- [x] M4: `/issue-next` skill
 - [ ] M5: `/issue-update-decisions` skill
 - [ ] M6: `/issue-done` skill
 - [ ] M7: Global symlinks — install all six in `~/.claude/skills/`
