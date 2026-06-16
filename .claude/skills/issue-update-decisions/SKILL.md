@@ -84,7 +84,7 @@ After recording the decision in the active issue, propagate its impact to other 
 
 ### Process
 
-1. **Fetch all open issues**: Run `gh issue list --state open --json number,title,body` to get all open issues (excluding the active issue just updated).
+1. **Fetch all open issues**: Run `gh issue list --state open --json number,title,body` to get all open issues. Exclude the active issue (identified in Step 1) from the list when iterating — it was already updated in Step 4.
 2. **Read all PRD files**: Read each file in `prds/*.md`.
 3. **For each new decision**, assess whether it affects any open issue's or PRD's:
    - **Description or scope**: Does the decision change what this issue or milestone should deliver?
