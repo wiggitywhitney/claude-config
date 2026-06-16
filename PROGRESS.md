@@ -6,6 +6,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-06-16) Installed global symlinks in `~/.claude/skills/` for all six issue workflow skills (`/issue-create`, `/issue-start`, `/issue-update-progress`, `/issue-next`, `/issue-update-decisions`, `/issue-done`), making the full suite available in any repo without requiring a switch to claude-config; opened issue #103 to track the same gap for the PRD skill suite
+
 - (2026-06-16) Added `/issue-done` skill — sixth of six in the GitHub issue workflow suite; closes out issue work end-to-end: identifies all issues from the branch name, ensures a PR exists, runs the full CodeRabbit + `/code-review` gate, updates PROGRESS.md, merges, closes all issues in the working set, and cleans local and remote branches; built by identifying the minimal diff from the battle-tested `prd-done` skill
 
 - (2026-06-16) Added `/issue-update-decisions` skill — fifth of six in the GitHub issue workflow suite; records design decisions in the active issue's Decision Log and cascades impact to all open issues and PRD files, presenting one finding at a time per the single-question rule; uses `--body-file` for reliable multi-line issue body updates; built by identifying the minimal diff from the battle-tested `prd-update-decisions` skill

@@ -1,6 +1,6 @@
 # PRD #101: Issue Workflow Skill Suite
 
-**Status**: Draft
+**Status**: Complete
 **Created**: 2026-06-16
 **Issue**: https://github.com/wiggitywhitney/claude-config/issues/101
 
@@ -31,7 +31,7 @@ All six skills are globally available via symlinks from `~/.claude/skills/` poin
 - [x] M4: `/issue-next` skill
 - [x] M5: `/issue-update-decisions` skill
 - [x] M6: `/issue-done` skill
-- [ ] M7: Global symlinks — install all six in `~/.claude/skills/`
+- [x] M7: Global symlinks — install all six in `~/.claude/skills/`
 
 > **Constraint for all SKILL.md files produced by this PRD**: Each SKILL.md must lead with numbered workflow steps, not a goal statement or purpose summary. Do NOT open any SKILL.md with a description of what the skill does — start directly with the numbered process steps. This is required for all AI-consumed skill documents per CLAUDE.md ("emphasize the process to follow rather than stating the goal upfront").
 
