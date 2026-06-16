@@ -144,7 +144,7 @@ If user chooses option 2, commit the ROADMAP.md update if one was made:
 # If docs/ROADMAP.md was updated, stage and commit it:
 git add docs/ROADMAP.md
 git commit -m "docs: add issue #[issue-number] to ROADMAP.md [skip ci]"
-git pull --rebase origin main && git push origin main
+git push origin HEAD
 ```
 
 **Confirmation Message:**
