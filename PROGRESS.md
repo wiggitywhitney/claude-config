@@ -6,6 +6,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-06-16) Added `/issue-update-decisions` skill — fifth of six in the GitHub issue workflow suite; records design decisions in the active issue's Decision Log and cascades impact to all open issues and PRD files, presenting one finding at a time per the single-question rule; uses `--body-file` for reliable multi-line issue body updates; built by identifying the minimal diff from the battle-tested `prd-update-decisions` skill
+
 - (2026-06-16) Added `/issue-next` skill — fourth of six in the GitHub issue workflow suite; reconstructs working context at the start of a fresh session by reading the most recent checkpoint comment (sentinel: `## Progress Checkpoint`) from the active issue and supplementing with recent git log; falls back gracefully to git log only when no checkpoint exists; built by identifying the minimal diff from the battle-tested `prd-next` skill
 
 - (2026-06-16) Strengthened the implementation guidance in the issue skill PRD — added Decision 11 (the work of writing each issue skill is identifying the minimal diff from its PRD counterpart, not composing a new skill) and updated the Step 0 instructions in M3–M6 to lead with the battle-tested-copy framing so a cold AI starts from the right mental model
