@@ -6,6 +6,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-06-16) Strengthened the implementation guidance in the issue skill PRD — added Decision 11 (the work of writing each issue skill is identifying the minimal diff from its PRD counterpart, not composing a new skill) and updated the Step 0 instructions in M3–M6 to lead with the battle-tested-copy framing so a cold AI starts from the right mental model
+
 - (2026-06-16) Added `/issue-update-progress` skill — third of six in the GitHub issue workflow suite; synthesizes what got done and what comes next from conversation context and git history, proposes a structured checkpoint comment for the relevant GitHub issue, posts it, and commits current code state; the checkpoint comment format it defines (`## Progress Checkpoint` with Branch/Done/Next step/Open questions fields) is the parsing contract that `/issue-next` reads; built by identifying the minimal diff from the battle-tested `prd-update-progress` skill
 
 - (2026-06-16) Added `/issue-start` skill — second of six in the GitHub issue workflow suite; analyzes open issues to recommend juggling pairs before creating a branch, waits for the user to confirm the working set, then creates a branch whose name encodes all issue numbers (`feature/<numbers>-<description>`) so that `/issue-done` can later identify which issues to close; includes contributor-aware PROGRESS.md creation matching the behavior of `/prd-start`
