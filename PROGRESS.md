@@ -6,6 +6,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-06-16) Added `/issue-create` skill — first of six skills in a GitHub issue workflow suite that mirrors the PRD skill suite; guides the user through gathering a problem statement, drafting a well-formed issue body (Problem, Solution, optional Acceptance Criteria, mandatory PROGRESS.md checkbox), running `/write-prompt` review, creating the issue via `gh issue create`, and optionally updating `docs/ROADMAP.md`; built by duplicating the battle-tested `prd-create` skill structure and editing minimally
+
 - (2026-06-06) Added `datadog-mcp-gotchas.md` global rule file covering the official Claude Code plugin install process (plugin vs. manual config), OAuth-preferred auth, two `/reload-plugins` calls required, known `env` block bug where API keys aren't reliably passed to the subprocess, `DD_MCP_DOMAIN` format (`mcp.datadoghq.com` not a URL), and `DD_MCP_TOOLSETS` env-var override behavior; referenced from `CLAUDE.md` under "Adopting New Technologies"
 
 - (2026-06-06) Added `scripts/check-contributing-freshness.sh` (SessionStart hook — warns when CONTRIBUTING.md or pr-checklist.md has changed since the last recorded review SHA) and `scripts/vale-on-edit.sh` (PostToolUse hook — runs vale on .md files after Write/Edit in repos with a `.vale.ini`)
