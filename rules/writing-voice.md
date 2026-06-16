@@ -163,6 +163,12 @@ For audio/podcast episodes: "Give it a listen!" followed by a blank line, then t
 For video episodes (Datadog Illuminated, Thunder, and other video shows): "Watch here:" followed immediately by the URL on the very next line — no blank line between "Watch here:" and the URL.
 Do not skip the CTA for any episode type.
 
+**Use a playful `*ahem* WAS` self-correction for callbacks to something just established.**
+When the text has already set up a premise ("there was no common standard") and then a payoff is coming, the self-correction voice move — "There is, *ahem* WAS, no common standard" — is punchy and human. The italics signal stage direction. Use sparingly; it works because it mimics live speech.
+
+**A standalone "Until now." (or similar short payoff sentence) earns its own paragraph.**
+After a buildup, the punchy one-sentence turn deserves breathing room — not tacked onto the preceding paragraph. The paragraph break is part of the emphasis.
+
 **Bluesky and Mastodon: embed the @handle in the sentence as the subject, not as a parenthetical.**
 The handle is how the platform notifies the person — it belongs where their name would go, not appended in parentheses after it.
 - Do: "In this episode of SDI, @nathenharvey.bsky.social, who leads the DORA research program at Google, explains..."
