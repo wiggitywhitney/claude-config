@@ -321,11 +321,16 @@ After creating the PR and starting the CodeRabbit review timer, use the wait tim
 - [ ] **Check PR details**: Use `gh pr view [pr-number]` to check for human review comments and PR metadata
 - [ ] **Review all automated feedback**: Check PR comments section for automated code review feedback (bots, linters, analyzers)
   - **Use multiple methods to capture all feedback**:
-    - **MCP servers** (preferred when available): Use any available MCP servers for comprehensive review data
-      - Code review MCPs (e.g., CodeRabbit, custom review servers) for detailed AI code reviews
-      - Check available MCP tools/functions related to code reviews, pull requests, or automated feedback
-    - CLI commands: `gh pr view [pr-number]`, `gh pr checks [pr-number]`, `gh api repos/owner/repo/pulls/[pr-number]/comments`
-    - **Web interface inspection**: Fetch the PR URL directly to capture all comments, including inline code suggestions that CLI tools may miss
+    - **Always fetch all three CodeRabbit channels** — CodeRabbit posts to all three and missing any one means missing findings:
+      ```bash
+      gh api repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '[.[] | {user: .user.login, state, body}]'
+      gh api repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '[.[] | {user: .user.login, path, line, body}]'
+      gh api repos/OWNER/REPO/issues/PR_NUMBER/comments --jq '[.[] | {user: .user.login, body}]'
+      ```
+      - `/pulls/{n}/reviews` — full review bodies including "outside diff range" findings (most content lives here)
+      - `/pulls/{n}/comments` — inline comments attached to specific diff lines
+      - `/issues/{n}/comments` — conversation-level notices (rate-limit notices, "reviews paused")
+    - **MCP servers** (supplemental when available): Code review MCPs for additional coverage
     - Look for comments from automated tools (usernames ending in 'ai', 'bot', or known review tools)
 - [ ] **Present ALL code review findings**: ALWAYS present every review comment to the user, regardless of severity
   - **Show ALL comments**: Present every suggestion, nitpick, and recommendation - do not filter or omit any
@@ -351,6 +356,7 @@ After creating the PR and starting the CodeRabbit review timer, use the wait tim
   - Create additional commits on the feature branch to address feedback
   - Update tests if needed to cover suggested improvements
   - Document any feedback that was intentionally not addressed and why
+- [ ] **Re-review after pushing fixes**: Start another 7-minute timer. Re-run all three `gh api` calls from above. Repeat the triage loop until no new **Fix** findings remain (Defer and Skip findings do not block merge). If CodeRabbit is rate-limited, post `@coderabbitai review` as a PR comment to trigger a re-review.
 - [ ] **Verify all checks pass**: Ensure all CI/CD, tests, security analysis, and automated processes are complete and passing
 - [ ] **Final review**: Confirm the PR addresses the original PRD requirements and maintains code quality
 - [ ] **Merge to main**: Complete the pull request merge only after all feedback addressed and processes complete
