@@ -217,11 +217,11 @@ Write `.claude/skills/issue-done/SKILL.md` with the following workflow steps:
 1. **Identify closing set** — Read `git branch --show-current` to extract all issue numbers from the branch name. Fetch each issue's title and confirm they are open.
 2. **Check PR status** — If no open PR exists for this branch, create one via `gh pr create` following `rules/git-workflow.md` (use `--label run-acceptance` if `.github/workflows/acceptance-gate.yml` exists).
 3. **Review gate** — Follow the full review flow from `rules/git-workflow.md`: start a 7-minute background timer for CodeRabbit, fetch findings from all three channels once the timer fires, address findings, run `/code-review` per the exceptions in git-workflow.md. Do not proceed to merge until the review gate is passed and the human approves.
-4. **Merge** — Merge the PR via `gh pr merge`.
-5. **Close issues** — For each issue number from the branch name, run `gh issue close <number>`.
-6. **Clean branches** — Delete the local branch (`git branch -d <branch>`) and remote branch (`git push origin --delete <branch>`). Switch to main and pull (`git checkout main && git pull`).
-7. **Update PROGRESS.md** — Add a changelog entry under the appropriate section describing what changed and why. Follow the PROGRESS.md style rules in global CLAUDE.md.
-8. **Update ROADMAP.md** — If the closed issue(s) appear in `docs/ROADMAP.md`, remove those entries (ROADMAP is forward-looking; completed work belongs in PROGRESS.md only).
+4. **Update PROGRESS.md** — Add a changelog entry under the appropriate section describing what changed and why. Follow the PROGRESS.md style rules in global CLAUDE.md. Commit this on the feature branch before merging so the entry is part of the merged PR.
+5. **Update ROADMAP.md** — If the closed issue(s) appear in `docs/ROADMAP.md`, remove those entries (ROADMAP is forward-looking; completed work belongs in PROGRESS.md only). Commit alongside PROGRESS.md if updated.
+6. **Merge** — Merge the PR via `gh pr merge`.
+7. **Close issues** — For each issue number from the branch name, run `gh issue close <number>`.
+8. **Clean branches** — Delete the local branch (`git branch -d <branch>`) and remote branch (`git push origin --delete <branch>`). Switch to main and pull (`git checkout main && git pull`).
 9. **Confirm** — Output which issues were closed, the PR URL, and confirm branch cleanup.
 
 Multi-issue handling: close all issues whose numbers appear in the branch name. If an issue was added to the branch mid-work but is not in the branch name, the user must specify it explicitly when invoking the skill.

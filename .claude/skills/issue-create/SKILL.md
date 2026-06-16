@@ -9,7 +9,7 @@ category: project-management
 ## Process
 
 ### Step 1: Gather the Issue Concept
-Ask the user to describe the problem this issue addresses. Ask one question at a time (per CLAUDE.md rule on multiple questions). Follow up: what is the solution approach? Any known acceptance criteria?
+Ask the user to describe the problem this issue addresses. Ask one question at a time (per CLAUDE.md rule on multiple questions). Continue the gather flow one question per turn until you have: the solution approach, any known acceptance criteria, and the priority (High / Medium / Low) needed for ROADMAP placement.
 
 ### Step 2: Draft the Issue Body
 Produce a well-formed issue body:
@@ -55,10 +55,12 @@ Output the issue URL and number.
 - [ ] [criterion 1]
 - [ ] [criterion 2]
 
+## Checklist
+
 - [ ] Update PROGRESS.md with a changelog entry
 ```
 
-Omit the `## Acceptance Criteria` section entirely if the user did not provide criteria. The PROGRESS.md checkbox is always required as the final item regardless.
+Omit the `## Acceptance Criteria` section entirely if the user did not provide criteria. The `## Checklist` section with the PROGRESS.md checkbox is always required and must never be omitted.
 
 ## Discussion Guidelines
 
