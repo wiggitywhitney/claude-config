@@ -38,6 +38,9 @@ category: project-management
 
   ## Testing
   - [Testing approach and results]
+
+  ## Documentation
+  - [Documentation updates made]
   ```
 
 ### 3. Review Gate
