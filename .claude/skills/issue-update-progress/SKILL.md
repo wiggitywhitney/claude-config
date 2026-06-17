@@ -14,7 +14,7 @@ You are helping save progress on active issue work. This command synthesizes wha
 
 1. **Identify Working Set** - Extract issue numbers from the current branch name
 2. **Identify Relevant Issue** - Determine which issue receives the checkpoint comment
-3. **Synthesize Progress** - Derive done/next/questions from context and git log; propose for confirmation
+3. **Synthesize Progress** - Derive done/next/questions from context and git log; compose checkpoint comment
 4. **Post Checkpoint Comment** - Post the approved comment to the relevant issue
 5. **Commit** - Stage all working changes and commit
 6. **Confirm** - Output the comment URL and commit SHA
