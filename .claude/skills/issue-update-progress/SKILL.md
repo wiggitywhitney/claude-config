@@ -75,14 +75,27 @@ From the gathered context, derive:
 
 Compose the full checkpoint comment body using the format from the "Checkpoint Comment Format" section above.
 
-**Propose the complete checkpoint comment body to the user for confirmation.** If the user edits the proposal, apply their edits before posting. Do not post the comment until the user approves the final text.
+Post the checkpoint comment directly. Only pause if the synthesized content is genuinely ambiguous — for example, if it's unclear which item was completed or what the next step should be. Default to posting.
+
+## Step 3.5: Implementation vs. Plan Analysis
+
+Scan the conversation and git log for divergences between what the issue describes and what was actually implemented:
+
+- **Scope changes**: Features added or removed during implementation
+- **Approach changes**: Different technical approach than the issue specifies
+- **Requirement evolution**: User needs that became clearer during development
+- **Technical discoveries**: Constraints or opportunities discovered during work
+
+If divergences are found, add a brief note to the checkpoint comment's **Open questions** section before posting. If a divergence is significant (approach changed, acceptance criterion no longer applies), surface it explicitly after posting: "The implementation diverged from the issue in [X way]. Consider running `/issue-update-decisions` to capture this before clearing context."
+
+If no divergences are found, proceed to Step 4.
 
 ## Step 4: Post Checkpoint Comment
 
-Post the approved comment to the relevant issue:
+Post the checkpoint comment to the relevant issue:
 
 ```bash
-gh issue comment <number> --body "<approved checkpoint comment>"
+gh issue comment <number> --body "<checkpoint comment>"
 ```
 
 Output the comment URL after posting.

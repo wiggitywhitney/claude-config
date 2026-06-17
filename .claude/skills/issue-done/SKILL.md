@@ -18,30 +18,66 @@ category: project-management
 
 ### 2. Check PR Status
 - [ ] **Check for existing PR**: Run `gh pr list --head $(git branch --show-current) --state open --json number,title,url`
-- [ ] **If PR exists**: Note the PR number and URL. Proceed to Step 3.
-- [ ] **If no PR exists**: Create one:
+- [ ] **If PR exists**: Note the PR number and URL. Proceed to Step 2.5.
+- [ ] **If no PR exists**: Note this. Proceed to Step 2.5 — PR creation happens at Step 2.6 after verification.
+
+### 2.5. Pre-PR Verification
+
+Launch a verification subagent with this task:
+
+> Read the full body of issue #[number] — all acceptance criteria and checklist items. For each criterion:
+>
+> 1. List the criterion exactly as written.
+> 2. Locate observable evidence in the codebase: the specific file that exists, the function wired to the main code path, the test that covers it.
+> 3. Apply the three-level check — **Exists** (artifact is present) → **Substantive** (real content, not a stub or placeholder) → **Wired** (connected and reachable from the running system).
+> 4. If any level fails, mark the criterion as a gap.
+>
+> Report a criterion-by-criterion table: one row per criterion, with a column for the evidence found. Rows with no evidence must say "GAP — no evidence found" with a specific description of what is missing. Every criterion must map to a specific, observable artifact.
+
+If the agent reports any gaps, implement the missing work and re-run the verification before proceeding. If no gaps, proceed to Step 2.6.
+
+### 2.6. Create or Update PR with Auto-Filled Fields
+
+Analyze the branch diff to derive all PR fields:
+
+```bash
+git diff main...HEAD --stat
+git log main..HEAD --oneline
+```
+
+From this analysis, derive:
+- **PR title**: From the issue title and dominant commit scope (Conventional Commits format: `feat(scope): description`)
+- **Description**: What changed and why, drawn from commit messages and issue body
+- **Changes Made**: Bullet list derived from `git diff --stat` file list grouped by type
+- **Testing**: Derived from test file presence in the diff
+- **Documentation**: Derived from markdown file presence in the diff
+
+**If no PR exists yet**: Create it now using the derived content:
   - Check for acceptance gate: `ls .github/workflows/acceptance-gate.yml 2>/dev/null`. If found, add `--label run-acceptance`
-  - Check for PR template in `.github/PULL_REQUEST_TEMPLATE.md` and related paths; use it if found, otherwise use the default structure below
-  - Construct the PR body: include `Closes #<number>` for each issue in the closing set
+  - Check for PR template in `.github/PULL_REQUEST_TEMPLATE.md` and related paths; use it if found and fill in the derived fields; otherwise use the default body structure below
   - Run `gh pr create --title "..." --body "..."` following `rules/git-workflow.md`
 
-  **Default PR body structure** (when no template exists):
-  ```markdown
-  ## Description
-  [What this PR does and why]
+**If PR already exists**: Update its body with the derived content if the current body is sparse or placeholder: `gh pr edit <PR_NUMBER> --body "..."`
 
-  ## Related Issues
-  Closes #[issue-number]
+**Default PR body structure** (when no template exists):
+```markdown
+## Description
+[Derived: what this PR does and why]
 
-  ## Changes Made
-  - [List key changes]
+## Related Issues
+Closes #[issue-number]
 
-  ## Testing
-  - [Testing approach and results]
+## Changes Made
+- [Derived from git diff --stat]
 
-  ## Documentation
-  - [Documentation updates made]
-  ```
+## Testing
+- [Derived from test file presence in diff]
+
+## Documentation
+- [Derived from markdown file presence in diff]
+```
+
+Proceed to Step 3.
 
 ### 3. Review Gate
 **Do not proceed to merge until this gate is passed and the human approves.**

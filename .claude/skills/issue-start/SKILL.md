@@ -161,27 +161,18 @@ Development progress log for [project-name].
 - **Gitignore**: [Added to .gitignore (multi-contributor) / Tracked publicly (solo contributor)]
 ```
 
-### Step 5: Confirm
+### Step 5: Hand Off to /issue-next
 
-Present the final summary and stop:
+Present the final summary:
 
 ```markdown
 ## Ready to Work 🚀
 
 **Working set**: Issue #X — [title][, Issue #Y — [title]]
 **Branch**: `feature/<issue-numbers>-<semantic-description>`
-
----
-
-Run `/issue-update-progress` at natural stopping points to preserve context for fresh sessions.
 ```
 
-**⚠️ STOP HERE - DO NOT:**
-- Begin implementation work
-- Make any code changes
-- Continue beyond presenting the confirmation message
-
-Implementation decisions belong to the user. `/issue-update-progress` handles mid-session saves; `/issue-next` handles fresh-session pickup.
+Then immediately invoke `/issue-next` using the Skill tool to reconstruct full issue context and begin implementation.
 
 ## Success Criteria
 
@@ -190,11 +181,10 @@ This command should:
 - ✅ Present juggling candidate recommendations with rationale
 - ✅ Wait for the user's working-set decision before creating the branch
 - ✅ Create a branch whose name encodes all issue numbers in the working set
-- ✅ Remind the user to run `/issue-update-progress` at natural stopping points
+- ✅ Auto-invoke `/issue-next` after branch creation to transition directly into work
 
 ## Notes
 
-- This command focuses on **setup only** — working set decision, branch creation, environment prep
 - The branch name is the machine-readable working set: `/issue-done` reads it to know which issues to close
 - PROGRESS.md creation is identical to the `/prd-start` behavior — same contributor-detection logic applies
 - If any `gh` command fails with "command not found", inform the user that GitHub CLI is required: https://cli.github.com/

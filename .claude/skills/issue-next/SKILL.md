@@ -94,13 +94,25 @@ Present a structured context summary in this format:
 
 If the checkpoint was posted from a different session, note this: "Last checkpoint was posted [relative time if available from comment timestamp]. Recent commits since then: [list any commits after the checkpoint was posted]."
 
-## Step 5: Transition
+## Step 5: Create Tasks from Checklist
 
-Ask a single question:
+Read the active issue body:
 
-"Ready to continue with the next step, or do you want to adjust the plan first?"
+```bash
+gh issue view <number> --json body
+```
 
-Wait for the user's response before taking any further action.
+Parse all unchecked checklist items (`- [ ] ...`). For each unchecked item, call TaskCreate with:
+- `subject`: the checklist item text (strip the `- [ ] ` prefix)
+- `description`: "From issue #<number>: [item text]"
+
+Skip already-checked items (`- [x] ...`). If no checklist items exist, skip this step.
+
+## Step 6: Proceed
+
+Begin working on the "Next Step" from the checkpoint — or, if there is no checkpoint, the first unchecked checklist item. Mark the corresponding task `in_progress` before starting, `completed` when done.
+
+If the next step is ambiguous or contradicts the issue's acceptance criteria, surface the ambiguity before acting. Otherwise, proceed without pausing for permission.
 
 ## Success Criteria
 
@@ -108,7 +120,8 @@ Wait for the user's response before taking any further action.
 - ✅ Finds the most recent checkpoint comment using the exact sentinel `## Progress Checkpoint`
 - ✅ Falls back gracefully to git log when no checkpoint comment exists
 - ✅ Presents a complete brief without requiring the user to re-explain context
-- ✅ Transitions to the next step with a single question
+- ✅ Creates TaskCreate entries for unchecked checklist items in the active issue
+- ✅ Proceeds into work without asking permission
 
 ## After Completing a Work Session
 
