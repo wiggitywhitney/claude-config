@@ -54,7 +54,7 @@ From this analysis, derive:
 
 **If no PR exists yet**: Create it now using the derived content:
   - Check for acceptance gate: `ls .github/workflows/acceptance-gate.yml 2>/dev/null`. If found, add `--label run-acceptance`
-  - Check for PR template in `.github/PULL_REQUEST_TEMPLATE.md` and related paths; use it if found and fill in the derived fields; otherwise use the default body structure below
+  - Check for PR template in this order: `.github/PULL_REQUEST_TEMPLATE.md`, `.github/pull_request_template.md`, `docs/PULL_REQUEST_TEMPLATE.md`. Use the first match found and fill in the derived fields; if none exist, use the default body structure below
   - Run `gh pr create --title "..." --body "..."` following `rules/git-workflow.md`
 
 **If PR already exists**: Update its body with the derived content if the current body is sparse or placeholder: `gh pr edit <PR_NUMBER> --body "..."`

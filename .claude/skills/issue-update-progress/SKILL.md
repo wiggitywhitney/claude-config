@@ -75,7 +75,7 @@ From the gathered context, derive:
 
 Compose the full checkpoint comment body using the format from the "Checkpoint Comment Format" section above.
 
-Post the checkpoint comment directly. Only pause if the synthesized content is genuinely ambiguous — for example, if it's unclear which item was completed or what the next step should be. Default to posting.
+Then proceed to Step 3.5 to check for divergences before posting.
 
 ## Step 3.5: Implementation vs. Plan Analysis
 
