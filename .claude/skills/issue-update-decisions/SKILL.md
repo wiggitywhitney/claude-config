@@ -91,8 +91,7 @@ After recording the decision in the active issue, propagate its impact to other 
    - **Acceptance criteria**: Do success conditions need updating to reflect the new reality?
    - **Implementation approach**: Does the decision change how this issue or milestone should be built?
    - **Dependencies**: Does the decision introduce or remove dependencies?
-4. **Present findings one at a time**: For each affected issue or PRD, describe specifically what needs updating and propose the exact update. Wait for user confirmation before presenting the next finding. Per CLAUDE.md: never present a numbered list of multiple findings at once.
-5. **Apply updates with user confirmation**: Use `gh issue edit` for issues, Edit tool for PRD files.
+4. **Apply updates automatically**: For each affected issue or PRD, apply the update directly using `gh issue edit` for issues and the Edit tool for PRD files. Only pause if a proposed update is genuinely ambiguous — for example, if it's unclear whether the decision changes an acceptance criterion or only adds context to it.
 
 ### Update Format
 
