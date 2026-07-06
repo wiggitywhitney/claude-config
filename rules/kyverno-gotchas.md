@@ -157,3 +157,29 @@ helm install kyverno kyverno/kyverno \
 ```
 
 Policies are still enforced when Kyverno is running. `failurePolicy: Ignore` only affects the brief window when Kyverno is restarting. GKE explicitly recommends this for any webhook that might create circular dependencies with system components.
+
+## Kyverno native OTLP export is broken — gRPC-Go v1.63 dns resolver regression (verified chart 3.7.1 / app v1.17.1)
+
+Kyverno's built-in OTel exporter (enabled via `admissionController.tracing.enabled: true` / `otelConfig: grpc`) fails with:
+
+```text
+name resolver error: produced zero addresses
+```
+
+even against a bare ClusterIP address like `10.96.x.x:4317`. The bug is a regression introduced in gRPC-Go v1.63: `grpc.NewClient()` defaults to the `dns` resolver instead of `passthrough`, causing it to treat literal IP addresses as hostnames to be looked up. DNS resolution of a ClusterIP returns zero A records, so the connection never opens — zero spans and zero metrics reach the Collector.
+
+The bug is baked into Kyverno's bundled binary. There is no operator-level workaround. A fork would need to replace `grpc.NewClient("<host>:<port>")` with `grpc.Dial("passthrough:///<host>:<port>")` (even though `grpc.Dial` is deprecated in v1.63+, it still defaults to `passthrough` — the problem is specifically that `grpc.NewClient` does not). The gRPC-Go issue is tracked at https://github.com/grpc/grpc-go/issues/7625.
+
+**Recommended alternative:** Use the Datadog Agent Autodiscovery openmetrics check instead of native OTLP. Kyverno's admission controller serves Prometheus metrics on port 8000. Add a pod annotation to enable the Agent `kyverno` check:
+
+```yaml
+# in admissionController.podAnnotations (Helm values)
+ad.datadoghq.com/kyverno.checks: |
+  {
+    "kyverno": {
+      "instances": [{"openmetrics_endpoint": "http://%%host%%:8000/metrics"}]
+    }
+  }
+```
+
+The Agent check emits `kyverno.*` dot-format names, which are compatible with the official Datadog OOTB Kyverno dashboard. This is the same proven Autodiscovery pattern used for Falco, cert-manager, and Istio.

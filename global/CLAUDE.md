@@ -65,20 +65,25 @@ When you have multiple questions or decisions for the user, present them **one a
 
 - **MANDATORY**: Before writing code with any technology new to the project, invoke `/research <technology>`. Do not skip this step.
 - Full process: @~/.claude/rules/adopting-new-technologies.md
-- Kyverno (version numbering, GKE firewall, subjects matching): @~/.claude/rules/kyverno-gotchas.md
-- yt-dlp (format selectors, ffmpeg-absent behavior, mweb stability, Node v20+): @~/.claude/rules/yt-dlp-gotchas.md
-- Weaver (v0.22.1 auto-escaping defaults, definition schema format): @~/.claude/rules/weaver-gotchas.md
-- Micro.blog API (dual auth tokens, editPage param order, feed-based cross-posting): @~/.claude/rules/microblog-api-gotchas.md
-- OTel JS semantic conventions (stable vs incubating entry-points, DB/HTTP attribute renames, deprecated SEMATTRS_*): @~/.claude/rules/otel-semconv-gotchas.md
-- mmdc/mermaid-cli (Puppeteer peer dep, Apple Silicon Chrome path, npx -p flag, PNG scaling): @~/.claude/rules/mmdc-gotchas.md
-- Social platform video upload (Bluesky separate service token, Mastodon async 202 poll, LinkedIn 4-step init/upload/finalize/poll + ETag stripping): @~/.claude/rules/social-video-upload-gotchas.md
-- TypeScript tsc CLI (TS5112 hard error in 6.x, --ignoreConfig version-gate, stdout not stderr, new 6.x defaults): @~/.claude/rules/typescript-cli-gotchas.md
-- LinkedIn REST API (commentary silent truncation on unescaped reserved chars, content.media not the cause, refresh token partner approval): @~/.claude/rules/linkedin-api-gotchas.md
-- IS scoring / OTel Collector (binary preferred over Docker, Docker needs --user+--workdir+abs-path, port 4318 conflict with DD Agent, OTel SDK devDeps for target app): @~/.claude/rules/is-scoring-gotchas.md
-- Datadog MCP server (official plugin install, OAuth vs key-based auth, APM trace tools, vals exec incompatibility, env block bug): @~/.claude/rules/datadog-mcp-gotchas.md
-- OTel Span Metrics Connector (cardinality limit default=0, ms→s unit change gate, Exemplars not TraceId, sampler placement, v0.95.0 Datadog Exporter change): @~/.claude/rules/otel-span-metrics-connector-gotchas.md
-- Datadog span-based metrics (auto vs custom distinction, fixed tag set on Trace Metrics, trace.* namespace collision, filter vs group-by cardinality, trace completion emission delay): @~/.claude/rules/datadog-span-based-metrics-gotchas.md
-- DDOT / Datadog Distribution of OTel Collector (Agent-embedded not standalone, curated component list, routingprocessor removed v7.71.0, spanmetricsconnector YAML key unconfirmed, Fleet Automation Preview): @~/.claude/rules/ddot-gotchas.md
+- **The technology-specific gotcha files below are reference pointers, not auto-loaded context.** Only read a file from this index when the current task actually touches that technology — do not read the whole list "just in case."
+  - Kyverno (version numbering, GKE firewall, subjects matching): `~/.claude/rules/kyverno-gotchas.md`
+  - yt-dlp (format selectors, ffmpeg-absent behavior, mweb stability, Node v20+): `~/.claude/rules/yt-dlp-gotchas.md`
+  - Weaver (v0.22.1 auto-escaping defaults, definition schema format): `~/.claude/rules/weaver-gotchas.md`
+  - Micro.blog API (dual auth tokens, editPage param order, feed-based cross-posting): `~/.claude/rules/microblog-api-gotchas.md`
+  - OTel JS semantic conventions (stable vs incubating entry-points, DB/HTTP attribute renames, deprecated SEMATTRS_*): `~/.claude/rules/otel-semconv-gotchas.md`
+  - mmdc/mermaid-cli (Puppeteer peer dep, Apple Silicon Chrome path, npx -p flag, PNG scaling): `~/.claude/rules/mmdc-gotchas.md`
+  - Social platform video upload (Bluesky separate service token, Mastodon async 202 poll, LinkedIn 4-step init/upload/finalize/poll + ETag stripping): `~/.claude/rules/social-video-upload-gotchas.md`
+  - TypeScript tsc CLI (TS5112 hard error in 6.x, --ignoreConfig version-gate, stdout not stderr, new 6.x defaults): `~/.claude/rules/typescript-cli-gotchas.md`
+  - LinkedIn REST API (commentary silent truncation on unescaped reserved chars, content.media not the cause, refresh token partner approval): `~/.claude/rules/linkedin-api-gotchas.md`
+  - IS scoring / OTel Collector (binary preferred over Docker, Docker needs --user+--workdir+abs-path, port 4318 conflict with DD Agent, OTel SDK devDeps for target app): `~/.claude/rules/is-scoring-gotchas.md`
+  - Datadog MCP server (official plugin install, OAuth vs key-based auth, APM trace tools, vals exec incompatibility, env block bug): `~/.claude/rules/datadog-mcp-gotchas.md`
+  - OTel Span Metrics Connector (cardinality limit default=0, ms→s unit change gate, Exemplars not TraceId, sampler placement, v0.95.0 Datadog Exporter change): `~/.claude/rules/otel-span-metrics-connector-gotchas.md`
+  - Datadog span-based metrics (auto vs custom distinction, fixed tag set on Trace Metrics, trace.* namespace collision, filter vs group-by cardinality, trace completion emission delay): `~/.claude/rules/datadog-span-based-metrics-gotchas.md`
+  - DDOT / Datadog Distribution of OTel Collector (Agent-embedded not standalone, curated component list, routingprocessor removed v7.71.0, spanmetricsconnector YAML key unconfirmed, Fleet Automation Preview): `~/.claude/rules/ddot-gotchas.md`
+  - OTel Logs Bridge API / sdk-logs (experimental not GA in June 2026, console.log has no automatic bridge, SDK must init before logging libraries load, traceBased filter silently drops unsampled-trace logs): `~/.claude/rules/otel-logs-bridge-gotchas.md`
+  - Datadog log-trace correlation with OTel SDK (dd.trace_id 64-bit decimal NOT required, 32-char hex natively accepted, service.name not auto-remapped, OTLP vs file pipeline correlation behavior): `~/.claude/rules/datadog-log-trace-gotchas.md`
+  - Pino (v10 is current not v9, instrumentation-pino supports <11, ESM default import works, MCP server needs stderr destination, Error first-arg pattern): `~/.claude/rules/pino-gotchas.md`
+  - sharp (Node >= 20.9.0 required, macOS Homebrew libvips triggers source build use SHARP_IGNORE_GLOBAL_LIBVIPS=1, fit: inside must be explicit, Buffer input works directly): `~/.claude/rules/sharp-gotchas.md`
 
 ## Testing
 
@@ -87,7 +92,7 @@ When you have multiple questions or decisions for the user, present them **one a
 - **Bash scripts**: Use **bats-core** (`brew install bats-core`) for all bash test suites. Place tests in `tests/<script-name>.bats`. Do NOT use plain-bash ad hoc test scripts.
 - Full testing rules: @~/.claude/rules/testing-rules.md
 - Bats gotchas and patterns: @~/.claude/rules/bats-bash-testing.md
-- Project-type strategies: @~/Documents/Repositories/claude-config/guides/testing-decision-guide.md
+- Project-type strategies (reference pointer, not auto-loaded — read only when choosing a testing strategy for a new project type): `~/Documents/Repositories/claude-config/guides/testing-decision-guide.md`
 
 ## Acceptance Gate Failures
 
@@ -116,7 +121,7 @@ The key principle: "pre-existing" and "unrelated to our changes" are not reasons
 
 ## GitHub Issues
 
-When creating a GitHub issue: draft the body, then use the Skill tool to invoke `/write-prompt` passing the draft as input — ask it to organize the unstructured content into a clear, polished version without adding, removing, or changing meaning. Use the polished result when calling `gh issue create`.
+When creating a GitHub issue: draft the body, then use the Skill tool to invoke `/write-prompt` passing the draft as input — ask it to organize the unstructured content into a clear, polished version without adding, removing, or changing meaning. Use the polished result when calling `gh issue create`. Do NOT run `/code-review` on GitHub issues — it requires an open PR and is only for PRs.
 
 Every GitHub issue body must end with a checklist item that updates the project's `PROGRESS.md` (style rules below). Without this, non-PRD work accumulates without a durable record.
 
@@ -136,10 +141,11 @@ Narrative issue references in prose ("Closed issue #493 as working as intended")
 
 ## ROADMAP.md
 
-When a repo has a `docs/ROADMAP.md`, update it on PRD lifecycle events:
+When a repo has a `docs/ROADMAP.md`, update it on lifecycle events:
 
 - **On PRD creation**: add an entry to the appropriate timeframe tier (Short-term / Medium-term / Long-term by PRD priority): `- [Brief description] ([PRD #NNN](issue-url)) — [1-line rationale or blocked-by]`. If a placeholder exists ("new PRD, to be created"), update in place — don't duplicate.
-- **On PRD closure**: remove the entry. ROADMAP is forward-looking; completed work lives in `PROGRESS.md`.
+- **On standalone issue creation** *(an issue with no corresponding PRD file in `prds/`)*: add an entry the same way, using the issue number and URL directly: `- [Brief description] ([#NNN](issue-url)) — [1-line rationale or blocked-by]`.
+- **On PRD or issue closure**: remove the entry. ROADMAP is forward-looking; completed work lives in `PROGRESS.md`. Never use strikethrough — remove the line entirely.
 
 Link to the GitHub issue, not the PRD file path — issues are stable across renames.
 
@@ -195,7 +201,7 @@ Feature work is tracked in PRDs (`prds/` directory). Use the PRD skills: `/prd-c
 ## Eval Run Setup (spinybacked-orbweaver-eval)
 
 When setting up a new spiny-orb evaluation target or running `spiny-orb instrument`:
-- GitHub PAT setup, dry-run verification, and failure modes: @~/.claude/rules/eval-github-pat.md
+- GitHub PAT setup, dry-run verification, and failure modes (reference pointer, not auto-loaded — read only when setting up a new eval target): `~/.claude/rules/eval-github-pat.md`
 
 ## Conflict Resolution
 

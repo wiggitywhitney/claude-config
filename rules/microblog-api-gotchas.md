@@ -53,9 +53,26 @@ When creating pages via Micropub JSON, `mp-channel` must be `["pages"]` (array),
 
 Micro.blog cross-posting reads from the blog's RSS/JSON feed — it is NOT triggered by Micropub API calls directly. This means:
 - Cross-posting timing depends on feed polling, not post creation
-- There is no API parameter to control which platforms receive a specific post
-- Per-category filtering is possible only via category-specific feeds (`/categories/name/feed.xml`)
-- No per-post cross-posting toggle exists in any API
+- Per-category filtering is possible only via category-specific feeds (`/categories/name/feed.xml`), but micro.blog has confirmed this is unreliable: "you cannot set automatic crossposting based on the source feed or the category of a post"
+
+## Per-post cross-posting suppression via `mp-syndicate-to[]` (Micropub only)
+
+The Micropub API supports `mp-syndicate-to[]` to control which platforms receive cross-posts for a specific post:
+
+- **Omit the parameter entirely** → micro.blog cross-posts to ALL configured platforms (default)
+- **`mp-syndicate-to[]=` (blank value)** → suppress ALL cross-posting for this post
+- **`mp-syndicate-to[]=mastodon`** → cross-post to Mastodon only
+
+This is critical when posting to micro.blog AND other platforms directly in the same workflow — without suppression, those platforms receive both the direct post AND a micro.blog syndication duplicate.
+
+```javascript
+// Suppress cross-posting (blank value appended to URLSearchParams):
+params.append('mp-syndicate-to[]', '');
+```
+
+Query available targets: `GET /micropub?q=syndicate-to` returns `uid` and `name` for each configured service.
+
+**Do NOT confuse with feed-based cross-posting** — `mp-syndicate-to[]` only works on Micropub API posts, not on posts published other ways.
 
 ## Rescheduling posts creates phantom duplicates
 
@@ -64,10 +81,6 @@ Changing a scheduled post's publication date can cause it to appear at ALL previ
 ## Template pages (About, Archive, Photos) have is_template flag
 
 `microblog.getPages` returns `is_template: true` for built-in pages. These pages use Hugo templates for rendering. Editing their `description` field via `microblog.editPage` updates the raw content, but the final rendered output depends on the theme's template. Test edits on a non-critical page first.
-
-## Cross-posting has no per-post API control
-
-9 platforms supported (LinkedIn image cross-posting is reportedly planned but not yet implemented). There is no API to selectively cross-post a single post — it's all or nothing per feed.
 
 ## Micropub `?q=source` response does not return a `photo` property
 

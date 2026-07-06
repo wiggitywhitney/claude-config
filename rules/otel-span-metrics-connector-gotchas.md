@@ -2,9 +2,20 @@
 
 Verified 2026-06-16 against opentelemetry-collector-contrib spanmetricsconnector README and GitHub issues. Applies to any project emitting span-based metrics via an OTel Collector pipeline.
 
+## Naming cheat sheet — keep these straight
+
+| Context | Correct form |
+|---|---|
+| Human-readable (prose, docs) | "Span Metrics Connector" or "spanmetrics connector" |
+| otelcol-contrib YAML `type:` key | `span_metrics` |
+| Deprecated YAML key (still works) | `spanmetrics` |
+| DDOT YAML key (unconfirmed) | Verify against DDOT version — may differ |
+
+In conversation: say "spanmetrics connector." In config files: always write `span_metrics`. Never mix `span_metrics` and `spanmetrics` within the same explanation as if they're interchangeable — they are the same component, but one is the current YAML key and one is the deprecated YAML key.
+
 ## Component type was renamed
 
-The component type is now `span_metrics`, not `spanmetrics`. The old name still works (deprecated, not yet removed) but use `span_metrics` in new configs. The component has always been called "Span Metrics Connector" in docs — the YAML type is what changed.
+The YAML `type:` key is now `span_metrics`, not `spanmetrics`. The old name still works (deprecated, not yet removed) but use `span_metrics` in new configs. The human-readable name ("Span Metrics Connector") has not changed — only the YAML type key changed.
 
 ## Default cardinality limit is unlimited — no circuit breaker
 
@@ -36,6 +47,20 @@ The connector replaced an older processor component. Key renames that break exis
 - Metric `latency` → `duration`
 - `_total` suffix dropped from metric names
 - Prometheus-specific label sanitization removed
+
+## `add_resource_attributes` defaults to `false` — env and version tags missing from Datadog metrics
+
+By default, the spanmetricsconnector does NOT propagate resource attributes (`deployment.environment.name`, `service.version`) to the generated metrics' resource scope. Only `service.name` appears as a *dimension* (data point attribute) by default. When the Datadog Exporter processes these metrics, it reads resource attributes for unified service tag mapping — if the resource scope is empty, metrics are missing `env` and `version` tags. This breaks Datadog metrics-to-logs correlation even when the OTel SDK sets these attributes correctly on spans.
+
+**Fix:** Set `add_resource_attributes: true` in the spanmetricsconnector config:
+
+```yaml
+connectors:
+  span_metrics:
+    add_resource_attributes: true
+```
+
+This option "enables the old behavior before the `connector.spanmetrics.excludeResourceMetrics` feature gate was introduced." Verify the option exists in the otelcol-contrib version in use.
 
 ## Datadog Exporter no longer computes Trace Metrics (v0.95.0+)
 
