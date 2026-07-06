@@ -65,24 +65,25 @@ When you have multiple questions or decisions for the user, present them **one a
 
 - **MANDATORY**: Before writing code with any technology new to the project, invoke `/research <technology>`. Do not skip this step.
 - Full process: @~/.claude/rules/adopting-new-technologies.md
-- Kyverno (version numbering, GKE firewall, subjects matching): @~/.claude/rules/kyverno-gotchas.md
-- yt-dlp (format selectors, ffmpeg-absent behavior, mweb stability, Node v20+): @~/.claude/rules/yt-dlp-gotchas.md
-- Weaver (v0.22.1 auto-escaping defaults, definition schema format): @~/.claude/rules/weaver-gotchas.md
-- Micro.blog API (dual auth tokens, editPage param order, feed-based cross-posting): @~/.claude/rules/microblog-api-gotchas.md
-- OTel JS semantic conventions (stable vs incubating entry-points, DB/HTTP attribute renames, deprecated SEMATTRS_*): @~/.claude/rules/otel-semconv-gotchas.md
-- mmdc/mermaid-cli (Puppeteer peer dep, Apple Silicon Chrome path, npx -p flag, PNG scaling): @~/.claude/rules/mmdc-gotchas.md
-- Social platform video upload (Bluesky separate service token, Mastodon async 202 poll, LinkedIn 4-step init/upload/finalize/poll + ETag stripping): @~/.claude/rules/social-video-upload-gotchas.md
-- TypeScript tsc CLI (TS5112 hard error in 6.x, --ignoreConfig version-gate, stdout not stderr, new 6.x defaults): @~/.claude/rules/typescript-cli-gotchas.md
-- LinkedIn REST API (commentary silent truncation on unescaped reserved chars, content.media not the cause, refresh token partner approval): @~/.claude/rules/linkedin-api-gotchas.md
-- IS scoring / OTel Collector (binary preferred over Docker, Docker needs --user+--workdir+abs-path, port 4318 conflict with DD Agent, OTel SDK devDeps for target app): @~/.claude/rules/is-scoring-gotchas.md
-- Datadog MCP server (official plugin install, OAuth vs key-based auth, APM trace tools, vals exec incompatibility, env block bug): @~/.claude/rules/datadog-mcp-gotchas.md
-- OTel Span Metrics Connector (cardinality limit default=0, ms→s unit change gate, Exemplars not TraceId, sampler placement, v0.95.0 Datadog Exporter change): @~/.claude/rules/otel-span-metrics-connector-gotchas.md
-- Datadog span-based metrics (auto vs custom distinction, fixed tag set on Trace Metrics, trace.* namespace collision, filter vs group-by cardinality, trace completion emission delay): @~/.claude/rules/datadog-span-based-metrics-gotchas.md
-- DDOT / Datadog Distribution of OTel Collector (Agent-embedded not standalone, curated component list, routingprocessor removed v7.71.0, spanmetricsconnector YAML key unconfirmed, Fleet Automation Preview): @~/.claude/rules/ddot-gotchas.md
-- OTel Logs Bridge API / sdk-logs (experimental not GA in June 2026, console.log has no automatic bridge, SDK must init before logging libraries load, traceBased filter silently drops unsampled-trace logs): @~/.claude/rules/otel-logs-bridge-gotchas.md
-- Datadog log-trace correlation with OTel SDK (dd.trace_id 64-bit decimal NOT required, 32-char hex natively accepted, service.name not auto-remapped, OTLP vs file pipeline correlation behavior): @~/.claude/rules/datadog-log-trace-gotchas.md
-- Pino (v10 is current not v9, instrumentation-pino supports <11, ESM default import works, MCP server needs stderr destination, Error first-arg pattern): @~/.claude/rules/pino-gotchas.md
-- sharp (Node >= 20.9.0 required, macOS Homebrew libvips triggers source build use SHARP_IGNORE_GLOBAL_LIBVIPS=1, fit: inside must be explicit, Buffer input works directly): @~/.claude/rules/sharp-gotchas.md
+- **The technology-specific gotcha files below are reference pointers, not auto-loaded context.** Only read a file from this index when the current task actually touches that technology — do not read the whole list "just in case."
+  - Kyverno (version numbering, GKE firewall, subjects matching): `~/.claude/rules/kyverno-gotchas.md`
+  - yt-dlp (format selectors, ffmpeg-absent behavior, mweb stability, Node v20+): `~/.claude/rules/yt-dlp-gotchas.md`
+  - Weaver (v0.22.1 auto-escaping defaults, definition schema format): `~/.claude/rules/weaver-gotchas.md`
+  - Micro.blog API (dual auth tokens, editPage param order, feed-based cross-posting): `~/.claude/rules/microblog-api-gotchas.md`
+  - OTel JS semantic conventions (stable vs incubating entry-points, DB/HTTP attribute renames, deprecated SEMATTRS_*): `~/.claude/rules/otel-semconv-gotchas.md`
+  - mmdc/mermaid-cli (Puppeteer peer dep, Apple Silicon Chrome path, npx -p flag, PNG scaling): `~/.claude/rules/mmdc-gotchas.md`
+  - Social platform video upload (Bluesky separate service token, Mastodon async 202 poll, LinkedIn 4-step init/upload/finalize/poll + ETag stripping): `~/.claude/rules/social-video-upload-gotchas.md`
+  - TypeScript tsc CLI (TS5112 hard error in 6.x, --ignoreConfig version-gate, stdout not stderr, new 6.x defaults): `~/.claude/rules/typescript-cli-gotchas.md`
+  - LinkedIn REST API (commentary silent truncation on unescaped reserved chars, content.media not the cause, refresh token partner approval): `~/.claude/rules/linkedin-api-gotchas.md`
+  - IS scoring / OTel Collector (binary preferred over Docker, Docker needs --user+--workdir+abs-path, port 4318 conflict with DD Agent, OTel SDK devDeps for target app): `~/.claude/rules/is-scoring-gotchas.md`
+  - Datadog MCP server (official plugin install, OAuth vs key-based auth, APM trace tools, vals exec incompatibility, env block bug): `~/.claude/rules/datadog-mcp-gotchas.md`
+  - OTel Span Metrics Connector (cardinality limit default=0, ms→s unit change gate, Exemplars not TraceId, sampler placement, v0.95.0 Datadog Exporter change): `~/.claude/rules/otel-span-metrics-connector-gotchas.md`
+  - Datadog span-based metrics (auto vs custom distinction, fixed tag set on Trace Metrics, trace.* namespace collision, filter vs group-by cardinality, trace completion emission delay): `~/.claude/rules/datadog-span-based-metrics-gotchas.md`
+  - DDOT / Datadog Distribution of OTel Collector (Agent-embedded not standalone, curated component list, routingprocessor removed v7.71.0, spanmetricsconnector YAML key unconfirmed, Fleet Automation Preview): `~/.claude/rules/ddot-gotchas.md`
+  - OTel Logs Bridge API / sdk-logs (experimental not GA in June 2026, console.log has no automatic bridge, SDK must init before logging libraries load, traceBased filter silently drops unsampled-trace logs): `~/.claude/rules/otel-logs-bridge-gotchas.md`
+  - Datadog log-trace correlation with OTel SDK (dd.trace_id 64-bit decimal NOT required, 32-char hex natively accepted, service.name not auto-remapped, OTLP vs file pipeline correlation behavior): `~/.claude/rules/datadog-log-trace-gotchas.md`
+  - Pino (v10 is current not v9, instrumentation-pino supports <11, ESM default import works, MCP server needs stderr destination, Error first-arg pattern): `~/.claude/rules/pino-gotchas.md`
+  - sharp (Node >= 20.9.0 required, macOS Homebrew libvips triggers source build use SHARP_IGNORE_GLOBAL_LIBVIPS=1, fit: inside must be explicit, Buffer input works directly): `~/.claude/rules/sharp-gotchas.md`
 
 ## Testing
 

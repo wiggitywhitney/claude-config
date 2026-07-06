@@ -99,6 +99,9 @@ Earns trust; makes the email feel less like a cold blast. Never describe Ajuna a
 **Never tell someone back who they are** ("You are a cloud engineer", "You are a Datadog Ambassador").
 When it comes from an introducer, attribute it: "David tells me that you are a new Datadog Ambassador — welcome!" — not a declaration, a warm acknowledgment.
 
+**Mark optional steps or items with `(optional)` — not "Optional!" and not a softening parenthetical.**
+`(optional)` lowercase in parentheses is the right form. "Optional!" as a standalone sentence and "(No worries if you don't have anything to share!)" are both wrong. Applies to bulleted lists and inline prose alike.
+
 **No hedging language.** "Usually", "typically", "about", "generally", "kind of", "make sure to" — cut them. If something is always true, say it plainly.
 - Do: "Please complete the form." / "We hold them over Zoom."
 - Don't: "Please make sure to complete the form." / "We do them over Zoom."
@@ -107,11 +110,21 @@ When it comes from an introducer, attribute it: "David tells me that you are a n
 
 **Use active, direct constructions. Never passive hedges.**
 - "I am reaching out because..." not "I wanted to reach out because..."
+- "I'm following up on my note from last week." not "I wanted to follow up on my note from last week."
 - "Are you interested?" not "Would you be interested?"
 - "I need X" not "I was hoping to get X"
 The passive version sounds like you're apologizing for asking. Just ask.
 
+**Follow-up nudges to guest invite prospects end with enthusiasm.** After the ask, add "I'd love to have you!" Short follow-ups need warmth to land well.
+- Do: "I'm following up on my note from last week. Are you interested in being a guest on Datadog Illuminated? I'd love to have you!"
+- Don't: "I wanted to follow up on my note from last week. Are you interested in being a guest on Datadog Illuminated?"
+
 **"I would love" is acceptable when expressing genuine enthusiasm for someone's specific angle** — e.g., "I would love your perspective about X." It's warmer than "I am interested in" and fits panel invite contexts. The no-hedging rule applies to asks and questions ("Are you interested?" not "Would you be interested?"), not to statements of enthusiasm.
+
+**In cold outreach, name the topic — don't name the specific technique.** When referencing a blog post or project as the reason for the invite, one sentence naming what they built is enough. Cut a follow-up sentence that names the specific internal method/workflow (e.g., "the narrow-prompt, failing-tests-as-judge workflow") — that level of detail reads as presumptuous or overly technical for a first contact, even when accurate. Save that depth for the planning conversation after they say yes.
+- Do: "I read your engineering blog post about migrating Stream Router from FoundationDB to PostgreSQL, and I would love to tell that story on the show."
+- Don't: add a second sentence spelling out the specific technique/workflow used.
+(Confirmed: cut from the sent version of the Arnold Wakim invite, 2026-07-01 — draft had it, sent version didn't.)
 
 **Personalize with specific interest in their angle.**
 "I'm interested to hear about how AI has reshaped your job as a cloud engineer" — not generic praise about their background, a concrete reason you want *them* in the conversation. If you don't know their specific angle, ask Whitney before drafting rather than inventing one.
@@ -192,6 +205,32 @@ LinkedIn doesn't have this convention — use their full name there.
 - Removed the goal sentence ("five non-advocate submissions") — Ara doesn't need to know the internal goal to give tips
 - "and that I should pick your brain" → "and she recommended that I pick your brain" — makes Ajuna's recommendation explicit rather than implied; carries more social weight
 - Added "Thank you!" — she always closes outreach this way
+
+---
+
+## Slide Speaker Notes Voice
+
+These rules apply when writing speaker notes for a conference talk.
+
+**Cross-slide narrative bridging with ellipsis.** Speaker notes can end one slide mid-sentence (cliffhanger) and open the next slide with "..." picking up where they left off. The ellipsis signals the continuation; the slide reveal provides the pause.
+
+Example:
+> Slide 3 notes end: "This isn't the worst-case scenario though. The worst case is when..."
+> Slide 4 notes open: "...Nothing looks broken."
+
+**CAPS for a single word or short phrase, mid-sentence.** One moment of spoken emphasis, not a style override. "The dashboard that the VP is looking at RIGHT NOW."
+
+**Short interjections and punch-line fragments are acceptable — truncated structural sentences are not.** True interjections ("Uh-oh.") and deliberate punch-line pivots ("Or both." "Total mystery!") land harder as their own sentences. But a sentence that belongs to the argument and happens to be short is not a punch line — write it as a complete sentence. "Not sixteen." is a fragment; "It is one integration instead of sixteen." is the right form. The test: could this fragment stand alone on a protest sign? If yes, it can be a fragment. If it is just a fact left dangling, complete it.
+
+**Playful casual words mid-talk.** "Uh-oh" in a professional conference talk. Keeps energy up, signals trouble without drama.
+
+**Second-person hypothetical over third-person anecdote.** "What if your billing system was wrong for a month?" not "Julien has seen cases where a billing system was wrong for a month." The audience is in the scenario, not watching it from outside.
+
+**Binary consequence framing with a twist.** "You either lose money or reputation. Or both." — states two bad options, then lands the twist ("Or both.") as its own sentence.
+
+**Escalate stakes with a title.** When the scenario needs urgency, swap a generic role for an executive title. "The dashboard that the VP is looking at RIGHT NOW" hits harder than "the dashboard" alone.
+
+**Transition slides get real language, not placeholders.** "[transition]" is not acceptable. Write the actual sentence: "Let's talk about what makes data pipeline observability difficult."
 
 ---
 

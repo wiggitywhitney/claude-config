@@ -161,6 +161,7 @@ If ROADMAP.md was not updated (file doesn't exist or no entry was needed), skip 
 
 - **PROGRESS.md checkbox**: Always the final item in the issue body — never omit it
 - **Review is mandatory**: `/write-prompt` must run before `gh issue create` — do not skip
+- **Do NOT run `/code-review`** on GitHub issues — `/code-review` requires an open PR and is only for PRs
 - **One question at a time**: Ask about the problem first; follow up for solution and criteria separately
 - **ROADMAP.md is conditional**: Only update if `docs/ROADMAP.md` exists in the repo
 - **Draft before create**: Unlike PRD creation, there is no issue-number dependency on the filename — always draft and review before creating the issue

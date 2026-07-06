@@ -101,7 +101,7 @@
       "Bash(rm *)"
     ]
   },
-  "model": "sonnet[1m]",
+  "model": "opus[1m]",
   "hooks": {
     "PreToolUse": [
       {
@@ -208,7 +208,16 @@
   "enabledPlugins": {
     "skill-creator@claude-plugins-official": true,
     "code-review@claude-plugins-official": true,
-    "datadog@claude-plugins-official": true
+    "datadog@claude-plugins-official": true,
+    "trajectory@trajectory": true
+  },
+  "extraKnownMarketplaces": {
+    "trajectory": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/whitney.lee/.trajectory/claude-marketplace"
+      }
+    }
   },
   "alwaysThinkingEnabled": true,
   "effortLevel": "high",

@@ -37,6 +37,7 @@ description: Git workflow rules including branching, CodeRabbit reviews, and com
   - **Fix** if the finding is real and the only reason not to fix it is effort — effort alone is not a reason to skip.
   - **Defer** if the finding is real and worth addressing, but complexity or scope makes it better suited to a dedicated issue than an inline fix. Create a GitHub issue; run `/write-prompt` on the issue body before creating it.
   - **Skip** if the suggestion misunderstands the code, or if fix complexity genuinely outweighs the benefit and the finding is not worth tracking at all.
+- **Before linking an issue in a PR description (`Closes #N`)**: every unchecked acceptance criteria checkbox in that issue must be either (a) implemented and committed in the current branch, or (b) tracked in a new open issue filed before the PR is created. If any checkbox is unchecked and has no tracking issue, remove the `Closes #N` reference — do not close the issue with this PR. Deferring acceptance criteria requires explicit human approval in the current session; never defer silently or unilaterally.
 - **After merging a PR**, delete the local and remote feature branch immediately. Don't leave stale branches accumulating.
 - NEVER include references to Claude, AI, Anthropic, or Co-Authored-By AI attribution in commit messages. Write commit messages as if authored by a human developer.
 - Repos may override rules via dotfiles (`.skip-branching`, `.skip-coderabbit`).

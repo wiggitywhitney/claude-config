@@ -2,6 +2,8 @@
 
 IS scoring runs the target app against an OTel Collector to capture OTLP traces, then scores them with `evaluation/is/score-is.js`. The Collector writes traces to `eval-traces.json` for IS scoring **and** forwards them to Datadog APM via the Datadog exporter — both exporters run in parallel.
 
+The Datadog Agent's embedded OTLP HTTP receiver has been permanently disabled in `/opt/datadog-agent/etc/datadog.yaml` (the `http:` block removed from `otlp_config.receiver.protocols`). `otelcol-contrib` owns port 4318 without interference — no Agent stop/start required before or after a scoring run.
+
 ## Preferred: Binary download (no Docker required)
 
 Download `otelcol-contrib` for macOS ARM64 from the [releases page](https://github.com/open-telemetry/opentelemetry-collector-contrib/releases). Place on PATH (e.g., `~/.local/bin/`). Run from the eval repo root with `vals exec` to inject `DD_API_KEY`:
@@ -38,20 +40,6 @@ touch evaluation/is/eval-traces.json
 
 `spinybacked-orbweaver-eval/evaluation/is/otelcol-config.yaml` is used for every IS scoring run, regardless of the target repo (commit-story-v2, taze, any future target). Changes to this file apply globally — fix it once, it applies everywhere. Do not remove or replace the file exporter when adding new exporters — both must run in parallel.
 
-## Port 4318 Conflict with Datadog Agent
-
-The Datadog Agent occupies port 4318. Stop it first; restart after.
-
-```bash
-datadog-agent stop
-```
-
-```bash
-datadog-agent start
-```
-
-Both work without sudo. `sudo launchctl stop/start com.datadoghq.agent` also works but is unnecessary.
-
 ## OTel SDK packages for target apps
 
 The target app's `examples/instrumentation.js` requires the full OTel SDK (not just the API). Install as devDependencies on the instrumented branch before running IS scoring:
@@ -64,11 +52,13 @@ These are not committed — install only for the IS scoring run, then restore th
 
 ## Full sequence for a scoring run
 
+Check if otelcol-contrib is already running (it can persist across sessions now that the Agent no longer conflicts):
 ```bash
-datadog-agent stop
+lsof -i :4318 -sTCP:LISTEN
 ```
+If port 4318 is already held by `otelcol-c`, skip the start step below — the existing instance is ready.
 
-Start the Collector (binary preferred) — use `vals exec` to inject `DD_API_KEY`:
+If otelcol-contrib is not running, start it (binary preferred) — use `vals exec` to inject `DD_API_KEY`:
 ```bash
 vals exec -f ~/Documents/Repositories/spinybacked-orbweaver-eval/.vals.yaml -- bash -c 'export PATH="/opt/homebrew/bin:$PATH" && otelcol-contrib --config ~/Documents/Repositories/spinybacked-orbweaver-eval/evaluation/is/otelcol-config.yaml > /tmp/otelcol.log 2>&1' &
 COLLECTOR_PID=$!
@@ -93,14 +83,13 @@ OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4318/v1/traces node --import
 
 Score and save:
 ```bash
-node evaluation/is/score-is.js evaluation/is/eval-traces.json > evaluation/<target>/run-<N>/is-score.md
+node evaluation/is/score-is.js evaluation/is/eval-traces.json --target <target> > evaluation/<target>/run-<N>/is-score.md
 ```
 
 Clean up:
 ```bash
 if [ -n "${COLLECTOR_PID:-}" ]; then kill "$COLLECTOR_PID"; fi
 git -C ~/Documents/Repositories/<target> checkout main
-datadog-agent start
 ```
 
 If you used Docker instead of the binary collector, run: `docker stop eval-collector && docker rm eval-collector`
@@ -109,6 +98,6 @@ If you used Docker instead of the binary collector, run: `docker stop eval-colle
 
 - **90/100** is achievable with only 3 committed files (release-it run-3: 4 INTERNAL spans, 7/8 rules pass)
 - **RES-001** (service.instance.id absent) is a common miss — the bootstrap sets `service.name` and `service.version` but not `service.instance.id`
-- **SPA-001** (≤10 INTERNAL spans) — the calibration is 10 spans; small instrumented sets pass easily
+- **SPA-001** (INTERNAL spans) — global default is 30; per-target overrides in `SPA001_PER_TARGET_LIMITS`: `taze` → not_applicable (null), `commit-story-v2` → 55 (max observed 48 in run-24). Pass `--target <name>` to the CLI to activate per-target thresholds.
 - **MET rules** are always "not applicable" for CLI apps that produce no OTel metrics
 - Applicable rules: ~8 of 15; skipped: ~7 (multi-instance, k8s, metrics)
