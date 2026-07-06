@@ -91,7 +91,7 @@ When you have multiple questions or decisions for the user, present them **one a
 - Use real implementations when feasible; mock only at system boundaries. Separate deterministic from non-deterministic.
 - **Bash scripts**: Use **bats-core** (`brew install bats-core`) for all bash test suites. Place tests in `tests/<script-name>.bats`. Do NOT use plain-bash ad hoc test scripts.
 - Full testing rules: @~/.claude/rules/testing-rules.md
-- Bats gotchas and patterns: @~/.claude/rules/bats-bash-testing.md
+- Bats gotchas and patterns (reference pointer, not auto-loaded — read only when writing or debugging a bash test suite): `~/.claude/rules/bats-bash-testing.md`
 - Project-type strategies (reference pointer, not auto-loaded — read only when choosing a testing strategy for a new project type): `~/Documents/Repositories/claude-config/guides/testing-decision-guide.md`
 
 ## Acceptance Gate Failures
@@ -195,7 +195,7 @@ Every code file (`.py`, `.sh`, `.ts`, `.tsx`, `.js`, `.jsx`) must start with a 1
 Feature work is tracked in PRDs (`prds/` directory). Use the PRD skills: `/prd-create`, `/prd-next`, `/prd-update-progress`, `/prd-update-decisions`, `/prd-done`.
 - Do not invent tasks outside the PRD structure. When a PRD exists, follow it.
 - **Do NOT commit manually during PRD work.** `/prd-update-progress` handles commits, PRD updates, and journaling together.
-- Cross-PRD dependencies block clean merges. Design PRDs so every milestone is completable from main alone. Recovery when one is discovered mid-implementation: @~/.claude/rules/prd-dependency-management.md
+- Cross-PRD dependencies block clean merges. Design PRDs so every milestone is completable from main alone. Recovery details (reference pointer, not auto-loaded — read only when a cross-PRD dependency is discovered): `~/.claude/rules/prd-dependency-management.md`
 - **Decision cascade**: When a row is added to a PRD's `## Decision Log`, evaluate each remaining milestone in that PRD: does the new decision change its prerequisites, approach, or success criteria? Update any milestone whose plan is affected. Then scan other open PRDs in `prds/` — if the decision is relevant to their scope, open those PRDs and update their affected milestones too.
 
 ## Eval Run Setup (spinybacked-orbweaver-eval)
@@ -217,4 +217,4 @@ Check the freshness timestamp in that file. If it is more than 48 hours old, tre
 
 ## Hooks Reference
 
-- Hook details: @~/.claude/rules/hooks-reference.md
+- Hook details (reference pointer, not auto-loaded — read only when a hook fires unexpectedly or you need to know what a specific hook checks): `~/.claude/rules/hooks-reference.md`
