@@ -76,3 +76,27 @@ Whitney's preferences for conference presentation slides.
 - **Key moment slides**: Centered (`.center`), large inline-styled text, 1-2 sentences max. Question and answer on separate slides.
 - **Demo slides**: Simple instructions, QR code (generated live in Chrome), presenter cues in speaker notes
 - **Reveal slides** (post-demo): Table showing what the audience didn't know, followed by a centered punchline slide
+
+## Speaker Notes Voice
+
+Rules for writing the actual speaker notes content read aloud during a talk (as opposed to slide visuals/structure above).
+
+**Cross-slide narrative bridging with ellipsis.** Speaker notes can end one slide mid-sentence (cliffhanger) and open the next slide with "..." picking up where they left off. The ellipsis signals the continuation; the slide reveal provides the pause.
+
+Example:
+> Slide 3 notes end: "This isn't the worst-case scenario though. The worst case is when..."
+> Slide 4 notes open: "...Nothing looks broken."
+
+**CAPS for a single word or short phrase, mid-sentence.** One moment of spoken emphasis, not a style override. "The dashboard that the VP is looking at RIGHT NOW."
+
+**Short interjections and punch-line fragments are acceptable — truncated structural sentences are not.** True interjections ("Uh-oh.") and deliberate punch-line pivots ("Or both." "Total mystery!") land harder as their own sentences. But a sentence that belongs to the argument and happens to be short is not a punch line — write it as a complete sentence. "Not sixteen." is a fragment; "It is one integration instead of sixteen." is the right form. The test: could this fragment stand alone on a protest sign? If yes, it can be a fragment. If it is just a fact left dangling, complete it.
+
+**Playful casual words mid-talk.** "Uh-oh" in a professional conference talk. Keeps energy up, signals trouble without drama.
+
+**Second-person hypothetical over third-person anecdote.** "What if your billing system was wrong for a month?" not "Julien has seen cases where a billing system was wrong for a month." The audience is in the scenario, not watching it from outside.
+
+**Binary consequence framing with a twist.** "You either lose money or reputation. Or both." — states two bad options, then lands the twist ("Or both.") as its own sentence.
+
+**Escalate stakes with a title.** When the scenario needs urgency, swap a generic role for an executive title. "The dashboard that the VP is looking at RIGHT NOW" hits harder than "the dashboard" alone.
+
+**Transition slides get real language, not placeholders.** "[transition]" is not acceptable. Write the actual sentence: "Let's talk about what makes data pipeline observability difficult."

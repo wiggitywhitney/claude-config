@@ -96,6 +96,12 @@ Put it right after you name what you're inviting them to — don't make the read
 **Acknowledge CCs in the body** ("Ajuna Kyaruzi is cc'd here").
 Earns trust; makes the email feel less like a cold blast. Never describe Ajuna as "my manager" — just cc her and name her.
 
+**Don't re-name someone in a sentence when they're addressed directly in the very next sentence.**
+When a message thanks a connector and then pivots to address the new contact by name ("Eric, I'll follow up..."), drop the new contact's name from the thank-you sentence — it's redundant once they're named as the direct addressee right after.
+- Do: "Thank you so much for connecting us! I'm excited to work on this. Eric, I'll follow up with you directly..."
+- Don't: "Thank you so much for connecting us! I'm excited to work with Eric on this. Eric, I'll follow up..."
+(Confirmed: cut from the sent version of the reply to Samantha Scaglione re: Eric Karschner, 2026-07-06.)
+
 **Never tell someone back who they are** ("You are a cloud engineer", "You are a Datadog Ambassador").
 When it comes from an introducer, attribute it: "David tells me that you are a new Datadog Ambassador — welcome!" — not a declaration, a warm acknowledgment.
 
@@ -190,76 +196,4 @@ LinkedIn doesn't have this convention — use their full name there.
 
 ---
 
-## Annotated Examples
-
-### Professional Slack outreach — cutting goal-context and attribution fix
-
-**Draft:**
-> Hey Ara! I've been tasked with sourcing speakers for KubeCon NA this fall, and the goal is to get five non-advocate submissions across the team. Ajuna mentioned you have experience finding speakers for KubeCon and that I should pick your brain. How have you approached finding people in the past? I'd love any tips or tricks you're willing to share.
-
-**What she actually sent:**
-> Hello Ara! I've been tasked with sourcing speakers for KubeCon NA coming up this fall, and Ajuna mentioned you have experience finding speakers for KubeCon, and she recommended that I pick your brain. How have you approached finding people in the past? I'd love any tips or tricks you're willing to share. Thank you!
-
-**What changed and why:**
-- "Hey" → "Hello" — Ara isn't a close contact; professional register appropriate
-- Removed the goal sentence ("five non-advocate submissions") — Ara doesn't need to know the internal goal to give tips
-- "and that I should pick your brain" → "and she recommended that I pick your brain" — makes Ajuna's recommendation explicit rather than implied; carries more social weight
-- Added "Thank you!" — she always closes outreach this way
-
----
-
-## Slide Speaker Notes Voice
-
-These rules apply when writing speaker notes for a conference talk.
-
-**Cross-slide narrative bridging with ellipsis.** Speaker notes can end one slide mid-sentence (cliffhanger) and open the next slide with "..." picking up where they left off. The ellipsis signals the continuation; the slide reveal provides the pause.
-
-Example:
-> Slide 3 notes end: "This isn't the worst-case scenario though. The worst case is when..."
-> Slide 4 notes open: "...Nothing looks broken."
-
-**CAPS for a single word or short phrase, mid-sentence.** One moment of spoken emphasis, not a style override. "The dashboard that the VP is looking at RIGHT NOW."
-
-**Short interjections and punch-line fragments are acceptable — truncated structural sentences are not.** True interjections ("Uh-oh.") and deliberate punch-line pivots ("Or both." "Total mystery!") land harder as their own sentences. But a sentence that belongs to the argument and happens to be short is not a punch line — write it as a complete sentence. "Not sixteen." is a fragment; "It is one integration instead of sixteen." is the right form. The test: could this fragment stand alone on a protest sign? If yes, it can be a fragment. If it is just a fact left dangling, complete it.
-
-**Playful casual words mid-talk.** "Uh-oh" in a professional conference talk. Keeps energy up, signals trouble without drama.
-
-**Second-person hypothetical over third-person anecdote.** "What if your billing system was wrong for a month?" not "Julien has seen cases where a billing system was wrong for a month." The audience is in the scenario, not watching it from outside.
-
-**Binary consequence framing with a twist.** "You either lose money or reputation. Or both." — states two bad options, then lands the twist ("Or both.") as its own sentence.
-
-**Escalate stakes with a title.** When the scenario needs urgency, swap a generic role for an executive title. "The dashboard that the VP is looking at RIGHT NOW" hits harder than "the dashboard" alone.
-
-**Transition slides get real language, not placeholders.** "[transition]" is not acceptable. Write the actual sentence: "Let's talk about what makes data pipeline observability difficult."
-
----
-
-### Warm-intro reply — panel panelist invite (Tanya Vo, DASH 2026)
-
-**What she actually sent:**
-> Thank you for the introduction, David!
->
-> (^-^)/ Tanya, it is so nice to meet you. David tells me that you are a new Datadog Ambassador - welcome!
->
-> Ajuna (cc'd here) and I are putting together the Women in Tech Lunch Panel at DASH 2026. Would you like to participate as a panelist? I'm interested to hear about how AI has reshaped your job as a cloud engineer. The panel is called "Engineering with AI in the Stack" and takes place during lunch on Wednesday June 10.
->
-> Here is the session page: https://dash.datadoghq.com/sessions/women-in-tech-lunch-panel---engineering-with-ai-in-the-stack/
->
-> Some of the questions we are planning to cover include:
-> - What scaffolding did you have to build before AI started helping instead of creating more work?
-> - When AI first burst onto the scene, what assumptions did you make about it that turned out not to be true?
-> - Tell me a failure story about when you used AI and shouldn't have, or when you should have and didn't, or when it misbehaved. Then tell me what you would have done differently, hindsight being 20/20.
-> - Regarding the huge potential of AI, what excites you? What scares you?
->
-> Are you interested and available to participate? If you have any questions, please don't hesitate to ask.
->
-> Warmly,
-> Whitney
-
-**What this example shows:**
-- "David tells me that you are a new Datadog Ambassador — welcome!" — attribute facts from the introducer, add a warm greeting
-- Ask comes immediately after naming the panel: "Would you like to participate as a panelist?"
-- Personalizes with specific interest: "I'm interested to hear about how AI has reshaped your job as a cloud engineer"
-- Session page link replaces any abstract description — let the page do that work
-- "Are you interested?" not "Would you be interested?" — active, not passive
-- "I wanted to reach out" → just reach out; no hedging preamble needed
+Speaker notes voice rules for conference talks moved to `rules/presentation-slides.md`, under "Speaker Notes Voice" — read only when writing speaker notes.
