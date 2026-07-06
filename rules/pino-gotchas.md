@@ -24,7 +24,7 @@ await waitForAllMessagesAcknowledged();
 sdk.start();
 ```
 
-Also add `import-in-the-middle` as an explicit devDependency — it is a transitive dep via `@opentelemetry/instrumentation-pino` but declaring it explicitly pins the version and makes the dependency relationship visible.
+Also add `import-in-the-middle` as an explicit runtime dependency (not devDependency) — the `--import` bootstrap needs it at production startup, and production installs commonly prune devDependencies. It is a transitive dep via `@opentelemetry/instrumentation-pino`, but declaring it explicitly pins the version, makes the dependency relationship visible, and guarantees it survives a devDependency-pruned install.
 
 This pattern applies to any OTel instrumentation that intercepts ESM-imported CJS modules on Node v22+.
 

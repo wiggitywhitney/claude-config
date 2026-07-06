@@ -115,7 +115,7 @@ When it comes from an introducer, attribute it: "David tells me that you are a n
 - "I need X" not "I was hoping to get X"
 The passive version sounds like you're apologizing for asking. Just ask.
 
-**Follow-up nudges to guest invite prospects end with enthusiasm.** After the ask, add "I'd love to have you!" Short follow-ups need warmth to land well.
+**Follow-up nudges to prospective guests end with enthusiasm.** After the ask, add "I'd love to have you!" Short follow-ups need warmth to land well.
 - Do: "I'm following up on my note from last week. Are you interested in being a guest on Datadog Illuminated? I'd love to have you!"
 - Don't: "I wanted to follow up on my note from last week. Are you interested in being a guest on Datadog Illuminated?"
 

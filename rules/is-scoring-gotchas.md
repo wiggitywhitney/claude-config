@@ -56,7 +56,7 @@ Check if otelcol-contrib is already running (it can persist across sessions now 
 ```bash
 lsof -i :4318 -sTCP:LISTEN
 ```
-If port 4318 is already held by `otelcol-c`, skip the start step below — the existing instance is ready.
+If the output shows `otelcol-c` (otelcol-contrib) as the listening process, skip the start step below — the existing instance is ready. If a different process holds the port, that's a stale or unrelated listener — do not reuse it; resolve the conflict before starting the collector.
 
 If otelcol-contrib is not running, start it (binary preferred) — use `vals exec` to inject `DD_API_KEY`:
 ```bash

@@ -13,7 +13,7 @@ sharp 0.35.x requires Node-API v9. Node 18 will fail at install or runtime. CI a
 
 ## macOS: globally installed libvips via Homebrew triggers source build
 
-`brew install vips` installs libvips globally. When sharp's install script detects it, it tries to build from source instead of downloading prebuilt binaries — and the source build often fails because `node-addon-api` isn't available. Fix:
+Prebuilt binaries are distributed as separate `@img/sharp-*` scoped optional dependencies, not fetched via a postinstall script. `brew install vips` installs libvips globally, and sharp's dependency resolution can detect it and build from source instead of using the prebuilt `@img/sharp-*` package — the source build often fails because `node-addon-api` isn't available. Fix:
 
 ```bash
 SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install sharp

@@ -92,7 +92,7 @@ When you have multiple questions or decisions for the user, present them **one a
 - **Bash scripts**: Use **bats-core** (`brew install bats-core`) for all bash test suites. Place tests in `tests/<script-name>.bats`. Do NOT use plain-bash ad hoc test scripts.
 - Full testing rules: @~/.claude/rules/testing-rules.md
 - Bats gotchas and patterns: @~/.claude/rules/bats-bash-testing.md
-- Project-type strategies: @~/Documents/Repositories/claude-config/guides/testing-decision-guide.md
+- Project-type strategies (reference pointer, not auto-loaded — read only when choosing a testing strategy for a new project type): `~/Documents/Repositories/claude-config/guides/testing-decision-guide.md`
 
 ## Acceptance Gate Failures
 
@@ -201,7 +201,7 @@ Feature work is tracked in PRDs (`prds/` directory). Use the PRD skills: `/prd-c
 ## Eval Run Setup (spinybacked-orbweaver-eval)
 
 When setting up a new spiny-orb evaluation target or running `spiny-orb instrument`:
-- GitHub PAT setup, dry-run verification, and failure modes: @~/.claude/rules/eval-github-pat.md
+- GitHub PAT setup, dry-run verification, and failure modes (reference pointer, not auto-loaded — read only when setting up a new eval target): `~/.claude/rules/eval-github-pat.md`
 
 ## Conflict Resolution
 
