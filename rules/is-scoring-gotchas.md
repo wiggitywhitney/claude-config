@@ -50,15 +50,28 @@ npm install --save-dev @opentelemetry/sdk-node @opentelemetry/exporter-trace-otl
 
 These are not committed — install only for the IS scoring run, then restore the branch.
 
+## Persistent collector via macOS LaunchAgent (2026-07-08+)
+
+`otelcol-contrib` now runs as a `launchd` LaunchAgent (`~/Library/LaunchAgents/com.whitney.otelcol-contrib.plist`, label `com.whitney.otelcol-contrib`) with `RunAtLoad` and `KeepAlive` both `true`. It survives crashes (auto-respawns) and should already be listening on port 4318 in virtually every session — the manual start step below is now a fallback for when the LaunchAgent isn't loaded, not the normal path.
+
+Three gotchas surfaced building this LaunchAgent, all specific to running `vals exec`/`otelcol-contrib` under `launchd` rather than an interactive shell:
+
+- **`vals exec` strips `PATH` for its own subprocess even when `PATH` was exported in the outer shell first.** Exporting `PATH="/opt/homebrew/bin:$PATH"` before `vals exec -- otelcol-contrib ...` still fails with `executable file not found in $PATH` — the export doesn't propagate into the environment `vals exec` builds for the command after `--`. Fix: nest a second `bash -c` *inside* `vals exec --` and re-export `PATH` there: `vals exec -f .vals.yaml -- bash -c 'export PATH="..." && otelcol-contrib ...'`. This is the same pattern documented above for plain `bash -c` contexts — confirmed to also apply when the outer process is a `launchd` job.
+- **`otelcol-contrib` may actually be installed at `~/.local/bin`, not `/opt/homebrew/bin`** — verify with `which otelcol-contrib` rather than assuming the Homebrew path. Add whichever directory it's actually in to the `PATH` export (both directories is safest).
+- **`launchd`'s default working directory is `/` (read-only on macOS) when no `WorkingDirectory` key is set.** The shared `otelcol-config.yaml` file exporter uses a relative path (`./eval-traces.json`), which under `launchd`'s default cwd resolves to `/eval-traces.json` and fails with `read-only file system`. Fix: add a `WorkingDirectory` key to the plist pointing at the directory containing `otelcol-config.yaml` (`~/Documents/Repositories/spinybacked-orbweaver-eval/evaluation/is`). A stray `eval-traces.json` file appearing in an unrelated repo's root is a symptom of this same issue from a past manual start — the collector was launched with that repo as cwd.
+- **`WorkingDirectory` (and other plain plist string values) are NOT shell-expanded by `launchd`** — a literal absolute path is required. This differs from the `ProgramArguments` array entries above, which are handed to `/bin/bash -c` and therefore DO expand `$HOME`/env vars, because bash does the expanding, not launchd. Writing `$HOME/...` directly into `WorkingDirectory` (or any other plain `<string>` value outside a `bash -c` argument) fails silently with launchd falling back to its default cwd (`/`) rather than erroring — easy to miss since the symptom looks identical to the "no `WorkingDirectory` key set" case above.
+
+Debug with `launchctl list com.whitney.otelcol-contrib` (shows `PID`, `LastExitStatus`) and the log at `/tmp/otelcol-contrib.log`. Reload after editing the plist: `launchctl unload ~/Library/LaunchAgents/com.whitney.otelcol-contrib.plist && launchctl load ~/Library/LaunchAgents/com.whitney.otelcol-contrib.plist`.
+
 ## Full sequence for a scoring run
 
-Check if otelcol-contrib is already running (it can persist across sessions now that the Agent no longer conflicts):
+Check if otelcol-contrib is already running (the LaunchAgent above should mean this is almost always true):
 ```bash
 lsof -i :4318 -sTCP:LISTEN
 ```
 If the output shows `otelcol-c` (otelcol-contrib) as the listening process, skip the start step below — the existing instance is ready. If a different process holds the port, that's a stale or unrelated listener — do not reuse it; resolve the conflict before starting the collector.
 
-If otelcol-contrib is not running, start it (binary preferred) — use `vals exec` to inject `DD_API_KEY`:
+If otelcol-contrib is not running (the LaunchAgent isn't loaded), start it manually as a fallback — use `vals exec` to inject `DD_API_KEY`:
 ```bash
 vals exec -f ~/Documents/Repositories/spinybacked-orbweaver-eval/.vals.yaml -- bash -c 'export PATH="/opt/homebrew/bin:$PATH" && otelcol-contrib --config ~/Documents/Repositories/spinybacked-orbweaver-eval/evaluation/is/otelcol-config.yaml > /tmp/otelcol.log 2>&1' &
 COLLECTOR_PID=$!
