@@ -56,3 +56,15 @@ Fix: move sampling from the OTel SDK to the OTel Collector level. When all spans
 ## Infinite Cardinality Metrics coverage of span-based custom metrics is unconfirmed
 
 Datadog's Infinite Cardinality Metrics (GA June 9, 2026) prices metrics per metric name rather than per time series. Whether span-based custom metrics from "Generate Metrics from Spans" fall under this pricing model is not confirmed in the docs. The "Generate Metrics from Spans" docs still say "billed as custom metrics" with no mention of Infinite Cardinality. Do NOT assume high-cardinality group-by dimensions are cost-free under this model until Datadog confirms it.
+
+## Never guess a Metrics Explorer deep-link URL — give a plain query string instead
+
+Datadog's Metrics Explorer URL query-param format (view state, time range, graph type encoded in the URL) is not documented and not guessable from the metric name and tag alone. A guessed URL either 404s or loads an empty/default view, which looks like "the metric has no data" when actually the URL itself was wrong. When directing a user to check a metric in Metrics Explorer, give the plain query string (e.g. `avg:traces.span.metrics.duration{service:commit-story} by {commit_story.ai.section_type}`) for manual entry into the query bar, not a constructed URL.
+
+## Cardinality estimator requires the metric to be older than 48 hours — no estimate, not a zero/safe estimate, for younger metrics
+
+Both the UI's "Estimated New Volume" preview (shown when editing a metric's Tag Configuration) and the `GET /api/v2/metrics/{metric_name}/estimate` API endpoint only produce a result once the target metric is more than 48 hours old. A metric younger than that returns no estimate at all — this is a precondition failure, not a signal that the change is safe or has zero cardinality impact. Do not proceed with a Tag Configuration change on a newly-created metric on the assumption that "no estimate returned" means "no risk"; wait out the 48-hour window (or accept the risk explicitly) before saving.
+
+## Metric Tag Configuration changes ("Allow all tags" / denylist mode) are NOT retroactive
+
+Changing a metric's Tag Configuration (Metrics without Limits™) only affects tag indexing for data points ingested *after* the change. Data points already ingested had the newly-allowed tag stripped at indexing time and cannot be relabeled after the fact — they permanently show as `N/A` (or absent) for that tag's group-by dimension, even after the config is fixed. After applying an "allow all tags" / exclude_tags_mode fix, expect an `N/A`-only bucket in existing data; only spans/metrics emitted after the change will populate real tag values. Do not treat a persistent `N/A` bucket as evidence the fix failed — check whether fresh data (post-change) is populating correctly instead.
