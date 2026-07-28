@@ -12,11 +12,11 @@ description: Git workflow rules including branching, CodeRabbit reviews, and com
 - The pre-push hook runs CodeRabbit CLI review (advisory). When findings appear, fix issues and push again before creating a PR.
 - **CodeRabbit CLI manual invocation:** When you need to run a CodeRabbit CLI review outside the pre-push hook (e.g., reviewing a PRD or doc-only branch), use:
   ```bash
-  coderabbit review --plain --type committed --base origin/main 2>&1
+  coderabbit review --committed --base origin/main 2>&1
   ```
   Run in background — reviews take 1-7+ minutes. If CodeRabbit returns a rate-limit error with a wait time (e.g., "please try after 4 minutes and 29 seconds"), set a background sleep timer for that duration and retry automatically. Key gotchas:
-  - Always use `--plain` (interactive mode requires a TTY, which Claude Code's Bash tool lacks).
-  - Always use `--type committed` for branch-vs-base comparison. The default `--type all` looks for uncommitted changes and will report "No files found" on a clean working tree.
+  - As of CLI v0.7.0, plain text is the default output mode and `--plain` is no longer a recognized flag — passing it now errors with "unknown option '--plain'" before the review even starts. Verify with `coderabbit review --help` if a command errors immediately, since flag names have changed across versions.
+  - As of CLI v0.7.0, use `--committed` for branch-vs-base comparison, not `--type committed` (the `--type` flag itself no longer exists). The default (no flag) reviews tracked changes; `--uncommitted` reviews staged/tracked edits; `--include-untracked` adds untracked files.
   - Always use `origin/main` (not `main`) as the base ref.
   - The branch must have commits that the base doesn't — if you cherry-pick from main, the CLI sees no diff.
   - Do NOT use `--no-color` — this flag is not recognized and causes the CLI to exit with an error.
@@ -43,4 +43,5 @@ description: Git workflow rules including branching, CodeRabbit reviews, and com
 - **After merging a PR**, delete the local and remote feature branch immediately. Don't leave stale branches accumulating.
 - NEVER include references to Claude, AI, Anthropic, or Co-Authored-By AI attribution in commit messages. Write commit messages as if authored by a human developer.
 - Repos may override rules via dotfiles (`.skip-branching`, `.skip-coderabbit`).
+- **Global gitignore can block `git add` on already-tracked files.** `~/.gitignore_global` (set via `git config core.excludesfile`) contains a personal `prds/` exclusion pattern. In repos that actually track `prds/*.md` files (e.g. Journal), `git add <path-under-prds/>` fails with "paths are ignored... Use -f if you really want to add them" even though the file is tracked and `git check-ignore` on that exact path returns no match at the repo level — the block comes from the global excludesfile, not a repo `.gitignore`. Fix: use `git add -u <path>` instead of `git add <path>` — it stages modifications to already-tracked files without consulting ignore rules, avoiding the need for the discouraged `-f` flag.
 - **Acceptance gate labeling:** When creating a PR for a project with acceptance gate tests (`.github/workflows/acceptance-gate.yml` exists or `.claude/verify.json` contains `"acceptance_test"`), add `--label run-acceptance` to the `gh pr create` command. This triggers the acceptance gate CI workflow. The `/prd-done` skill handles this automatically for PRD-driven PRs; apply the same convention for manual PRs.
