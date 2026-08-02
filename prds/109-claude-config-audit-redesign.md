@@ -53,6 +53,14 @@ This section is binding on the implementing AI and is not optional.
 
 **Log decisions as they are made,** to `docs/research/claude-config-audit-decisions.md`, in the same turn they are made. Do not batch them for later reconstruction. The scoping conversation for this PRD was long and decision-dense; compaction summarizes lossily and the running log is the defense against that.
 
+### Reference repos are refreshed at read time, not at clone time
+
+**Every milestone that reads a reference repo pulls it first, and records the commit SHA it actually read.** This applies to repos cloned during M1, to `~/Documents/Repositories/forrester-workflow`, to `~/Documents/Repositories/claude-personal`, and to anything else already on disk.
+
+Cloning happens once in M1; the spikes that read those clones run later, potentially much later. A clone that was current when it was taken is not current when it is read. Michael pushed to `llm-coding-workflow` during the planning conversation on 2026-08-02 — 500 commits had accumulated since the previous clone, and he said he was still pushing as he said it. Viktor's repos will drift the same way between M1 and M4.
+
+Recording the SHA matters as much as pulling: a finding attributed to "his current setup" is unverifiable later unless the state it came from is named. Every spike document states the repo and SHA it was written against.
+
 ### Model protocol
 
 Every milestone carries a **Model** line. Milestones whose output is a *judgment* — research where training data is unreliable, the comparison spikes, the classification policy, the spec — require the strongest available model. Milestones whose output is *retrieval or mechanical transformation* run on whatever is active and delegate bulk reading to Sonnet subagents.
@@ -113,7 +121,7 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 **Success criteria:**
 - Every repo Whitney named is cloned and readable locally
 - Michael's repo enumeration was re-run at clone time and its full output recorded, and every repo judged plausibly related to configuring or running a coding agent is cloned — not only `llm-coding-workflow`. The recorded output lists each repo with a clone-or-skip decision and a one-line reason, so the filter can be audited rather than taken on trust
-- `wiggitywhitney/claude-personal` is cloned or confirmed present, since Whitney's configuration spans two repositories
+- `wiggitywhitney/claude-personal` is cloned or, if already present, pulled current — Whitney's configuration spans two repositories and the local copy may be behind
 - `research/repos/` is gitignored, and if that ignore rule had to be added it is committed before the worktree check
 - `git status` is clean after cloning and after that commit
 - A directory listing has been shown to Whitney and she has confirmed nothing is missing
@@ -178,7 +186,7 @@ Note also that all three were self-inflicted by Claude writing compound one-line
 
 **Model:** Opus 5 on the main thread — the already-have / have-worse / have-nothing calls are judgment. Delegate bulk file reading of the clone to Sonnet subagents.
 
-**Step 0:** M1 must be complete — the clones must exist. Read M2's output on global-versus-project skill installation; Viktor's position cannot be fairly evaluated without it.
+**Step 0:** M1 must be complete — the clones must exist. **Pull all three Viktor repos before reading them** and record the SHAs; M1 may have run long before this milestone. Read M2's output on global-versus-project skill installation; Viktor's position cannot be fairly evaluated without it.
 
 **What:** Summarize Viktor's role-based agent swarm — `.dot-agent-deck.toml`, the orchestrator / coder / reviewer / auditor / tester / release roles — and identify specifically where it solves a problem the current setup has no answer for.
 
@@ -243,7 +251,7 @@ Note also that all three were self-inflicted by Claude writing compound one-line
 **Why:** The existing research shaped PRD #84 and is now out of date. Leaving stale documents in `docs/research/` is worse than having none, because future work will read them and act on them. This milestone both produces new findings and repairs the record.
 
 **To implement:**
-- Re-pull `~/Documents/Repositories/forrester-workflow` and clone the additional repos gathered in M1.
+- Pull `~/Documents/Repositories/forrester-workflow` and every other Michael repo gathered in M1, and record the SHA read for each. He commits daily; a clone taken at M1 is stale by definition.
 - Document his current workflow with the same treatment M4 gives Viktor's: capabilities, and for each one whether Whitney already has an equivalent, a worse equivalent, or nothing.
 - Cover the parallel-work angle explicitly — tmux and Netcup were both named as things he has solved and she has not.
 - Update `michael-forrester-workflow.md` and `michael-autonomous-execution-principles.md` in place. Mark clearly what changed from the previous version, so anyone who read the old version can see the delta.
