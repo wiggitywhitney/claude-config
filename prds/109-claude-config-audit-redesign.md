@@ -214,7 +214,15 @@ Note also that all three were self-inflicted by Claude writing compound one-line
 
 **Step 0:** M1 must be complete. Read M4's output — the swarm findings determine which of Viktor's PRD-skill features are only meaningful inside a swarm.
 
-**What:** Diff Viktor's current PRD-related skills against this repo's `prd-*` and `issue-*` skills, and label every difference by adoption timeline.
+**What:** Diff Viktor's current PRD-related skills against this repo's PRD-lifecycle and issue-lifecycle skills, and label every difference by adoption timeline.
+
+**Canonical skill manifest.** Use this exact list for comparison, consolidation, and migration; do not re-derive it from a glob, because `prd-*` silently excludes `prds-get`.
+
+- **PRD lifecycle, 8 skills:** `prd-create`, `prd-start`, `prd-next`, `prd-update-progress`, `prd-update-decisions`, `prd-done`, `prd-close`, `prds-get`. Each has both a `SKILL.md` and a `SKILL.v1-yolo.md` — **16 files, 8 pairs.**
+- **Issue lifecycle, 6 skills:** `issue-create`, `issue-start`, `issue-next`, `issue-update-progress`, `issue-update-decisions`, `issue-done`. No YOLO variants — **6 files.**
+- **Not a skill:** `prd-loop-continue` is `scripts/prd-loop-continue.sh`, a SessionStart hook script installed by `/make-autonomous`. It is in scope for migration because the consolidation may change what it invokes, but it is not part of the 22 skill files and must not be counted as one.
+
+Total in scope: **22 skill files** across 14 skills. Any count that disagrees with this manifest is wrong.
 
 **Why:** Whitney's PRD skills were originally derived from Viktor's, and both have evolved independently since. Some of what he has now will be directly portable; some will only make sense if she later adopts his swarm. Conflating those two timelines would either import machinery she cannot use or cause her to dismiss something she could use today.
 
@@ -234,7 +242,10 @@ Note also that all three were self-inflicted by Claude writing compound one-line
 - `docs/research/viktor-prd-skills-diff.md` exists, covering all eight PRD-lifecycle skills — the seven matching `prd-*` plus `prds-get` — all six `issue-*` skills, and all eight `SKILL.v1-yolo.md` variants
 - Every adoption candidate is labeled adopt-now or adopt-with-swarm
 - A complete divergence table exists for all eight interactive/YOLO pairs, with a keep-which decision per divergence
-- A consolidation design exists: eight autonomous-first files, with a generalized escalation contract, and a scripted idempotent migration for the nine affected repos
+- A consolidation design exists: eight autonomous-first PRD-lifecycle files, with a generalized escalation contract, and a scripted idempotent migration for the nine repos carrying PRD skill symlinks
+- The six issue-lifecycle skills have a **recorded disposition** — merged into one lifecycle with two entry points, or kept as a separate family — with the reasoning stated either way. M5 cannot pass with only the PRD-family result documented
+- A **combined final file count** is stated, covering both families against the canonical 22-file manifest
+- The migration plan covers **every** repo consuming either family, not only the nine with PRD symlinks — enumerate consumers rather than assuming the PRD-symlinked set is complete
 - Whitney has approved the consolidation design before any file is deleted
 - Decisions logged
 
