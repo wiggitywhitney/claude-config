@@ -96,6 +96,65 @@ return content.includes('<img');
 
 Do NOT check `data.properties?.photo` — it will always be `undefined`, even on posts with photos.
 
+## Micropub `replace: { content }` silently strips post categories — always include category in the payload
+
+Both of these update operations silently clear a post's `category` on micro.blog:
+
+- `add: { photo: [hostedUrl] }` — strips category
+- `replace: { content: [newContent] }` — also strips category
+
+Both return 200 success with no indication that category was cleared. The post disappears from category pages like `/video/` and `/podcast/` with no error.
+
+**The safe pattern for any content update**: read the current `category` and include it explicitly alongside the updated content.
+
+```javascript
+const sourceRes = await fetch(`https://micro.blog/micropub?q=source&url=${encodeURIComponent(postUrl)}`, {
+  headers: { Authorization: `Bearer ${token}` },
+});
+const sourceData = await sourceRes.json();
+const existingContent = sourceData.properties?.content?.[0] ?? '';
+const existingCategory = sourceData.properties?.category ?? [];
+
+if (!existingContent) {
+  // Skip — content is null/empty (see gotcha below)
+  return;
+}
+
+const newContent = `${existingContent}\n\n<img src="${photoUrl}">`;
+
+// Always include existing category — omitting it silently clears it
+const replacePayload = { content: [newContent] };
+if (existingCategory.length > 0) {
+  replacePayload.category = existingCategory;
+}
+
+await fetch('https://micro.blog/micropub', {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ action: 'update', url: postUrl, replace: replacePayload }),
+});
+```
+
+This applies to all scripts that modify post content: adding images, stripping images, and deduplicating images.
+
+**Exception**: `replace: { category }` does NOT strip content. Restoring a category alone is safe. Only operations that write `content` need to carry `category` along.
+
+Note: `createMicroblogPost` (new post creation) is safe — it sets both `category` and `photo[]` in the same form-encoded POST, so category is never dropped. Only UPDATE operations on existing posts are affected.
+
+## `?q=source` returns null/empty content for rescheduled posts with stale URLs
+
+When a post has been rescheduled, micro.blog's Micropub source query (`GET /micropub?q=source&url=<postUrl>`) may return `properties.content[0]` as `null` or an empty string — even though the post URL appears valid in the spreadsheet. This likely occurs because rescheduling changes the post's canonical URL, making the old URL stale. Micro.blog appears to return empty/null content (not a 404) for these stale URLs.
+
+Always guard against null/empty content before attempting a content-replace:
+
+```javascript
+const existingContent = sourceData.properties?.content?.[0] ?? '';
+if (!existingContent) {
+  console.warn(`Skipping ${postUrl} — source content is null/empty (possibly rescheduled post with stale URL)`);
+  return;
+}
+```
+
 ## Micropub `delete: ["photo"]` returns 500 — use content-replace instead
 
 Sending `{ action: "update", url, delete: ["photo"] }` to remove a photo from an existing post returns a 500 error from micro.blog. Because photos are stored as `<img>` tags in `properties.content[0]` (not as a separate property), there is nothing to delete at the property level.

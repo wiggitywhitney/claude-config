@@ -123,7 +123,7 @@ The key principle: "pre-existing" and "unrelated to our changes" are not reasons
 
 When creating a GitHub issue: draft the body, then use the Skill tool to invoke `/write-prompt` passing the draft as input — ask it to organize the unstructured content into a clear, polished version without adding, removing, or changing meaning. Use the polished result when calling `gh issue create`. Do NOT run `/code-review` on GitHub issues — it requires an open PR and is only for PRs.
 
-Every GitHub issue body must end with a checklist item that updates the project's `PROGRESS.md` (style rules below). Without this, non-PRD work accumulates without a durable record.
+Every GitHub issue body must end with a checklist item that updates the project's `PROGRESS.md` (style rules below) — **unless `PROGRESS.md` is gitignored in that repo**. If gitignored, the file is personal tracking invisible to collaborators; adding the checkbox to a team-visible issue is noise to teammates. Check `.gitignore` before including it.
 
 ## PROGRESS.md
 

@@ -147,6 +147,18 @@ When a reply confirms a scheduled meeting or completed task, state that first �
 - Do: "I put 30 minutes on your calendar for tomorrow at 10 AM US Central. I am looking forward to our conversation..."
 - Don't: "I am looking forward to our conversation... I put 30 minutes on your calendar..."
 
+For scheduling emails (polls, availability requests), put the link/action immediately after the warmup — before any context or agenda.
+
+**For fun group emails with a close-knit or enthusiastic audience, a playful opener is appropriate.**
+Use a playful opener when ALL of the following are true: the recipients know you or were personally recruited by you, the email is not cold outreach, and the context is celebratory or low-stakes (a panel, a fun event, a shared project).
+- Do: "Greetings illustrious panelists! ♫" (group Whitney curated, excited about the event)
+- Don't: "Greetings illustrious ambassadors!" in a first cold email to a new contact
+
+**Subject lines for scheduling emails can be action-oriented and conversational when writing to a warm/familiar audience.**
+Signal: you have already exchanged at least one email with this person, or they accepted your invitation.
+- Do: "DASH Women in Tech Panel — Let's meet! Share your availability via a Doodle poll"
+- Don't: Use this style for cold or first-contact scheduling outreach — use descriptive subject lines there.
+
 **Include timezone when scheduling across potential time zones.**
 Always specify "US Central" (or whichever applies) when putting time on someone's calendar by email.
 
