@@ -9,7 +9,7 @@ The Datadog Agent's embedded OTLP HTTP receiver has been permanently disabled in
 Download `otelcol-contrib` for macOS ARM64 from the [releases page](https://github.com/open-telemetry/opentelemetry-collector-contrib/releases). Place on PATH (e.g., `~/.local/bin/`). Run from the eval repo root with `vals exec` to inject `DD_API_KEY`:
 
 ```bash
-vals exec -f .vals.yaml -- bash -c 'export PATH="/opt/homebrew/bin:$PATH" && otelcol-contrib --config evaluation/is/otelcol-config.yaml > /tmp/otelcol.log 2>&1' &
+vals exec -f .vals.yaml -- bash -c 'export PATH="$HOME/.local/bin:/opt/homebrew/bin:$PATH" && otelcol-contrib --config evaluation/is/otelcol-config.yaml > /tmp/otelcol.log 2>&1' &
 ```
 
 This writes traces to `evaluation/is/eval-traces.json` and forwards them to Datadog APM. After the run, query `service:<target>` in Datadog MCP to retrieve `service.instance.id` for trace verification.
@@ -73,7 +73,7 @@ If the output shows `otelcol-c` (otelcol-contrib) as the listening process, skip
 
 If otelcol-contrib is not running (the LaunchAgent isn't loaded), start it manually as a fallback — use `vals exec` to inject `DD_API_KEY`:
 ```bash
-vals exec -f ~/Documents/Repositories/spinybacked-orbweaver-eval/.vals.yaml -- bash -c 'export PATH="/opt/homebrew/bin:$PATH" && otelcol-contrib --config ~/Documents/Repositories/spinybacked-orbweaver-eval/evaluation/is/otelcol-config.yaml > /tmp/otelcol.log 2>&1' &
+vals exec -f ~/Documents/Repositories/spinybacked-orbweaver-eval/.vals.yaml -- bash -c 'export PATH="$HOME/.local/bin:/opt/homebrew/bin:$PATH" && otelcol-contrib --config ~/Documents/Repositories/spinybacked-orbweaver-eval/evaluation/is/otelcol-config.yaml > /tmp/otelcol.log 2>&1' &
 COLLECTOR_PID=$!
 until lsof -i :4318 >/dev/null 2>&1; do sleep 0.5; done
 ```

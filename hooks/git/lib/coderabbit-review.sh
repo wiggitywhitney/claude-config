@@ -5,7 +5,7 @@
 #
 # Usage: coderabbit-review.sh [project-directory] [base-branch]
 #
-# Runs `coderabbit review --plain --type committed --base <base-branch>`
+# Runs `coderabbit review --committed --base <base-branch>`
 # against the project directory and outputs findings.
 #
 # This is an advisory check — exit code is always 0 regardless of findings.
@@ -70,7 +70,7 @@ elif command -v gtimeout &>/dev/null; then
 fi
 
 if [[ -n "$TIMEOUT_BIN" ]]; then
-  REVIEW_OUTPUT=$("$TIMEOUT_BIN" 420 "$CODERABBIT_BIN" review --plain --type committed --base "$BASE_BRANCH" --no-color --cwd "$PROJECT_DIR" 2>&1) || {
+  REVIEW_OUTPUT=$("$TIMEOUT_BIN" 420 "$CODERABBIT_BIN" review --committed --base "$BASE_BRANCH" --cwd "$PROJECT_DIR" 2>&1) || {
     EXIT_CODE=$?
     if [[ $EXIT_CODE -eq 124 ]]; then
       echo "CodeRabbit CLI review timed out (7m) — skipping"
@@ -80,7 +80,7 @@ if [[ -n "$TIMEOUT_BIN" ]]; then
     exit 0
   }
 else
-  REVIEW_OUTPUT=$("$CODERABBIT_BIN" review --plain --type committed --base "$BASE_BRANCH" --no-color --cwd "$PROJECT_DIR" 2>&1) || {
+  REVIEW_OUTPUT=$("$CODERABBIT_BIN" review --committed --base "$BASE_BRANCH" --cwd "$PROJECT_DIR" 2>&1) || {
     EXIT_CODE=$?
     echo "CodeRabbit CLI review failed (exit $EXIT_CODE) — skipping"
     exit 0

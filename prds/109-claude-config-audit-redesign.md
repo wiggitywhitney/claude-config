@@ -47,6 +47,10 @@ This section is binding on the implementing AI and is not optional.
 
 **Decide policies, not instances.** Where a change touches many files, propose a single rule covering all of them and ask her to approve or edit the rule — then apply it mechanically. Do not ask for per-file or per-instance approval. Per-instance approval is miserable at scale and buries the actual choice inside the noise.
 
+**Check in with Whitney after every milestone.** Do not chain milestones. Finish one, present what it found, and wait. This was an explicit instruction when the audit was first scoped and it applies to every milestone in this PRD, including the ones that look mechanical.
+
+**Verify against the conversation continuously, not only at M9.** After each milestone, extract the human turns from that milestone's session transcript and diff them against this PRD and the decision log. Anything said and not written down gets written down before the next milestone starts. M9 is the final pass over the finished spec; it is not the only time this check runs. Waiting until the end would mean discovering at M9 that an instruction given at M1 was never captured, after seven milestones had already been built on the gap.
+
 **Log decisions as they are made,** to `docs/research/claude-config-audit-decisions.md`, in the same turn they are made. Do not batch them for later reconstruction. The scoping conversation for this PRD was long and decision-dense; compaction summarizes lossily and the running log is the defense against that.
 
 ### Model protocol
@@ -95,7 +99,8 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 
 **Success criteria:**
 - Every repo Whitney named is cloned and readable locally
-- `research/repos/` is gitignored and `git status` is clean after cloning
+- `research/repos/` is gitignored, and if that ignore rule had to be added it is committed before the worktree check
+- `git status` is clean after cloning and after that commit
 - A directory listing has been shown to Whitney and she has confirmed nothing is missing
 
 ---
@@ -138,6 +143,7 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 
 **To implement:**
 - Run `/research Claude Code sandbox and permission-mode settings, and whether any of them allow read-only bash commands containing shell expansion to run without prompting` — the current `~/.claude/settings.json` has `skipDangerousModePermissionPrompt` set but no sandbox or default-mode configuration. Include all output with sources.
+- **Redact before writing anything to a tracked file.** Session JSONL transcripts contain API tokens, secret values, absolute personal paths, and customer data. Keep raw extracts in a scratch location outside the repository and delete them when the milestone ends. Commit only aggregated output: command classes (not full command lines), counts, and sanitized reason-string labels. Generalize or strip any path containing a username, any string resembling a credential, and any customer or third-party identifier. **The same policy binds M9**, which reads the same transcripts.
 - Mine `~/.claude/projects/*/*.jsonl` for every Bash command actually run across recorded sessions, and for every approval prompt and its reason string. Build a **taxonomy of trigger classes** ranked by how often each fires. Two are already known — shell expansion, and `cd` with output redirection — but do not assume the list is complete. For each class, state plainly whether a settings change could eliminate it or whether only changed Claude behavior can.
 - Recommend a rebuilt allowlist grounded in that frequency data, plus any settings change the research supports. Present as a policy Whitney approves, not a list of individual entries she vets.
 - Write the behavioral guidance that reduces prompts regardless of settings — prefer Grep/Glob/Read over Bash for search and inspection, write literal commands without variable expansion, use absolute paths instead of `cd X && ...`, and put genuine logic in a script file invoked plainly. Decide with Whitney where this guidance lives so it survives compaction.
@@ -192,7 +198,7 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 - For each difference, state: where the two have diverged, what is genuinely better in his, and what is genuinely better in hers. Do not default to his being better because it is newer to her.
 - Label every candidate adoption as either **adopt now** (works standalone) or **adopt only with the swarm** (depends on his rule-based sub-agent system). These are different timelines and must not be mixed.
 - Extend the same analysis to the six `issue-*` skills and to the eight `SKILL.v1-yolo.md` autonomous variants. **There are three parallel implementations of one lifecycle, not two** — see the decision log finding. Nothing enforces that a change to one family reaches the others, and that has already shipped a live bug: the `prd-done` three-channel CodeRabbit fetch never reached the YOLO variant, so autonomous mode misses findings today.
-- Design the consolidation. Per decisions 16 and 17, the direction is settled: **collapse sixteen files to eight, autonomous-first**, with the interactive confirmation gates as the exception rather than the base. A second file requiring hand-mirroring has been tested for four months and produced a bug on each side; do not propose another variant-as-separate-file scheme.
+- Design the consolidation. The direction is settled by the "prioritize autonomy" and "escalation contract" decisions: **collapse the sixteen PRD skill files — eight `SKILL.md` plus eight `SKILL.v1-yolo.md` — down to eight, autonomous-first**, with interactive confirmation gates as the exception rather than the base. That count covers the `prd-*` family only. The six `issue-*` skills are a separate open question resolved in this same milestone: decide whether they merge into one lifecycle with two entry points or stay a distinct family, then state the resulting final file count for both families together and extend the migration plan to cover whichever answer is chosen. A second file requiring hand-mirroring has been tested for four months and produced a bug on each side; do not propose another variant-as-separate-file scheme.
 - Generalize `prd-next`'s **Autonomous Decision Protocol** — its explicit proceed-when and stop-when lists — into every lifecycle skill as the standard escalation contract. This is the mechanism that makes reduced oversight safe, and it currently exists in one file out of sixteen. Design it once, informed by M4's findings on how Viktor's roles handle the same problem at swarm scale.
 - Merge divergences on merit, not origin. Where the autonomous variant is better (acceptance-gate detection, read-only/mutating/external command classification, autonomous triage), keep it. Where the interactive variant is better (three-channel CodeRabbit fetch, whole-PRD Anki sourcing with dedupe), keep that. Enumerate every divergence across all eight pairs — do not assume the two already found are the only ones.
 - Plan the migration. Nine repos symlink `.claude/skills/prd-*/SKILL.md` to `SKILL.v1-yolo.md` in this repo: `cluster-whisperer`, `kubecon-2026-gitops`, `spinybacked-orbweaver`, `spinybacked-orbweaver-eval`, `project-signal-boost`, `KubeHound-Demo`, `commit-story-v2`, `content-manager`, `scaling-on-satisfaction`. Deleting the YOLO files breaks all of them. The migration must be scripted and idempotent.
@@ -232,7 +238,7 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 
 ---
 
-### M7: Repo-native audit — hooks, skills, general cleanup
+### M7: Repo-native audit — hooks, skills, general cleanup, and cross-repo config sprawl
 
 **Model:** Opus 5 on the main thread — remove / consolidate / repair / keep is judgment, and "is this rule still true" needs a model willing to say no. Delegate the raw inventory sweep to Sonnet subagents.
 
@@ -249,12 +255,18 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 - Review `scripts/`, `templates/`, `profiles/`, `config/`, and `hooks/archive/` for dead material.
 - Check whether `setup.sh` still reflects what the repo actually installs.
 - Note the `/issue-create` gap found during scoping: the skill has no branch for bringing an already-created issue into compliance.
+- Audit the tracked settings symlink. `~/.claude/settings.json` points at `config/settings.json` in this repo, so Claude Code writes settings into tracked files — a model change was found written into the working tree on 2026-08-02. Check every symlink target under `~/.claude/`, identify which tracked files can be mutated by tooling rather than by a person, and report the configured model defaults.
+- **Resolve PRD #84 and close it.** Six of its seven milestones are implemented and committed on the local-only branch `feature/prd-84-autonomous-prd-execution`, which was never pushed, never had a PR, and is now behind main by a large margin. The PRD file on main shows every checkbox unchecked. Triage the branch into three buckets and act on each: (a) **salvage** M2 (tests on every push), M3 (orchestrator script), M4 (SessionStart run detection) — standalone infrastructure that does not touch the skill files M5 restructures; re-apply onto a fresh branch off current main and PR them; (b) **fold into M5** the `make-autonomous` allowlist and the YOLO skill updates, which land in files the consolidation rewrites; (c) **revisit** PRD #84's Decision 1, which rejected Michael's `_execution-state.md` and `tasks.yaml` patterns on research M6 has since replaced. Drop the two stray `prd-9999` smoke-test commits entirely. PRD #84 must end this milestone **closed**, with its salvaged work either merged or explicitly re-homed in a named PRD — not left in Draft.
+- **Audit the other repos, not just this one.** The scoping instruction was that "all the repos, really, should probably be edited — I bet some can be removed and cleaned up." Twenty-one repos under `~/Documents/Repositories/` have a `.claude/skills/` directory; nine carry the YOLO symlinks. Inventory what Claude Code configuration each repo actually has — project `CLAUDE.md`, `.claude/skills/`, `.claude/settings.local.json`, installed git hooks, `.skip-*` dotfiles — and identify what is stale, duplicated, orphaned, or pointing at scripts that no longer exist. Produce a per-repo remove / consolidate / repair / keep recommendation. Do not modify other repos in this milestone; recommend only, and let the spec decide what a cleanup PRD would do.
+- Recommend a mechanism for detecting stalled work. PRD #84 reached six of seven milestones and then sat unpushed for four months with no hook, skill, or session-start check surfacing it. Whatever the redesign produces needs a way to notice this class of silence.
 - Present findings as a categorized list — remove / consolidate / repair / keep — for Whitney to approve as a set.
 
 **Success criteria:**
 - `docs/research/claude-config-repo-audit.md` exists, containing a complete hook inventory with a remove / consolidate / repair / keep recommendation for each
 - A skills inventory with the same treatment
 - Dead material in `scripts/`, `templates/`, `profiles/`, `config/`, and `hooks/archive/` identified
+- A cross-repo configuration inventory exists covering every repo with a `.claude/` directory, with a remove / consolidate / repair / keep recommendation per repo and no other repo modified
+- PRD #84 is **closed**, with its salvaged work merged or explicitly re-homed in a named PRD
 - Whitney has approved the categorized list
 - Decisions logged
 
@@ -308,6 +320,7 @@ A spec that summarizes findings instead of recording decisions has failed this m
 **Why:** The scoping conversation for this PRD was long and decision-dense, and the audit conversations will be longer. Compaction summarizes lossily, and decisions made in conversation have a real chance of never reaching a document. The session transcripts persist on disk regardless of compaction, so this check is possible — but only if someone deliberately runs it.
 
 **To implement:**
+- Apply M3's redaction policy. These are the same transcripts, with the same secrets in them. Raw extracts stay outside the repository; only findings reach a tracked file.
 - Read the session transcripts in `~/.claude/projects/-Users-whitney-lee-Documents-Repositories-claude-config/`. The scoping conversation for this PRD is `a32b6735-ae87-47d4-9fdf-5cdbe24805a9.jsonl`; later audit sessions will add more.
 - Extract every decision, rejected alternative, constraint, and open question from the transcripts.
 - Diff that against the decision log, this PRD, and the spec file. Report anything present in conversation but absent from all three.
@@ -350,7 +363,11 @@ A spec that summarizes findings instead of recording decisions has failed this m
 | 15 | Every milestone declares a required **Model**. Claude reads the session model at milestone start, proceeds silently on a match, and stops to ask Whitney to switch on a mismatch — then re-reads the environment to verify rather than accepting her word. | Claude cannot invoke `/model`; it is user-typed. A directive phrased as "switch models here" would be silently unexecutable. Verification beats confirmation because Whitney's managed settings pin Sonnet 5 on restart, so the wrong model is the default, not the exception. Per-milestone model and effort are not expressible in the current PRD skills at all — logged as a redesign finding for M7. |
 | 16 | **Prioritize autonomy.** Whitney wants less oversight of Claude, not more. Where the audit must choose between an autonomous and an interactive pattern, autonomous wins by default. Take best practices from both, but the confirmation-gated version is the exception, not the base. | Stated guiding principle. This does **not** conflict with decision 4 — she decides the shape of the system, then wants that system to run with less babysitting. Design authority stays human; runtime supervision goes down. Consequence: skill consolidation merges toward the autonomous variant, not away from it. |
 | 17 | The escalation contract — explicit proceed-when and stop-when criteria, as in `prd-next`'s Autonomous Decision Protocol — is what makes reduced oversight safe, and it must be generalized to every lifecycle skill. | It currently exists in exactly one of sixteen skill files. Autonomy without a crisp escalation contract is not autonomy, it is unsupervised guessing. This is higher-value than any individual bug fix in the skill set. |
-| 18 | This PRD was itself created using the pre-redesign process — the current `/prd-create`, `/issue-create`, and `/write-prompt` skills, with their current friction. | It serves as a baseline. Whatever the redesign produces should be measurably better to use than what produced this document. |
+| 18 | Claude checks in with Whitney after **every** milestone. Milestones are not chained. | Explicit instruction when the audit was first scoped, and it was missing from the first draft of this PRD — found by the transcript audit on 2026-08-02. |
+| 19 | Conversation-versus-document verification runs **after every milestone**, not only at M9. | Also found by the transcript audit. Waiting until M9 would mean discovering at the end that an instruction given at M1 was never captured, after seven milestones had been built on the gap. M9 remains the final pass over the finished spec. |
+| 20 | The existing Michael research is stale; M6 is a fresh spike that also repairs the two outdated documents in place. | Whitney confirmed his workflow changed since they were written. Leaving them unmarked would let future work act on outdated findings — PRD #84 already did exactly that. |
+| 21 | M7 audits Claude Code configuration across **all** repos, not only claude-config — recommend-only, no other repo modified in this PRD. | "All the repos, really, should probably be edited — I bet some can be removed and cleaned up." Twenty-one repos have a `.claude/skills/` directory and nine carry YOLO symlinks, so the sprawl is real and measurable. Also found by the transcript audit. |
+| 22 | This PRD was itself created using the pre-redesign process — the current `/prd-create`, `/issue-create`, and `/write-prompt` skills, with their current friction. | It serves as a baseline. Whatever the redesign produces should be measurably better to use than what produced this document. |
 
 ## Open Questions
 

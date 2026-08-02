@@ -8,6 +8,8 @@ Started 2026-08-02. Source conversation transcript: `~/.claude/projects/-Users-w
 
 ## Decisions
 
+> **Numbering here is local to this file and does not match the PRD's Decision Log IDs.** `prds/109-claude-config-audit-redesign.md` is authoritative for decision numbering; cross-reference by decision text, never by number. Two hand-maintained numbering schemes across two files is the same "one decision, two places" failure mode this audit keeps finding — the redesign should replace both with stable slugs rather than integers.
+
 | # | Decision | Rationale |
 |---|---|---|
 | 1 | The goal is a workflow that is current with what AI can actually do now, and a joy to use — wise, efficient, happy, productive. | Explicitly **not** driven by the You Choose Episode 1 deadline, and unrelated to the house-hunting research spike. Both were considered and ruled out as framing. |
@@ -38,7 +40,7 @@ Started 2026-08-02. Source conversation transcript: `~/.claude/projects/-Users-w
   - `Compound command contains cd with output redirection - manual approval required to prevent path resolution bypass` — a hard security rule against `cd X && ... > file`, independent of the allowlist and independent of expansion.
 
   Both examples were caused by Claude writing needlessly clever one-liners when purpose-built tools were available — the second one immediately after Claude had described the discipline that would have prevented it. M3 must build a full taxonomy of trigger classes from real session data rather than assuming one cause, and must separate "settings can fix this" from "only changed behavior can fix this."
-- **The existing Michael research is stale.** `docs/research/michael-forrester-workflow.md` and `docs/research/michael-autonomous-execution-principles.md` describe a workflow he has since changed, and the clone at `~/Documents/Repositories/forrester-workflow` is only part of his current setup. Milestone 4 is a fresh spike, not a validation pass, and the existing docs are updated as part of it. Whitney has additional repos to supply.
+- **The existing Michael research is stale.** `docs/research/michael-forrester-workflow.md` and `docs/research/michael-autonomous-execution-principles.md` describe a workflow he has since changed, and the clone at `~/Documents/Repositories/forrester-workflow` is only part of his current setup. The Michael spike (PRD M6) is a fresh spike, not a validation pass, and the existing docs are updated as part of it. Whitney has additional repos to supply.
 - **Existing related research:** `docs/research/prd-workflow-principles.md`, `docs/research/claude-code-autonomous-capabilities.md`.
 - **There are three parallel implementations of one lifecycle, not two.** Each of the 8 `prd-*` skill directories contains both a `SKILL.md` (interactive) and a `SKILL.v1-yolo.md` (autonomous) — 1,807 lines of shadow implementation. `/make-autonomous` symlinks `.claude/skills/prd-*/SKILL.md` to the repo's `SKILL.v1-yolo.md` per project, so which set is live depends on invisible per-project state. Add the 6 `issue-*` skills and that is three families maintained by hand.
 - **The drift is real and has already shipped a bug.** Through April 2026 each pair was updated in a single commit. Since June they have diverged: the `prd-update-progress` `--no-color` fix landed in `SKILL.md` on 2026-06-04 and reached the YOLO variant on 2026-06-15, eleven days later as a separate commit. The `prd-done` three-channel CodeRabbit fetch (2026-06-16) **never reached the YOLO variant at all** — verified by grep. Autonomous mode therefore still uses the old single-channel fetch and silently misses CodeRabbit findings, in the exact mode where no human is watching.
@@ -62,6 +64,21 @@ Started 2026-08-02. Source conversation transcript: `~/.claude/projects/-Users-w
 - How many implementation PRDs should the spec produce, and in what order?
 - Which additional Michael repos should be cloned beyond `llm-coding-workflow`?
 - Which git hooks can be removed or consolidated?
+
+## Open threads
+
+Live commitments made in conversation that have no other home. Delete a line only when it is genuinely done, not when it is merely discussed.
+
+- [ ] Apply CodeRabbit findings 1–4 on PR #111: decision-ID desync between this file and the PRD, M1 `.gitignore`/clean-worktree contradiction, M3+M9 session-data redaction policy, M5 "sixteen to eight" ambiguity about the `issue-*` family
+- [ ] Add the #8 corrections to `git-workflow.md`: plain `git add` exits 1 while still staging; a repo-level `!prds/` negation is the durable fix
+- [ ] Drop `stash@{0}` once its `git-workflow.md` hunk is confirmed to contain nothing unique
+- [ ] Push PR #111 and run a CodeRabbit re-review cycle
+- [ ] Merge #111, then delete the branch locally and remotely
+- [ ] Start #108 with `/issue-start` (rule-loading defects)
+- [ ] Start #110 with `/issue-start` (interactive/autonomous `prd-done` drift)
+- [ ] Supply the M1 repo list: confirm Viktor's three, name Michael's additional repos
+- [ ] Recover or re-home `stash@{1}` (PRD 39) and `stash@{2}` (PRD 24) — neither has been inspected
+- [ ] Carry the recurring theme into the spec: this repo's dominant failure mode is a decision landing in only one of the two places it needs to (rule updated but script not, `SKILL.md` updated but variant not, `CLAUDE.md` claiming behavior that exists in one path only)
 
 ## Repos to examine
 
