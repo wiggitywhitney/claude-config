@@ -14,6 +14,10 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Fixed
 
+- (2026-08-02) Completed the pre-push CodeRabbit hook repair. The first pass replaced three flags removed in CLI v0.7.0 but left `--cwd`, which the CLI also does not accept — the correct flag is `--dir`. Verified against `coderabbit review --help` rather than inferred, since the first fix was shipped on an incomplete reading of the same help output.
+
+- (2026-08-02) Fixed the photo-removal example in `microblog-api-gotchas.md`, which violated both safety rules stated earlier in the same file: it neither guarded against empty source content — so a rescheduled post with a stale URL would have its body erased — nor carried the existing category through the replacement, silently removing the post from its category pages.
+
 - (2026-08-02) Corrected the global-gitignore guidance in `git-workflow.md` after reproducing the behavior in a scratch repository. Plain `git add` on a tracked file under an ignored parent directory exits 1 *but stages the change anyway*, so a script checking the exit code misreads success as failure. Also documented that the condition is repo-specific — `claude-config/.gitignore` contains a `!prds/` negation that cancels the global rule, so a check run there wrongly concludes the problem does not exist — and that adding that same negation is the durable fix for any repo legitimately tracking `prds/`.
 
 - (2026-08-02) Corrected the `otelcol-contrib` fallback startup commands in `is-scoring-gotchas.md` to put `$HOME/.local/bin` ahead of `/opt/homebrew/bin` on `PATH`. The same rule already warned that the binary may live in either location and advised including both, but the commands exported only the Homebrew path.

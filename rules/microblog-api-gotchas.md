@@ -168,12 +168,27 @@ const sourceRes = await fetch(`https://micro.blog/micropub?q=source&url=${encode
 });
 const data = await sourceRes.json();
 const content = data.properties?.content?.[0] ?? '';
+const category = data.properties?.category ?? [];
+
+// Guard first — a stale URL returns empty content, and replacing with it erases the post
+if (!content) {
+  console.warn(`Skipping ${postUrl} — source content is null/empty (possibly a rescheduled post with a stale URL)`);
+  return;
+}
+
 const stripped = content.replace(/<img[^>]*>/g, '').trimEnd();
 
-// Replace content with photos removed
+// Carry the existing category — any content replacement that omits it silently clears it
+const replacePayload = { content: [stripped] };
+if (category.length > 0) {
+  replacePayload.category = category;
+}
+
 await fetch('https://micro.blog/micropub', {
   method: 'POST',
   headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-  body: JSON.stringify({ action: 'update', url: postUrl, replace: { content: [stripped] } }),
+  body: JSON.stringify({ action: 'update', url: postUrl, replace: replacePayload }),
 });
 ```
+
+Both guards above are mandatory for every content replacement, including this one — see the two gotchas earlier in this file.
