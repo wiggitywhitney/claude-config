@@ -204,7 +204,7 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 - Plan the migration. Nine repos symlink `.claude/skills/prd-*/SKILL.md` to `SKILL.v1-yolo.md` in this repo: `cluster-whisperer`, `kubecon-2026-gitops`, `spinybacked-orbweaver`, `spinybacked-orbweaver-eval`, `project-signal-boost`, `KubeHound-Demo`, `commit-story-v2`, `content-manager`, `scaling-on-satisfaction`. Deleting the YOLO files breaks all of them. The migration must be scripted and idempotent.
 
 **Success criteria:**
-- `docs/research/viktor-prd-skills-diff.md` exists, covering all eight `prd-*` skills, all six `issue-*` skills, and all eight `SKILL.v1-yolo.md` variants
+- `docs/research/viktor-prd-skills-diff.md` exists, covering all eight PRD-lifecycle skills — the seven matching `prd-*` plus `prds-get` — all six `issue-*` skills, and all eight `SKILL.v1-yolo.md` variants
 - Every adoption candidate is labeled adopt-now or adopt-with-swarm
 - A complete divergence table exists for all eight interactive/YOLO pairs, with a keep-which decision per divergence
 - A consolidation design exists: eight autonomous-first files, with a generalized escalation contract, and a scripted idempotent migration for the nine affected repos
