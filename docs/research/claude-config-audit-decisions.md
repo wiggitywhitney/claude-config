@@ -63,6 +63,8 @@ Started 2026-08-02. Source conversation transcript: `~/.claude/projects/-Users-w
 - Is there a sandbox or permission-mode setting that eliminates the `simple_expansion` prompt class outright?
 - How many implementation PRDs should the spec produce, and in what order?
 - Which additional Michael repos should be cloned beyond `llm-coding-workflow`?
+- Is `vfarcic/dot-ai-infra` (his permanent cluster) in scope for this PRD, or is it You Choose material? This PRD audits Whitney's Claude Code workflow; a Kubernetes cluster repo matters only if the parallel-work or agent-infrastructure question reaches into cluster setup.
+- What is `vfarcic/dot-ai` actually for, beyond distributing skills into projects? Unknown as of 2026-08-02, and deliberately not guessed at — M4 establishes it.
 - Which git hooks can be removed or consolidated?
 
 ## Discarded, recorded here so it is not re-discovered
@@ -96,8 +98,8 @@ Live commitments made in conversation that have no other home. Delete a line onl
 
 | Owner | Repo | Status |
 |---|---|---|
-| Viktor | `https://github.com/vfarcic/dot-agent-deck` — swarm roles, `.dot-agent-deck.toml`, and PRD skills in `.claude/skills/` | Not yet cloned |
-| Viktor | `https://github.com/vfarcic/dot-ai-infra` — permanent cluster | Not yet cloned |
-| Viktor | `https://github.com/vfarcic/dot-ai` — skill distribution into projects | Not yet cloned, needs confirmation |
+| Viktor | `https://github.com/vfarcic/dot-agent-deck` — his current setup. `.dot-agent-deck.toml` describes his agent-swarm roles for a project and is what he says he now relies on heavily; current skills in `.claude/skills/` | Confirmed 2026-08-02, not yet cloned |
+| Viktor | `https://github.com/vfarcic/dot-ai` — how he distributes skills into each project, and the probable origin of the `prd-*` skills Whitney forked. Broader purpose unknown — establish it, do not assume | Confirmed 2026-08-02, not yet cloned |
+| Viktor | `https://github.com/vfarcic/dot-ai-infra` — his permanent cluster | Confirmed 2026-08-02, not yet cloned. **Scope unresolved** — see open questions |
 | Michael | `llm-coding-workflow` | Cloned at `~/Documents/Repositories/forrester-workflow` — stale, needs re-pull |
 | Michael | Additional repos | Whitney to supply |

@@ -91,7 +91,11 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 **Why:** Fetching these via web search or WebFetch hit GitHub crawl-blocking during scoping. Local clones sidestep that entirely. Gathering happens once, up front, because M4, M5, and M6 all depend on the clones existing — if cloning were folded into the first spike, the later ones would either redo it or silently depend on leftover state.
 
 **To implement:**
-- Ask Whitney to confirm the Viktor repo list. Known candidates: `vfarcic/dot-agent-deck` (swarm roles, `.dot-agent-deck.toml`, and PRD skills in `.claude/skills/`), `vfarcic/dot-ai-infra` (permanent cluster), `vfarcic/dot-ai` (skill distribution into projects — needs confirmation that this is the right repo).
+- Clone Viktor's repos. The list is confirmed:
+  - **`vfarcic/dot-agent-deck`** — his *current* setup. Skills live in `.claude/skills/`. `.dot-agent-deck.toml` describes the roles of his agent swarm for that project, and he says he now relies heavily on it. Treat the TOML as his center of gravity, not the skills.
+  - **`vfarcic/dot-ai`** — how he distributes skills into each project, and the probable origin of the `prd-*` skills Whitney forked. Purpose otherwise unknown; do not assume.
+  - **`vfarcic/dot-ai-infra`** — his permanent cluster.
+- **Establish the fork point before diffing anything.** Whitney's `prd-*` skills were forked from `dot-ai`, but his current skills live in `dot-agent-deck`. That makes a two-way diff misleading. Find the closest common ancestor in `dot-ai` and run a three-way comparison — ancestor, his current, hers — so M5 can distinguish "he changed this," "she changed this," and "both changed it independently." A two-way diff collapses those three cases into one and will produce recommendations that quietly discard her deliberate divergences.
 - Ask Whitney for Michael's repos. `llm-coding-workflow` is already cloned at `~/Documents/Repositories/forrester-workflow` but is stale — re-pull it. She has additional repos to supply.
 - Clone into `research/repos/`. Confirm that path is gitignored; if it is not, add it to `.gitignore` before cloning. Do not commit clone contents.
 - Confirm each clone succeeded and print a directory listing.
@@ -168,7 +172,8 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 **Why:** This is the largest structural difference between his workflow and Whitney's, and it overlaps directly with the parallel-work problem she named as the change most likely to affect how her day feels. The question is not "is his approach good" but "which specific gap does it fill here."
 
 **To implement:**
-- Read `.dot-agent-deck.toml` and the `.claude/` setup in the local clone. Do not go deep on his PRD skills — that is M5.
+- Start with `.dot-agent-deck.toml`. It is the primary artifact of this spike — his own framing is that it describes the roles of his agent swarm for a project and that he now relies heavily on it. The skills are downstream of that structure, so read the TOML first and let it frame everything else. Do not go deep on his PRD skills — that is M5.
+- Then read the `.claude/` setup in `dot-agent-deck`, and `dot-ai` for how he distributes skills into projects. The purpose of `dot-ai` beyond skill distribution is unknown; establish what it actually is rather than assuming.
 - Document how roles are defined, how work is dispatched between them, and what state coordinates them.
 - Examine how he distributes skills into projects, and evaluate his "skills are always per-project, never global" position against M2's findings. Note that his stated reason is portability — clone onto a different laptop and it works.
 - For each capability, state plainly whether Whitney already has an equivalent, has a worse equivalent, or has nothing.
@@ -193,7 +198,7 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 **Why:** Whitney's PRD skills were originally derived from Viktor's, and both have evolved independently since. Some of what he has now will be directly portable; some will only make sense if she later adopts his swarm. Conflating those two timelines would either import machinery she cannot use or cause her to dismiss something she could use today.
 
 **To implement:**
-- Read his PRD-related skills in the local clone's `.claude/skills/`.
+- Read his current PRD-related skills in `dot-agent-deck`'s `.claude/skills/`, **and** locate the ancestor versions in `dot-ai` that Whitney's were forked from. Run the comparison three ways — ancestor, his, hers — per the decision log. Label each difference by who moved: he did, she did, or both did independently. A difference where only she moved is a deliberate divergence and the default is to keep it; the burden is on his version to be better, not merely newer to her.
 - Diff against this repo's `prd-create`, `prd-start`, `prd-next`, `prd-update-progress`, `prd-update-decisions`, `prd-done`, `prd-close`.
 - For each difference, state: where the two have diverged, what is genuinely better in his, and what is genuinely better in hers. Do not default to his being better because it is newer to her.
 - Label every candidate adoption as either **adopt now** (works standalone) or **adopt only with the swarm** (depends on his rule-based sub-agent system). These are different timelines and must not be mixed.
@@ -382,6 +387,9 @@ A spec that summarizes findings instead of recording decisions has failed this m
 | 20 | The existing Michael research is stale; M6 is a fresh spike that also repairs the two outdated documents in place. | Whitney confirmed his workflow changed since they were written. Leaving them unmarked would let future work act on outdated findings — PRD #84 already did exactly that. |
 | 21 | M7 audits Claude Code configuration across **all** repos, not only claude-config — recommend-only, no other repo modified in this PRD. | "All the repos, really, should probably be edited — I bet some can be removed and cleaned up." Twenty-one repos have a `.claude/skills/` directory and nine carry YOLO symlinks, so the sprawl is real and measurable. Also found by the transcript audit. |
 | 22 | This PRD was itself created using the pre-redesign process — the current `/prd-create`, `/issue-create`, and `/write-prompt` skills, with their current friction. | It serves as a baseline. Whatever the redesign produces should be measurably better to use than what produced this document. |
+
+| 23 | The Viktor skill comparison is a **three-way** diff — common ancestor in `dot-ai`, his current version in `dot-agent-deck`, and Whitney's — not a two-way diff of his current against hers. | Her `prd-*` skills were forked from `dot-ai`; his current skills live in `dot-agent-deck`. A two-way diff cannot distinguish "he changed this" from "she changed this" from "both changed it independently," and collapsing those three cases produces recommendations that quietly discard her deliberate divergences as though they were staleness. |
+| 24 | `.dot-agent-deck.toml` is the primary artifact of the Viktor spike, ahead of his skills. | His own framing: the TOML describes the roles of his agent swarm for a project, and he now relies heavily on it. The skills are downstream of that structure. |
 
 ## Open Questions
 
