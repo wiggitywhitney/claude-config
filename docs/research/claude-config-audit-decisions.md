@@ -63,7 +63,7 @@ Started 2026-08-02. Source conversation transcript: `~/.claude/projects/-Users-w
 - Is there a sandbox or permission-mode setting that eliminates the `simple_expansion` prompt class outright?
 - How many implementation PRDs should the spec produce, and in what order?
 - Which additional Michael repos should be cloned beyond `llm-coding-workflow`?
-- Is `vfarcic/dot-ai-infra` (his permanent cluster) in scope for this PRD, or is it You Choose material? This PRD audits Whitney's Claude Code workflow; a Kubernetes cluster repo matters only if the parallel-work or agent-infrastructure question reaches into cluster setup.
+- **Deferred, with Whitney's lean recorded:** is `vfarcic/dot-ai-infra` (his permanent cluster) in scope? Her position on 2026-08-02 — she has no established need for persistent infrastructure, and the You Choose demo that might justify one is explicitly out of scope for this PRD. Revisit only if the Viktor spike shows the swarm depends on cluster-side components, which would make it a prerequisite rather than a curiosity.
 - What is `vfarcic/dot-ai` actually for, beyond distributing skills into projects? Unknown as of 2026-08-02, and deliberately not guessed at — M4 establishes it.
 - Which git hooks can be removed or consolidated?
 
@@ -101,5 +101,7 @@ Live commitments made in conversation that have no other home. Delete a line onl
 | Viktor | `https://github.com/vfarcic/dot-agent-deck` — his current setup. `.dot-agent-deck.toml` describes his agent-swarm roles for a project and is what he says he now relies on heavily; current skills in `.claude/skills/` | Confirmed 2026-08-02, not yet cloned |
 | Viktor | `https://github.com/vfarcic/dot-ai` — how he distributes skills into each project, and the probable origin of the `prd-*` skills Whitney forked. Broader purpose unknown — establish it, do not assume | Confirmed 2026-08-02, not yet cloned |
 | Viktor | `https://github.com/vfarcic/dot-ai-infra` — his permanent cluster | Confirmed 2026-08-02, not yet cloned. **Scope unresolved** — see open questions |
-| Michael | `llm-coding-workflow` | Cloned at `~/Documents/Repositories/forrester-workflow` — stale, needs re-pull |
-| Michael | Additional repos | Whitney to supply |
+| Michael | `peopleforrester/llm-coding-workflow` — his workflow system: own `claude-config/`, `netcup-*`, `wsl2-specific/naruto/`, `tasks.yaml`, `PROJECT_STATE.md`, `decisions.md` | Cloned and **pulled current 2026-08-02** (HEAD `418cd9f`, 500 commits since the prior clone). 52 MB, 702 files, 11 PRDs |
+| Michael | `peopleforrester/claude-dotfiles` — production-ready Claude Code configurations, skills, templates; updated 2026-07-29 | Candidate, awaiting Whitney's confirmation |
+| Michael | `peopleforrester/Brain_spec_skills_claude` — Claude Code skills for spec-driven development | Candidate, awaiting confirmation |
+| Michael | `observe-claude-code`, `mcp_best_practices`, `agentic-covenants` | Lower-confidence candidates; 21 public repos total, do not clone all |

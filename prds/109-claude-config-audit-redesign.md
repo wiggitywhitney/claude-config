@@ -96,7 +96,11 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
   - **`vfarcic/dot-ai`** — how he distributes skills into each project, and the probable origin of the `prd-*` skills Whitney forked. Purpose otherwise unknown; do not assume.
   - **`vfarcic/dot-ai-infra`** — his permanent cluster.
 - **Establish the fork point before diffing anything.** Whitney's `prd-*` skills were forked from `dot-ai`, but his current skills live in `dot-agent-deck`. That makes a two-way diff misleading. Find the closest common ancestor in `dot-ai` and run a three-way comparison — ancestor, his current, hers — so M5 can distinguish "he changed this," "she changed this," and "both changed it independently." A two-way diff collapses those three cases into one and will produce recommendations that quietly discard her deliberate divergences.
-- Ask Whitney for Michael's repos. `llm-coding-workflow` is already cloned at `~/Documents/Repositories/forrester-workflow` but is stale — re-pull it. She has additional repos to supply.
+- Clone Michael's repos, owner `peopleforrester`:
+  - **`llm-coding-workflow`** — confirmed and already cloned at `~/Documents/Repositories/forrester-workflow`; pulled current on 2026-08-02 (500 commits since the prior clone, HEAD `418cd9f`). 52 MB, 702 tracked files, 11 PRDs. Contains its own `claude-config/` (`AGENTS.md`, `CLAUDE.md`, `fleet`, `hooks`, `rules`, `settings.json`, `shell`, `skills`, `systemd`), plus `netcup-*`, `wsl2-specific/` including `naruto/` for terminal layout snapshots, `tasks.yaml`, `PROJECT_STATE.md`, `plan.md`, and `decisions.md`.
+  - **`claude-dotfiles`** — candidate, needs Whitney's confirmation. Described as production-ready Claude Code configurations, skills, and templates; updated 2026-07-29. If his live Claude Code setup is here rather than in `llm-coding-workflow`, the spike would otherwise draw conclusions from the wrong source.
+  - **`Brain_spec_skills_claude`** — candidate, needs confirmation. Claude Code skills for spec-driven development.
+  - Lower-confidence candidates to raise with Whitney before cloning: `observe-claude-code`, `mcp_best_practices`, `agentic-covenants`. He has 21 public repos; do not clone them all.
 - Clone into `research/repos/`. Confirm that path is gitignored; if it is not, add it to `.gitignore` before cloning. Do not commit clone contents.
 - Confirm each clone succeeded and print a directory listing.
 - Record the resolved list — owner, repo, URL, local path, commit SHA at clone time — in the "Repos to examine" table of the decision log. Later milestones cite that table, and the SHA makes a finding reproducible after upstream moves.
@@ -245,9 +249,13 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 
 ### M7: Repo-native audit — hooks, skills, general cleanup, and cross-repo config sprawl
 
-**Model:** Opus 5 on the main thread — remove / consolidate / repair / keep is judgment, and "is this rule still true" needs a model willing to say no. Delegate the raw inventory sweep to Sonnet subagents.
+**Model:** Opus 5 on the main thread — remove / consolidate / repair / keep is judgment, and "is this rule still true" needs a model willing to say no.
+
+**Enumeration is deterministic, classification is not.** Every raw sweep in this milestone — finding repos with a `.claude/` directory, listing hooks, listing skills, reading frontmatter, resolving symlink targets, collecting file sizes and last-modified dates — is done by a script whose output is reproducible, not by a model looking around. Per the global standard: prefer deterministic scripts for operational tasks; use AI for content understanding and synthesis. Sonnet subagents may classify and summarize what the scripts produce, and may invoke those scripts, but must not substitute their own search for the enumeration. A completeness claim backed by a model's sweep is not a completeness claim.
 
 **Step 0:** Read M2's load inventory. This milestone covers what that inventory does not: hooks, scripts, and accumulated cruft.
+
+**M6 gates the design work in this milestone.** Read its output before designing anything. As of 2026-08-02 Michael's `llm-coding-workflow` already contains working implementations of at least three things this milestone is otherwise asked to invent: a config-drift check with tests written first, a generated rules table, and a fix for rules not being reachable. Designing our own and discovering his afterward would waste the effort and would itself be an instance of the pattern this PRD is organized around.
 
 **What:** Audit claude-config on its own terms and produce a list of things to remove, consolidate, or repair — findings that no comparison against another person's workflow would surface.
 
@@ -272,6 +280,9 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 - A skills inventory with the same treatment
 - Dead material in `scripts/`, `templates/`, `profiles/`, `config/`, and `hooks/archive/` identified
 - A cross-repo configuration inventory exists covering every repo with a `.claude/` directory, with a remove / consolidate / repair / keep recommendation per repo and no other repo modified
+- Every enumeration behind the inventories is produced by a committed, re-runnable script, not by a model's sweep — re-running it reproduces the same list
+- A coupled-pair warning hook is designed, with its pair-discovery method stated and shown to be **derived by construction** rather than from a maintained list, plus the set of pairs that method currently finds and an honest statement of which known pairs it misses
+- A stalled-work detection mechanism is recommended, with the reasoning for the approach chosen
 - PRD #84 is **closed**, with its salvaged work merged or explicitly re-homed in a named PRD
 - Whitney has approved the categorized list
 - Decisions logged
@@ -390,6 +401,8 @@ A spec that summarizes findings instead of recording decisions has failed this m
 
 | 23 | The Viktor skill comparison is a **three-way** diff — common ancestor in `dot-ai`, his current version in `dot-agent-deck`, and Whitney's — not a two-way diff of his current against hers. | Her `prd-*` skills were forked from `dot-ai`; his current skills live in `dot-agent-deck`. A two-way diff cannot distinguish "he changed this" from "she changed this" from "both changed it independently," and collapsing those three cases produces recommendations that quietly discard her deliberate divergences as though they were staleness. |
 | 24 | `.dot-agent-deck.toml` is the primary artifact of the Viktor spike, ahead of his skills. | His own framing: the TOML describes the roles of his agent swarm for a project, and he now relies heavily on it. The skills are downstream of that structure. |
+
+| 25 | **Every enumeration in this PRD is produced by a committed, re-runnable script; models classify and synthesize but never enumerate.** Applies to M2's load inventory, M3's command and prompt-reason mining, M7's hook/skill/cross-repo sweeps, and M9's transcript extraction. | The global standard already says to prefer deterministic scripts for operational tasks and reserve AI for content understanding and synthesis. Beyond that, several milestones make completeness claims — "every file in `rules/`", "every repo with a `.claude/` directory" — and a completeness claim backed by a model looking around is not a completeness claim. Scripts also make the numbers reproducible later, which matters because this PRD's before/after measurements are its evidence. |
 
 ## Open Questions
 
