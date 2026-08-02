@@ -65,19 +65,31 @@ Started 2026-08-02. Source conversation transcript: `~/.claude/projects/-Users-w
 - Which additional Michael repos should be cloned beyond `llm-coding-workflow`?
 - Which git hooks can be removed or consolidated?
 
+## Discarded, recorded here so it is not re-discovered
+
+`stash@{2}` (PRD 24, March 2026) contained an alternate `.mcp.json` wiring for the CodeRabbit MCP server. It was **not** recovered and the stash was dropped on 2026-08-02. Recorded in case the question comes back:
+
+```json
+"coderabbitai": {
+  "command": "vals",
+  "args": ["exec", "-i", "-f", ".vals.yaml", "--", "/opt/homebrew/bin/npx", "coderabbitai-mcp@latest"]
+}
+```
+
+Rejected because the current `npx` + `${GITHUB_PAT}` configuration works (the CodeRabbit MCP tools are live), `datadog-mcp-gotchas.md` argues against wrapping MCP servers in `vals exec`, and the hardcoded `/opt/homebrew/bin/npx` is fragile across machines.
+
 ## Open threads
 
 Live commitments made in conversation that have no other home. Delete a line only when it is genuinely done, not when it is merely discussed.
 
-- [ ] Apply CodeRabbit findings 1–4 on PR #111: decision-ID desync between this file and the PRD, M1 `.gitignore`/clean-worktree contradiction, M3+M9 session-data redaction policy, M5 "sixteen to eight" ambiguity about the `issue-*` family
-- [ ] Add the #8 corrections to `git-workflow.md`: plain `git add` exits 1 while still staging; a repo-level `!prds/` negation is the durable fix
-- [ ] Drop `stash@{0}` once its `git-workflow.md` hunk is confirmed to contain nothing unique
-- [ ] Push PR #111 and run a CodeRabbit re-review cycle
-- [ ] Merge #111, then delete the branch locally and remotely
+- [x] Apply CodeRabbit findings 1–4 on PR #111 — done 2026-08-02
+- [x] Add the #8 corrections to `git-workflow.md` — done 2026-08-02, backed by a scratch-repo reproduction
+- [x] Inspect and empty all three stashes; drop them — done 2026-08-02. Three journal files recovered across them, one requiring a merge rather than an overwrite
+- [x] Repair the pre-push CodeRabbit hook, which had been failing on removed v0.7.0 flags and exiting 0 — done 2026-08-02
+- [ ] CodeRabbit re-review on PR #111, then merge and delete the branch locally and remotely
 - [ ] Start #108 with `/issue-start` (rule-loading defects)
 - [ ] Start #110 with `/issue-start` (interactive/autonomous `prd-done` drift)
 - [ ] Supply the M1 repo list: confirm Viktor's three, name Michael's additional repos
-- [ ] Recover or re-home `stash@{1}` (PRD 39) and `stash@{2}` (PRD 24) — neither has been inspected
 - [ ] Carry the recurring theme into the spec: this repo's dominant failure mode is a decision landing in only one of the two places it needs to (rule updated but script not, `SKILL.md` updated but variant not, `CLAUDE.md` claiming behavior that exists in one path only)
 
 ## Repos to examine
