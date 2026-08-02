@@ -292,7 +292,7 @@ Only THEN decide which cards to make. Every card should fit into this narrative.
 
 **The anti-pattern**: Jumping straight to implementation details — config flags, middleware patterns, code structure, response codes — without first establishing why the thing exists and how the pieces relate. Implementation details are only card-worthy when they teach a concept you'd explain at a conference.
 
-**Test**: Would you explain this to a colleague over coffee? If not, it's too granular for a card.
+**Conference talk test**: Before including a fact on a card, ask: "Would this be interesting in a conference talk?" If not, it's too granular and boring — skip it. Focus on high-level architecture, design decisions, and how systems fit together. Not individual function signatures, config flags, or step-by-step implementation details — unless they somehow play a huge part in the story.
 
 ### Card Granularity Guidelines
 - Focus on the "why" and the concept, not nitty-gritty implementation details

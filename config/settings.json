@@ -31,6 +31,7 @@
       "Bash(coderabbit *)",
       "Bash(gog *)",
       "Bash(~/.cargo/bin/weaver *)",
+      "Bash(vale *)",
       "mcp__coderabbitai__get_coderabbit_reviews",
       "mcp__coderabbitai__get_review_comments",
       "mcp__coderabbitai__resolve_comment",
@@ -146,6 +147,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/scripts/vale-on-edit.sh"
+          },
+          {
+            "type": "command",
             "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/post-write-codeblock-check.sh"
           },
           {
@@ -186,6 +191,10 @@
           {
             "type": "command",
             "command": "/Users/whitney.lee/Documents/Repositories/claude-config/scripts/check-running-clusters.sh"
+          },
+          {
+            "type": "command",
+            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/scripts/check-contributing-freshness.sh"
           }
         ]
       }

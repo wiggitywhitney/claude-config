@@ -147,6 +147,18 @@ When a reply confirms a scheduled meeting or completed task, state that first �
 - Do: "I put 30 minutes on your calendar for tomorrow at 10 AM US Central. I am looking forward to our conversation..."
 - Don't: "I am looking forward to our conversation... I put 30 minutes on your calendar..."
 
+For scheduling emails (polls, availability requests), put the link/action immediately after the warmup — before any context or agenda.
+
+**For fun group emails with a close-knit or enthusiastic audience, a playful opener is appropriate.**
+Use a playful opener when ALL of the following are true: the recipients know you or were personally recruited by you, the email is not cold outreach, and the context is celebratory or low-stakes (a panel, a fun event, a shared project).
+- Do: "Greetings illustrious panelists! ♫" (group Whitney curated, excited about the event)
+- Don't: "Greetings illustrious ambassadors!" in a first cold email to a new contact
+
+**Subject lines for scheduling emails can be action-oriented and conversational when writing to a warm/familiar audience.**
+Signal: you have already exchanged at least one email with this person, or they accepted your invitation.
+- Do: "DASH Women in Tech Panel — Let's meet! Share your availability via a Doodle poll"
+- Don't: Use this style for cold or first-contact scheduling outreach — use descriptive subject lines there.
+
 **Include timezone when scheduling across potential time zones.**
 Always specify "US Central" (or whichever applies) when putting time on someone's calendar by email.
 
@@ -179,7 +191,7 @@ Strip any "We cover..." or bullet-list-of-topics structure. After the episode co
 
 **Every episode post gets a CTA between the insight sentence and the URL — phrasing depends on format.**
 For audio/podcast episodes: "Give it a listen!" followed by a blank line, then the URL on its own line.
-For video episodes (Datadog Illuminated, Thunder, and other video shows): "Watch here:" followed immediately by the URL on the very next line — no blank line between "Watch here:" and the URL.
+For video episodes (Datadog Illuminated, Thunder, and other video shows): vary the CTA phrasing across episodes — do not default to "Give it a watch!" every time, which Whitney is tired of seeing. "Watch here:" is one good tame option; others are fine too, as long as it doesn't turn into a new repeated tic. This variation is across different episodes over time, not across platforms within the same episode — each platform (LinkedIn, Mastodon, Bluesky, Micro.blog) has its own separate audience, so using the same CTA on all of them for one episode is fine and not repetitive. The CTA line is followed immediately by the URL on the very next line — no blank line between the CTA and the URL. This holds regardless of exact CTA phrasing — the no-blank-line rule is about the format (video) not the specific wording.
 Do not skip the CTA for any episode type.
 
 **Use a playful `*ahem* WAS` self-correction for callbacks to something just established.**
