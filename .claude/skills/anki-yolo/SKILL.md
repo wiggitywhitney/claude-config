@@ -159,6 +159,7 @@ Cards with multiple mapped concepts: embed all mapped images on their own lines.
 
 - **Default to 10 cards max** unless the caller specifies otherwise
 - **Architectural level only**: How things fit together, key decisions, surprising patterns. No implementation minutiae.
+- **Conference talk test**: Before including a fact on a card, ask: "Would this be interesting in a conference talk?" If not, it's too granular. Focus on high-level architecture, design decisions, and how systems fit together — not individual function signatures, config flags, or step-by-step implementation details — unless they somehow play a huge part in the story.
 
 ## Handling Arguments
 
