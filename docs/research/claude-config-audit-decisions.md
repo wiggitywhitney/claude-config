@@ -90,7 +90,7 @@ Live commitments made in conversation that have no other home. Delete a line onl
 - [ ] Start #108 with `/issue-start` (rule-loading defects)
 - [ ] Start #110 with `/issue-start` (interactive/autonomous `prd-done` drift)
 - [ ] Supply the M1 repo list: confirm Viktor's three, name Michael's additional repos
-- [ ] Carry the recurring theme into the spec: this repo's dominant failure mode is a decision landing in only one of the two places it needs to (rule updated but script not, `SKILL.md` updated but variant not, `CLAUDE.md` claiming behavior that exists in one path only)
+- [x] Carry the "one decision, two places" theme into the spec — done 2026-08-02. **Stated once, in the PRD**, as the decision row on the organizing principle plus the `## Coupled pairs` and `## Decisions` requirements in M8's output format. Deliberately **not** restated here: copying it into both files would create precisely the pair it describes. Read it in `prds/109-claude-config-audit-redesign.md`.
 
 ## Repos to examine
 
