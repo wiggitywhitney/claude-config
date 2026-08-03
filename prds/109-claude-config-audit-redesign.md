@@ -556,5 +556,4 @@ Carried from the decision log. These are answered during the milestones, not bef
 - Global versus project-level skills — Viktor's position is "never global." Does that hold once #21858 is ruled out? *(M2, M4)*
 - Is there a sandbox or permission-mode setting that eliminates the `simple_expansion` prompt class outright? *(M3)*
 - How many implementation PRDs should the spec produce, and in what order? *(M8)*
-- Which additional Michael repos should be cloned? *(M1)*
 - Which git hooks can be removed or consolidated? *(M7)*
