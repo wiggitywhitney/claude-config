@@ -153,12 +153,15 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 - Produce a measured inventory at `docs/research/claude-config-load-inventory.md` — a table with one row per file in `rules/` and per skill, with columns: path / loading mechanism / bytes / loaded in a fresh session (yes-no) / why. Totals at the bottom. Record the measurement date and whether issue #108 had merged at the time, since that changes the numbers.
 - Ask Whitney to run `/context` and `/memory` and paste the output. Claude cannot invoke these — they are user-typed commands. Reconcile her output against the inventory and note any discrepancy.
 - Recommend, per rule, one of: stays a path-scoped rule / moves to `global/CLAUDE.md` for durability across compaction / moves to a hook / becomes an on-demand skill. Present this as a **policy** — a small set of rules for classifying any file — not as 40 individual recommendations. Use the existing hook configuration as evidence for what is already enforced outside model judgment.
+- **Inherit the unmet size goal from PRD #43** (closed 2026-03-16, archived to `prds/done/` on 2026-08-03; read its superseded header first). That PRD set out to bring `global/CLAUDE.md` under 150 lines. It shipped its six extracted rule files and missed the goal: the file was 202 lines on 2026-08-03, more than the 172 that prompted the work. **Set the target in always-loaded bytes rather than lines** — lines were always a proxy, and #108 established the real measurement at 56,994 bytes across `global/CLAUDE.md` plus the eleven `@`-referenced rules. Propose a budget Whitney approves, and note that PRD #43 failed partly because its chosen mechanism could not achieve its goal: `@`-referencing an extracted file removes nothing from the always-loaded set.
+  - Carry forward PRD #43's Decision 2 as an input rather than relitigating it: short domain-specific sections stay inline, because extracting a four-line section costs more in file overhead than it saves.
 
 **Success criteria:**
 - `/research` output for both questions is captured in `docs/research/` with sources
 - A measured load inventory exists covering every file in `rules/` and every skill
 - Whitney's `/context` and `/memory` output has been reconciled against the inventory
 - A classification policy has been presented to Whitney and she has approved or edited it
+- An always-loaded byte budget for `global/CLAUDE.md` plus its `@`-referenced rules is proposed and approved, replacing PRD #43's unmet 150-line target
 - The resulting decisions are logged in the decision log
 
 ---

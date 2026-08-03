@@ -1,5 +1,15 @@
 # PRD #43: Refactor Global CLAUDE.md
 
+**Status**: Closed 2026-03-16 (issue #43). Archived 2026-08-03.
+
+> **Superseded in part — do not execute Milestone 3 as written.** This PRD's strategy was to extract verbose sections into rule files and reference them with `@path/to/file` from `CLAUDE.md`. That does not reduce always-loaded context: an `@`-referenced file loads in every session exactly as inline text does, now with file overhead on top. Worse, this PRD also required `paths:` frontmatter on those same files, and a file carrying both mechanisms loads twice. The five rules that ended up double-loaded — `git-workflow`, `issue-juggling`, `infrastructure-safety`, `adopting-new-technologies`, `datadog-environment` — are exactly this PRD's Milestone 2 deliverables, and three of them were scoped `paths: ["**/*"]`, re-injecting on every file read. Issue #108 fixed that in August 2026 and established the rule this PRD predates: every rule file gets **exactly one** loading mechanism, `paths:` for on-demand and `@`-reference only for the few that genuinely apply to every session.
+>
+> **What shipped:** Milestone 2. All six rule files exist.
+>
+> **What did not:** the size goal. `global/CLAUDE.md` was 202 lines as of 2026-08-03, against this PRD's target of under 150 — more than the 172 that prompted it. That goal now belongs to PRD #109 M2, measured against the always-loaded byte budget rather than line count, since lines were always a proxy and #108 established the real measurement.
+>
+> **What is still sound:** Decision 2 below — short domain-specific sections stay inline, because extracting a four-line section costs more in file overhead than it saves. Decision 3 was also correct and correctly implemented: `hooks-reference.md` is path-scoped and loads only when hooks are being edited, which is the model the rest of this PRD should have followed.
+
 ## Problem
 
 Global CLAUDE.md is 172 lines, exceeding the 150-line target. Every line is loaded into every conversation across all projects, so bloat has a direct token cost. Several sections duplicate content that already exists in `@`-referenced rule files, and others contain verbose examples and multi-line instructions that could be extracted.
