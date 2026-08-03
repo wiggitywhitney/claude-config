@@ -166,7 +166,7 @@ Live commitments made in conversation that have no other home. Delete a line onl
 
 ## Repos to examine
 
-**Resolved by M1, 2026-08-03.** Every repo below is cloned into `research/repos/` (gitignored) with the commit SHA read at clone time. This table supersedes the earlier snapshot; the snapshot's Michael sub-list is folded into the "included" table below, and the raw `gh repo list peopleforrester` enumeration (63 repos as of 2026-08-03, up from 20 on 2026-08-02) is preserved in "Michael repos excluded" for audit.
+**Resolved by M1, 2026-08-03.** Every repo below is cloned into `research/repos/` (gitignored) with the commit SHA read at clone time. This table supersedes the earlier snapshot; the snapshot's Michael sub-list is folded into the "included" table below, and the raw `gh repo list peopleforrester` enumeration (63 repos as of 2026-08-03, up from 20 on 2026-08-02) is preserved in "Michael repos excluded" for audit. Four repos passed the initial subject filter but were trashed after Whitney's review — see the note below the exclusion list.
 
 ### Cloned
 
@@ -182,14 +182,10 @@ Live commitments made in conversation that have no other home. Delete a line onl
 | Michael | `peopleforrester/observe-claude-code` | `research/repos/observe-claude-code` | `3ffab35` |
 | Michael | `peopleforrester/MCP_Server_Claude_Doc_monitor` | `research/repos/MCP_Server_Claude_Doc_monitor` | `63995fd` |
 | Michael | `peopleforrester/copilot-cli-enterprise-patterns` | `research/repos/copilot-cli-enterprise-patterns` | `76b8566` |
-| Michael | `peopleforrester/Webinar_Claude_Code_Hands_On` | `research/repos/Webinar_Claude_Code_Hands_On` | `e01cd62` |
 | Michael | `peopleforrester/agentic-covenants` | `research/repos/agentic-covenants` | `1488d1d` |
-| Michael | `peopleforrester/KCD_Texas_2026_Workshop` | `research/repos/KCD_Texas_2026_Workshop` | `badbb13` |
 | Michael | `peopleforrester/Unleash_an_Agent_Watch_It_Burn` | `research/repos/Unleash_an_Agent_Watch_It_Burn` | `49dabf6` |
 | Michael | `peopleforrester/rounds-agenticburn` | `research/repos/rounds-agenticburn` | `06c4fdc` |
-| Michael | `peopleforrester/mforrester-spiny-orbweaver` | `research/repos/mforrester-spiny-orbweaver` | `87159b2` |
 | Michael | `peopleforrester/telemetry-agent` | `research/repos/telemetry-agent` | `c73f830` |
-| Michael | `peopleforrester/SREday-Texas-2026` | `research/repos/SREday-Texas-2026` | `9c7291e` |
 | Whitney | `wiggitywhitney/claude-personal` | `~/Documents/Repositories/claude-personal` | `53cf930` (already current, no pull needed) |
 
 ### Michael repos excluded
@@ -197,10 +193,12 @@ Live commitments made in conversation that have no other home. Delete a line onl
 Full enumeration via `gh repo list peopleforrester --json name,description,updatedAt --limit 100`, 63 repos returned 2026-08-03. Each judged against: could this plausibly contain part of how he configures or runs a coding agent?
 
 - **K8s/AI products, not agent-config** (built with or about AI, but the repo is the product, not his agent workflow): `mcp-k8s-observability-argocd-server`, `backend-first-idp`, `k8sgpt`, `kait`, `aiterm`, `kubeauto-ai-day`, `langgraph-k8s-troubleshooting-agent`, `burritobot`
-- **Conference talks/tutorials without agent-config content**: `DevOpsDaysAtlanta_2026_Cluster_Destruction_Ignite`, `k8s-staying-current`, `cloud-native-ai-lab`, `KodeKloudWebinars`, `LLMday-Texas-2026`, `auditor-with-no-questions`, `2026_Kubecon_Europe_CNCF_MLOps_Pipeline_Tutorial`, `2026_Kubecon_Europe_CNCF_PlatformAgentIntelligence_Tutorial`, `2026_Kubecon_Europe_CNCF_Portal_Fatigue_IDP_Tutorial`
+- **Conference talks/tutorials without agent-config content**: `DevOpsDaysAtlanta_2026_Cluster_Destruction_Ignite`, `k8s-staying-current`, `cloud-native-ai-lab`, `KodeKloudWebinars`, `LLMday-Texas-2026`, `auditor-with-no-questions`, `2026_Kubecon_Europe_CNCF_MLOps_Pipeline_Tutorial`, `2026_Kubecon_Europe_CNCF_PlatformAgentIntelligence_Tutorial`, `2026_Kubecon_Europe_CNCF_Portal_Fatigue_IDP_Tutorial`, `KCD_Texas_2026_Workshop`, `SREday-Texas-2026`, `Webinar_Claude_Code_Hands_On`
 - **Podcast/website/pricing/book-manuscript** (explicit exclusion categories): `the-ai-inevitable`, `aie-website`, `ai-field-guide`, `anthropic-pricing`, `packt-agentic-devops` (Packt is a technical book publisher — treated as book-manuscript)
 - **Generic dotfiles/infra, predates or unrelated to agent config**: `homedir`, `mighty-vim`, `dockerfile`, `nginx`, `nodejs`, `jenkinsfile-library`, `pipeline-examples`
-- **Sample apps, personal, misc**: `resume`, `Hello-World`, `mrf_micro_blog`, `AWS_bedrock_chatbot_serverless`, `kubernetes-security-kcsa-mock`, `kubernetes-the-amd64-hard-way`, `webinar_k8s_in_regulated_enterprises`, `simple-typescript-app`, `was-demo`, `020-170-sample-app`, `020-360-sample-app`, `020-130-sample-app`, `020-100-sample-app`, `020-060-sample-app`
+- **Sample apps, personal, misc**: `resume`, `Hello-World`, `mrf_micro_blog`, `AWS_bedrock_chatbot_serverless`, `kubernetes-security-kcsa-mock`, `kubernetes-the-amd64-hard-way`, `webinar_k8s_in_regulated_enterprises`, `simple-typescript-app`, `was-demo`, `020-170-sample-app`, `020-360-sample-app`, `020-130-sample-app`, `020-100-sample-app`, `020-060-sample-app`, `mforrester-spiny-orbweaver`
 - **Games**: `Python-Zork`, `zork1`
+
+> Initially cloned then trashed by Whitney's review on 2026-08-03: `KCD_Texas_2026_Workshop`, `mforrester-spiny-orbweaver`, `SREday-Texas-2026`, `Webinar_Claude_Code_Hands_On`. Reclassified from "included" to their respective exclusion categories above; conference-talk artifacts and an unclear-name repo did not survive her spot-check even though the initial subject-filter judgment cloned them as ambiguous cases.
 
 > `dot-ai-infra`'s scope was flagged unresolved in the earlier snapshot; Whitney approved cloning it anyway on 2026-08-03 per the ambiguous-name-clone-it default.
