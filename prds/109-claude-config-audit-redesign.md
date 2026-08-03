@@ -84,7 +84,7 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 
 ## Milestones
 
-- [ ] M1: Reference repos gathered and cloned
+- [x] M1: Reference repos gathered and cloned
 - [ ] M2: Current-behavior research — rules, skills, context, compaction
 - [ ] M3: Current-behavior research — permissions and approval friction
 - [ ] M4: Viktor swarm workflow spike
