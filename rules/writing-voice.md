@@ -70,9 +70,16 @@ She consistently adds it. Don't omit it.
 
 **Separate the booking link into its own paragraph with a transition.** "For the practice sessions, book two slots from my calendar: [link]" — not bolted onto the description paragraph.
 
-**When following up on an already-scheduled meeting with more detail, name the meeting before pivoting to the new information.** Don't drop straight into "here's a clearer picture of how this works" — the reader needs the thread reconnected first.
-- Do: "I put a meeting on for us for August 20th, but meanwhile, here's a clearer picture of how this works in case it answers your questions before we meet."
-- Don't: "Here's a clearer picture of how this works in case it answers your questions before we meet." (skips restating the meeting)
+**When following up on an already-scheduled meeting with more detail, name the meeting before pivoting to the new information, as two separate sentences.** Don't drop straight into "here's a clearer picture of how this works" — the reader needs the thread reconnected first. Use "scheduled," not "put [a meeting] on" — and split into two sentences rather than joining with "but meanwhile."
+- Do: "I scheduled a meeting for us on August 20th. Meanwhile, here is a clearer picture of how this works in case it answers your questions before we meet."
+- Don't: "I put a meeting on for us for August 20th, but meanwhile, here's a clearer picture of how this works in case it answers your questions before we meet." (run-on, and "put a meeting on" is not her wording)
+(Confirmed: sent version of the Arnold Wakim follow-up, 2026-08-03 — corrected from an earlier draft that used the "Don't" phrasing above.)
+
+**When explaining the lightboard process to a guest who hasn't yet committed, include a link to a published episode as a concrete example.** "Here is an example of a published episode; this will help you understand what I mean" — place it right after describing the plan/record/screenshot workflow, before the "not recorded live" paragraph. Helps an undecided guest picture the format instead of taking the description on faith.
+(Confirmed: added in the sent version of the Arnold Wakim follow-up, 2026-08-03 — not present in the AI-drafted version.)
+
+**When a guest already has a preliminary discussion call booked, say "meet to record" / "arrive to the recording session" rather than the bare "meet" / "arrive to the session."** Disambiguates the future recording session from the call already on the calendar.
+(Confirmed: sent version of the Arnold Wakim follow-up, 2026-08-03.)
 (Confirmed: cut from the sent version of the Arnold Wakim follow-up, 2026-08-03.)
 
 **Explicit attribution over implied.**
@@ -187,6 +194,13 @@ Match the actual level of certainty. "I think I want to do it" is honest; "I'm p
 
 **"Do you see any problem with this?" is more natural than "Is there any reason I shouldn't?"**
 Use simpler, more conversational phrasing in Slack. The formal construction reads stiff.
+
+**Never refer to "leadership" as an amorphous blob — name the specific person.** Whitney knows exactly who raised a concern or made a call; say their name ("check with Jacob" / "check with Jonas"), not the vague institutional "leadership."
+
+**Avoid business-jargon phrases like "lock anything in" and "it's a go."** These read as corporate-speak, not how she talks. Say what's actually happening in plain words instead (e.g. "decide," "figure out the wording," "if he wants to do it").
+
+**Avoid "always"/"never" absolutes about a relationship or process that isn't actually established yet.** "Same as we always do" claims a track record that doesn't exist — Whitney hasn't worked with Xavier enough times to say "always." Only use always/never framing for genuinely established, repeated patterns.
+(Confirmed: rejected draft for the Xavier Beynon Slack reply, 2026-08-03 — Whitney's stated objections were "I don't say leadership like that, like some amorphous blob out there," "I don't say 'lock anything in,'" "I don't say 'it's a go,'" and "I haven't worked with Xavier enough to always do anything.")
 
 **Never abbreviate show names in social posts.** Always write the full name: "Software Defined Interviews" not "SDI", "Datadog Illuminated" not "DI", etc. Readers who don't already know the show have no idea what the abbreviation means.
 
