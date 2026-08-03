@@ -14,11 +14,11 @@
 
 Global CLAUDE.md is 172 lines, exceeding the 150-line target. Every line is loaded into every conversation across all projects, so bloat has a direct token cost. Several sections duplicate content that already exists in `@`-referenced rule files, and others contain verbose examples and multi-line instructions that could be extracted.
 
-## Solution
+## Solution (historical — superseded by #108)
 
 Factor verbose sections into `@`-referenced rule files in `rules/` or `guides/`. Keep CLAUDE.md as a concise index where each topic gets 1-2 lines plus an `@path/to/file` reference for details. Target: under 150 lines, ideally ~120.
 
-## Current State Analysis
+## Current State Analysis (historical — line counts and section list as of March 2026)
 
 | Section | Lines | Already has @ref? | Action |
 |---|---|---|---|
@@ -40,14 +40,14 @@ Factor verbose sections into `@`-referenced rule files in `rules/` or `guides/`.
 | PRD Workflow (11) | 11 | No | Compress to 3-4 lines |
 | Rules Enforced by Hooks (15) | 15 | No | Extract to reference file |
 
-## Constraints
+## Constraints (historical — the frontmatter-plus-`@`-reference pairing below is what caused double-loading)
 
 - CLAUDE.md must remain self-contained enough that a fresh agent understands the rules without reading every referenced file — the index lines must be actionable, not just pointers
 - Referenced rule files need correct `paths:` frontmatter so they're only loaded in relevant contexts
 - Some rules files already exist (`testing-rules.md`, `vals-secrets.md`, `aboutme-headers.md`) — reuse them, don't duplicate
 - The symlink `~/.claude/CLAUDE.md` → `global/CLAUDE.md` must continue to work
 
-## Success Criteria
+## Success Criteria (historical — the line-count target was superseded by an always-loaded byte budget in PRD #109 M2)
 
 - [ ] Global CLAUDE.md is under 150 lines
 - [ ] No behavioral rules are lost — every rule is either inline or in a referenced file
@@ -56,13 +56,13 @@ Factor verbose sections into `@`-referenced rule files in `rules/` or `guides/`.
 
 ## Milestones
 
-### Milestone 1: Audit and plan extractions
+### Milestone 1: Audit and plan extractions (historical)
 - [ ] Read every section of current CLAUDE.md and catalog what can be extracted vs what must stay inline
 - [ ] Identify which existing rule files can absorb content (e.g., `testing-rules.md` already exists)
 - [ ] Identify new rule files needed
 - [ ] Produce a line-count budget showing how each section shrinks
 
-### Milestone 2: Create new rule files for extracted content
+### Milestone 2: Create new rule files for extracted content (shipped; the `paths:`-plus-`@`-reference requirement below was later corrected by #108)
 - [ ] Create `rules/git-workflow.md` — Git workflow details, CodeRabbit process, acceptance gate labeling
 - [ ] Create `rules/issue-juggling.md` — Autonomous issue queue workflow
 - [ ] Create `rules/infrastructure-safety.md` — Infrastructure safety rules, cloud resource lifecycle
@@ -72,14 +72,14 @@ Factor verbose sections into `@`-referenced rule files in `rules/` or `guides/`.
 - [ ] All new files have correct `paths:` frontmatter
 - [ ] All new files contain the full detail from the extracted sections
 
-### Milestone 3: Compress CLAUDE.md with @-references
+### Milestone 3: Compress CLAUDE.md with @-references (superseded — do NOT execute as written; `@`-referencing an extracted file removes nothing from the always-loaded set)
 - [ ] Replace verbose sections with 1-2 line summaries + `@path/to/file` references
 - [ ] Merge TDD section into Testing as a single line
 - [ ] Compress PRD Workflow to 3-4 lines
 - [ ] Compress Writing Code to essential rules only (move examples to referenced file if needed)
 - [ ] Verify line count is under 150
 
-### Milestone 4: Validate no rules are lost
+### Milestone 4: Validate no rules are lost (historical)
 - [ ] Diff old vs new CLAUDE.md content — every rule accounted for
 - [ ] Verify `@` references resolve correctly
 - [ ] Test that a fresh Claude Code session loads the rules properly (spot-check a few referenced files)
