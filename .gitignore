@@ -5,3 +5,4 @@ __pycache__/
 _autonomous-run.log
 .DS_Store
 !prds/
+research/repos/
