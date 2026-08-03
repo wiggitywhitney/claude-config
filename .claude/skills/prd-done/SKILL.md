@@ -230,9 +230,9 @@ Please review and respond:
   Ready to create PR? (yes/no)
   ```
 
-#### 3.6. Detect and Apply PR Label (if release.yml exists)
+#### 3.6. Detect and Apply the Release Label (if release.yml exists)
 
-**IMPORTANT: Only apply labels if `.github/release.yml` exists - fully dynamic based on that file**
+**Scope: this section covers the release-category label only, and it is fully dynamic based on `.github/release.yml`. It does not govern `run-acceptance`, which step 3.6b detects independently — a repo can run an acceptance gate with no release metadata at all.**
 
 - [ ] **Check for `.github/release.yml`**:
   - If file exists → Proceed with label detection
