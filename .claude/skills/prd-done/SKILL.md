@@ -342,6 +342,14 @@ After creating the PR and starting the CodeRabbit review timer, use the wait tim
       - `/pulls/{n}/reviews` — full review bodies including "outside diff range" findings (most content lives here)
       - `/pulls/{n}/comments` — inline comments attached to specific diff lines
       - `/issues/{n}/comments` — conversation-level notices (rate-limit notices, "reviews paused")
+    - **Confirm the review ran by positive evidence, not by absence of findings.** Three states look identical if you only check whether findings came back: CodeRabbit reviewed and found nothing, CodeRabbit was rate-limited and never ran, and CodeRabbit reviewed an older commit. A rate-limit notice proves the second case, but its absence proves nothing. The test that works is a review or inline comment whose `commit_id` equals the current PR head:
+
+      ```bash
+      git rev-parse HEAD
+      gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '.[] | select(.user.login == "coderabbitai[bot]") | .commit_id'
+      ```
+
+      No match means the review is still pending for this head — keep waiting, or re-trigger. Do not treat it as clean.
     - **MCP servers** (supplemental when available): Code review MCPs for additional coverage
     - Look for comments from automated tools (usernames ending in 'ai', 'bot', or known review tools)
 - [ ] **Present ALL code review findings**: ALWAYS present every review comment to the user, regardless of severity

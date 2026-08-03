@@ -30,6 +30,8 @@
 
   `--paginate` is required: without it each call returns only the first 30 results, so a PR with many findings silently reports a subset. The filter must be a **streaming** one (`.[] | {...}`) rather than a wrapped array (`[.[] | {...}]`) — with `--paginate`, gh applies the filter per page, so a wrapped filter emits one array per page instead of one combined result. Do **not** reach for `--slurp` here: gh rejects it outright with "the `--slurp` option is not supported with `--jq` or `--template`". Verified against gh on 2026-08-02.
 
+  **Confirm the review ran by positive evidence, not by absence of findings.** "Reviewed and found nothing," "rate-limited and never ran," and "reviewed an older commit" are indistinguishable if you only check whether findings came back. A rate-limit notice proves the second case; its absence proves nothing. Compare `git rev-parse HEAD` against the `commit_id` of CodeRabbit's reviews — no match means the review is still pending for this head, not that it is clean.
+
   Present all findings to the user.
 - **CodeRabbit PR rate limit:** When the issues/comments channel shows a rate-limit notice, CodeRabbit does NOT auto-retry — it stops entirely. You must manually trigger a re-review by posting `@coderabbitai review` as a PR comment (`gh pr comment PR_NUMBER --body "@coderabbitai review"`), then start another 7-minute timer to poll for the result.
 - After pushing fixes for CodeRabbit feedback, start another 7-minute timer to check for the re-review before merging.
