@@ -166,7 +166,7 @@ Live commitments made in conversation that have no other home. Delete a line onl
 
 ## Repos to examine
 
-**Resolved by M1, 2026-08-03.** Every repo below is cloned into `research/repos/` (gitignored) with the commit SHA read at clone time. This table supersedes the earlier snapshot; the snapshot's Michael sub-list is folded into the "included" table below, and the raw `gh repo list peopleforrester` enumeration (63 repos as of 2026-08-03, up from 20 on 2026-08-02) is preserved in "Michael repos excluded" for audit. Four repos passed the initial subject filter but were trashed after Whitney's review — see the note below the exclusion list.
+**Resolved by M1, 2026-08-03.** Every repository in the `Cloned` table is available locally, with the commit SHA read at clone or pull time. Repositories under `research/repos/` are gitignored; external working-copy paths are recorded explicitly. This table supersedes the earlier snapshot; the snapshot's Michael sub-list is folded into the "included" table below, and the raw `gh repo list peopleforrester` enumeration (60 repos as of 2026-08-03, up from 20 on 2026-08-02) is preserved in "Michael repos excluded" for audit. Four repos passed the initial subject filter but were trashed after Whitney's review — see the note below the exclusion list.
 
 ### Cloned
 
@@ -190,7 +190,7 @@ Live commitments made in conversation that have no other home. Delete a line onl
 
 ### Michael repos excluded
 
-Full enumeration via `gh repo list peopleforrester --json name,description,updatedAt --limit 100`, 63 repos returned 2026-08-03. Each judged against: could this plausibly contain part of how he configures or runs a coding agent?
+Full enumeration via `gh repo list peopleforrester --json name,description,updatedAt --limit 100`, 60 repos returned 2026-08-03. Each judged against: could this plausibly contain part of how he configures or runs a coding agent? All 60 are accounted for below: 11 included in the Cloned table above (Michael rows) plus 49 excluded here.
 
 - **K8s/AI products, not agent-config** (built with or about AI, but the repo is the product, not his agent workflow): `mcp-k8s-observability-argocd-server`, `backend-first-idp`, `k8sgpt`, `kait`, `aiterm`, `kubeauto-ai-day`, `langgraph-k8s-troubleshooting-agent`, `burritobot`
 - **Conference talks/tutorials without agent-config content**: `DevOpsDaysAtlanta_2026_Cluster_Destruction_Ignite`, `k8s-staying-current`, `cloud-native-ai-lab`, `KodeKloudWebinars`, `LLMday-Texas-2026`, `auditor-with-no-questions`, `2026_Kubecon_Europe_CNCF_MLOps_Pipeline_Tutorial`, `2026_Kubecon_Europe_CNCF_PlatformAgentIntelligence_Tutorial`, `2026_Kubecon_Europe_CNCF_Portal_Fatigue_IDP_Tutorial`, `KCD_Texas_2026_Workshop`, `SREday-Texas-2026`, `Webinar_Claude_Code_Hands_On`
@@ -200,5 +200,5 @@ Full enumeration via `gh repo list peopleforrester --json name,description,updat
 - **Games**: `Python-Zork`, `zork1`
 
 > Initially cloned then trashed by Whitney's review on 2026-08-03: `KCD_Texas_2026_Workshop`, `mforrester-spiny-orbweaver`, `SREday-Texas-2026`, `Webinar_Claude_Code_Hands_On`. Reclassified from "included" to their respective exclusion categories above; conference-talk artifacts and an unclear-name repo did not survive her spot-check even though the initial subject-filter judgment cloned them as ambiguous cases.
-
+>
 > `dot-ai-infra`'s scope was flagged unresolved in the earlier snapshot; Whitney approved cloning it anyway on 2026-08-03 per the ambiguous-name-clone-it default.
