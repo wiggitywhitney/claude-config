@@ -172,6 +172,7 @@ git commit -m "docs(prd-[issue-id]): create PRD #[issue-id] - [feature-name] [sk
 - Created PRD for [brief feature description]
 - Defined [X] major milestones
 - Documented problem, solution, and success criteria
+- Added to ROADMAP.md ([timeframe] section)
 - Ready for implementation"
 
 # Pull latest and push to main

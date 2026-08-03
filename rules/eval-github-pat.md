@@ -1,3 +1,7 @@
+---
+paths: ["**/evaluation/**", "**/*.vals.yaml", "**/spiny-orb*"]
+---
+
 # Eval Run GitHub PAT Setup
 
 When setting up a new eval target repo, a fine-grained PAT scoped to the fork is required for spiny-orb to push the instrument branch and create a PR.

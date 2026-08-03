@@ -1,3 +1,7 @@
+---
+paths: ["**/otelcol*.y*ml", "**/*collector*.y*ml", "**/datadog*.y*ml", "**/*ddot*"]
+---
+
 # DDOT (Datadog Distribution of OpenTelemetry Collector) Gotchas
 
 Verified 2026-06-16 against docs.datadoghq.com/opentelemetry/setup/ddot_collector/ and Datadog blog. Applies when deploying an OTel Collector in a Datadog environment.

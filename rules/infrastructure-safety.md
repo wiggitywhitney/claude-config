@@ -1,8 +1,3 @@
----
-paths: ["**/*.yaml", "**/*.yml", "**/*.sh", "**/k8s/**", "**/manifests/**", "**/Dockerfile*"]
-description: Safety rules for Kubernetes clusters, databases, cloud resources, and infrastructure
----
-
 # Infrastructure Safety
 
 - When dealing with infrastructure directly (Kubernetes clusters, databases, cloud resources), always make a backup of any files you edit.

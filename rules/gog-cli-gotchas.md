@@ -1,3 +1,7 @@
+---
+paths: ["**/*gog*", "**/gogcli-safety-hook.py"]
+---
+
 # gog CLI Gotchas
 
 ## `sheets update --help` triggers the safety hook — don't probe syntax that way

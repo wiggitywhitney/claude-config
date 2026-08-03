@@ -1,3 +1,7 @@
+---
+paths: ["**/tsconfig*.json", "**/*tsc*", "**/verify.json"]
+---
+
 # TypeScript tsc CLI Gotchas
 
 Verified against TypeScript 5.9.x and 6.0 (March 2026). Relevant whenever invoking `tsc` programmatically or from a tool that passes individual files on the command line.

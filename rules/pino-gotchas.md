@@ -1,3 +1,7 @@
+---
+paths: ["**/*pino*", "**/logger.*", "**/instrumentation.*", "**/package.json"]
+---
+
 # Pino Gotchas
 
 Verified 2026-06-19 against pino v10.3.1, @opentelemetry/instrumentation-pino v0.65.0, import-in-the-middle v3.0.0, and @opentelemetry/sdk-node v0.213.0 on Node.js v22+.

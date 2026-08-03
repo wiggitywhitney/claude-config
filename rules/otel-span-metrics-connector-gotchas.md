@@ -1,3 +1,7 @@
+---
+paths: ["**/otelcol*.y*ml", "**/*collector*.y*ml", "**/*span*metric*"]
+---
+
 # OTel Span Metrics Connector Gotchas
 
 Verified 2026-06-16 against opentelemetry-collector-contrib spanmetricsconnector README and GitHub issues. Applies to any project emitting span-based metrics via an OTel Collector pipeline.

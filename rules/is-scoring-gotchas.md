@@ -1,3 +1,7 @@
+---
+paths: ["**/evaluation/**", "**/otelcol*.y*ml", "**/*.vals.yaml"]
+---
+
 # IS Scoring — OTel Collector Setup Gotchas
 
 IS scoring runs the target app against an OTel Collector to capture OTLP traces, then scores them with `evaluation/is/score-is.js`. The Collector writes traces to `eval-traces.json` for IS scoring **and** forwards them to Datadog APM via the Datadog exporter — both exporters run in parallel.

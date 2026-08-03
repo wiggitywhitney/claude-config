@@ -1,3 +1,7 @@
+---
+paths: ["**/.mcp.json", "**/settings.json", "**/settings.local.json", "**/settings.template.json"]
+---
+
 # Datadog MCP Server Gotchas
 
 Verified June 2026 against `datadog-labs/claude-code-plugin` and official tools reference.

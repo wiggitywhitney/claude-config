@@ -1,3 +1,7 @@
+---
+paths: ["**/*linkedin*"]
+---
+
 # LinkedIn REST API Gotchas
 
 Surprises when using the LinkedIn REST API from Node.js. Cross-project reference — see also the project-level `content-manager/.claude/rules/linkedin-api-gotchas.md` for the full set.

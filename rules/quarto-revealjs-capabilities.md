@@ -1,3 +1,7 @@
+---
+paths: ["**/*.qmd", "**/_quarto.y*ml", "**/slides/**", "**/custom.scss"]
+---
+
 # Quarto + Reveal.js + Mermaid Capabilities
 
 What the slide tech stack can do. Use these features when building presentation slides.

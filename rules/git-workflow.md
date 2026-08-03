@@ -1,8 +1,3 @@
----
-paths: ["**/*"]
-description: Git workflow rules including branching, CodeRabbit reviews, and commit conventions
----
-
 # Git Workflow
 
 - Always work on feature branches. Never commit directly to main.

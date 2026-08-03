@@ -1,3 +1,7 @@
+---
+paths: ["**/*bluesky*", "**/*mastodon*", "**/*linkedin*", "**/*video*", "**/*social*"]
+---
+
 # Social Platform Video Upload Gotchas
 
 Covers Bluesky, Mastodon, and LinkedIn video upload APIs.

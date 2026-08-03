@@ -1,8 +1,3 @@
----
-paths: ["**/*.ts", "**/*.js", "**/*.py", "**/*.sh", "**/settings.json"]
-description: Datadog AI Gateway routing for Claude Code and how to bypass it
----
-
 # Datadog Enterprise Environment
 
 Claude Code routes through the Datadog AI Gateway via two env vars set in `settings.json`:
