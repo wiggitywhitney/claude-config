@@ -10,6 +10,9 @@ Core rules are in `~/.claude/CLAUDE.md` under "Writing Style." This file extends
 
 ## Rules (with reasons)
 
+**Don't invent a first-person physical-action opener** ("I sat down at the lightboard with X").
+Whitney rejected this outright: "I didn't sit down. Use my voice. This, I wouldn't talk like that at all." Don't dramatize or narrate an action as a scene-setting hook — state the fact plainly, guest-first. Accepted replacement: "Lin Sun, co-creator of kagent, joined me at the lightboard to walk through how it works." (Confirmed: kagent gist post draft, 2026-08-03.)
+
 **Quoted text must be verbatim — word for word, nothing rearranged.**
 Quotation marks mean those are someone's actual words. Never rearrange word order, combine two sentences into one, or paraphrase inside quotes. If a verbatim sentence is too long or awkward for the context, offer it without quotes — or offer multiple verbatim options for Whitney to choose from. Obvious transcription errors in auto-captions (e.g., "K native" → "Knative") may still be corrected since those are caption artifacts, not the speaker's words.
 
@@ -66,6 +69,11 @@ She consistently adds it. Don't omit it.
 **"We hold them over Zoom"** not "We do them over Zoom." "Hold" is the natural word for scheduled meetings.
 
 **Separate the booking link into its own paragraph with a transition.** "For the practice sessions, book two slots from my calendar: [link]" — not bolted onto the description paragraph.
+
+**When following up on an already-scheduled meeting with more detail, name the meeting before pivoting to the new information.** Don't drop straight into "here's a clearer picture of how this works" — the reader needs the thread reconnected first.
+- Do: "I put a meeting on for us for August 20th, but meanwhile, here's a clearer picture of how this works in case it answers your questions before we meet."
+- Don't: "Here's a clearer picture of how this works in case it answers your questions before we meet." (skips restating the meeting)
+(Confirmed: cut from the sent version of the Arnold Wakim follow-up, 2026-08-03.)
 
 **Explicit attribution over implied.**
 When crediting someone's suggestion, make the subject clear.
