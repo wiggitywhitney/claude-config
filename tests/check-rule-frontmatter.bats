@@ -132,6 +132,15 @@ bare_rule() {
     [[ "$output" == *"not scoping"* ]]
 }
 
+@test "catches the ** / * wildcard in a block sequence with a trailing comment" {
+    printf -- '---\npaths:\n  - "**/*"  # everything, for now\n---\n\n# Commented\n' \
+        > "$FAKE_REPO/rules/block-commented.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"block-commented.md"* ]]
+    [[ "$output" == *"not scoping"* ]]
+}
+
 @test "accepts a real scope written as a block sequence" {
     printf -- '---\npaths:\n  - "**/*.ts"\n  - "**/package.json"\n---\n\n# Block sequence\n' \
         > "$FAKE_REPO/rules/block-scoped.md"

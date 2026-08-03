@@ -72,7 +72,7 @@ while IFS= read -r file; do
             # such a file fails to parse and never loads regardless.
             if printf '%s\n' "$frontmatter" | grep -qE "^paths:.*[\"']\*\*/\*[\"']"; then
                 wildcard=true
-            elif printf '%s\n' "$frontmatter" | grep -qE "^[[:space:]]*-[[:space:]]*[\"']\*\*/\*[\"'][[:space:]]*$"; then
+            elif printf '%s\n' "$frontmatter" | grep -qE "^[[:space:]]*-[[:space:]]*[\"']\*\*/\*[\"'][[:space:]]*(#.*)?$"; then
                 wildcard=true
             fi
         fi

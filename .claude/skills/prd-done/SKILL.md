@@ -236,7 +236,7 @@ Please review and respond:
 
 - [ ] **Check for `.github/release.yml`**:
   - If file exists → Proceed with label detection
-  - If file doesn't exist → Skip label detection, proceed to create PR without labels
+  - If file doesn't exist → Skip **release-label** detection only, then continue to 3.6b. Acceptance-gate detection is independent of `release.yml`; a repo can use an acceptance gate without release metadata, and skipping 3.6b here would drop its `run-acceptance` label.
 
 - [ ] **If release.yml exists, parse it to understand available categories and labels**:
   - Read the YAML file
