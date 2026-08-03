@@ -91,6 +91,7 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 - [ ] M5: Skill families diffed and an autonomous-first consolidation designed
 - [ ] M6: Michael workflow spike
 - [ ] M7: Repo-native audit — hooks, skills, general cleanup
+- [ ] M7b: PRD #84 resolved and retired
 - [ ] M8: Spec file written and signed off
 - [ ] M9: Audit-agent verification pass against the decision log and session transcript
 
@@ -308,12 +309,7 @@ Total in scope: **22 skill files** across 14 skills. Any count that disagrees wi
 - Check whether `setup.sh` still reflects what the repo actually installs.
 - Note the `/issue-create` gap found during scoping: the skill has no branch for bringing an already-created issue into compliance.
 - Audit the tracked settings symlink. `~/.claude/settings.json` points at `config/settings.json` in this repo, so Claude Code writes settings into tracked files — a model change was found written into the working tree on 2026-08-02. Check every symlink target under `~/.claude/`, identify which tracked files can be mutated by tooling rather than by a person, and report the configured model defaults.
-- **Produce a disposition plan for PRD #84.** Six of its eight milestones are implemented and committed on the local-only branch `feature/prd-84-autonomous-prd-execution`, which was never pushed, never had a PR, and is now far behind main. **Read the branch's copy of `prds/84-autonomous-prd-execution.md`, not main's — the milestone lists differ** (Decision 28). Main's copy has seven milestones with documentation as M7 and every checkbox unchecked; the branch's has eight, with M1–M6 checked, an added M7 for real-PRD validation against spinybacked-orbweaver PRD #752, and documentation renumbered to M8. The two remaining milestones are therefore not both documentation — one is external validation work. **This milestone plans the triage; it does not perform it** — re-applying commits and opening PRs is implementation, which this PRD explicitly defers. Sort the branch into three buckets and write the plan:
-  - **Salvage** — the tests-on-every-push change, the orchestrator script, and the SessionStart run detection. Standalone infrastructure that does not touch the skill files M5 restructures. Name the follow-up PRD that re-applies them onto current main; do not re-apply them here.
-  - **Fold into the consolidation** — the `make-autonomous` allowlist and the YOLO skill updates, which land in files M5 rewrites. Record them as inputs to that work.
-  - **Revisit** — PRD #84's Decision 1 rejected Michael's `_execution-state.md` and `tasks.yaml` patterns on the strength of research M6 has since replaced. Re-examine the reasoning against the current findings.
-  - Drop the two stray `prd-9999` smoke-test commits entirely.
-- **Close PRD #84 administratively once its work is re-homed.** Closing a stalled PRD whose contents are accounted for elsewhere is a bookkeeping act, not implementation, and it is in scope here — Whitney asked specifically that PRD #84 not be left in Draft. The condition for closing it is that every bucket above has a named destination, not that the code has landed. Do not close it while any of its work is unaccounted for.
+- PRD #84's disposition is **not** part of this milestone. It moved to M7b, which resolves it end to end rather than planning a triage for someone else. Do not sort, salvage, or plan for that branch here.
 - **Audit the other repos, not just this one.** The scoping instruction was that "all the repos, really, should probably be edited — I bet some can be removed and cleaned up." Discover the repo set by enumerating **every** repository under `~/Documents/Repositories/` containing a `.claude/` directory — not only those with `.claude/skills/`, which would skip a repo carrying just a `settings.local.json`. As a lower bound, twenty-one have `.claude/skills/` and nine carry the YOLO symlinks. Inventory what Claude Code configuration each discovered repo actually has — project `CLAUDE.md`, `.claude/skills/`, `.claude/settings.local.json`, installed git hooks, `.skip-*` dotfiles — and identify what is stale, duplicated, orphaned, or pointing at scripts that no longer exist. Produce a per-repo remove / consolidate / repair / keep recommendation. Do not modify other repos in this milestone; recommend only, and let the spec decide what a cleanup PRD would do.
 - **Design the check for unevidenced completion claims.** Per the decision on evidence-bearing claims, a `PROGRESS.md` entry or commit message asserting a state — fixed, working, complete, current, verified, passing — is half of a coupled pair whose other half is the system. Recommend a remedy at the strongest tier available: scripting the recurring verifications so the observation is produced automatically, before falling back to a hook that flags the vocabulary and asks what backs it. Note honestly that the hook is an assert and catches only the words it knows.
 - **Inventory prose procedures that should be scripts.** Sweep the rules and skills for multi-step sequences a reader must execute in full for the result to be correct — API calls to several endpoints, ordered git operations, verification loops. Each is a collapse candidate. Flag in particular any procedure whose partial execution looks identical to success, since nothing will ever surface the omission.
@@ -331,9 +327,80 @@ Total in scope: **22 skill files** across 14 skills. Any count that disagrees wi
 - Every enumeration behind the inventories is produced by a committed, re-runnable script, not by a model's sweep — re-running it reproduces the same list
 - A coupled-pair warning hook is designed, with its pair-discovery method stated and shown to be **derived by construction** rather than from a maintained list, plus the set of pairs that method currently finds and an honest statement of which known pairs it misses
 - A stalled-work detection mechanism is recommended, with the reasoning for the approach chosen
-- A written disposition plan for PRD #84 exists, with every bucket assigned a named destination and no code re-applied in this milestone
-- PRD #84 is **closed** once that plan is complete — closure is bookkeeping, not implementation, and is gated on every bucket having a destination rather than on the code having landed
 - Whitney has approved the categorized list
+
+---
+
+### M7b: PRD #84 resolved and retired
+
+**Numbered M7b rather than M8 deliberately.** Renumbering the later milestones would mean updating roughly eleven cross-references to M8 and M9 scattered through this document, and stale cross-references are the exact defect Decision 28 records. Do not "fix" this to M8.
+
+**Model:** Opus 5 on the main thread. Every verdict here is a judgment call with an irreversible consequence attached, and one of the three outcomes deletes work permanently.
+
+**Step 0:** Read M4, M5, and M6 first. All three gate this milestone. Whether PRD #84's architecture is still the right one is precisely what those spikes determine, so no verdict reached before they complete is worth anything.
+
+**What:** Resolve PRD #84 completely. By the end of this milestone the branch `feature/prd-84-autonomous-prd-execution` no longer exists, issue #84 is closed, `prds/84-autonomous-prd-execution.md` is in `prds/done/`, and nothing about PRD #84 remains on anyone's list.
+
+**Why:** PRD #84 reached six of its eight milestones in April, then sat unpushed for four months. It is the clearest instance in this repo of work that was neither finished nor abandoned, and the cost of that limbo is ongoing: it holds a branch nobody dares delete, it made a claim in this PRD that turned out to be wrong, and until 2026-08-03 it was the sole copy of five journal files. Planning a triage for some future PRD is how it got stranded in the first place, so this milestone performs the disposition rather than scheduling it.
+
+**This milestone performs implementation, by explicit exception (Decision 29).** Everywhere else this PRD defers implementation to the PRDs its spec produces. That deferral does not apply here. Merging a surviving piece, deleting the branch, and closing the issue all happen inside this milestone.
+
+#### The three verdicts
+
+Every piece of work on the branch receives exactly one:
+
+1. **Trash.** No value in the code and no lesson worth recording. It goes away with the branch and is never mentioned again.
+2. **The code lives.** It is merged to main, and PRD #84's approach for that piece becomes part of the canonical workflow the spec describes.
+3. **The learnings live, the code does not.** What was discovered is written into the spec; the implementation is discarded with the branch.
+
+**Assign no verdict before this milestone runs, and record none in this PRD.** The facts below are recorded precisely so that whoever performs this milestone can reach their own conclusions from evidence rather than inheriting someone else's. A presumptive verdict written here would decide the question in advance while appearing to leave it open.
+
+**Constraint on verdict 2:** a piece cannot take verdict 2 if it modifies a file that M5's consolidation restructures. Merging it would only be undone when the consolidation is implemented. Such a piece takes verdict 3 instead — its idea reaches the spec, its code does not.
+
+#### Facts about the branch, recorded 2026-08-03
+
+Re-verify each before relying on it; main moves.
+
+- 88 commits behind main. A trial merge (`git merge-tree --write-tree main <branch>`) reports five conflicts: `PROGRESS.md`, `config/settings.json`, `rules/microblog-api-gotchas.md`, and add/add conflicts on `journal/entries/2026-05/2026-05-16.md` and `journal/summaries/daily/2026-05-14.md`. The branch cannot be merged without conflict resolution, and two of the five conflicts are journal files.
+- No remote counterpart exists. The branch has never been pushed, so it is a single local copy.
+- Its journal content was rescued to main on 2026-08-03: two files main lacked entirely and branch-only lines in two others. **Re-run the check before deleting anything** rather than trusting this line — `git diff --numstat main <branch> -- journal/` — because the rule against losing journal files does not admit exceptions and this note could be wrong.
+- The branch's own copy of `prds/84-autonomous-prd-execution.md` is the authority on its state (Decision 28): eight milestones, M1–M6 checked. Main's copy shows seven with everything unchecked.
+
+**Work on the branch, by PRD #84 milestone.** Descriptions only — no assessment.
+
+| PRD #84 milestone | Files | What it does |
+|---|---|---|
+| M1 | `.claude/skills/make-autonomous/SKILL.md`, `make-careful/SKILL.md`, `tests/make-autonomous.bats` | Adds twelve permission entries so a headless `claude -p` session can run tests, manage tasks, spawn agents, and schedule wake-ups; matching removals in careful mode |
+| M2 | `hooks/git/checks/pre-push-verify.sh`, `tests/git-hook-checks.bats` | Runs the project test command on every push rather than only when a PR is open |
+| M3 | `scripts/autonomous-prd.sh`, `scripts/autonomous-prd-child-prompt.md`, `tests/autonomous-prd.bats` | Orchestrator that spawns child sessions and writes an active-run marker |
+| M4 | `scripts/check-autonomous-run.sh`, `tests/check-autonomous-run.bats`, `scripts/install-git-hooks.sh` | SessionStart detection of an in-progress autonomous run |
+| M5 | `rules/autonomous-pause-handling.md`, `.claude/skills/prd-next/SKILL.v1-yolo.md`, `prd-update-progress/SKILL.v1-yolo.md` | Pause-handling rule and YOLO skill changes for headless operation |
+| — | two `prd-9999` commits | Smoke-test scaffolding created while validating the loop |
+| — | `docs/research/claude-code-autonomous-capabilities.md`, `docs/research/index.md`, `rules/bats-bash-testing.md`, `rules/microblog-api-gotchas.md`, `.gitignore`, `global/CLAUDE.md`, `PROGRESS.md`, `config/settings.json` | Incidental edits alongside the milestone work |
+
+PRD #84's two unfinished milestones are its M7, an end-to-end run against `spinybacked-orbweaver` PRD #752, and its M8, user documentation. Neither is completed here. If the spec needs either capability, the spec states that requirement in its own terms rather than inheriting PRD #84's milestone framing.
+
+Its Decision 1 rejected Michael's `_execution-state.md` and `tasks.yaml` patterns on the strength of research that M6 replaces. Re-examine that reasoning against M6's findings.
+
+**To implement:**
+- Read M4, M5, and M6 output. Re-verify the facts above.
+- Assign one of the three verdicts to every row of the work table, with the reasoning for each.
+- Present the completed table to Whitney and get her approval before acting on any row. Approval covers the set, not each row separately.
+- Write the verdict-3 learnings into the spec. This happens inside PRD #109; do not schedule it elsewhere.
+- If any row took verdict 2, merge that work to main through a PR, following the normal review gate.
+- Confirm no journal content exists only on the branch. If any does, rescue it to main first.
+- Delete the branch, locally and on any remote it reached.
+- Close issue #84 with a comment recording each row's verdict, and move `prds/84-autonomous-prd-execution.md` to `prds/done/`.
+- Remove the stale-copy warning from that file's header — once the branch is gone, the warning describes a branch that no longer exists.
+
+**Success criteria:**
+- Every row of the work table carries exactly one verdict and the reasoning behind it
+- Whitney has approved the completed verdict table
+- Every verdict-3 learning is present in the spec, verifiable by pointing at where
+- No journal content exists only on the deleted branch, shown by the diff command rather than asserted
+- `feature/prd-84-autonomous-prd-execution` does not exist
+- Issue #84 is closed with the verdicts recorded, and its PRD file is in `prds/done/` with the stale-copy warning removed
+- No open item anywhere refers to PRD #84 as pending work
 - Decisions logged
 
 ---
@@ -342,14 +409,14 @@ Total in scope: **22 skill files** across 14 skills. Any count that disagrees wi
 
 **Model:** Opus 5. The highest-judgment milestone in the PRD — everything else exists to feed it.
 
-**Step 0:** Read the full decision log and the output of M2 through M7. Every one of those milestones gates this one.
+**Step 0:** Read the full decision log and the output of M2 through M7b. Every one of those milestones gates this one.
 
 **What:** Write a spec file in this repo recording concrete decisions: what to keep building on, what to tear down and recreate, and whether any part warrants a separate system rather than a modification of this one.
 
 **Why:** A conversational summary evaporates. The spec is the artifact that survives, and it is what the implementation PRDs are generated from. It has to be specific enough that a cold reader could act on it.
 
 **To implement:**
-- Before writing, ask Whitney the real open questions surfaced across M2–M7 — one at a time, per the Process section. Do not guess at her preferences to avoid asking.
+- Before writing, ask Whitney the real open questions surfaced across M2–M7b — one at a time, per the Process section. Do not guess at her preferences to avoid asking.
 - Structure the spec around decisions, not findings. Each entry states what was decided, what was rejected, and why.
 - Record explicitly **what stays intact under every scenario** — the fallback path to the current way of working must be legible. Whitney has to be able to revert if the new approach does not pan out.
 - Identify which implementation PRDs the spec should spawn and in what order. Do not create them in this milestone; recommend them and let Whitney decide the number and sequencing.
@@ -417,7 +484,7 @@ A spec that summarizes findings instead of recording decisions has failed this m
 - **Issue #110** (bidirectional drift between interactive and autonomous `prd-done`) does not block this PRD. It stops two live bugs while the audit runs, and its divergence table feeds M5 directly. M5 must read it before starting.
 - **Issue #108** (three rule-loading defects) blocks the implementation PRDs this spec spawns, not this PRD itself. This PRD is written first; #108 is executed after. When #108 is started, it must be started with the `/issue-start` skill.
 - M4, M5, and M6 all depend on M1's clones.
-- M5 depends on M4. M8 depends on M2 through M7. M9 depends on M8.
+- M5 depends on M4. M7b depends on M4, M5, and M6. M8 depends on M2 through M7b. M9 depends on M8.
 
 ## Decision Log
 
@@ -456,7 +523,9 @@ A spec that summarizes findings instead of recording decisions has failed this m
 | 26 | **A multi-step procedure that must be executed correctly becomes a script, not prose in a skill.** This is a form of collapse: N prose steps can be partially executed and silently half-done; one command either runs or fails. When the spec finds a procedure written out as instructions in more than one skill or rule, the default disposition is to extract it into a script that all of them call. | The three-channel CodeRabbit fetch is the worked example. It is currently prose in `git-workflow.md`, prose in `prd-done/SKILL.md`, and absent from `prd-done/SKILL.v1-yolo.md` — so it is simultaneously a duplicated-decision pair and a remember-to-do-it-right procedure. Both failure modes fired during scoping on 2026-08-02: the YOLO variant has been fetching one channel of three since June, and Claude — with the rule loaded in context and having just documented the bug — fetched two of three by hand and reported the review as processed. Two findings were missed. A procedure whose correctness depends on the reader remembering all its steps will eventually be executed partially, and partial execution here is indistinguishable from success. |
 
 | 27 | **A claim about the state of the world must carry the observation that supports it, in the same sentence.** Verbs describing an action taken ("edited the file") are self-evidencing and need nothing. Verbs describing a resulting state — fixed, working, complete, current, verified, passing — are claims about reality and require the observation attached. If the observation cannot be produced, the claim cannot be written. `PROGRESS.md` entries and commit messages state what changed and what was observed as separate clauses, never collapsed into one. | Three instances during scoping on 2026-08-02, all the same shape: the CodeRabbit hook was called "fixed" when three of four invalid flags had been replaced and the fourth was never checked against `--help`; the approval-prompt mitigation was called "narrow and complete" on the strength of three observations; a clone was called "current" when it was 500 commits behind. In each case the summary was written in the same breath as the action, before any verification could have occurred, and the observation that would have falsified it was available and not made. This is a coupled pair — the claim and the reality — with nothing holding them together, and partial truth reads identically to complete truth. It matters more as oversight decreases: the point of prioritizing autonomy is that Whitney is watching less closely, which means the claims have to carry their own evidence. |
-| 28 | **When a document exists on both an unmerged branch and main, the branch version is the authority on that branch's own state — read it, not main's.** For PRD #84 specifically, M7's disposition plan reads the branch's copy of the PRD file. Any statement about an unmerged branch's progress that was derived from main's copy is suspect and needs re-deriving. | The milestone counts diverged and this PRD recorded the wrong one. Main's `prds/84-autonomous-prd-execution.md` lists seven milestones with documentation as M7 and every checkbox unchecked; the branch's lists eight, with M1–M6 checked, an added M7 for real-PRD validation against spinybacked-orbweaver PRD #752, and documentation moved to M8. This PRD said "six of seven" in two places, which understated the remaining work and mischaracterised it as documentation-only when one of the two remaining milestones is external validation. The cause is the same coupled-pair pattern this PRD is organized around, with an extra twist: for an unmerged branch, main's copy is *structurally* guaranteed to be the stale half, so the usual "which side is current" question has a known answer. Verified 2026-08-03 by reading both copies. |
+| 28 | **When a document exists on both an unmerged branch and main, the branch version is the authority on that branch's own state — read it, not main's.** For PRD #84 specifically, M7b reads the branch's copy of the PRD file. Any statement about an unmerged branch's progress that was derived from main's copy is suspect and needs re-deriving. | The milestone counts diverged and this PRD recorded the wrong one. Main's `prds/84-autonomous-prd-execution.md` lists seven milestones with documentation as M7 and every checkbox unchecked; the branch's lists eight, with M1–M6 checked, an added M7 for real-PRD validation against spinybacked-orbweaver PRD #752, and documentation moved to M8. This PRD said "six of seven" in two places, which understated the remaining work and mischaracterised it as documentation-only when one of the two remaining milestones is external validation. The cause is the same coupled-pair pattern this PRD is organized around, with an extra twist: for an unmerged branch, main's copy is *structurally* guaranteed to be the stale half, so the usual "which side is current" question has a known answer. Verified 2026-08-03 by reading both copies. |
+| 29 | **PRD #84 is resolved inside this PRD, not planned for a later one — M7b performs the disposition, merges anything that survives, deletes the branch, and closes the issue.** This is an explicit exception to this PRD's rule that implementation is deferred to the PRDs its spec produces. Each piece of work on the branch takes one of three verdicts: trash, the code lives, or the learnings live and the code does not. | The earlier text said "this milestone plans the triage; it does not perform it," which is the same move that stranded PRD #84 in the first place: six milestones finished in April, then four months of limbo because the remaining step belonged to nobody in particular. A plan handed to a future PRD is indistinguishable from no plan if that PRD is never written. Whitney's instruction was that #84 be completely off the plate at the end of the milestone — closed, branch gone, never thought about again — which is only achievable if the milestone acts. The limbo also had a cost beyond drag: the branch was the sole copy of five journal files, and a stalled branch nobody will delete is a data-loss risk that grows with time. |
+| 30 | **A PRD records the evidence bearing on an open decision and never a presumptive answer to it.** Facts, measurements, and descriptions belong in the milestone; verdicts, likely outcomes, and default dispositions do not. Where a milestone exists to make a judgment, the document's job is to make that judgment well-informed rather than pre-made. | Written while drafting M7b. A per-item table of likely verdicts was proposed and rejected: a recommendation written into a PRD is read by the agent performing the milestone as the answer, not as an input, so it decides the question in advance while appearing to leave it open. The converse error is just as real, though — stripping the *facts* along with the opinions would force rediscovery of things like the branch being 88 commits behind with five merge conflicts, and an agent under time pressure may simply not re-derive them and then choose a verdict on a false premise about cost. So the rule cuts precisely between the two: record that a change is a ten-line edit touching no skill file; do not record that it therefore deserves to survive. |
 
 ## Open Questions
 
