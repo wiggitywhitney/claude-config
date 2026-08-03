@@ -1,8 +1,3 @@
----
-paths: ["**/*"]
-description: Git workflow rules including branching, CodeRabbit reviews, and commit conventions
----
-
 # Git Workflow
 
 - Always work on feature branches. Never commit directly to main.
@@ -25,13 +20,18 @@ description: Git workflow rules including branching, CodeRabbit reviews, and com
 - After creating a PR, immediately run `/code-review` in the session — **except** for: docs-only PRs (markdown, SKILL.md, CLAUDE.md, rules files); standalone issue fixes where ≤2 non-test source files changed, the changes are self-contained (each file is independently modified with no complex cross-file interactions), new tests directly cover the changed logic, and CodeRabbit CLI found no blocking findings; or other small/obvious code changes where CodeRabbit coverage is sufficient. `/code-review` and CodeRabbit find different issue classes — `/code-review` catches CLAUDE.md compliance, bugs, and historical context issues; CodeRabbit catches security and correctness issues. Address both sets of findings before merging. If CodeRabbit is rate-limited and never posts a review, `/code-review` provides full coverage; do not block the merge indefinitely waiting for CodeRabbit.
 - After creating a PR, start a background sleep timer (7 minutes) to poll for the CodeRabbit review. When the timer fires, fetch all CodeRabbit findings using three `gh api` calls — CodeRabbit posts to all three channels and missing any one means missing findings:
   ```bash
-  gh api repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '[.[] | {user: .user.login, state, body}]'
-  gh api repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '[.[] | {user: .user.login, path, line, body}]'
-  gh api repos/OWNER/REPO/issues/PR_NUMBER/comments --jq '[.[] | {user: .user.login, body}]'
+  gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '.[] | {user: .user.login, state, body}'
+  gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '.[] | {user: .user.login, path, line, body}'
+  gh api --paginate repos/OWNER/REPO/issues/PR_NUMBER/comments --jq '.[] | {user: .user.login, body}'
   ```
   - `/pulls/{n}/reviews` — full review bodies including "outside diff range" findings (most content lives here)
   - `/pulls/{n}/comments` — inline comments attached to specific diff lines
   - `/issues/{n}/comments` — conversation-level notices (e.g., "reviews paused") and rate-limit notices
+
+  `--paginate` is required: without it each call returns only the first 30 results, so a PR with many findings silently reports a subset. The filter must be a **streaming** one (`.[] | {...}`) rather than a wrapped array (`[.[] | {...}]`) — with `--paginate`, gh applies the filter per page, so a wrapped filter emits one array per page instead of one combined result. Do **not** reach for `--slurp` here: gh rejects it outright with "the `--slurp` option is not supported with `--jq` or `--template`". Verified against gh on 2026-08-02.
+
+  **Confirm the review ran by positive evidence, not by absence of findings.** "Reviewed and found nothing," "rate-limited and never ran," and "reviewed an older commit" are indistinguishable if you only check whether findings came back. A rate-limit notice proves the second case; its absence proves nothing. Compare the PR head SHA from `gh api repos/OWNER/REPO/pulls/PR_NUMBER --jq '.head.sha'` against the `commit_id` on CodeRabbit's reviews *and* inline comments — no match in either means the review is still pending for this head, not that it is clean. Use the API's head SHA rather than `git rev-parse HEAD`, which is the local head and diverges whenever commits are unpushed. Check both channels: a round can produce a review body with no inline comments, or the reverse.
+
   Present all findings to the user.
 - **CodeRabbit PR rate limit:** When the issues/comments channel shows a rate-limit notice, CodeRabbit does NOT auto-retry — it stops entirely. You must manually trigger a re-review by posting `@coderabbitai review` as a PR comment (`gh pr comment PR_NUMBER --body "@coderabbitai review"`), then start another 7-minute timer to poll for the result.
 - After pushing fixes for CodeRabbit feedback, start another 7-minute timer to check for the re-review before merging.

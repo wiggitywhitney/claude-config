@@ -230,13 +230,13 @@ Please review and respond:
   Ready to create PR? (yes/no)
   ```
 
-#### 3.6. Detect and Apply PR Label (if release.yml exists)
+#### 3.6. Detect and Apply the Release Label (if release.yml exists)
 
-**IMPORTANT: Only apply labels if `.github/release.yml` exists - fully dynamic based on that file**
+**Scope: this section covers the release-category label only, and it is fully dynamic based on `.github/release.yml`. It does not govern `run-acceptance`, which step 3.6b detects independently — a repo can run an acceptance gate with no release metadata at all.**
 
 - [ ] **Check for `.github/release.yml`**:
   - If file exists → Proceed with label detection
-  - If file doesn't exist → Skip label detection, proceed to create PR without labels
+  - If file doesn't exist → Skip **release-label** detection only, then continue to 3.6b. Acceptance-gate detection is independent of `release.yml`; a repo can use an acceptance gate without release metadata, and skipping 3.6b here would drop its `run-acceptance` label.
 
 - [ ] **If release.yml exists, parse it to understand available categories and labels**:
   - Read the YAML file
@@ -269,11 +269,23 @@ Please review and respond:
 - [ ] **Apply detected label**: Add the single best-matching label to the PR creation command
   - Example: `gh pr create --title "..." --body "..." --label "fix"`
 
+#### 3.6b. Detect Acceptance Gate Tests (run-acceptance label)
+
+**Separate from release.yml labels** — this label triggers CI acceptance gate workflows and is additive to any release category label.
+
+- [ ] **Check for acceptance gate tests** in the repository (run `scripts/detect-acceptance-gate.sh` from claude-config, or check manually):
+  - `.github/workflows/acceptance-gate.yml` exists, OR
+  - `.claude/verify.json` contains an `"acceptance_test"` command
+- [ ] **If detected**: Add `run-acceptance` to the PR labels (alongside any release.yml label from 3.6)
+- [ ] **If not detected**: Skip — no change to label behavior
+
 #### 3.7. Create Pull Request
 - [ ] **Construct PR body**: Combine auto-filled and user-provided information following template structure
-- [ ] **Create PR**:
-  - If label detected: `gh pr create --title "[title]" --body "[body]" --label "[single-label]"`
-  - If no release.yml or no matching label: `gh pr create --title "[title]" --body "[body]"`
+- [ ] **Create PR** (combine release.yml label from 3.6 and `run-acceptance` from 3.6b as needed):
+  - Both labels: `gh pr create --title "[title]" --body "[body]" --label "[release-label]" --label "run-acceptance"`
+  - Release label only: `gh pr create --title "[title]" --body "[body]" --label "[release-label]"`
+  - Acceptance label only: `gh pr create --title "[title]" --body "[body]" --label "run-acceptance"`
+  - No labels: `gh pr create --title "[title]" --body "[body]"`
 - [ ] **Verify PR created**: Confirm PR was created successfully, template populated correctly, and label applied (if applicable)
 - [ ] **Request reviews**: Assign appropriate team members for code review if specified
 - [ ] **Run `/code-review`**: Immediately after PR creation, invoke `/code-review` using the Skill tool. Review all findings at or above the 80-confidence threshold and fix them before merging. The CodeRabbit timer and Anki capture (steps 4.0–4.1) proceed in parallel — only the merge is gated on `/code-review` findings being addressed. `/code-review` and CodeRabbit find different issue classes — `/code-review` catches CLAUDE.md compliance, bugs, and historical context issues; CodeRabbit catches security and correctness issues. If CodeRabbit is rate-limited and never posts, `/code-review` provides full coverage; do not block indefinitely waiting for CodeRabbit.
@@ -323,13 +335,22 @@ After creating the PR and starting the CodeRabbit review timer, use the wait tim
   - **Use multiple methods to capture all feedback**:
     - **Always fetch all three CodeRabbit channels** — CodeRabbit posts to all three and missing any one means missing findings:
       ```bash
-      gh api repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '[.[] | {user: .user.login, state, body}]'
-      gh api repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '[.[] | {user: .user.login, path, line, body}]'
-      gh api repos/OWNER/REPO/issues/PR_NUMBER/comments --jq '[.[] | {user: .user.login, body}]'
+      gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '.[] | {user: .user.login, state, body}'
+      gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '.[] | {user: .user.login, path, line, body}'
+      gh api --paginate repos/OWNER/REPO/issues/PR_NUMBER/comments --jq '.[] | {user: .user.login, body}'
       ```
       - `/pulls/{n}/reviews` — full review bodies including "outside diff range" findings (most content lives here)
       - `/pulls/{n}/comments` — inline comments attached to specific diff lines
       - `/issues/{n}/comments` — conversation-level notices (rate-limit notices, "reviews paused")
+    - **Confirm the review ran by positive evidence, not by absence of findings.** Three states look identical if you only check whether findings came back: CodeRabbit reviewed and found nothing, CodeRabbit was rate-limited and never ran, and CodeRabbit reviewed an older commit. A rate-limit notice proves the second case, but its absence proves nothing. The test that works is a review or inline comment whose `commit_id` equals the current PR head:
+
+      ```bash
+      HEAD_SHA=$(gh api repos/OWNER/REPO/pulls/PR_NUMBER --jq '.head.sha')
+      gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '.[] | select(.user.login == "coderabbitai[bot]") | .commit_id'
+      gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '.[] | select(.user.login == "coderabbitai[bot]") | .commit_id'
+      ```
+
+      Take the head SHA from the API, not from `git rev-parse HEAD` — the local head diverges from the PR head whenever commits are unpushed, and CodeRabbit reviews what was pushed. Check both channels, because a round can produce a review body with no inline comments or inline comments with no review body; a match in either one counts. No match in either means the review is still pending for this head — keep waiting, or re-trigger. Do not treat it as clean.
     - **MCP servers** (supplemental when available): Code review MCPs for additional coverage
     - Look for comments from automated tools (usernames ending in 'ai', 'bot', or known review tools)
 - [ ] **Present ALL code review findings**: ALWAYS present every review comment to the user, regardless of severity

@@ -1,3 +1,7 @@
+---
+paths: ["**/*.qmd", "**/slides/**", "**/_quarto.y*ml", "**/custom.scss"]
+---
+
 # Presentation Slide Rules (Quarto + Reveal.js)
 
 Whitney's preferences for conference presentation slides.

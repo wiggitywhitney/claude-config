@@ -86,9 +86,9 @@ Proceed to Step 3.
 - [ ] **Run `/code-review`**: Immediately invoke `/code-review` using the Skill tool — **except** for docs-only PRs and the other exceptions listed in `rules/git-workflow.md`. Run it in the foreground; never in the background or in parallel.
 - [ ] **Fetch CodeRabbit findings** (when timer fires): Resolve OWNER and REPO with `gh repo view --json owner,name`. Then run all three channels:
   ```bash
-  gh api repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '[.[] | {user: .user.login, state, body}]'
-  gh api repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '[.[] | {user: .user.login, path, line, body}]'
-  gh api repos/OWNER/REPO/issues/PR_NUMBER/comments --jq '[.[] | {user: .user.login, body}]'
+  gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '.[] | {user: .user.login, state, body}'
+  gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '.[] | {user: .user.login, path, line, body}'
+  gh api --paginate repos/OWNER/REPO/issues/PR_NUMBER/comments --jq '.[] | {user: .user.login, body}'
   ```
 - [ ] **Present ALL findings**: Show every CodeRabbit and `/code-review` finding to the user. Do not filter or omit any.
 - [ ] **Triage findings** per `rules/git-workflow.md`:

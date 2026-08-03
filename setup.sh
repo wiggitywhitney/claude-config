@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# ABOUTME: Portable installer for this repo's Claude Code configuration.
+# ABOUTME: Resolves settings.template.json paths and symlinks CLAUDE.md, rules, and skills into ~/.claude.
 # setup.sh — Portable Claude Code configuration installer
 #
 # Resolves settings.template.json with machine-specific paths.
@@ -128,6 +130,12 @@ create_symlinks() {
     # skills/write-docs → repo .claude/skills/write-docs
     ensure_symlink "$CLAUDE_CONFIG_DIR/.claude/skills/write-docs" "$CLAUDE_DIR/skills/write-docs" "skills/write-docs"
 
+    # skills/make-autonomous and skills/make-careful → repo .claude/skills/
+    # Both directions must be globally reachable: /make-autonomous installs the YOLO
+    # skill symlinks and hooks into a project, /make-careful removes them again.
+    ensure_symlink "$CLAUDE_CONFIG_DIR/.claude/skills/make-autonomous" "$CLAUDE_DIR/skills/make-autonomous" "skills/make-autonomous"
+    ensure_symlink "$CLAUDE_CONFIG_DIR/.claude/skills/make-careful" "$CLAUDE_DIR/skills/make-careful" "skills/make-careful"
+
     echo "Symlinks complete." >&2
 }
 
@@ -148,6 +156,8 @@ if [[ "$UNINSTALL_MODE" == true ]]; then
         "$CLAUDE_DIR/skills/research"
         "$CLAUDE_DIR/skills/write-prompt"
         "$CLAUDE_DIR/skills/write-docs"
+        "$CLAUDE_DIR/skills/make-autonomous"
+        "$CLAUDE_DIR/skills/make-careful"
     )
 
     for link_path in "${SYMLINKS_TO_CHECK[@]}"; do

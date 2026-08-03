@@ -1,3 +1,7 @@
+---
+paths: ["**/instrumentation.*", "**/logger.*", "**/*otel*", "**/package.json"]
+---
+
 # OTel Logs Bridge API Gotchas (Node.js)
 
 Verified 2026-06-16 against opentelemetry.io spec, npm package docs, and opentelemetry-js GitHub. Applies when adding OTel log-trace correlation to a Node.js project.

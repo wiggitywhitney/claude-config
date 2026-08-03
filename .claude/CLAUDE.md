@@ -31,9 +31,9 @@ This catches problems in ~30s locally, reducing review round-trips after PR crea
 1. Create the PR and push to remote
 2. Wait 7 minutes, then fetch all CodeRabbit findings using three `gh api` calls — CodeRabbit posts to all three channels and missing any one means missing findings:
    ```bash
-   gh api repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '[.[] | {user: .user.login, state, body}]'
-   gh api repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '[.[] | {user: .user.login, path, line, body}]'
-   gh api repos/OWNER/REPO/issues/PR_NUMBER/comments --jq '[.[] | {user: .user.login, body}]'
+   gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '.[] | {user: .user.login, state, body}'
+   gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '.[] | {user: .user.login, path, line, body}'
+   gh api --paginate repos/OWNER/REPO/issues/PR_NUMBER/comments --jq '.[] | {user: .user.login, body}'
    ```
 3. If no review yet, wait another 2-3 minutes before checking again
 4. For each CodeRabbit comment: explain the issue, give a recommendation, then **follow your own recommendation** (YOLO mode)
@@ -77,7 +77,13 @@ Wait for the user's answer. Never choose a default silently.
 
 **Hook severity:** Use exit 2 (blocking deny) only for zero-tolerance rules that must never be violated (e.g., commit message policy, verification failures). Use exit 0 with advisory `additionalContext` for style and quality guidance where violations are informational, not blocking.
 
-**Rule file frontmatter:** All rule files in `rules/` must include `paths:` frontmatter so Claude Code only loads them in relevant file contexts. Example: `paths: ["**/*.ts", "**/*.tsx"]` for TypeScript rules. This reduces token cost by avoiding irrelevant rules in every conversation.
+**Rule file frontmatter:** Every file in `rules/` must have exactly one loading mechanism — never both, never neither.
+
+- **On-demand rules carry `paths:` frontmatter** so Claude Code loads them only in relevant file contexts. Example: `paths: ["**/*.ts", "**/*.tsx"]` for TypeScript rules. This is the default.
+- **Rules whose trigger is an action rather than a file type** — running git, adopting a technology, touching infrastructure — cannot be expressed as a glob. These load through an `@`-reference in `global/CLAUDE.md` and must **not** also define `paths:`, which would load them twice.
+- Never use `paths: ["**/*"]`. That is not scoping; it re-injects the rule on every file read.
+
+`scripts/check-rule-frontmatter.sh` enforces all three. The full index of which rule loads how is in `rules/README.md`.
 
 **Placeholder rule files:** When creating a new rule file for a domain that doesn't have established patterns yet, create a stub with correct `paths:` frontmatter and a single line: "Add rules as patterns emerge from real usage." Do not fill rule files with speculative rules — let real usage drive content.
 

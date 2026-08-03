@@ -1,8 +1,3 @@
----
-paths: ["**/*"]
-description: Autonomous issue queue workflow for juggling multiple GitHub issues
----
-
 # Issue Juggling
 
 When told to "juggle" issues or work through a queue of issues autonomously:

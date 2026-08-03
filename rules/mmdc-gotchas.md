@@ -1,3 +1,7 @@
+---
+paths: ["**/*.mmd", "**/*.qmd", "**/slides/**"]
+---
+
 # mmdc (Mermaid CLI) Gotchas
 
 ## Quarto revealjs: `%%{init}%%` in `{mermaid}` blocks causes slide nesting when many blocks are present

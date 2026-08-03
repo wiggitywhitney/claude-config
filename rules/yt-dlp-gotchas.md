@@ -1,3 +1,7 @@
+---
+paths: ["**/*yt-dlp*", "**/*youtube*", "**/.github/workflows/*.yml"]
+---
+
 # yt-dlp Gotchas
 
 ## Format selector: `best[ext=mp4]` picks the combined stream — use it first

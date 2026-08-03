@@ -1,3 +1,7 @@
+---
+paths: ["**/*weaver*", "**/registry_manifest.y*ml", "**/live-check*.ts"]
+---
+
 # Weaver Gotchas
 
 ## v0.22.1 breaking changes (released 2026-03-13)

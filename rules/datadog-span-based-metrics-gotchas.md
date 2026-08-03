@@ -1,3 +1,7 @@
+---
+paths: ["**/otelcol*.y*ml", "**/*collector*.y*ml", "**/*span*metric*", "**/instrumentation.*"]
+---
+
 # Datadog Span-Based Metrics Gotchas
 
 Verify against Datadog docs: Generate Metrics from Spans, Trace Metrics Namespace. Applies when using Datadog's "Generate Metrics from Spans" feature or relying on auto-generated Trace Metrics.

@@ -161,10 +161,11 @@ The ROADMAP.md update will be included in the commit at the end of the workflow.
 Always commit and push the PRD immediately. PRD-only commits (all `.md` files) are exempt from branch protection and go directly to main.
 
 ```bash
-# Stage the PRD file (and ROADMAP.md if it was updated)
+# Stage the PRD file, plus ROADMAP.md when the roadmap step updated it.
+# Stage both in the same commit — a commit message that reports a roadmap
+# update while the roadmap sits unstaged is a false record.
 git add prds/[issue-id]-[feature-name].md
-# If docs/ROADMAP.md exists and was updated, include it:
-# git add docs/ROADMAP.md
+if [ -f docs/ROADMAP.md ]; then git add docs/ROADMAP.md; fi
 
 # Commit with skip CI flag to avoid unnecessary CI runs
 git commit -m "docs(prd-[issue-id]): create PRD #[issue-id] - [feature-name] [skip ci]
@@ -172,6 +173,7 @@ git commit -m "docs(prd-[issue-id]): create PRD #[issue-id] - [feature-name] [sk
 - Created PRD for [brief feature description]
 - Defined [X] major milestones
 - Documented problem, solution, and success criteria
+- Added to ROADMAP.md ([timeframe] section)
 - Ready for implementation"
 
 # Pull latest and push to main

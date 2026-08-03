@@ -1,3 +1,7 @@
+---
+paths: ["**/instrumentation.*", "**/*otel*", "**/*semconv*", "**/*telemetry*", "**/*tracing*"]
+---
+
 # OTel JS Semantic Conventions Gotchas
 
 Verified against `@opentelemetry/semantic-conventions` v1.40.0.

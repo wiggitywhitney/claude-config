@@ -1,3 +1,7 @@
+---
+paths: ["**/instrumentation.*", "**/logger.*", "**/*otel*", "**/*.vals.yaml"]
+---
+
 # Datadog Log-Trace Correlation Gotchas (OTel SDK)
 
 Verified 2026-06-16 against docs.datadoghq.com/opentelemetry/correlate/logs_and_traces/ and related pages. Applies when adding log-trace correlation to a Node.js project using the OTel SDK (not dd-trace).
