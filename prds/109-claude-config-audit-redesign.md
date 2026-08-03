@@ -91,7 +91,7 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 - [ ] M5: Skill families diffed and an autonomous-first consolidation designed
 - [ ] M6: Michael workflow spike
 - [ ] M7: Repo-native audit — hooks, skills, general cleanup
-- [ ] M7b: PRD #84 resolved and retired
+- [ ] M7b: PRD #84 resolved and retired, and issue #98 with it
 - [ ] M8: Spec file written and signed off
 - [ ] M9: Audit-agent verification pass against the decision log and session transcript
 
@@ -308,7 +308,8 @@ Total in scope: **22 skill files** across 14 skills. Any count that disagrees wi
 - Review `scripts/`, `templates/`, `profiles/`, `config/`, and `hooks/archive/` for dead material.
 - Check whether `setup.sh` still reflects what the repo actually installs.
 - Note the `/issue-create` gap found during scoping: the skill has no branch for bringing an already-created issue into compliance.
-- Audit the tracked settings symlink. `~/.claude/settings.json` points at `config/settings.json` in this repo, so Claude Code writes settings into tracked files — a model change was found written into the working tree on 2026-08-02. Check every symlink target under `~/.claude/`, identify which tracked files can be mutated by tooling rather than by a person, and report the configured model defaults.
+- **Fix the tracked settings symlink — this is a diagnosed defect with a candidate fix, not an open question.** `~/.claude/settings.json` symlinks to the tracked `config/settings.json`, so every settings write Claude Code makes becomes a git diff here. Observed twice: a model change in the working tree on 2026-08-02, and on 2026-08-03 `"model": "opus[1m]"` rewritten to `"sonnet[1m]"` mid-session and reverted rather than committed. Committing it would have flipped the tracked default to the weaker model. Removing the `model` key does not help — `/model` rewrites it. The candidate fix is to stop tracking the live file, since `settings.template.json` plus `setup.sh`'s resolve-and-merge already provides the provisioning path; the repo carries both and needs only the template. Evaluate that fix, then check every remaining symlink target under `~/.claude/` for the same shape and identify which tracked files tooling can mutate.
+  - Report the configured model defaults, and record that the source is outside this repo: `/Library/Application Support/ClaudeCode/managed-settings.json` is root-owned Datadog policy setting `model: sonnet`, `effortLevel: medium`, and `CLAUDE_CODE_DISABLE_FAST_MODE: 1`. Managed settings outrank user settings, so no change here makes Opus survive a restart. Whether a user-side override exists is M3's question; do not assume it does.
 - PRD #84's disposition is **not** part of this milestone. It moved to M7b, which resolves it end to end rather than planning a triage for someone else. Do not sort, salvage, or plan for that branch here.
 - **Audit the other repos, not just this one.** The scoping instruction was that "all the repos, really, should probably be edited — I bet some can be removed and cleaned up." Discover the repo set by enumerating **every** repository under `~/Documents/Repositories/` containing a `.claude/` directory — not only those with `.claude/skills/`, which would skip a repo carrying just a `settings.local.json`. As a lower bound, twenty-one have `.claude/skills/` and nine carry the YOLO symlinks. Inventory what Claude Code configuration each discovered repo actually has — project `CLAUDE.md`, `.claude/skills/`, `.claude/settings.local.json`, installed git hooks, `.skip-*` dotfiles — and identify what is stale, duplicated, orphaned, or pointing at scripts that no longer exist. Produce a per-repo remove / consolidate / repair / keep recommendation. Do not modify other repos in this milestone; recommend only, and let the spec decide what a cleanup PRD would do.
 - **Design the check for unevidenced completion claims.** Per the decision on evidence-bearing claims, a `PROGRESS.md` entry or commit message asserting a state — fixed, working, complete, current, verified, passing — is half of a coupled pair whose other half is the system. Recommend a remedy at the strongest tier available: scripting the recurring verifications so the observation is produced automatically, before falling back to a hook that flags the vocabulary and asks what backs it. Note honestly that the hook is an assert and catches only the words it knows.
@@ -331,7 +332,7 @@ Total in scope: **22 skill files** across 14 skills. Any count that disagrees wi
 
 ---
 
-### M7b: PRD #84 resolved and retired
+### M7b: PRD #84 resolved and retired, and issue #98 with it
 
 **Numbered M7b rather than M8 deliberately.** Renumbering the later milestones would mean updating roughly eleven cross-references to M8 and M9 scattered through this document, and stale cross-references are the exact defect Decision 28 records. Do not "fix" this to M8.
 
@@ -382,9 +383,21 @@ PRD #84's two unfinished milestones are its M7, an end-to-end run against `spiny
 
 Its Decision 1 rejected Michael's `_execution-state.md` and `tasks.yaml` patterns on the strength of research that M6 replaces. Re-examine that reasoning against M6's findings.
 
+#### Issue #98 resolves here too
+
+Issue #98 (`scripts/autonomous-issues.sh`, opened 2026-05-15, untouched since) is **downstream of this milestone's verdicts, not a parallel case.** It has no work product at all: no `autonomous-issues.sh` exists in any commit on any branch, and no branch was ever created for it. Verified 2026-08-03.
+
+What it does have is a hard dependency on PRD #84's code. Every item in its own "Read before starting" list — `scripts/autonomous-prd.sh`, `scripts/autonomous-prd-child-prompt.md`, the active-run marker format, and M4's SessionStart collision detection — exists only on the branch this milestone may delete, and its instructions say to reuse those conventions and keep them identical. If the orchestrator does not survive, #98 becomes an issue directing a future implementer to read four files that do not exist. That is worse than either outcome, so it cannot be left untouched.
+
+- If the orchestrator row takes the code-lives verdict, #98 stays open and becomes actionable as written.
+- Otherwise #98 is closed, and the requirement behind it — unattended execution over a flat queue of standalone issues, not only over PRD milestones — is carried into the spec in the spec's own terms, with no reference to PRD #84's conventions.
+
+Either way, #98 does not survive this milestone as an open issue pointing at deleted files. Its one genuinely independent design claim is worth weighing on its merits when the spec is written: that a flat issue queue and a milestone-structured PRD queue should be two focused mechanisms rather than one generalized one. That is a live question about the canonical workflow, not an inherited answer.
+
 **To implement:**
-- Read M4, M5, and M6 output. Re-verify the facts above.
+- Read M4, M5, and M6 output. Re-verify the facts above, including that #98 still has no work product.
 - Assign one of the three verdicts to every row of the work table, with the reasoning for each.
+- Resolve #98 per the two branches above, and record which applied.
 - Present the completed table to Whitney and get her approval before acting on any row. Approval covers the set, not each row separately.
 - Write the verdict-3 learnings into the spec. This happens inside PRD #109; do not schedule it elsewhere.
 - If any row took verdict 2, merge that work to main through a PR, following the normal review gate.
@@ -400,7 +413,8 @@ Its Decision 1 rejected Michael's `_execution-state.md` and `tasks.yaml` pattern
 - No journal content exists only on the deleted branch, shown by the diff command rather than asserted
 - `feature/prd-84-autonomous-prd-execution` does not exist
 - Issue #84 is closed with the verdicts recorded, and its PRD file is in `prds/done/` with the stale-copy warning removed
-- No open item anywhere refers to PRD #84 as pending work
+- Issue #98 is either open and actionable without referring to deleted files, or closed with its requirement carried into the spec — and which of the two happened is recorded
+- No open item anywhere refers to PRD #84 as pending work, and no open item references a file that this milestone deleted
 - Decisions logged
 
 ---
