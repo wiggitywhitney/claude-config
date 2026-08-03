@@ -6,7 +6,7 @@
 **Research**:
 - [claude-config audit decision log](../docs/research/claude-config-audit-decisions.md) — the running record of every decision, finding, and open question from the scoping conversation. **Read this first.** It is the authoritative source for why this PRD is shaped the way it is.
 - [PRD workflow principles](../docs/research/prd-workflow-principles.md) — how the current PRD skills work, what state lives where, the atomic-commit invariant
-- [Michael Forrester workflow](../docs/research/michael-forrester-workflow.md) — **stale**, describes a workflow he has since changed; updated by M6
+- [Michael Forrester workflow](../docs/research/michael-forrester-workflow.md) — **stale**, describes a workflow he has since changed; updated by Milestone B3
 - [Michael Forrester autonomous execution principles](../docs/research/michael-autonomous-execution-principles.md) — **stale**, same caveat
 - [Claude Code autonomous capabilities](../docs/research/claude-code-autonomous-capabilities.md) — 2026 platform constraints
 
@@ -45,11 +45,17 @@ This section is binding on the implementing AI and is not optional.
 
 **One question at a time.** Never present a numbered list of two or more questions in a single message. Ask, resolve, then ask the next.
 
+**Explain the evidence as though Whitney has not read the documentation (Decision 36).** Plain language, no assumed background, no jargon inherited from a docs page. When a recommendation rests on a platform behavior, explain the behavior before stating the conclusion. Then give the choices simply and recommend one, with the cost of the alternatives.
+
+**Write each answer down in the turn it is given (Decision 36).** Not batched at the end of a conversation. A long design conversation that compacts before its answers are recorded loses them, and the session transcript is a poor substitute for a decision log.
+
+**Keep the PRD, the research docs, and the decision log separate (Decision 37).** The PRD holds what to do. Research docs hold what was learned — findings, evidence, measurements. The decision log holds decisions, kept to a sentence or two, linking out to the evidence rather than reproducing it. A decision row that has grown into a paragraph of findings belongs in a research document with a link left behind.
+
 **Decide policies, not instances.** Where a change touches many files, propose a single rule covering all of them and ask her to approve or edit the rule — then apply it mechanically. Do not ask for per-file or per-instance approval. Per-instance approval is miserable at scale and buries the actual choice inside the noise.
 
 **Check in with Whitney after every milestone.** Do not chain milestones. Finish one, present what it found, and wait. This was an explicit instruction when the audit was first scoped and it applies to every milestone in this PRD, including the ones that look mechanical.
 
-**Verify against the conversation continuously, not only at M9.** After each milestone, extract the human turns from that milestone's session transcript and diff them against this PRD and the decision log. Anything said and not written down gets written down before the next milestone starts. M9 is the final pass over the finished spec; it is not the only time this check runs. Waiting until the end would mean discovering at M9 that an instruction given at M1 was never captured, after seven milestones had already been built on the gap.
+**Verify against the conversation continuously, not only at Milestone D2.** After each milestone, extract the human turns from that milestone's session transcript and diff them against this PRD and the decision log. Anything said and not written down gets written down before the next milestone starts. Milestone D2 is the final pass over the finished spec; it is not the only time this check runs. Waiting until the end would mean discovering at Milestone D2 that an instruction given at Milestone A1 was never captured, after seven milestones had already been built on the gap.
 
 **Log decisions as they are made,** to `docs/research/claude-config-audit-decisions.md`, in the same turn they are made. Do not batch them for later reconstruction. The scoping conversation for this PRD was long and decision-dense; compaction summarizes lossily and the running log is the defense against that.
 
@@ -63,9 +69,9 @@ Applies with particular force to before/after measurements, which are this PRD's
 
 ### Reference repos are refreshed at read time, not at clone time
 
-**Every milestone that reads a reference repo pulls it first, and records the commit SHA it actually read.** This applies to repos cloned during M1, to `~/Documents/Repositories/forrester-workflow`, to `~/Documents/Repositories/claude-personal`, and to anything else already on disk.
+**Every milestone that reads a reference repo pulls it first, and records the commit SHA it actually read.** This applies to repos cloned during Milestone A1, to `~/Documents/Repositories/forrester-workflow`, to `~/Documents/Repositories/claude-personal`, and to anything else already on disk.
 
-Cloning happens once in M1; the spikes that read those clones run later, potentially much later. A clone that was current when it was taken is not current when it is read. Michael pushed to `llm-coding-workflow` during the planning conversation on 2026-08-02 — 500 commits had accumulated since the previous clone, and he said he was still pushing as he said it. Viktor's repos will drift the same way between M1 and M4.
+Cloning happens once in Milestone A1; the spikes that read those clones run later, potentially much later. A clone that was current when it was taken is not current when it is read. Michael pushed to `llm-coding-workflow` during the planning conversation on 2026-08-02 — 500 commits had accumulated since the previous clone, and he said he was still pushing as he said it. Viktor's repos will drift the same way between Milestone A1 and Milestone B2.
 
 Recording the SHA matters as much as pulling: a finding attributed to "his current setup" is unverifiable later unless the state it came from is named. Every spike document states the repo and SHA it was written against.
 
@@ -84,20 +90,37 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 
 ## Milestones
 
-- [x] M1: Reference repos gathered and cloned
-- [ ] M2: Current-behavior research — rules, skills, context, compaction
-- [ ] M3: Current-behavior research — permissions and approval friction
-- [ ] M4: Viktor swarm workflow spike
-- [ ] M5: Skill families diffed and an autonomous-first consolidation designed
-- [ ] M6: Michael workflow spike
-- [ ] M7: Repo-native audit — hooks, skills, general cleanup
-- [ ] M7b: PRD #84 resolved and retired, and issue #98 with it
-- [ ] M8: Spec file written and signed off
-- [ ] M9: Audit-agent verification pass against the decision log and session transcript
+**Four phases, in strict order: measure what is, learn what is possible, decide what to build, then dispose and verify (Decision 34).** No design decision is made before all three research inputs exist.
+
+**Execution order is the checklist below, not the order the detailed sections appear in.** The sections still follow the original numbering from before the phase restructure, so Milestone A4 currently sits after the Phase B sections and Milestone D1 before Milestone C2. Reordering them is a mechanical follow-up, deliberately separated from this restructure so the two changes can be reviewed apart. **Work the checklist; do not infer sequence from section position.**
+
+**Phase A — Audit. What the system currently does.**
+
+- [x] Milestone A1: Reference repos gathered and cloned
+- [ ] Milestone A2: Load measurement — rules, skills, context, compaction
+- [ ] Milestone A3: Permissions and approval friction
+- [ ] Milestone A4: Repo-native audit — hooks, skills, cross-repo config sprawl
+
+**Phase B — Research. What is possible, from three independent sources.**
+
+- [ ] Milestone B1: Claude Code capability spike — tools, hooks, settings, architectures
+- [ ] Milestone B2: Viktor swarm workflow spike
+- [ ] Milestone B3: Michael workflow spike
+- [ ] Milestone B4: Skill families diffed — three-way comparison
+
+**Phase C — Design. Decide, with Whitney, using everything from A and B.**
+
+- [ ] Milestone C1: Collaborative design — classification policy, byte budget, skill consolidation, hook pruning
+- [ ] Milestone C2: Spec file written and signed off
+
+**Phase D — Disposal and verification.**
+
+- [ ] Milestone D1: PRD #84 resolved and retired, and issue #98 with it
+- [ ] Milestone D2: Audit-agent verification pass against the decision log and session transcript
 
 ---
 
-### M1: Reference repos gathered and cloned
+### Milestone A1: Reference repos gathered and cloned
 
 **Model:** Any. Mechanical — cloning and confirming. No switch needed.
 
@@ -105,14 +128,14 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 
 **What:** Ask Whitney for every repo link she wants examined, then clone each one locally into a scratch directory that is excluded from version control.
 
-**Why:** Fetching these via web search or WebFetch hit GitHub crawl-blocking during scoping. Local clones sidestep that entirely. Gathering happens once, up front, because M4, M5, and M6 all depend on the clones existing — if cloning were folded into the first spike, the later ones would either redo it or silently depend on leftover state.
+**Why:** Fetching these via web search or WebFetch hit GitHub crawl-blocking during scoping. Local clones sidestep that entirely. Gathering happens once, up front, because Milestone B2, Milestone B4, and Milestone B3 all depend on the clones existing — if cloning were folded into the first spike, the later ones would either redo it or silently depend on leftover state.
 
 **To implement:**
 - Clone Viktor's repos. The list is confirmed:
   - **`vfarcic/dot-agent-deck`** — his *current* setup. Skills live in `.claude/skills/`. `.dot-agent-deck.toml` describes the roles of his agent swarm for that project, and he says he now relies heavily on it. Treat the TOML as his center of gravity, not the skills.
   - **`vfarcic/dot-ai`** — how he distributes skills into each project, and the probable origin of the `prd-*` skills Whitney forked. Purpose otherwise unknown; do not assume.
   - **`vfarcic/dot-ai-infra`** — his permanent cluster.
-- **Establish the fork point before diffing anything.** Whitney's `prd-*` skills were forked from `dot-ai`, but his current skills live in `dot-agent-deck`. That makes a two-way diff misleading. Find the closest common ancestor in `dot-ai` and run a three-way comparison — ancestor, his current, hers — so M5 can distinguish "he changed this," "she changed this," and "both changed it independently." A two-way diff collapses those three cases into one and will produce recommendations that quietly discard her deliberate divergences.
+- **Establish the fork point before diffing anything.** Whitney's `prd-*` skills were forked from `dot-ai`, but his current skills live in `dot-agent-deck`. That makes a two-way diff misleading. Find the closest common ancestor in `dot-ai` and run a three-way comparison — ancestor, his current, hers — so Milestone B4 can distinguish "he changed this," "she changed this," and "both changed it independently." A two-way diff collapses those three cases into one and will produce recommendations that quietly discard her deliberate divergences.
 - Clone Michael's repos, owner `peopleforrester`:
   - **`llm-coding-workflow`** — confirmed and already cloned at `~/Documents/Repositories/forrester-workflow`; pulled current on 2026-08-02 (500 commits since the prior clone, HEAD `418cd9f`). 52 MB, 702 tracked files, 11 PRDs. Contains its own `claude-config/` (`AGENTS.md`, `CLAUDE.md`, `fleet`, `hooks`, `rules`, `settings.json`, `shell`, `skills`, `systemd`), plus `netcup-*`, `wsl2-specific/` including `naruto/` for terminal layout snapshots, `tasks.yaml`, `PROJECT_STATE.md`, `plan.md`, and `decisions.md`.
   - **Michael confirmed on 2026-08-02 that `llm-coding-workflow` is the primary repo** — "that is where the latest Opus 5 juice is" — and said he was still pushing changes at the time. **Re-pull immediately before the spike runs**, not just at clone time; the clone taken during planning is already behind.
@@ -121,11 +144,11 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
     1. **Enumerate deterministically.** `gh repo list peopleforrester --json name,description,updatedAt`. Record the full output so the selection can be audited.
     2. **Then judge each name and description against one question:** could this plausibly contain part of how he configures or runs a coding agent? Clone those. This is a semantic judgment and correctly belongs to a model rather than a script — consistent with the deterministic-enumeration rule, which governs enumeration, not relevance.
   - **Include** anything touching Claude Code configuration, skills, rules, hooks, agent workflow, coding-agent tooling, or agent observability — even for a different tool, since a Copilot or MCP pattern may still reveal how he structures things. **Exclude** subject-matter projects that merely happen to be built with agents: games, websites, podcasts, demo platforms, pricing data, book manuscripts.
-  - Applying that on 2026-08-02 gives roughly nine of twenty: `llm-coding-workflow`, `claude-dotfiles`, `Brain_spec_skills_claude`, `observe-claude-code`, `mcp_best_practices`, `agentic-covenants`, `MCP_Server_Claude_Doc_monitor`, `copilot-cli-enterprise-patterns`, `Webinar_Claude_Code_Hands_On`. Re-run the enumeration rather than trusting this list — he was actively pushing on the day it was written. When a name is ambiguous, clone it: a discarded clone costs nothing, a skipped one costs a finding nobody knows is missing. **This is a historical planning-time snapshot, superseded by M1's actual run.** The live enumeration on 2026-08-03 found 60 repos (up from 20), cloned 11 of Michael's after judgment and a post-clone trim by Whitney, and the full accounting lives in the "Repos to examine" section of [the decision log](../docs/research/claude-config-audit-decisions.md).
+  - Applying that on 2026-08-02 gives roughly nine of twenty: `llm-coding-workflow`, `claude-dotfiles`, `Brain_spec_skills_claude`, `observe-claude-code`, `mcp_best_practices`, `agentic-covenants`, `MCP_Server_Claude_Doc_monitor`, `copilot-cli-enterprise-patterns`, `Webinar_Claude_Code_Hands_On`. Re-run the enumeration rather than trusting this list — he was actively pushing on the day it was written. When a name is ambiguous, clone it: a discarded clone costs nothing, a skipped one costs a finding nobody knows is missing. **This is a historical planning-time snapshot, superseded by Milestone A1's actual run.** The live enumeration on 2026-08-03 found 60 repos (up from 20), cloned 11 of Michael's after judgment and a post-clone trim by Whitney, and the full accounting lives in the "Repos to examine" section of [the decision log](../docs/research/claude-config-audit-decisions.md).
 - **Include Whitney's own second configuration repo.** `wiggitywhitney/claude-personal`, cloned at `~/Documents/Repositories/claude-personal` — 101 tracked files (`memory/`, `scripts/`, `tests/`), last commit 2026-04-12. It exists to hold the parts of her Claude Code setup that cannot be public, so that a new machine can be provisioned from both repos together. Her configuration is therefore split across two repositories, which makes `claude-config` and `claude-personal` a coupled pair by construction — see the organizing principle. The audit is incomplete if it only looks at one of them.
 - Clone into `research/repos/`. Confirm that path is gitignored; if it is not, add it to `.gitignore` before cloning. Do not commit clone contents.
 - Confirm each clone succeeded and print a directory listing.
-- **Triage pass (Decision 31).** Metadata filtering only proves a repo is plausibly relevant, not that it has anything inside worth reading. Before recording the final list, skim each Michael candidate's README and top-level directory structure and discard anything that is clearly a dead end — empty, a one-off experiment, a name/description mismatch with actual content. Dispatch as one Haiku 4.5 subagent per repo, run in parallel — the same bulk-reading delegation pattern M4 and M6 use for Sonnet, one tier cheaper since this pass only needs to answer "is there anything here," not judge content. Record a one-line discard reason per repo, the same way the subject filter does. Present the survivors to Whitney for a final spot-check before moving on — the first pass at this (2026-08-03) was an ad hoc manual trim of four repos rather than this systematic step, and should be treated as superseded by a full triage run rather than as already satisfying it.
+- **Triage pass (Decision 31).** Metadata filtering only proves a repo is plausibly relevant, not that it has anything inside worth reading. Before recording the final list, skim each Michael candidate's README and top-level directory structure and discard anything that is clearly a dead end — empty, a one-off experiment, a name/description mismatch with actual content. Dispatch as one Haiku 4.5 subagent per repo, run in parallel — the same bulk-reading delegation pattern Milestone B2 and Milestone B3 use for Sonnet, one tier cheaper since this pass only needs to answer "is there anything here," not judge content. Record a one-line discard reason per repo, the same way the subject filter does. Present the survivors to Whitney for a final spot-check before moving on — the first pass at this (2026-08-03) was an ad hoc manual trim of four repos rather than this systematic step, and should be treated as superseded by a full triage run rather than as already satisfying it.
 - Record the resolved list — owner, repo, URL, local path, commit SHA at clone time — in the "Repos to examine" table of the decision log. Later milestones cite that table, and the SHA makes a finding reproducible after upstream moves.
 
 **Success criteria:**
@@ -139,11 +162,15 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 
 ---
 
-### M2: Current-behavior research — rules, skills, context, compaction
+### Milestone A2: Load measurement — rules, skills, context, compaction
 
-**Model:** Opus 5. Judgment — separating current fact from stale training data, and designing the classification policy.
+**Re-scoped 2026-08-03 (Decision 34). This milestone measures and documents; it does not decide.** The classification policy and the byte budget were originally specified here and have moved to Milestone C1, because both are design outputs that were being produced at position two of the plan — before the Viktor, Michael, and capability spikes that should inform them. Produce the facts; carry them to Phase C.
+
+**Model:** Opus 5. Judgment — separating current fact from stale training data.
 
 **Step 0:** Read the "Findings that shaped the plan" section of [the decision log](../docs/research/claude-config-audit-decisions.md). Two findings gate this milestone: GitHub issue #21858 has been ruled out by live test, and the 96,637-byte context leak has been measured and is tracked in issue #108. Do not re-litigate either.
+
+Also read [Research: Claude Code context loading and compaction](../docs/research/claude-code-context-loading-and-compaction.md), produced by this milestone's first research pass. It establishes the five load reasons, confirms that `paths:`-scoped rules do **not** survive compaction, and leaves one question open that the classification policy depends on — whether `@`-imported rules are re-injected. Settle that by measurement before the policy assumes either answer.
 
 **What:** Establish what Claude Code actually does today with rules, skills, context, and compaction — then produce a measured inventory of what loads in this setup and why.
 
@@ -151,24 +178,25 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 
 **To implement:**
 - Run `/research how Claude Code loads rules, skills, and CLAUDE.md into context, and what compaction does to each` — start from `code.claude.com/docs/en/context-window` and the Claude Code changelog. Include all `/research` output verbatim with source links and confidence scores; do not summarize it away.
-- Run `/research whether Claude Code skills can be installed globally or only per-project, and what changed recently` — this is needed for M4, where Viktor's "never global" position has to be evaluated on current facts.
+- Run `/research whether Claude Code skills can be installed globally or only per-project, and what changed recently` — this is needed for Milestone B2, where Viktor's "never global" position has to be evaluated on current facts.
 - Produce a measured inventory at `docs/research/claude-config-load-inventory.md` — a table with one row per file in `rules/` and per skill, with columns: path / loading mechanism / bytes / loaded in a fresh session (yes-no) / why. Totals at the bottom. Record the measurement date and whether issue #108 had merged at the time, since that changes the numbers.
 - Ask Whitney to run `/context` and `/memory` and paste the output. Claude cannot invoke these — they are user-typed commands. Reconcile her output against the inventory and note any discrepancy.
-- Recommend, per rule, one of: stays a path-scoped rule / moves to `global/CLAUDE.md` for durability across compaction / moves to a hook / becomes an on-demand skill. Present this as a **policy** — a small set of rules for classifying any file — not as 40 individual recommendations. Use the existing hook configuration as evidence for what is already enforced outside model judgment.
-- **Inherit the unmet size goal from PRD #43** (closed 2026-03-16, archived to `prds/done/` on 2026-08-03; read its superseded header first). That PRD set out to bring `global/CLAUDE.md` under 150 lines. It shipped its six extracted rule files and missed the goal: the file was 202 lines on 2026-08-03, more than the 172 that prompted the work. **Set the target in always-loaded bytes rather than lines** — lines were always a proxy, and #108 established the real measurement at 56,994 bytes across `global/CLAUDE.md` plus the eleven `@`-referenced rules. Propose a budget Whitney approves, and note that PRD #43 failed partly because its chosen mechanism could not achieve its goal: `@`-referencing an extracted file removes nothing from the always-loaded set.
-  - Carry forward PRD #43's Decision 2 as an input rather than relitigating it: short domain-specific sections stay inline, because extracting a four-line section costs more in file overhead than it saves.
+- **Settle whether `@`-imported rules survive compaction.** Still unresolved and it gates the classification policy in Milestone C1. Every always-loaded rule in this setup arrives via `@`-reference, and the official compaction table has no row for imports or for user-level `CLAUDE.md`, so the durability of the entire always-loaded set is unverified. Method: register an `InstructionsLoaded` hook with matcher `compact` through a throwaway `--settings` file, run a session long enough to compact, and read which paths reappear. Do not reason about this; measure it.
 
 **Success criteria:**
 - `/research` output for both questions is captured in `docs/research/` with sources
-- A measured load inventory exists covering every file in `rules/` and every skill
-- Whitney's `/context` and `/memory` output has been reconciled against the inventory
-- A classification policy has been presented to Whitney and she has approved or edited it
-- An always-loaded byte budget for `global/CLAUDE.md` plus its `@`-referenced rules is proposed and approved, replacing PRD #43's unmet 150-line target
-- The resulting decisions are logged in the decision log
+- A measured load inventory exists covering every file in `rules/` and every skill, generated by a committed re-runnable script
+- Whitney's `/context` and `/memory` output has been reconciled against the inventory, with any discrepancy resolved rather than noted
+- The `@`-import compaction question is answered by observation, and the answer is recorded
+- Findings are logged, and anything bearing on a Phase C decision is written where Milestone C1 will find it
+
+**Carried to Milestone C1** — recorded here so the inputs are not lost in the move:
+- The per-rule classification recommendation (stays path-scoped / moves to `global/CLAUDE.md` / becomes a hook / becomes an on-demand skill), presented as a policy rather than 40 individual calls.
+- The always-loaded byte budget inherited from PRD #43 (closed 2026-03-16, archived to `prds/done/`; read its superseded header first). That PRD aimed to bring `global/CLAUDE.md` under 150 lines, shipped six extracted rule files, and missed: 202 lines on 2026-08-03, more than the 172 that prompted the work. Set the target in **always-loaded bytes**, not lines. Note why it failed — `@`-referencing an extracted file removes nothing from the always-loaded set, so the chosen mechanism could not achieve the goal. Carry forward PRD #43's Decision 2 as an input rather than relitigating it: short domain-specific sections stay inline.
 
 ---
 
-### M3: Current-behavior research — permissions and approval friction
+### Milestone A3: Permissions and approval friction
 
 **Model:** Opus 5. Judgment — building the trigger taxonomy and separating settings-fixable classes from behavior-only ones.
 
@@ -184,35 +212,75 @@ Note also that all three were self-inflicted by Claude writing compound one-line
 
 **To implement:**
 - Run `/research Claude Code sandbox and permission-mode settings, and whether any of them allow read-only bash commands containing shell expansion to run without prompting` — the current `~/.claude/settings.json` has `skipDangerousModePermissionPrompt` set but no sandbox or default-mode configuration. Include all output with sources.
-- **Redact before writing anything to a tracked file.** Session JSONL transcripts contain API tokens, secret values, absolute personal paths, and customer data. Keep raw extracts in a scratch location outside the repository and delete them when the milestone ends. Commit only aggregated output: command classes (not full command lines), counts, and sanitized reason-string labels. Generalize or strip any path containing a username, any string resembling a credential, and any customer or third-party identifier. **The same policy binds M9**, which reads the same transcripts.
+- **Redact before writing anything to a tracked file.** Session JSONL transcripts contain API tokens, secret values, absolute personal paths, and customer data. Keep raw extracts in a scratch location outside the repository and delete them when the milestone ends. Commit only aggregated output: command classes (not full command lines), counts, and sanitized reason-string labels. Generalize or strip any path containing a username, any string resembling a credential, and any customer or third-party identifier. **The same policy binds Milestone D2**, which reads the same transcripts.
 - Mine `~/.claude/projects/*/*.jsonl` for every Bash command actually run across recorded sessions, and for every approval prompt and its reason string. Build a **taxonomy of trigger classes** ranked by how often each fires. Two are already known — shell expansion, and `cd` with output redirection — but do not assume the list is complete. For each class, state plainly whether a settings change could eliminate it or whether only changed Claude behavior can.
-- Recommend a rebuilt allowlist grounded in that frequency data, plus any settings change the research supports. Present as a policy Whitney approves, not a list of individual entries she vets.
+- **Produce the evidence for a rebuilt allowlist — the frequency data and the settings-fixable classification — but do not settle it here.** The allowlist and any settings change are decided in Milestone C1 (Decision 34), presented as a policy Whitney approves rather than a list of individual entries she vets. Milestone B1's capability spike may change the answer materially, since a sandbox or permission-mode setting could eliminate an entire trigger class that no allowlist entry can.
 - Write the behavioral guidance that reduces prompts regardless of settings — prefer Grep/Glob/Read over Bash for search and inspection, write literal commands without variable expansion, use absolute paths instead of `cd X && ...`, and put genuine logic in a script file invoked plainly. Decide with Whitney where this guidance lives so it survives compaction.
 
 **Success criteria:**
 - `/research` output on sandbox and permission-mode settings is captured with sources
 - `docs/research/claude-config-permission-audit.md` exists, containing the frequency-ranked command inventory and the trigger taxonomy, with each class labeled settings-fixable or behavior-only
-- A rebuilt allowlist and any settings change have been recommended and approved by Whitney
-- Behavioral guidance is written and its location decided
+- A rebuilt allowlist and any supporting settings change are **recommended with their evidence**; approval happens in Milestone C1
+- Behavioral guidance is drafted, with its location proposed rather than decided
+- Findings logged, and written where Milestone C1 will find them
+
+---
+
+### Milestone B1: Claude Code capability spike
+
+**Added 2026-08-03 (Decision 35).** The third research input, alongside Viktor and Michael. Runs before both, so their setups are read by someone who already knows what the platform offers — the difference between "he does X, interesting" and "he does X because the platform cannot do Y."
+
+**Model:** Opus 5. Judgment — deciding what is worth adopting is the whole output, and a weaker model will summarize the documentation instead of assessing it.
+
+**Step 0:** Read `docs/research/claude-code-context-loading-and-compaction.md` and `docs/research/claude-code-skill-installation-scope.md`, both produced by Milestone A2. They are the first two fragments of this spike's subject matter and establish its method: check the documentation, then verify against the local binary or a live session rather than trusting the page.
+
+**What:** Produce an inventory of what Claude Code 2.1.220 can do that this setup is not using, scoped to the goals in Decision 1 — less oversight, less friction, more parallel work, durable context.
+
+**Why:** Every finding that changed the plan on 2026-08-03 came from reading documentation rather than from reasoning. Two narrow research passes produced five capability findings, one of which — skills precedence being personal-over-project — invalidated four months of assumed autonomous behavior. That hit rate from two incidental passes is the argument for a deliberate one. "Current with what AI can do now" is Decision 1's stated goal, and nothing in the plan was checking it.
+
+**Scope — capabilities, not only AI skills.** Whitney's framing: tools and all the possible things. Cover at minimum:
+- Hook events, especially ones nothing here uses. `InstructionsLoaded` was found by accident during Milestone A2 and is already the best instrument in the audit; assume there are others.
+- Settings and permission surfaces — sandboxing, permission modes, `--settings`, `claudeMdExcludes`, managed-settings interaction.
+- Subagents, forks, background tasks, and worktree isolation, evaluated specifically against the parallel-work problem in Decision 7.
+- Skill mechanics — `disable-model-invocation`, `context: fork`, background execution, plugins, nested and directory-qualified skills.
+- Session and context control — `/rewind`, `/doctor`, checkpointing, compaction controls, extended context.
+- CLI surface, headless and scripted invocation, and anything supporting unattended runs.
+- MCP and tool-search behavior, including deferred loading.
+
+**To implement:**
+- Start from the documentation index at `code.claude.com/docs/llms.txt` and enumerate the pages, so coverage is a list rather than a memory. Per Decision 25 the enumeration is deterministic; the judgment about relevance is not.
+- Delegate bulk page reading to Sonnet subagents; keep the assessment on the main thread.
+- **Verify version-gated claims against the local install rather than the page.** Several Milestone A2 findings were version-gated, and the documentation describes the current release, which may not be what is installed. Record the version every claim was checked against.
+- For each capability, state plainly: already used here / used worse here / not used at all / not applicable. Same three-way labelling Milestone B2 and Milestone B3 apply to Viktor and Michael, so the three spikes produce comparable output.
+- Flag anything that makes an existing rule, hook, or skill unnecessary. A platform feature that replaces a hand-rolled mechanism is a collapse candidate and feeds Milestone C1's pruning directly.
+- Note anything that contradicts an assumption already recorded in the decision log, and correct the log in the same turn.
+
+**Success criteria:**
+- `docs/research/claude-code-capabilities.md` exists, covering every scope area above
+- Every capability is labelled already used / used worse / not used / not applicable
+- Version-gated claims record the version they were verified against, and how
+- Collapse candidates are called out explicitly, so Milestone C1 inherits a list rather than re-deriving one
+- Any decision-log assumption this spike contradicts has been corrected
 - Decisions logged
 
 ---
 
-### M4: Viktor swarm workflow spike
+### Milestone B2: Viktor swarm workflow spike
 
 **Model:** Opus 5 on the main thread — the already-have / have-worse / have-nothing calls are judgment. Delegate bulk file reading of the clone to Sonnet subagents.
 
-**Step 0:** M1 must be complete — the clones must exist. **Pull all three Viktor repos before reading them** and record the SHAs; M1 may have run long before this milestone. Read M2's output on global-versus-project skill installation; Viktor's position cannot be fairly evaluated without it.
+**Step 0:** Milestone A1 must be complete — the clones must exist. **Pull all three Viktor repos before reading them** and record the SHAs; Milestone A1 may have run long before this milestone. Read Milestone A2's output on global-versus-project skill installation; Viktor's position cannot be fairly evaluated without it.
 
 **What:** Summarize Viktor's role-based agent swarm — `.dot-agent-deck.toml`, the orchestrator / coder / reviewer / auditor / tester / release roles — and identify specifically where it solves a problem the current setup has no answer for.
 
 **Why:** This is the largest structural difference between his workflow and Whitney's, and it overlaps directly with the parallel-work problem she named as the change most likely to affect how her day feels. The question is not "is his approach good" but "which specific gap does it fill here."
 
 **To implement:**
-- Start with `.dot-agent-deck.toml`. It is the primary artifact of this spike — his own framing is that it describes the roles of his agent swarm for a project and that he now relies heavily on it. The skills are downstream of that structure, so read the TOML first and let it frame everything else. Do not go deep on his PRD skills — that is M5.
+- Start with `.dot-agent-deck.toml`. It is the primary artifact of this spike — his own framing is that it describes the roles of his agent swarm for a project and that he now relies heavily on it. The skills are downstream of that structure, so read the TOML first and let it frame everything else. Do not go deep on his PRD skills — that is Milestone B4.
 - Then read the `.claude/` setup in `dot-agent-deck`, and `dot-ai` for how he distributes skills into projects. The purpose of `dot-ai` beyond skill distribution is unknown; establish what it actually is rather than assuming.
 - Document how roles are defined, how work is dispatched between them, and what state coordinates them.
-- Examine how he distributes skills into projects, and evaluate his "skills are always per-project, never global" position against M2's findings. Note that his stated reason is portability — clone onto a different laptop and it works.
+- Examine how he distributes skills into projects, and evaluate his "skills are always per-project, never global" position against Milestone A2's findings. Note that his stated reason is portability — clone onto a different laptop and it works.
+  - **Milestone A2 already answered the platform half of this question; do not re-research it.** See [Research: global versus project-level skill installation](../docs/research/claude-code-skill-installation-scope.md). Global installation is documented and supported, so his position is a preference rather than a platform constraint. Two arguments survive: his own portability point, and a sharper one he may not have in mind — Cowork sessions, cloud sessions, and routines **do not read `~/.claude/skills/` at all**, so Whitney's entirely-personal skill set does not exist in any of them. What Milestone B2 adds is how his distribution mechanism works in practice and whether it is worth adopting, not whether global is possible.
 - For each capability, state plainly whether Whitney already has an equivalent, has a worse equivalent, or has nothing.
 - Cover the parallel-work angle explicitly: tmux, running multiple agents concurrently, and how his swarm handles or avoids it.
 
@@ -224,11 +292,17 @@ Note also that all three were self-inflicted by Claude writing compound one-line
 
 ---
 
-### M5: Skill families diffed and an autonomous-first consolidation designed
+### Milestone B4: Skill families diffed — three-way comparison
+
+**Re-scoped 2026-08-03 (Decision 34). This milestone compares and documents; the consolidation is designed in Milestone C1.** Everything below that produces a *diff, divergence table, or labelled finding* stays here. Everything that decides *what the merged files become* — the consolidation design, the generalized escalation contract, the final file count, the migration plan, the issue-family disposition — moves to Milestone C1, where it happens with all three spikes available and with Whitney present. Produce the evidence; carry it to Phase C.
+
+This milestone sits in Phase B rather than Phase A because the three-way diff requires reading Viktor's repos, which is research rather than local measurement.
 
 **Model:** Opus 5. Judgment throughout — "what is genuinely better in mine" is the exact call a weaker model gets wrong by deferring to whatever it read most recently.
 
-**Step 0:** M1 must be complete. Read M4's output — the swarm findings determine which of Viktor's PRD-skill features are only meaningful inside a swarm.
+**Step 0:** Milestone A1 must be complete. Read Milestone B2's output — the swarm findings determine which of Viktor's PRD-skill features are only meaningful inside a swarm.
+
+Also read [Research: Claude Code context loading and compaction](../docs/research/claude-code-context-loading-and-compaction.md) for two platform facts that constrain the consolidation design. After a compaction, invoked skill bodies are re-injected but **capped at 5,000 tokens per skill and 25,000 total, truncated from the bottom** — so a long `SKILL.md` silently loses its tail, and instruction order inside the file is a correctness property rather than a style choice. That is a direct argument for placing the generalized escalation contract at the top of every consolidated file. Measure whether any current skill already exceeds the cap.
 
 **What:** Diff Viktor's current PRD-related skills against this repo's PRD-lifecycle and issue-lifecycle skills, and label every difference by adoption timeline.
 
@@ -248,38 +322,47 @@ Total in scope: **22 skill files** across 14 skills. Any count that disagrees wi
 - For each difference, state: where the two have diverged, what is genuinely better in his, and what is genuinely better in hers. Do not default to his being better because it is newer to her.
 - Label every candidate adoption as either **adopt now** (works standalone) or **adopt only with the swarm** (depends on his rule-based sub-agent system). These are different timelines and must not be mixed.
 - Extend the same analysis to the six `issue-*` skills and to the eight `SKILL.v1-yolo.md` autonomous variants. **There are three parallel implementations of one lifecycle, not two** — see the decision log finding. Nothing enforces that a change to one family reaches the others, and that has already shipped a live bug: the `prd-done` three-channel CodeRabbit fetch never reached the YOLO variant, so autonomous mode misses findings today.
-- Design the consolidation. The direction is settled by the "prioritize autonomy" and "escalation contract" decisions: **collapse the sixteen PRD skill files — eight `SKILL.md` plus eight `SKILL.v1-yolo.md` — down to eight, autonomous-first**, with interactive confirmation gates as the exception rather than the base. That count covers the `prd-*` family only. The six `issue-*` skills are a separate open question resolved in this same milestone: decide whether they merge into one lifecycle with two entry points or stay a distinct family, then state the resulting final file count for both families together and extend the migration plan to cover whichever answer is chosen. A second file requiring hand-mirroring has been tested for four months and produced a bug on each side; do not propose another variant-as-separate-file scheme.
-- Generalize `prd-next`'s **Autonomous Decision Protocol** — its explicit proceed-when and stop-when lists — into every lifecycle skill as the standard escalation contract. This is the mechanism that makes reduced oversight safe, and it currently exists in one file out of sixteen. Design it once, informed by M4's findings on how Viktor's roles handle the same problem at swarm scale.
-- **Extract repeated procedures into scripts as part of the merge.** Any multi-step procedure spelled out as prose in more than one skill — the three-channel CodeRabbit fetch and its re-review loop being the clearest case, spanning `git-workflow.md`, `prd-done`, and `issue-done` — becomes a single script the skills invoke. Collapsing the prose removes both the duplication and the dependence on whoever reads it executing every step. Enumerate these while diffing; they are easy to mistake for ordinary duplication and skip.
+- **Enumerate repeated procedures that are candidates for extraction into scripts.** Any multi-step procedure spelled out as prose in more than one skill — the three-channel CodeRabbit fetch and its re-review loop being the clearest case, spanning `git-workflow.md`, `prd-done`, and `issue-done` — is a collapse candidate. List them; **do not extract them here**, that is Milestone C1's call. They are easy to mistake for ordinary duplication and skip, so enumerate deliberately while diffing rather than noticing in passing.
+- **Document the raw material the escalation contract will be generalized from.** `prd-next`'s Autonomous Decision Protocol — its explicit proceed-when and stop-when lists — exists in exactly one of sixteen skill files. Record what it says and how it is structured. Designing the generalized version is Milestone C1's work, informed by Milestone B2's findings on how Viktor's roles solve the same problem at swarm scale.
+- **Enumerate every repo consuming either skill family**, not only the nine carrying PRD symlinks. The migration plan is designed in Milestone C1, but it can only be complete if the consumer list is, and assuming the PRD-symlinked set is the whole set is exactly the kind of gap that ships a broken migration.
 - Merge divergences on merit, not origin. Where the autonomous variant is better (acceptance-gate detection, read-only/mutating/external command classification, autonomous triage), keep it. Where the interactive variant is better (three-channel CodeRabbit fetch, whole-PRD Anki sourcing with dedupe), keep that. Enumerate every divergence across all eight pairs — do not assume the two already found are the only ones.
-- Plan the migration. Nine repos symlink `.claude/skills/prd-*/SKILL.md` to `SKILL.v1-yolo.md` in this repo: `cluster-whisperer`, `kubecon-2026-gitops`, `spinybacked-orbweaver`, `spinybacked-orbweaver-eval`, `project-signal-boost`, `KubeHound-Demo`, `commit-story-v2`, `content-manager`, `scaling-on-satisfaction`. Deleting the YOLO files breaks all of them. The migration must be scripted and idempotent.
+- **Record the migration's starting conditions.** Nine repos symlink `.claude/skills/prd-*/SKILL.md` to `SKILL.v1-yolo.md` in this repo: `cluster-whisperer`, `kubecon-2026-gitops`, `spinybacked-orbweaver`, `spinybacked-orbweaver-eval`, `project-signal-boost`, `KubeHound-Demo`, `commit-story-v2`, `content-manager`, `scaling-on-satisfaction`. **Those symlinks are inert (Decision 32) — deleting the YOLO files changes no behavior in any of them**, leaving nine sets of dangling symlinks to sweep rather than nine broken repos. **Do not re-derive the risk from the file layout**: it looks exactly like a live override and reads as one, and only the precedence rule makes it inert. Designing the migration script is Milestone C1's work; this milestone establishes the facts it needs.
+  - **Confirm the inertness across all nine repos rather than extrapolating.** Decision 32 was verified by live test on one skill in one repo, `prd-done` in `cluster-whisperer`. The precedence rule is documented generally and the mechanism is identical elsewhere, but this finding now carries weight for the whole migration, so it deserves a scripted loop over the full set instead of an inference. Cheap to run; expensive to be wrong about.
+- **Live-test every autonomous behavior before it becomes the default path (Decision 33).** The autonomous variants have never executed, so each behavior promoted to the base posture is untested code, not proven code. Test the escalation contract and each autonomous behavior — autonomous triage, acceptance-gate detection, the read-only/mutating/external classification — before it ships as the default. This step was not in the original plan and its cost is real; do not quietly drop it to stay on schedule.
+  - Keep the two axes separate (Decision 33a). **Content** is decided per divergence on merit, whichever variant it came from. **Posture** is where confirmation gates become the exception. "Autonomous-first" governs only posture and is not an instruction to start from the YOLO file — doing that would discard the interactive variant's better parts, which the divergence table already identifies.
 
 **Success criteria:**
 - `docs/research/viktor-prd-skills-diff.md` exists, covering all eight PRD-lifecycle skills — the seven matching `prd-*` plus `prds-get` — all six `issue-*` skills, and all eight `SKILL.v1-yolo.md` variants
 - Every adoption candidate is labeled adopt-now or adopt-with-swarm
 - A complete divergence table exists for all eight interactive/YOLO pairs, with a keep-which decision per divergence
-- A consolidation design exists: eight autonomous-first PRD-lifecycle files, with a generalized escalation contract, and a scripted idempotent migration for the nine repos carrying PRD skill symlinks
-- The six issue-lifecycle skills have a **recorded disposition** — merged into one lifecycle with two entry points, or kept as a separate family — with the reasoning stated either way. M5 cannot pass with only the PRD-family result documented
-- A **combined final file count** is stated, covering both families against the canonical 22-file manifest
-- The migration plan covers **every** repo consuming either family, not only the nine with PRD symlinks — enumerate consumers rather than assuming the PRD-symlinked set is complete
-- Whitney has approved the consolidation design before any file is deleted
-- Decisions logged
+- The inertness of the nine repos' YOLO symlinks has been confirmed across the full set by script, not extrapolated from the single-repo test in Decision 32
+- Repeated procedures that are extraction candidates are enumerated, with the three-channel CodeRabbit fetch among them
+- `prd-next`'s Autonomous Decision Protocol is documented as raw material for the generalized escalation contract
+- **Every** repo consuming either skill family is enumerated, not only the nine with PRD symlinks
+- Findings logged, and written where Milestone C1 will find them
+
+**Carried to Milestone C1** — the design outputs this milestone previously owned, recorded here so they are not lost in the move:
+- The consolidation itself: collapse the sixteen PRD skill files to eight, autonomous-first, with interactive confirmation gates as the exception rather than the base. That count covers the `prd-*` family only. A second file requiring hand-mirroring has been tested for four months and produced a bug on each side; do not propose another variant-as-separate-file scheme.
+- The `issue-*` family disposition — merged into one lifecycle with two entry points, or kept separate — with reasoning either way, and a **combined final file count** for both families against the canonical 22-file manifest.
+- The generalized escalation contract, placed near the top of each file so compaction truncation cannot cut it.
+- The scripted idempotent migration, covering every consuming repo this milestone enumerated.
+- A recorded live test result for every autonomous behavior promoted to the default path (Decision 33).
 
 ---
 
-### M6: Michael workflow spike
+### Milestone B3: Michael workflow spike
 
 **Model:** Opus 5 on the main thread. Delegate bulk file reading of the clones to Sonnet subagents.
 
-**Step 0:** M1 must be complete. Read `docs/research/michael-forrester-workflow.md` and `docs/research/michael-autonomous-execution-principles.md` **as historical baselines only** — Whitney has confirmed his workflow has changed since they were written. Do not treat them as current.
+**Step 0:** Milestone A1 must be complete. Read `docs/research/michael-forrester-workflow.md` and `docs/research/michael-autonomous-execution-principles.md` **as historical baselines only** — Whitney has confirmed his workflow has changed since they were written. Do not treat them as current.
 
 **What:** Research Michael's current setup fresh, and update the two stale research documents to match.
 
 **Why:** The existing research shaped PRD #84 and is now out of date. Leaving stale documents in `docs/research/` is worse than having none, because future work will read them and act on them. This milestone both produces new findings and repairs the record.
 
 **To implement:**
-- Pull `~/Documents/Repositories/forrester-workflow` and every other Michael repo that survived M1's triage pass (Decision 31), and record the SHA read for each. He commits daily; a clone taken at M1 is stale by definition. Do not re-add anything M1 already discarded — the triage's job was to save this milestone from spending judgment time on dead ends.
-- Document his current workflow with the same treatment M4 gives Viktor's: capabilities, and for each one whether Whitney already has an equivalent, a worse equivalent, or nothing.
+- Pull `~/Documents/Repositories/forrester-workflow` and every other Michael repo that survived Milestone A1's triage pass (Decision 31), and record the SHA read for each. He commits daily; a clone taken at Milestone A1 is stale by definition. Do not re-add anything Milestone A1 already discarded — the triage's job was to save this milestone from spending judgment time on dead ends.
+- Document his current workflow with the same treatment Milestone B2 gives Viktor's: capabilities, and for each one whether Whitney already has an equivalent, a worse equivalent, or nothing.
 - Cover the parallel-work angle explicitly — tmux and Netcup were both named as things he has solved and she has not.
 - Update `michael-forrester-workflow.md` and `michael-autonomous-execution-principles.md` in place. Mark clearly what changed from the previous version, so anyone who read the old version can see the delta.
 - Note any place where the stale research has already influenced this repo — PRD #84 in particular — and flag it for Whitney rather than silently reworking it.
@@ -292,15 +375,17 @@ Total in scope: **22 skill files** across 14 skills. Any count that disagrees wi
 
 ---
 
-### M7: Repo-native audit — hooks, skills, general cleanup, and cross-repo config sprawl
+### Milestone A4: Repo-native audit — hooks, skills, general cleanup, and cross-repo config sprawl
 
 **Model:** Opus 5 on the main thread — remove / consolidate / repair / keep is judgment, and "is this rule still true" needs a model willing to say no.
 
 **Enumeration is deterministic, classification is not.** Every raw sweep in this milestone — finding repos with a `.claude/` directory, listing hooks, listing skills, reading frontmatter, resolving symlink targets, collecting file sizes and last-modified dates — is done by a script whose output is reproducible, not by a model looking around. Per the global standard: prefer deterministic scripts for operational tasks; use AI for content understanding and synthesis. Sonnet subagents may classify and summarize what the scripts produce, and may invoke those scripts, but must not substitute their own search for the enumeration. A completeness claim backed by a model's sweep is not a completeness claim.
 
-**Step 0:** Read M2's load inventory. This milestone covers what that inventory does not: hooks, scripts, and accumulated cruft.
+**Step 0:** Read Milestone A2's load inventory. This milestone covers what that inventory does not: hooks, scripts, and accumulated cruft.
 
-**M6 gates the design work in this milestone.** Read its output before designing anything. As of 2026-08-02 Michael's `llm-coding-workflow` already contains working implementations of at least three things this milestone is otherwise asked to invent: a config-drift check with tests written first, a generated rules table, and a fix for rules not being reachable. Designing our own and discovering his afterward would waste the effort and would itself be an instance of the pattern this PRD is organized around.
+**Re-scoped 2026-08-03 (Decision 34). This milestone inventories; Milestone C1 designs.** It previously carried both, and was gated on Milestone B3 as a result. **That gate is now removed and this milestone can run at any point in Phase A**, because inventorying what exists needs no knowledge of what Michael built. Everything below that produces an *inventory, a measurement, or a remove/consolidate/repair/keep recommendation* stays here. The mechanisms this milestone was asked to *design* — the unevidenced-claims check, the coupled-pair warning hook, the stalled-work detector — move to Milestone C1.
+
+Recording why the old gate existed, because the reason still matters in Phase C: as of 2026-08-02 Michael's `llm-coding-workflow` reportedly contains working implementations of at least three things this milestone was otherwise asked to invent — a config-drift check with tests written first, a generated rules table, and a fix for rules not being reachable. Designing our own and discovering his afterward would waste the effort and would itself be an instance of the pattern this PRD is organized around. **Milestone C1 must read Milestone B3 before designing any of those three.** The generated rules table is the sharpest case: it is a `derive` remedy for the `rules/README.md` defect found in Milestone A2, and Decision 17a ranks derive above the assert this PRD would otherwise reach for.
 
 **What:** Audit claude-config on its own terms and produce a list of things to remove, consolidate, or repair — findings that no comparison against another person's workflow would surface.
 
@@ -315,14 +400,16 @@ Total in scope: **22 skill files** across 14 skills. Any count that disagrees wi
 - Note the `/issue-create` gap found during scoping: the skill has no branch for bringing an already-created issue into compliance.
 - **Fix the tracked settings symlink — this is a diagnosed defect with a candidate fix, not an open question.** `~/.claude/settings.json` symlinks to the tracked `config/settings.json`, so every settings write Claude Code makes becomes a git diff here. Observed twice: a model change in the working tree on 2026-08-02, and on 2026-08-03 `"model": "opus[1m]"` rewritten to `"sonnet[1m]"` mid-session and reverted rather than committed. Committing it would have flipped the tracked default to the weaker model. Removing the `model` key does not help — `/model` rewrites it. The candidate fix is to stop tracking the live file, since `settings.template.json` plus `setup.sh`'s resolve-and-merge already provides the provisioning path; the repo carries both and needs only the template. Evaluate that fix, then check every remaining symlink target under `~/.claude/` for the same shape and identify which tracked files tooling can mutate.
   - Report the configured model defaults, and record that the source is outside this repo: `/Library/Application Support/ClaudeCode/managed-settings.json` is root-owned Datadog policy setting `model: sonnet`, `effortLevel: medium`, and `CLAUDE_CODE_DISABLE_FAST_MODE: 1`. Managed settings outrank user settings, so no change here makes Opus survive a restart. **Resolved 2026-08-03: Whitney selects the model manually at the start of every session and has accepted that as the standing workflow.** Do not research override mechanisms, propose automation, or raise this as a finding again. Report the configured defaults as a fact about the environment and move on.
-- PRD #84's disposition is **not** part of this milestone. It moved to M7b, which resolves it end to end rather than planning a triage for someone else. Do not sort, salvage, or plan for that branch here.
-- **Audit the other repos, not just this one.** The scoping instruction was that "all the repos, really, should probably be edited — I bet some can be removed and cleaned up." Discover the repo set by enumerating **every** repository under `~/Documents/Repositories/` containing a `.claude/` directory — not only those with `.claude/skills/`, which would skip a repo carrying just a `settings.local.json`. As a lower bound, twenty-one have `.claude/skills/` and nine carry the YOLO symlinks. Inventory what Claude Code configuration each discovered repo actually has — project `CLAUDE.md`, `.claude/skills/`, `.claude/settings.local.json`, installed git hooks, `.skip-*` dotfiles — and identify what is stale, duplicated, orphaned, or pointing at scripts that no longer exist. Produce a per-repo remove / consolidate / repair / keep recommendation. Do not modify other repos in this milestone; recommend only, and let the spec decide what a cleanup PRD would do.
-- **Design the check for unevidenced completion claims.** Per the decision on evidence-bearing claims, a `PROGRESS.md` entry or commit message asserting a state — fixed, working, complete, current, verified, passing — is half of a coupled pair whose other half is the system. Recommend a remedy at the strongest tier available: scripting the recurring verifications so the observation is produced automatically, before falling back to a hook that flags the vocabulary and asks what backs it. Note honestly that the hook is an assert and catches only the words it knows.
+- PRD #84's disposition is **not** part of this milestone. It moved to Milestone D1, which resolves it end to end rather than planning a triage for someone else. Do not sort, salvage, or plan for that branch here.
+- **Audit the other repos, not just this one.** The scoping instruction was that "all the repos, really, should probably be edited — I bet some can be removed and cleaned up." Discover the repo set by enumerating **every** repository under `~/Documents/Repositories/` containing a `.claude/` directory — not only those with `.claude/skills/`, which would skip a repo carrying just a `settings.local.json`. As a lower bound, twenty-one have `.claude/skills/` and nine carry the YOLO symlinks. Inventory what Claude Code configuration each discovered repo actually has — project `CLAUDE.md`, `.claude/skills/`, **`.claude/commands/`**, `.claude/settings.local.json`, installed git hooks, `.skip-*` dotfiles — and identify what is stale, duplicated, orphaned, or pointing at scripts that no longer exist.
+  - **Include `.claude/commands/` and treat a command file as a skill definition.** Custom commands were merged into skills: a file at `.claude/commands/deploy.md` and a skill at `.claude/skills/deploy/SKILL.md` both produce `/deploy`, and where the names collide the skill wins. So a stray command file is an undiscovered third place a lifecycle definition can live, and a sweep that only enumerates `.claude/skills/` will report a repo as clean while a command file shadows nothing and does something.
+  - **Expect the nine YOLO symlinks to show up as dangling once Milestone B4 lands, and know they were already inert before that (Decision 32).** A project-level skill symlink looks like a live override and is not one, so the inventory should record the *effective* skill per repo rather than the files present. "What is installed" and "what actually runs" are two different columns here, and only the second one matters. Produce a per-repo remove / consolidate / repair / keep recommendation. Do not modify other repos in this milestone; recommend only, and let the spec decide what a cleanup PRD would do.
+- **Gather the evidence for a check on unevidenced completion claims. Milestone C1 designs it.** Per the decision on evidence-bearing claims, a `PROGRESS.md` entry or commit message asserting a state — fixed, working, complete, current, verified, passing — is half of a coupled pair whose other half is the system. Recommend a remedy at the strongest tier available: scripting the recurring verifications so the observation is produced automatically, before falling back to a hook that flags the vocabulary and asks what backs it. Note honestly that the hook is an assert and catches only the words it knows.
 - **Inventory prose procedures that should be scripts.** Sweep the rules and skills for multi-step sequences a reader must execute in full for the result to be correct — API calls to several endpoints, ordered git operations, verification loops. Each is a collapse candidate. Flag in particular any procedure whose partial execution looks identical to success, since nothing will ever surface the omission.
-- **Design a coupled-pair warning hook, and derive its pair list rather than declaring one.** Of the fourteen existing hooks, twelve fire on a file operation and two on a lifecycle event (`SessionStart`, `PostCompact`); none fires on a relationship between files. A PostToolUse hook that says "you edited `prd-done/SKILL.md` — its partner `SKILL.v1-yolo.md` was last touched two months ago" would have caught four of the five divergences found during scoping, at the moment they were created. Derive pairs by construction wherever possible — any `*.v1-yolo.md` beside a `SKILL.md` is a pair; any script path named inside a rule file is a pair; **any tracked file that differs between `main` and an unmerged local branch is a pair** (Decision 28), enumerable with `git branch --no-merged main` and `git diff --name-only main <branch>` — because a hand-maintained registry of pairs would itself be a second place a decision lives. This is the only remedy that reduces the rate of *new* pairs instead of cleaning up known ones.
+- **Enumerate the coupled pairs that exist today, and establish how they can be derived. Milestone C1 designs the warning hook itself.** Of the fourteen existing hooks, twelve fire on a file operation and two on a lifecycle event (`SessionStart`, `PostCompact`); none fires on a relationship between files. A PostToolUse hook that says "you edited `prd-done/SKILL.md` — its partner `SKILL.v1-yolo.md` was last touched two months ago" would have caught four of the five divergences found during scoping, at the moment they were created. Derive pairs by construction wherever possible — any `*.v1-yolo.md` beside a `SKILL.md` is a pair; any script path named inside a rule file is a pair; **any tracked file that differs between `main` and an unmerged local branch is a pair** (Decision 28), enumerable with `git branch --no-merged main` and `git diff --name-only main <branch>` — because a hand-maintained registry of pairs would itself be a second place a decision lives. This is the only remedy that reduces the rate of *new* pairs instead of cleaning up known ones.
 
   The branch-versus-main class is worth calling out separately because it has a property the others lack: the stale half is known in advance. For an unmerged branch, `main`'s copy cannot reflect that branch's work, so there is no "which side is current" ambiguity to resolve — only a question of whether the reader knows to look. This PRD got it wrong for PRD #84 before the class was named.
-- Recommend a mechanism for detecting stalled work. PRD #84 reached six of eight milestones and then sat unpushed for four months with no hook, skill, or session-start check surfacing it. Whatever the redesign produces needs a way to notice this class of silence. Note that the branch was also the only copy of five journal files, four of them absent from main — so stalled-work detection is a data-loss concern, not only a throughput one.
+- **Record what stalled-work detection would need to catch. Milestone C1 chooses the mechanism.** PRD #84 reached six of eight milestones and then sat unpushed for four months with no hook, skill, or session-start check surfacing it. Whatever the redesign produces needs a way to notice this class of silence. Note that the branch was also the only copy of five journal files, four of them absent from main — so stalled-work detection is a data-loss concern, not only a throughput one.
 - Present findings as a categorized list — remove / consolidate / repair / keep — for Whitney to approve as a set.
 
 **Success criteria:**
@@ -331,19 +418,21 @@ Total in scope: **22 skill files** across 14 skills. Any count that disagrees wi
 - Dead material in `scripts/`, `templates/`, `profiles/`, `config/`, and `hooks/archive/` identified
 - A cross-repo configuration inventory exists covering every repo with a `.claude/` directory, with a remove / consolidate / repair / keep recommendation per repo and no other repo modified
 - Every enumeration behind the inventories is produced by a committed, re-runnable script, not by a model's sweep — re-running it reproduces the same list
-- A coupled-pair warning hook is designed, with its pair-discovery method stated and shown to be **derived by construction** rather than from a maintained list, plus the set of pairs that method currently finds and an honest statement of which known pairs it misses
-- A stalled-work detection mechanism is recommended, with the reasoning for the approach chosen
+- The coupled pairs existing today are enumerated, with a pair-discovery method shown to be **derived by construction** rather than from a maintained list, plus an honest statement of which known pairs that method misses
+- The evidence bearing on stalled-work detection is recorded, including that PRD #84's branch was the sole copy of five journal files — so this is a data-loss concern, not only a throughput one
 - Whitney has approved the categorized list
+
+**Carried to Milestone C1:** the coupled-pair warning hook, the unevidenced-claims check, and the stalled-work detector are all *designed* in Phase C, not here. This milestone supplies their inputs. Milestone C1 must read Milestone B3 before designing any of them, because Michael reportedly has working implementations of at least the drift check and the generated rules table.
 
 ---
 
-### M7b: PRD #84 resolved and retired, and issue #98 with it
+### Milestone D1: PRD #84 resolved and retired, and issue #98 with it
 
-**Numbered M7b rather than M8 deliberately.** Renumbering the later milestones would mean updating roughly eleven cross-references to M8 and M9 scattered through this document, and stale cross-references are the exact defect Decision 28 records. Do not "fix" this to M8.
+**Numbered Milestone D1 rather than Milestone C2 deliberately.** Renumbering the later milestones would mean updating roughly eleven cross-references to Milestone C2 and Milestone D2 scattered through this document, and stale cross-references are the exact defect Decision 28 records. Do not "fix" this to Milestone C2.
 
 **Model:** Opus 5 on the main thread. Every verdict here is a judgment call with an irreversible consequence attached, and one of the three outcomes deletes work permanently.
 
-**Step 0:** Read M4, M5, and M6 first. All three gate this milestone. Whether PRD #84's architecture is still the right one is precisely what those spikes determine, so no verdict reached before they complete is worth anything.
+**Step 0:** Read Milestone B2, Milestone B4, and Milestone B3 first. All three gate this milestone. Whether PRD #84's architecture is still the right one is precisely what those spikes determine, so no verdict reached before they complete is worth anything.
 
 **What:** Resolve PRD #84 completely. By the end of this milestone the branch `feature/prd-84-autonomous-prd-execution` no longer exists, issue #84 is closed, `prds/84-autonomous-prd-execution.md` is in `prds/done/`, and nothing about PRD #84 remains on anyone's list.
 
@@ -361,7 +450,7 @@ Every piece of work on the branch receives exactly one:
 
 **Assign no verdict before this milestone runs, and record none in this PRD.** The facts below are recorded precisely so that whoever performs this milestone can reach their own conclusions from evidence rather than inheriting someone else's. A presumptive verdict written here would decide the question in advance while appearing to leave it open.
 
-**Constraint on verdict 2:** a piece cannot take verdict 2 if it modifies a file that M5's consolidation restructures. Merging it would only be undone when the consolidation is implemented. Such a piece takes verdict 3 instead — its idea reaches the spec, its code does not.
+**Constraint on verdict 2:** a piece cannot take verdict 2 if it modifies a file that Milestone B4's consolidation restructures. Merging it would only be undone when the consolidation is implemented. Such a piece takes verdict 3 instead — its idea reaches the spec, its code does not.
 
 #### Facts about the branch, recorded 2026-08-03
 
@@ -370,29 +459,31 @@ Re-verify each before relying on it; main moves.
 - 88 commits behind main. A trial merge (`git merge-tree --write-tree main <branch>`) reports five conflicts: `PROGRESS.md`, `config/settings.json`, `rules/microblog-api-gotchas.md`, and add/add conflicts on `journal/entries/2026-05/2026-05-16.md` and `journal/summaries/daily/2026-05-14.md`. The branch cannot be merged without conflict resolution, and two of the five conflicts are journal files.
 - No remote counterpart exists. The branch has never been pushed, so it is a single local copy.
 - Its journal content was rescued to main on 2026-08-03: two files main lacked entirely and branch-only lines in two others. **Re-run the check before deleting anything** rather than trusting this line — `git diff --numstat main <branch> -- journal/` — because the rule against losing journal files does not admit exceptions and this note could be wrong.
-- The branch's own copy of `prds/84-autonomous-prd-execution.md` is the authority on its state (Decision 28): eight milestones, M1–M6 checked. Main's copy shows seven with everything unchecked.
+- The branch's own copy of `prds/84-autonomous-prd-execution.md` is the authority on its state (Decision 28): eight milestones, Milestone A1–Milestone B3 checked. Main's copy shows seven with everything unchecked.
 
 **Work on the branch, by PRD #84 milestone.** Descriptions only — no assessment.
 
 | PRD #84 milestone | Files | What it does |
 |---|---|---|
-| M1 | `.claude/skills/make-autonomous/SKILL.md`, `make-careful/SKILL.md`, `tests/make-autonomous.bats` | Adds twelve permission entries so a headless `claude -p` session can run tests, manage tasks, spawn agents, and schedule wake-ups; matching removals in careful mode |
-| M2 | `hooks/git/checks/pre-push-verify.sh`, `tests/git-hook-checks.bats` | Runs the project test command on every push rather than only when a PR is open |
-| M3 | `scripts/autonomous-prd.sh`, `scripts/autonomous-prd-child-prompt.md`, `tests/autonomous-prd.bats` | Orchestrator that spawns child sessions and writes an active-run marker |
-| M4 | `scripts/check-autonomous-run.sh`, `tests/check-autonomous-run.bats`, `scripts/install-git-hooks.sh` | SessionStart detection of an in-progress autonomous run |
-| M5 | `rules/autonomous-pause-handling.md`, `.claude/skills/prd-next/SKILL.v1-yolo.md`, `prd-update-progress/SKILL.v1-yolo.md` | Pause-handling rule and YOLO skill changes for headless operation |
+| PRD #84 Milestone 1 | `.claude/skills/make-autonomous/SKILL.md`, `make-careful/SKILL.md`, `tests/make-autonomous.bats` | Adds twelve permission entries so a headless `claude -p` session can run tests, manage tasks, spawn agents, and schedule wake-ups; matching removals in careful mode |
+| PRD #84 Milestone 2 | `hooks/git/checks/pre-push-verify.sh`, `tests/git-hook-checks.bats` | Runs the project test command on every push rather than only when a PR is open |
+| PRD #84 Milestone 3 | `scripts/autonomous-prd.sh`, `scripts/autonomous-prd-child-prompt.md`, `tests/autonomous-prd.bats` | Orchestrator that spawns child sessions and writes an active-run marker |
+| PRD #84 Milestone 4 | `scripts/check-autonomous-run.sh`, `tests/check-autonomous-run.bats`, `scripts/install-git-hooks.sh` | SessionStart detection of an in-progress autonomous run |
+| PRD #84 Milestone 5 | `rules/autonomous-pause-handling.md`, `.claude/skills/prd-next/SKILL.v1-yolo.md`, `prd-update-progress/SKILL.v1-yolo.md` | Pause-handling rule and YOLO skill changes for headless operation |
 | — | two `prd-9999` commits | Smoke-test scaffolding created while validating the loop |
 | — | `docs/research/claude-code-autonomous-capabilities.md`, `docs/research/index.md`, `rules/bats-bash-testing.md`, `rules/microblog-api-gotchas.md`, `.gitignore`, `global/CLAUDE.md`, `PROGRESS.md`, `config/settings.json` | Incidental edits alongside the milestone work |
 
-PRD #84's two unfinished milestones are its M7, an end-to-end run against `spinybacked-orbweaver` PRD #752, and its M8, user documentation. Neither is completed here. If the spec needs either capability, the spec states that requirement in its own terms rather than inheriting PRD #84's milestone framing.
+**One fact about the table above, added 2026-08-03 (Decision 32).** The PRD #84 Milestone 5 row edits two `SKILL.v1-yolo.md` files. Project-level YOLO symlinks are inert, so those edits could not have taken effect in any of the nine repos, and no observation of that work "running" is available from the nine — only from a repo where the personal skill was itself switched. The PRD #84 Milestone 1 row is unaffected: it changes `make-autonomous`/`make-careful` permission entries, which are written to `settings.local.json` and do take effect. Recorded as evidence bearing on the verdicts, not as a verdict. Per Decision 30, reach the conclusions here from this fact rather than inheriting one.
 
-Its Decision 1 rejected Michael's `_execution-state.md` and `tasks.yaml` patterns on the strength of research that M6 replaces. Re-examine that reasoning against M6's findings.
+PRD #84's two unfinished milestones are its Milestone 7, an end-to-end run against `spinybacked-orbweaver` PRD #752, and its Milestone 8, user documentation. Neither is completed here. If the spec needs either capability, the spec states that requirement in its own terms rather than inheriting PRD #84's milestone framing.
+
+Its Decision 1 rejected Michael's `_execution-state.md` and `tasks.yaml` patterns on the strength of research that Milestone B3 replaces. Re-examine that reasoning against Milestone B3's findings.
 
 #### Issue #98 resolves here too
 
 Issue #98 (`scripts/autonomous-issues.sh`, opened 2026-05-15, untouched since) is **downstream of this milestone's verdicts, not a parallel case.** It has no work product at all: no `autonomous-issues.sh` exists in any commit on any branch, and no branch was ever created for it. Verified 2026-08-03.
 
-What it does have is a hard dependency on PRD #84's code. Every item in its own "Read before starting" list — `scripts/autonomous-prd.sh`, `scripts/autonomous-prd-child-prompt.md`, the active-run marker format, and M4's SessionStart collision detection — exists only on the branch this milestone may delete, and its instructions say to reuse those conventions and keep them identical. If the orchestrator does not survive, #98 becomes an issue directing a future implementer to read four files that do not exist. That is worse than either outcome, so it cannot be left untouched.
+What it does have is a hard dependency on PRD #84's code. Every item in its own "Read before starting" list — `scripts/autonomous-prd.sh`, `scripts/autonomous-prd-child-prompt.md`, the active-run marker format, and Milestone B2's SessionStart collision detection — exists only on the branch this milestone may delete, and its instructions say to reuse those conventions and keep them identical. If the orchestrator does not survive, #98 becomes an issue directing a future implementer to read four files that do not exist. That is worse than either outcome, so it cannot be left untouched.
 
 - If the orchestrator row takes the code-lives verdict, #98 stays open and becomes actionable as written.
 - Otherwise #98 is closed, and the requirement behind it — unattended execution over a flat queue of standalone issues, not only over PRD milestones — is carried into the spec in the spec's own terms, with no reference to PRD #84's conventions.
@@ -400,7 +491,7 @@ What it does have is a hard dependency on PRD #84's code. Every item in its own 
 Either way, #98 does not survive this milestone as an open issue pointing at deleted files. Its one genuinely independent design claim is worth weighing on its merits when the spec is written: that a flat issue queue and a milestone-structured PRD queue should be two focused mechanisms rather than one generalized one. That is a live question about the canonical workflow, not an inherited answer.
 
 **To implement:**
-- Read M4, M5, and M6 output. Re-verify the facts above, including that #98 still has no work product.
+- Read Milestone B2, Milestone B4, and Milestone B3 output. Re-verify the facts above, including that #98 still has no work product.
 - Assign one of the three verdicts to every row of the work table, with the reasoning for each.
 - Resolve #98 per the two branches above, and record which applied.
 - Present the completed table to Whitney and get her approval before acting on any row. Approval covers the set, not each row separately.
@@ -424,18 +515,66 @@ Either way, #98 does not survive this milestone as an open issue pointing at del
 
 ---
 
-### M8: Spec file written and signed off
+### Milestone C1: Collaborative design
+
+**Added 2026-08-03 (Decision 34).** This is where the system gets designed, with Whitney, using everything Phase A measured and Phase B learned. It previously had no home: the classification policy sat in Milestone A2, the skill consolidation in Milestone B4, and the rest leaked into Milestone C2, which is specified as *writing* the spec rather than deciding what goes in it.
+
+**Model:** Opus 5. Every output is a judgment call made jointly with Whitney.
+
+**Step 0:** Read the output of Milestones A2, A3, A4, B1, B2, B3, and B4. All seven gate this milestone. A design decision made before all of them exist is the defect this phase structure was created to remove — do not start early because one area feels ready.
+
+**What:** Decide, with Whitney, what the redesigned system is. Produce recorded answers, not a document — Milestone C2 writes the document.
+
+**Why:** Design was previously spread across three milestones at three different points in the plan, so each decision was made with only part of the evidence. Consolidating it means every choice is made once, with everything available, and with Whitney in the room.
+
+#### How these conversations run (Decision 36)
+
+Binding, and not optional. Whitney set this out explicitly on 2026-08-03.
+
+- **Present the evidence first, explained as though she has not read the documentation.** Plain language, no assumed background, no jargon carried over from a docs page. If a finding rests on a platform behavior, explain the behavior before the conclusion.
+- **Then state the possible choices simply, and recommend one**, with the reasoning for the recommendation and the cost of the alternatives.
+- **One question at a time.** Ask, resolve it, then move to the next. Never present two or more open questions in one message.
+- **Write down each answer in the same turn it is given**, before asking the next question. This is the defense against losing a long design conversation to compaction — the answers survive on disk even when the conversation does not.
+
+#### The decisions this milestone makes
+
+Each carries its inputs, so a cold reader knows what evidence to gather before asking:
+
+- **The rule classification policy.** *Inputs: Milestone A2's load inventory, Milestone B1's capability findings, Milestone A4's hook inventory.* A draft exists, proposed on 2026-08-03 and accepted as a draft only: an ordered test — delete it / make it a hook / make it a script / path-scope it / make it always-loaded / make it an on-demand skill — with two cross-cutting rules, cut what is derivable from the codebase, and set `disable-model-invocation` on side-effect skills. **Re-examine rather than ratify.** It was written before all three spikes, and Milestone B3 may supersede parts of it: Michael reportedly has a generated rules table, which would be a `derive` remedy for a problem the draft only asserts against.
+- **The always-loaded byte budget.** *Inputs: Milestone A2's inventory and the `@`-import compaction answer.* Replaces PRD #43's unmet 150-line target. Two facts constrain it: roughly 40% of the startup skill listing is built-in and cannot be trimmed from this repo, so budget only the controllable portion; and imports must be counted by observed load rather than by globbing `rules/`, because at least one always-loaded import lives outside this repository. Decide the enforcement mechanism at the same time as the number — Decision 37 applies.
+- **The skill consolidation.** *Inputs: Milestone B4's three-way diff, Milestone B2's swarm findings, Milestone B1's skill mechanics.* Design half of the original Milestone B4. Governed by Decisions 33 and 33a: content merges on merit per divergence, posture is autonomous-first, and every autonomous behavior promoted to the default path needs a live test first.
+- **The permission allowlist, and any settings change behind it.** *Inputs: Milestone A3's trigger taxonomy and frequency data, Milestone B1's findings on sandbox and permission modes.* Presented as a policy Whitney approves, not entries she vets individually. Decide where the behavioral guidance lives at the same time — Milestone A3's own evidence says documentation the model agrees with and then ignores is not a remedy, so the location question is really an enforcement question.
+- **Hook pruning and consolidation.** *Inputs: Milestone A4's hook inventory, Milestone B1's hook-event findings.* Apply the same test 0 the classification policy uses. A platform capability that replaces a hand-rolled hook is a collapse, not a rewrite.
+- **What gets deleted outright.** Whitney's standing instruction: existence is not a reason to keep something. Every inventory from Phase A produces a delete list, not only a reclassification.
+
+**To implement:**
+- Work through the decisions above one at a time, following the conversation protocol.
+- Log every answer to `docs/research/claude-config-audit-decisions.md` in the turn it is given, per Decision 37's separation rule — the decision and its reason in the log, the supporting evidence in a research document.
+- Where a decision changes a later milestone, apply the cascade immediately rather than at the end.
+
+**Success criteria:**
+- Every decision listed above has a recorded answer, or a recorded reason for deferring it
+- Each answer is in the decision log, written when it was made rather than reconstructed afterwards
+- The classification policy has been re-examined against all three spikes, and its draft status is resolved either way
+- A delete list exists for rules, hooks, and skills
+- No decision was made before its listed inputs existed
+
+---
+
+### Milestone C2: Spec file written and signed off
 
 **Model:** Opus 5. The highest-judgment milestone in the PRD — everything else exists to feed it.
 
-**Step 0:** Read the full decision log and the output of M2 through M7b. Every one of those milestones gates this one.
+**Re-scoped 2026-08-03 (Decision 34). This milestone writes; Milestone C1 decides.** It previously carried both, which meant the deciding happened inside a writing task and got shaped by what was easy to write down. Every decision this file records should already exist in the decision log before this milestone starts.
 
-**What:** Write a spec file in this repo recording concrete decisions: what to keep building on, what to tear down and recreate, and whether any part warrants a separate system rather than a modification of this one.
+**Step 0:** Read the full decision log and the output of Milestone C1. If a decision the spec needs is missing from the log, that is a signal Milestone C1 is not finished — go back and decide it there, with Whitney, rather than settling it here while drafting.
+
+**What:** Write a spec file in this repo recording the decisions already made: what to keep building on, what to tear down and recreate, and whether any part warrants a separate system rather than a modification of this one.
 
 **Why:** A conversational summary evaporates. The spec is the artifact that survives, and it is what the implementation PRDs are generated from. It has to be specific enough that a cold reader could act on it.
 
 **To implement:**
-- Before writing, ask Whitney the real open questions surfaced across M2–M7b — one at a time, per the Process section. Do not guess at her preferences to avoid asking.
+- Before writing, ask Whitney the real open questions surfaced across Milestone A2–Milestone D1 — one at a time, per the Process section. Do not guess at her preferences to avoid asking.
 - Structure the spec around decisions, not findings. Each entry states what was decided, what was rejected, and why.
 - Record explicitly **what stays intact under every scenario** — the fallback path to the current way of working must be legible. Whitney has to be able to revert if the new approach does not pan out.
 - Identify which implementation PRDs the spec should spawn and in what order. Do not create them in this milestone; recommend them and let Whitney decide the number and sequencing.
@@ -473,18 +612,18 @@ A spec that summarizes findings instead of recording decisions has failed this m
 
 ---
 
-### M9: Audit-agent verification pass
+### Milestone D2: Audit-agent verification pass
 
 **Model:** Opus 5 (1M context) — **required, not preferred.** This milestone diffs multi-hundred-KB session transcripts against three documents. A smaller context window forces chunking, and chunking is how a decision goes missing in the one milestone whose entire job is catching missing decisions.
 
-**Step 0:** M8 must be complete and signed off.
+**Step 0:** Milestone C2 must be complete and signed off.
 
 **What:** Verify that the spec and this PRD together capture everything decided during the scoping and audit conversations, using the raw session transcript as ground truth.
 
 **Why:** The scoping conversation for this PRD was long and decision-dense, and the audit conversations will be longer. Compaction summarizes lossily, and decisions made in conversation have a real chance of never reaching a document. The session transcripts persist on disk regardless of compaction, so this check is possible — but only if someone deliberately runs it.
 
 **To implement:**
-- Apply M3's redaction policy. These are the same transcripts, with the same secrets in them. Raw extracts stay outside the repository; only findings reach a tracked file.
+- Apply Milestone A3's redaction policy. These are the same transcripts, with the same secrets in them. Raw extracts stay outside the repository; only findings reach a tracked file.
 - Read the session transcripts in `~/.claude/projects/-Users-whitney-lee-Documents-Repositories-claude-config/`. The scoping conversation for this PRD is `a32b6735-ae87-47d4-9fdf-5cdbe24805a9.jsonl`; later audit sessions will add more.
 - Extract every decision, rejected alternative, constraint, and open question from the transcripts.
 - Diff that against the decision log, this PRD, and the spec file. Report anything present in conversation but absent from all three.
@@ -500,10 +639,14 @@ A spec that summarizes findings instead of recording decisions has failed this m
 
 ## Dependencies
 
-- **Issue #110** (bidirectional drift between interactive and autonomous `prd-done`) does not block this PRD. It stops two live bugs while the audit runs, and its divergence table feeds M5 directly. M5 must read it before starting.
+- **Issue #110** (bidirectional drift between interactive and autonomous `prd-done`) does not block this PRD. It stops two live bugs while the audit runs, and its divergence table feeds Milestone B4 directly. Milestone B4 must read it before starting.
 - **Issue #108** (three rule-loading defects) blocks the implementation PRDs this spec spawns, not this PRD itself. This PRD is written first; #108 is executed after. When #108 is started, it must be started with the `/issue-start` skill.
-- M4, M5, and M6 all depend on M1's clones.
-- M5 depends on M4. M7b depends on M4, M5, and M6. M8 depends on M2 through M7b. M9 depends on M8.
+**Rewritten 2026-08-03 for the phase structure (Decision 34).**
+
+- **Within Phase A:** no ordering constraints. Milestones A2, A3, and A4 are independent and can run in any order. Milestone A4's former dependency on Milestone B3 was removed when its design work moved to Milestone C1.
+- **Within Phase B:** all depend on Milestone A1's clones. Milestone B1 runs first, so the other spikes are read with the platform's capabilities already known. Milestone B4 depends on Milestone B2, since the three-way diff needs Viktor's repos read.
+- **Phase C depends on all of Phase A and all of Phase B.** Milestone C1 gates Milestone C2. This is the constraint the restructure exists to enforce: no design decision before every input exists.
+- **Phase D:** Milestone D1 depends on Milestone B2, Milestone B3, and Milestone C1 — it needs the consolidation design, because a piece of PRD #84 cannot take the code-lives verdict if it modifies a file that consolidation restructures. Milestone D2 depends on Milestone C2.
 
 ## Decision Log
 
@@ -521,39 +664,54 @@ A spec that summarizes findings instead of recording decisions has failed this m
 | 9 | The `/issue-*` skills are a named workstream, updated after the `/prd-*` skills. | Seven `prd-*` and six `issue-*` skills are near-parallel implementations of the same lifecycle, with nothing enforcing that a change to one mirrors into the other. |
 | 10 | The audit must leave room for findings native to this repo, not only findings derived from Viktor's or Michael's setups. | Named examples: the git hook collection likely contains removable and consolidatable hooks; general repo cleanup. |
 | 11 | Falling back to the current way of working must remain possible. The spec records what stays intact under every scenario. | Stated requirement — the new system may not pan out. |
-| 12 | Decisions are logged continuously to the decision log, and M9 verifies the finished documents against the raw session transcript. | Compaction summarizes lossily. The transcript persists on disk regardless, so late reconstruction is possible — but a running log is cheaper and catches drift earlier. |
+| 12 | Decisions are logged continuously to the decision log, and Milestone D2 verifies the finished documents against the raw session transcript. | Compaction summarizes lossily. The transcript persists on disk regardless, so late reconstruction is possible — but a running log is cheaper and catches drift earlier. |
 | 13 | Whitney decides policies, not instances. | Decision 4 is about control over what the system becomes, not over mechanical execution. Per-instance approval is miserable at scale and buries the actual choice. |
-| 14 | The existing Michael research is stale and M6 is a fresh spike, not a validation pass. | Whitney confirmed his workflow has changed since those documents were written. Leaving them unmarked would let future work act on outdated findings. |
-| 15 | Every milestone declares a required **Model**. Claude reads the session model at milestone start, proceeds silently on a match, and stops to ask Whitney to switch on a mismatch — then re-reads the environment to verify rather than accepting her word. | Claude cannot invoke `/model`; it is user-typed. A directive phrased as "switch models here" would be silently unexecutable. Verification beats confirmation because Whitney's managed settings pin Sonnet 5 on restart, so the wrong model is the default, not the exception. Per-milestone model and effort are not expressible in the current PRD skills at all — logged as a redesign finding for M7. |
+| 14 | The existing Michael research is stale and Milestone B3 is a fresh spike, not a validation pass. | Whitney confirmed his workflow has changed since those documents were written. Leaving them unmarked would let future work act on outdated findings. |
+| 15 | Every milestone declares a required **Model**. Claude reads the session model at milestone start, proceeds silently on a match, and stops to ask Whitney to switch on a mismatch — then re-reads the environment to verify rather than accepting her word. | Claude cannot invoke `/model`; it is user-typed. A directive phrased as "switch models here" would be silently unexecutable. Verification beats confirmation because Whitney's managed settings pin Sonnet 5 on restart, so the wrong model is the default, not the exception. Per-milestone model and effort are not expressible in the current PRD skills at all — logged as a redesign finding for Milestone A4. |
 | 16 | **Prioritize autonomy.** Whitney wants less oversight of Claude, not more. Where the audit must choose between an autonomous and an interactive pattern, autonomous wins by default. Take best practices from both, but the confirmation-gated version is the exception, not the base. | Stated guiding principle. This does **not** conflict with decision 4 — she decides the shape of the system, then wants that system to run with less babysitting. Design authority stays human; runtime supervision goes down. Consequence: skill consolidation merges toward the autonomous variant, not away from it. |
 | 17 | The escalation contract — explicit proceed-when and stop-when criteria, as in `prd-next`'s Autonomous Decision Protocol — is what makes reduced oversight safe, and it must be generalized to every lifecycle skill. | It currently exists in exactly one of sixteen skill files. Autonomy without a crisp escalation contract is not autonomy, it is unsupervised guessing. This is higher-value than any individual bug fix in the skill set. |
 | 17a | **"One decision, two places" is the spec's organizing principle.** A decision that must be recorded in two places to take effect, where updating one gives no signal that the other is now stale, is the root pattern behind most findings in this audit. The spec organizes its decisions by remedy — **collapse** (make the second place stop existing), **derive** (generate one from the other so they cannot disagree), **assert** (a check that fails on divergence) — in that strict order of preference, rather than by subsystem. | Five independent instances surfaced during scoping alone: CLI flags documented but not implemented in the hook; the three-channel CodeRabbit fetch added to one skill variant and not the other; acceptance-gate labeling added to the other variant only, while `CLAUDE.md` claimed both had it; an Anki card-cap raise that landed without the constraint justifying it; and a flag repair that fixed three of four flags in one command. The context leak and the permission friction are the same pattern — configuration living in more places than anyone tracks. Each half stays individually valid, so nothing errors and no test fails. **Assert is the weakest remedy** because it only catches pairs someone already thought of; every instance found in this audit was a pair nobody had enumerated. |
 | 18 | Claude checks in with Whitney after **every** milestone. Milestones are not chained. | Explicit instruction when the audit was first scoped, and it was missing from the first draft of this PRD — found by the transcript audit on 2026-08-02. |
-| 19 | Conversation-versus-document verification runs **after every milestone**, not only at M9. | Also found by the transcript audit. Waiting until M9 would mean discovering at the end that an instruction given at M1 was never captured, after seven milestones had been built on the gap. M9 remains the final pass over the finished spec. |
-| 20 | The existing Michael research is stale; M6 is a fresh spike that also repairs the two outdated documents in place. | Whitney confirmed his workflow changed since they were written. Leaving them unmarked would let future work act on outdated findings — PRD #84 already did exactly that. |
-| 21 | M7 audits Claude Code configuration across **all** repos, not only claude-config — recommend-only, no other repo modified in this PRD. | "All the repos, really, should probably be edited — I bet some can be removed and cleaned up." Twenty-one repos have a `.claude/skills/` directory and nine carry YOLO symlinks, so the sprawl is real and measurable. Also found by the transcript audit. |
+| 19 | Conversation-versus-document verification runs **after every milestone**, not only at Milestone D2. | Also found by the transcript audit. Waiting until Milestone D2 would mean discovering at the end that an instruction given at Milestone A1 was never captured, after seven milestones had been built on the gap. Milestone D2 remains the final pass over the finished spec. |
+| 20 | The existing Michael research is stale; Milestone B3 is a fresh spike that also repairs the two outdated documents in place. | Whitney confirmed his workflow changed since they were written. Leaving them unmarked would let future work act on outdated findings — PRD #84 already did exactly that. |
+| 21 | Milestone A4 audits Claude Code configuration across **all** repos, not only claude-config — recommend-only, no other repo modified in this PRD. | "All the repos, really, should probably be edited — I bet some can be removed and cleaned up." Twenty-one repos have a `.claude/skills/` directory and nine carry YOLO symlinks, so the sprawl is real and measurable. Also found by the transcript audit. |
 | 22 | This PRD was itself created using the pre-redesign process — the current `/prd-create`, `/issue-create`, and `/write-prompt` skills, with their current friction. | It serves as a baseline. Whatever the redesign produces should be measurably better to use than what produced this document. |
 
 | 23 | The Viktor skill comparison is a **three-way** diff — common ancestor in `dot-ai`, his current version in `dot-agent-deck`, and Whitney's — not a two-way diff of his current against hers. | Her `prd-*` skills were forked from `dot-ai`; his current skills live in `dot-agent-deck`. A two-way diff cannot distinguish "he changed this" from "she changed this" from "both changed it independently," and collapsing those three cases produces recommendations that quietly discard her deliberate divergences as though they were staleness. |
 | 24 | `.dot-agent-deck.toml` is the primary artifact of the Viktor spike, ahead of his skills. | His own framing: the TOML describes the roles of his agent swarm for a project, and he now relies heavily on it. The skills are downstream of that structure. |
 
-| 25 | **Every enumeration in this PRD is produced by a committed, re-runnable script; models classify and synthesize but never enumerate.** Applies to M2's load inventory, M3's command and prompt-reason mining, M7's hook/skill/cross-repo sweeps, and M9's transcript extraction. | The global standard already says to prefer deterministic scripts for operational tasks and reserve AI for content understanding and synthesis. Beyond that, several milestones make completeness claims — "every file in `rules/`", "every repo with a `.claude/` directory" — and a completeness claim backed by a model looking around is not a completeness claim. Scripts also make the numbers reproducible later, which matters because this PRD's before/after measurements are its evidence. |
+| 25 | **Every enumeration in this PRD is produced by a committed, re-runnable script; models classify and synthesize but never enumerate.** Applies to Milestone A2's load inventory, Milestone A3's command and prompt-reason mining, Milestone A4's hook/skill/cross-repo sweeps, and Milestone D2's transcript extraction. | The global standard already says to prefer deterministic scripts for operational tasks and reserve AI for content understanding and synthesis. Beyond that, several milestones make completeness claims — "every file in `rules/`", "every repo with a `.claude/` directory" — and a completeness claim backed by a model looking around is not a completeness claim. Scripts also make the numbers reproducible later, which matters because this PRD's before/after measurements are its evidence. |
 
 | 26 | **A multi-step procedure that must be executed correctly becomes a script, not prose in a skill.** This is a form of collapse: N prose steps can be partially executed and silently half-done; one command either runs or fails. When the spec finds a procedure written out as instructions in more than one skill or rule, the default disposition is to extract it into a script that all of them call. | The three-channel CodeRabbit fetch is the worked example. It is currently prose in `git-workflow.md`, prose in `prd-done/SKILL.md`, and absent from `prd-done/SKILL.v1-yolo.md` — so it is simultaneously a duplicated-decision pair and a remember-to-do-it-right procedure. Both failure modes fired during scoping on 2026-08-02: the YOLO variant has been fetching one channel of three since June, and Claude — with the rule loaded in context and having just documented the bug — fetched two of three by hand and reported the review as processed. Two findings were missed. A procedure whose correctness depends on the reader remembering all its steps will eventually be executed partially, and partial execution here is indistinguishable from success. |
 
 | 27 | **A claim about the state of the world must carry the observation that supports it, in the same sentence.** Verbs describing an action taken ("edited the file") are self-evidencing and need nothing. Verbs describing a resulting state — fixed, working, complete, current, verified, passing — are claims about reality and require the observation attached. If the observation cannot be produced, the claim cannot be written. `PROGRESS.md` entries and commit messages state what changed and what was observed as separate clauses, never collapsed into one. | Three instances during scoping on 2026-08-02, all the same shape: the CodeRabbit hook was called "fixed" when three of four invalid flags had been replaced and the fourth was never checked against `--help`; the approval-prompt mitigation was called "narrow and complete" on the strength of three observations; a clone was called "current" when it was 500 commits behind. In each case the summary was written in the same breath as the action, before any verification could have occurred, and the observation that would have falsified it was available and not made. This is a coupled pair — the claim and the reality — with nothing holding them together, and partial truth reads identically to complete truth. It matters more as oversight decreases: the point of prioritizing autonomy is that Whitney is watching less closely, which means the claims have to carry their own evidence. |
-| 28 | **When a document exists on both an unmerged branch and main, the branch version is the authority on that branch's own state — read it, not main's.** For PRD #84 specifically, M7b reads the branch's copy of the PRD file. Any statement about an unmerged branch's progress that was derived from main's copy is suspect and needs re-deriving. | The milestone counts diverged and this PRD recorded the wrong one. Main's `prds/84-autonomous-prd-execution.md` lists seven milestones with documentation as M7 and every checkbox unchecked; the branch's lists eight, with M1–M6 checked, an added M7 for real-PRD validation against spinybacked-orbweaver PRD #752, and documentation moved to M8. This PRD said "six of seven" in two places, which understated the remaining work and mischaracterised it as documentation-only when one of the two remaining milestones is external validation. The cause is the same coupled-pair pattern this PRD is organized around, with an extra twist: for an unmerged branch, main's copy is *structurally* guaranteed to be the stale half, so the usual "which side is current" question has a known answer. Verified 2026-08-03 by reading both copies. |
-| 29 | **PRD #84 is resolved inside this PRD, not planned for a later one — M7b performs the disposition, merges anything that survives, deletes the branch, and closes the issue.** This is an explicit exception to this PRD's rule that implementation is deferred to the PRDs its spec produces. Each piece of work on the branch takes one of three verdicts: trash, the code lives, or the learnings live and the code does not. | The earlier text said "this milestone plans the triage; it does not perform it," which is the same move that stranded PRD #84 in the first place: six milestones finished in April, then four months of limbo because the remaining step belonged to nobody in particular. A plan handed to a future PRD is indistinguishable from no plan if that PRD is never written. Whitney's instruction was that #84 be completely off the plate at the end of the milestone — closed, branch gone, never thought about again — which is only achievable if the milestone acts. The limbo also had a cost beyond drag: the branch was the sole copy of five journal files, and a stalled branch nobody will delete is a data-loss risk that grows with time. |
-| 30 | **A PRD records the evidence bearing on an open decision and never a presumptive answer to it.** Facts, measurements, and descriptions belong in the milestone; verdicts, likely outcomes, and default dispositions do not. Where a milestone exists to make a judgment, the document's job is to make that judgment well-informed rather than pre-made. | Written while drafting M7b. A per-item table of likely verdicts was proposed and rejected: a recommendation written into a PRD is read by the agent performing the milestone as the answer, not as an input, so it decides the question in advance while appearing to leave it open. The converse error is just as real, though — stripping the *facts* along with the opinions would force rediscovery of things like the branch being 88 commits behind with five merge conflicts, and an agent under time pressure may simply not re-derive them and then choose a verdict on a false premise about cost. So the rule cuts precisely between the two: record that a change is a ten-line edit touching no skill file; do not record that it therefore deserves to survive. |
-| 31 | **M1 adds a lightweight triage pass over Michael's cloned candidate repos, using a fast/cheap model, before M4 or M6 spend deep judgment time on them.** Name-and-description filtering (the existing two-stage selection) only proves a repo is plausibly relevant; it does not prove the repo has anything inside it once cloned. The triage skims each candidate's README and top-level structure and discards anything that is clearly a dead end — empty, a one-off experiment, or a mismatch between name/description and actual content — recording a one-line reason per discard the same way the original subject filter does. | Whitney flagged after M1's first pass that the repo set felt too large and asked whether a cheap-model skim step existed before the deep spikes. It didn't — M1 filtered on metadata alone, and the first "trim" (removing four repos) was an ad hoc manual spot-check rather than a repeatable step. Folding a systematic version into M1 keeps the pruning close to where the candidates were already being looked at, rather than pushing dead weight into M6's setup step. |
+| 28 | **When a document exists on both an unmerged branch and main, the branch version is the authority on that branch's own state — read it, not main's.** For PRD #84 specifically, Milestone D1 reads the branch's copy of the PRD file. Any statement about an unmerged branch's progress that was derived from main's copy is suspect and needs re-deriving. | The milestone counts diverged and this PRD recorded the wrong one. Main's `prds/84-autonomous-prd-execution.md` lists seven milestones with documentation as Milestone A4 and every checkbox unchecked; the branch's lists eight, with Milestone A1–Milestone B3 checked, an added Milestone A4 for real-PRD validation against spinybacked-orbweaver PRD #752, and documentation moved to Milestone C2. This PRD said "six of seven" in two places, which understated the remaining work and mischaracterised it as documentation-only when one of the two remaining milestones is external validation. The cause is the same coupled-pair pattern this PRD is organized around, with an extra twist: for an unmerged branch, main's copy is *structurally* guaranteed to be the stale half, so the usual "which side is current" question has a known answer. Verified 2026-08-03 by reading both copies. |
+| 29 | **PRD #84 is resolved inside this PRD, not planned for a later one — Milestone D1 performs the disposition, merges anything that survives, deletes the branch, and closes the issue.** This is an explicit exception to this PRD's rule that implementation is deferred to the PRDs its spec produces. Each piece of work on the branch takes one of three verdicts: trash, the code lives, or the learnings live and the code does not. | The earlier text said "this milestone plans the triage; it does not perform it," which is the same move that stranded PRD #84 in the first place: six milestones finished in April, then four months of limbo because the remaining step belonged to nobody in particular. A plan handed to a future PRD is indistinguishable from no plan if that PRD is never written. Whitney's instruction was that #84 be completely off the plate at the end of the milestone — closed, branch gone, never thought about again — which is only achievable if the milestone acts. The limbo also had a cost beyond drag: the branch was the sole copy of five journal files, and a stalled branch nobody will delete is a data-loss risk that grows with time. |
+| 30 | **A PRD records the evidence bearing on an open decision and never a presumptive answer to it.** Facts, measurements, and descriptions belong in the milestone; verdicts, likely outcomes, and default dispositions do not. Where a milestone exists to make a judgment, the document's job is to make that judgment well-informed rather than pre-made. | Written while drafting Milestone D1. A per-item table of likely verdicts was proposed and rejected: a recommendation written into a PRD is read by the agent performing the milestone as the answer, not as an input, so it decides the question in advance while appearing to leave it open. The converse error is just as real, though — stripping the *facts* along with the opinions would force rediscovery of things like the branch being 88 commits behind with five merge conflicts, and an agent under time pressure may simply not re-derive them and then choose a verdict on a false premise about cost. So the rule cuts precisely between the two: record that a change is a ten-line edit touching no skill file; do not record that it therefore deserves to survive. |
+| 31 | **Milestone A1 adds a lightweight triage pass over Michael's cloned candidate repos, using a fast/cheap model, before Milestone B2 or Milestone B3 spend deep judgment time on them.** Name-and-description filtering (the existing two-stage selection) only proves a repo is plausibly relevant; it does not prove the repo has anything inside it once cloned. The triage skims each candidate's README and top-level structure and discards anything that is clearly a dead end — empty, a one-off experiment, or a mismatch between name/description and actual content — recording a one-line reason per discard the same way the original subject filter does. | Whitney flagged after Milestone A1's first pass that the repo set felt too large and asked whether a cheap-model skim step existed before the deep spikes. It didn't — Milestone A1 filtered on metadata alone, and the first "trim" (removing four repos) was an ad hoc manual spot-check rather than a repeatable step. Folding a systematic version into Milestone A1 keeps the pruning close to where the candidates were already being looked at, rather than pushing dead weight into Milestone B3's setup step. |
+
+| 32 | **Skill precedence is personal-over-project — the reverse of rule precedence — so the YOLO symlinks in all nine repos are inert and the autonomous skills have never run.** `/make-autonomous` is partially inert: the skill symlinks do nothing, while its `SessionStart` hook and permission entries work normally. Those repos have been running an autonomous loop over interactive skills since 2026-03-04. Verified by live test, not inferred. | Evidence, method, and the three downstream consequences: [claude-code-skill-installation-scope.md](../docs/research/claude-code-skill-installation-scope.md). Changes two earlier conclusions — the YOLO single-channel CodeRabbit fetch never missed a live finding, and Milestone B4's migration is cheaper than planned rather than riskier. | For rules, "user-level rules are loaded before project rules, giving project rules higher priority." For skills, "enterprise overrides personal, and personal overrides project." All eight PRD skills are installed personally at `~/.claude/skills/prd-*`, resolving to the interactive `SKILL.md`, so the personal copy wins over every project-level YOLO symlink. Test: the two variants carry different `description` strings, and a `claude -p` run in `cluster-whisperer` asking for its own `prd-done` description returned the interactive string. Broken symlink ruled out by `readlink -f` plus a content grep. Two earlier conclusions change: the single-channel CodeRabbit fetch in the YOLO variant never missed a live finding, and Milestone B4's migration is cheaper than planned rather than riskier — deleting the YOLO files breaks no behavior and leaves only dangling symlinks to sweep. |
+| 33 | **The autonomous variants are unvalidated drafts. Decision 16 stands as the destination, but every autonomous behavior promoted to the default path in Milestone B4 must be live-tested first.** Milestone B4 gains a validation step the original plan did not budget for. | Decision 16 was written believing the autonomous variants were live and battle-tested. Per Decision 32 they have never executed anywhere, so "autonomous-first" silently meant promoting never-executed code to the default path in every repo. Demoting autonomy was rejected because it discards a principle for a reason unrelated to its merits; proceeding as planned was rejected because it takes a risk the plan did not know it was taking. |
+| 33a | **"Autonomous-first" governs default posture, not choice of starting file.** Content is decided per divergence on merit regardless of origin; posture is where confirmation gates become the exception. Decision 33 constrains only posture. The consolidated files are expected to match neither existing variant. | Whitney corrected a framing that presented the choice as which half wins — a choice Milestone B4 had already rejected in specifying merit-based merging. The conflation is easy to repeat, because "autonomous-first" reads as "start from the YOLO file," which would discard the interactive variant's genuinely better parts (three-channel CodeRabbit fetch, whole-PRD Anki sourcing with dedupe). |
+
+| 34 | **The PRD is restructured into four ordered phases — Audit, Research, Design, Disposal — and design work is removed from Phases A and B entirely.** Milestone A2 loses the classification policy and byte budget; Milestone B4 loses the consolidation design. Both move to a new Milestone C1, where the design conversation happens with Whitney. | The plan interleaved measuring, learning, and deciding, so design decisions were scheduled before their inputs existed. Milestone A2 asked for a classification policy at position two of nine — before Viktor, Michael, or any capability review. Whitney named the audit/research/design sequence; it separates the three cleanly and no design decision is now made before all inputs exist. Mostly a re-sequencing rather than new work. |
+| 34a | **Milestones are renamed to phase-prefixed, spelled-out IDs — `Milestone A2`, not `M2` — migrated by script rather than by hand.** `scripts/migrate-prd-109-milestone-ids.sh` records the mapping and verifies by token count. | Grouping the old numbers under phase headings was considered and rejected: an agent reading "Milestone 2, Milestone 3, Milestone 7" under one phase infers sequence from the numbers, so the names would have silently misled rather than visibly broken. Spelled-out IDs are distinctive enough for exact find-and-replace; the short forms were not, since `M7` is a substring of `M7b`. The script disambiguates PRD #84's own M1–M8 references first, because a blind pass would have rewritten them into this PRD's IDs and produced sentences that read correctly and state something false. Verified: 85 tokens migrated, 0 remaining. |
+| 35 | **A Claude Code capability spike becomes the third research input, run before the Viktor and Michael spikes.** Covers tools, hooks, settings, subagents, and architectures — not only AI skills. | Every finding that changed the plan on 2026-08-03 came from reading documentation, not reasoning: five capability findings from two narrow passes, one of which invalidated four months of assumed autonomous behavior. Decision 1 sets "current with what AI can do now" as a goal and nothing in the plan was checking it. Running it first means the other two spikes are read by someone who knows what the platform already offers. A July 2026 community-practices spike was raised alongside it and is **not** decided — see Open Questions. |
+| 36 | **Design conversations follow a fixed protocol: evidence explained as though Whitney has not read the docs, then simple choices with one recommended, one question at a time, and each answer written down in the turn it is given.** | Whitney's explicit instruction, 2026-08-03. Extends Decisions 4 and 13 with two new requirements — accessible framing of evidence, and immediate recording. The recording rule is the defense against losing a long design conversation to compaction, which is a real risk for Milestone C1 specifically. |
+| 37 | **A separation rule governs where text lives: the PRD holds what to do, research docs hold what was learned, the decision log holds decisions with links out. Decision rows stay short. A one-time extraction pass moves existing embedded findings, and a size check enforces it.** | The decision log passed 41 KB and the PRD 560 lines, and several rows written on 2026-08-03 ran to a paragraph each — the bloat vector is evidence migrating into decision records. A rule alone will not hold: the command-shape discipline was violated repeatedly in the same session that documented it, so the weakest-tier `assert` remedy is still required here, since a PRD can neither be collapsed into something else nor generated. |
+| 38 | **The classification policy gains a test 0 — should this exist at all — ahead of every classifying test.** Applies to rules, hooks, and skills alike. | Whitney identified that the proposed policy sorted everything and deleted nothing, so bloat would survive in a tidier arrangement. Test 0 turns it from a sorting exercise into a pruning pass at no cost, and Milestone A4 inherits it for hooks rather than inventing its own criterion. |
+| 39 | **The classification policy proposed on 2026-08-03 is accepted as a draft only, and is re-examined in Milestone C1 rather than ratified.** | It was written with one of three research inputs available. Milestone B3 may supersede parts of it outright — Michael reportedly has a generated rules table, which is a `derive` remedy for a problem the draft can only `assert` against, and Decision 17a ranks derive above assert. |
 
 ## Open Questions
 
 Carried from the decision log. These are answered during the milestones, not before.
 
-- Should `/issue-*` and `/prd-*` collapse into one lifecycle with two entry points, or stay two families? *(M5)*
-- Which specific rules stay rules, which move to `CLAUDE.md` or hooks for durability, and which become on-demand skills? *(M2)*
-- Global versus project-level skills — Viktor's position is "never global." Does that hold once #21858 is ruled out? *(M2, M4)*
-- Is there a sandbox or permission-mode setting that eliminates the `simple_expansion` prompt class outright? *(M3)*
-- How many implementation PRDs should the spec produce, and in what order? *(M8)*
-- Which git hooks can be removed or consolidated? *(M7)*
+- **Is a July 2026 community-practices research spike worth running?** Raised by Whitney on 2026-08-03 alongside the capability spike. Claude recommended skipping it, or timeboxing it inside Milestone B2, on the grounds that community content is largely documentation rediscovery plus opinion and that Viktor and Michael are already two high-quality community samples with dedicated milestones. **Whitney has not decided, and no answer is recorded here.** Resolve before Phase B starts.
+- **When do the detailed milestone sections get reordered into phase order?** The checklist is in phase order; the sections below it are not. Deliberately deferred so the restructure could be reviewed without the reordering diff mixed in. *(Mechanical follow-up)*
+
+- Should `/issue-*` and `/prd-*` collapse into one lifecycle with two entry points, or stay two families? *(Milestone B4)*
+- Which specific rules stay rules, which move to `CLAUDE.md` or hooks for durability, and which become on-demand skills? *(Milestone A2)*
+- Global versus project-level skills — Viktor's position is "never global." Does that hold once #21858 is ruled out? *(Milestone A2, Milestone B2)*
+- Is there a sandbox or permission-mode setting that eliminates the `simple_expansion` prompt class outright? *(Milestone A3)*
+- How many implementation PRDs should the spec produce, and in what order? *(Milestone C2)*
+- Which git hooks can be removed or consolidated? *(Milestone A4)*
