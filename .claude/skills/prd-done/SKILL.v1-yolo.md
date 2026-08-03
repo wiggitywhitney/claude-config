@@ -316,9 +316,9 @@ After creating the PR and starting the CodeRabbit review timer, use the wait tim
   - **Use multiple methods to capture all feedback**:
     - **Always fetch all three CodeRabbit channels** — CodeRabbit posts to all three and missing any one means missing findings:
       ```bash
-      gh api repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '[.[] | {user: .user.login, state, body}]'
-      gh api repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '[.[] | {user: .user.login, path, line, body}]'
-      gh api repos/OWNER/REPO/issues/PR_NUMBER/comments --jq '[.[] | {user: .user.login, body}]'
+      gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '.[] | {user: .user.login, state, body}'
+      gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '.[] | {user: .user.login, path, line, body}'
+      gh api --paginate repos/OWNER/REPO/issues/PR_NUMBER/comments --jq '.[] | {user: .user.login, body}'
       ```
       - `/pulls/{n}/reviews` — full review bodies including "outside diff range" findings (most content lives here)
       - `/pulls/{n}/comments` — inline comments attached to specific diff lines
@@ -351,6 +351,7 @@ After creating the PR and starting the CodeRabbit review timer, use the wait tim
   - Update tests if needed to cover suggested improvements
   - Document any feedback that was intentionally not addressed and why
 - [ ] **Re-review after pushing fixes**: Start another 7-minute timer. Re-run all three `gh api` calls from above. Repeat the triage loop until no new **Fix** findings remain (Defer and Skip findings do not block merge). If the `/issues/{n}/comments` channel shows a rate-limit notice, CodeRabbit does not auto-retry — post `@coderabbitai review` as a PR comment (`gh pr comment PR_NUMBER --body "@coderabbitai review"`) and start another timer.
+  - **Clearing this loop is not approval.** A review with no remaining Fix findings, an empty review, and a rate-limited review that never ran all look the same from here. Human approval of the CodeRabbit review is still required before the merge step below, exactly as in the interactive workflow — the autonomy in this variant is in the triage, not in the merge decision.
 - [ ] **Verify all checks pass**: Ensure all CI/CD, tests, security analysis, and automated processes are complete and passing
 - [ ] **Final review**: Confirm the PR addresses the original PRD requirements and maintains code quality
 - [ ] **Merge to main**: Complete the pull request merge only after all feedback addressed and processes complete

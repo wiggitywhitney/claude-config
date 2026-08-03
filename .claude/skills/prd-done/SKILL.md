@@ -335,9 +335,9 @@ After creating the PR and starting the CodeRabbit review timer, use the wait tim
   - **Use multiple methods to capture all feedback**:
     - **Always fetch all three CodeRabbit channels** — CodeRabbit posts to all three and missing any one means missing findings:
       ```bash
-      gh api repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '[.[] | {user: .user.login, state, body}]'
-      gh api repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '[.[] | {user: .user.login, path, line, body}]'
-      gh api repos/OWNER/REPO/issues/PR_NUMBER/comments --jq '[.[] | {user: .user.login, body}]'
+      gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '.[] | {user: .user.login, state, body}'
+      gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '.[] | {user: .user.login, path, line, body}'
+      gh api --paginate repos/OWNER/REPO/issues/PR_NUMBER/comments --jq '.[] | {user: .user.login, body}'
       ```
       - `/pulls/{n}/reviews` — full review bodies including "outside diff range" findings (most content lives here)
       - `/pulls/{n}/comments` — inline comments attached to specific diff lines

@@ -108,6 +108,51 @@ bare_rule() {
     [[ "$output" == *"late-paths.md"* ]]
 }
 
+@test "catches the ** / * wildcard in a single-quoted inline list" {
+    printf -- "---\npaths: ['**/*']\n---\n\n# Single quoted\n" > "$FAKE_REPO/rules/single-quoted.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"single-quoted.md"* ]]
+    [[ "$output" == *"not scoping"* ]]
+}
+
+@test "catches the ** / * wildcard in a double-quoted block sequence" {
+    printf -- '---\npaths:\n  - "**/*"\n---\n\n# Block sequence\n' > "$FAKE_REPO/rules/block-double.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"block-double.md"* ]]
+    [[ "$output" == *"not scoping"* ]]
+}
+
+@test "catches the ** / * wildcard in a single-quoted block sequence" {
+    printf -- "---\npaths:\n  - '**/*'\n---\n\n# Block sequence\n" > "$FAKE_REPO/rules/block-single.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"block-single.md"* ]]
+    [[ "$output" == *"not scoping"* ]]
+}
+
+@test "accepts a real scope written as a block sequence" {
+    printf -- '---\npaths:\n  - "**/*.ts"\n  - "**/package.json"\n---\n\n# Block sequence\n' \
+        > "$FAKE_REPO/rules/block-scoped.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+}
+
+@test "fails with a clear message when the rules directory is missing" {
+    rm -rf "$FAKE_REPO/rules"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"no rules directory"* ]]
+}
+
+@test "fails with a clear message when global/CLAUDE.md is missing" {
+    rm -f "$FAKE_REPO/global/CLAUDE.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"no global/CLAUDE.md"* ]]
+}
+
 @test "the real repo passes its own check" {
     run "$SCRIPT" "$BATS_TEST_DIRNAME/.."
     [ "$status" -eq 0 ]

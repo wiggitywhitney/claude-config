@@ -65,7 +65,14 @@ while IFS= read -r file; do
         frontmatter=$(awk 'NR==1 && $0=="---" {next} /^---$/ {exit} {print}' "$file")
         if printf '%s\n' "$frontmatter" | grep -q '^paths:'; then
             has_paths=true
-            if printf '%s\n' "$frontmatter" | grep -qE '^paths:.*"\*\*/\*"'; then
+            # Catch `**/*` in every YAML shape a paths list can legally take:
+            # an inline list on the key line, single- or double-quoted, and a
+            # block sequence whose items sit on their own lines. Unquoted
+            # `**/*` is not valid YAML in either shape, so it is not matched —
+            # such a file fails to parse and never loads regardless.
+            if printf '%s\n' "$frontmatter" | grep -qE "^paths:.*[\"']\*\*/\*[\"']"; then
+                wildcard=true
+            elif printf '%s\n' "$frontmatter" | grep -qE "^[[:space:]]*-[[:space:]]*[\"']\*\*/\*[\"'][[:space:]]*$"; then
                 wildcard=true
             fi
         fi

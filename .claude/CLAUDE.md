@@ -31,9 +31,9 @@ This catches problems in ~30s locally, reducing review round-trips after PR crea
 1. Create the PR and push to remote
 2. Wait 7 minutes, then fetch all CodeRabbit findings using three `gh api` calls — CodeRabbit posts to all three channels and missing any one means missing findings:
    ```bash
-   gh api repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '[.[] | {user: .user.login, state, body}]'
-   gh api repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '[.[] | {user: .user.login, path, line, body}]'
-   gh api repos/OWNER/REPO/issues/PR_NUMBER/comments --jq '[.[] | {user: .user.login, body}]'
+   gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '.[] | {user: .user.login, state, body}'
+   gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '.[] | {user: .user.login, path, line, body}'
+   gh api --paginate repos/OWNER/REPO/issues/PR_NUMBER/comments --jq '.[] | {user: .user.login, body}'
    ```
 3. If no review yet, wait another 2-3 minutes before checking again
 4. For each CodeRabbit comment: explain the issue, give a recommendation, then **follow your own recommendation** (YOLO mode)
