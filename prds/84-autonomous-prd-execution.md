@@ -1,8 +1,12 @@
 # PRD #84: Autonomous PRD Execution
 
-**Status**: Draft
+**Status**: Draft — **this copy is stale; do not read it as the state of this PRD**
 **Created**: 2026-04-17
 **Issue**: https://github.com/wiggitywhitney/claude-config/issues/84
+
+> **Read the branch copy instead.** Six milestones of this PRD are implemented on the local-only branch `feature/prd-84-autonomous-prd-execution`, which was never pushed and has no remote counterpart. That branch's copy of this file is the authority on what was built: it lists eight milestones with M1–M6 checked, adds an M7 for real-PRD validation against spinybacked-orbweaver PRD #752, and moves documentation to M8. The unchecked boxes below reflect only that the work never merged.
+>
+> Do not delete that branch and do not re-apply its commits. Its disposition is planned by PRD #109 M7, which sorts the work into salvage / fold-into-consolidation / revisit buckets and closes this PRD once every bucket has a named destination. The branch was also the only copy of five journal files, four of which have since been rescued to main.
 **Research**:
 - [PRD workflow principles](../docs/research/prd-workflow-principles.md) — how the current PRD skills work, what state lives where, the atomic-commit invariant, YOLO variants, TaskCreate state machine, hooks that touch PRDs
 - [Michael Forrester autonomous execution principles](../docs/research/michael-autonomous-execution-principles.md) — `plan-execute`, `long-run`, `tasks.yaml`, GUPP, compaction recovery patterns, the staging-branch fork, Design Forks for Whitney's Designer
