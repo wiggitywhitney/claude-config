@@ -206,6 +206,16 @@ The handle is how the platform notifies the person — it belongs where their na
 - Don't: "Nathen Harvey (@nathenharvey.bsky.social) on Software Defined Interviews..."
 LinkedIn doesn't have this convention — use their full name there.
 
+**When proposing an episode angle/framing in an invite, use "I'm thinking, for the episode we can..." not "Here's the angle I'd love to explore:".**
+The colon-setup phrasing reads stiffer and more prepared than how Whitney actually talks. The looser "I'm thinking, for [X] we can start by discussing A, then narrow into B" is more conversational and still gets the structure across.
+- Do: "I'm thinking, for the episode we can start by discussing how Datadog engineering broadly is adopting AI... then narrow into your own workflow..."
+- Don't: "Here's the angle I'd love to explore: start with a look at how Datadog engineering broadly is adopting AI..."
+(Confirmed: cut from the sent version of the Rick Mangi invite, 2026-08-03.)
+
+**When naming an internal Slack channel in outreach, spell out "the ... Slack channel" rather than just the bare channel name.**
+"Jason Yee shared your writing in the #community-backroom Slack channel" — not "in #community-backroom." The explicit "Slack channel" makes it unambiguous even to a reader unfamiliar with that specific channel.
+(Confirmed: cut from the sent version of the Rick Mangi invite, 2026-08-03.)
+
 ---
 
 Speaker notes voice rules for conference talks moved to `rules/presentation-slides.md`, under "Speaker Notes Voice" — read only when writing speaker notes.
