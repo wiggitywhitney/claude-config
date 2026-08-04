@@ -28,6 +28,24 @@ fi
 before="$(grep -c -o -E '\bM[0-9]+b?\b' "$PRD" || true)"
 echo "Short milestone tokens before migration: ${before}"
 
+# Atomicity. The substitutions below run in sequence, so a failure partway through
+# would leave the PRD half-migrated — and because the idempotence guard above keys on
+# the presence of a migrated ID, a half-migrated file would then refuse to be retried.
+# Snapshot first and restore on any non-zero exit, including the deliberate exit 1
+# when unmapped tokens remain. The caller therefore sees either a fully migrated file
+# or an untouched one.
+backup="$(mktemp "${PRD}.bak.XXXXXX")"
+cp "$PRD" "$backup"
+restore_on_failure() {
+  local status=$?
+  if [[ "$status" -ne 0 ]]; then
+    cp "$backup" "$PRD"
+    echo "Migration failed (exit ${status}); PRD restored to its pre-migration state." >&2
+  fi
+  rm -f "$backup"
+}
+trap restore_on_failure EXIT
+
 # ---------------------------------------------------------------------------
 # Stage 1 — disambiguate PRD #84's own milestone IDs.
 #

@@ -37,7 +37,7 @@ The index moved from one always-loaded location to another and saved nothing. Th
 
 **Not fixed here.** This PRD produces a spec. The disposition belongs to the spec, and the checker and its bats tests belong to M7's review.
 
-## 2. Eight skills exceed or approach the compaction truncation cap
+## 2. Seven skills exceed the compaction truncation cap, and one more is at risk
 
 After a compaction an invoked skill body is re-injected **truncated to 5,000 tokens, keeping the start of the file**, with a 25,000-token total budget across all invoked skills and oldest dropped first.
 

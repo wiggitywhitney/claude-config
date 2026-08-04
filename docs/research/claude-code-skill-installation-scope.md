@@ -32,7 +32,7 @@ The finding that matters more for this repo is a precedence rule that runs oppos
 
 **Interpretation:** Skills and rules have inverted precedence. For rules, project wins. For skills, personal wins. Nothing in either page cross-references the other, and the natural assumption — that project-specific configuration beats personal configuration, as it does nearly everywhere else — is wrong for exactly one of the two mechanisms. This is the root cause of finding 2.
 
-**2. The YOLO symlinks are inert. `/make-autonomous` has never worked.** 🟢 — verified by live test
+**2. The YOLO symlinks are inert, so the autonomous skills have never run. `/make-autonomous` is partially inert, not wholly — its skill swap does nothing while its hook and permission entries work.** 🟢 — verified by live test
 
 The audit decision log currently records the opposite: *"project skills shadow global ones, so in those repos the YOLO variant is what runs every time, interactive session or not."* **That is incorrect.**
 

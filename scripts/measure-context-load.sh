@@ -87,6 +87,13 @@ count_always=0
 count_ondemand=0
 count_bare=0
 
+# Tracked separately from total_always because they are not interchangeable: the
+# `include` bytes are what the #108 baseline measured, while bare-rule bytes are
+# what #108 drove to zero. Summing them produces a figure that cannot be compared
+# with the baseline and reads as though it can.
+total_included=0
+total_bare=0
+
 while IFS= read -r file; do
   rel="${file#"${REPO_ROOT}/"}"
   b="$(bytes_of "$file")"
@@ -98,10 +105,13 @@ while IFS= read -r file; do
     mech='**both — defect**'; loaded='yes'; survives='yes'
     why='Carries `paths:` **and** is `@`-referenced, so it loads twice. Violates the one-mechanism rule.'
     total_always=$((total_always + b)); count_always=$((count_always + 1))
+    # Counted as included: it is @-referenced, which is what makes it always-loaded.
+    total_included=$((total_included + b))
   elif [[ "$referenced" == yes ]]; then
     mech='`include`'; loaded='yes'; survives='untested'
     why='`@`-referenced from `global/CLAUDE.md`; expanded at launch. Compaction behavior unverified.'
     total_always=$((total_always + b)); count_always=$((count_always + 1))
+    total_included=$((total_included + b))
   elif [[ "$scoped" == yes ]]; then
     mech='`path_glob_match`'; loaded='no'; survives='**no**'
     why='Loads only when a matching file is read; summarized away by compaction.'
@@ -110,7 +120,7 @@ while IFS= read -r file; do
     mech='`session_start` (bare)'; loaded='yes'; survives='yes'
     why='No frontmatter and no `@`-reference, so it loads unconditionally every session.'
     total_always=$((total_always + b)); count_always=$((count_always + 1))
-    count_bare=$((count_bare + 1))
+    count_bare=$((count_bare + 1)); total_bare=$((total_bare + b))
   fi
 
   printf '| `%s` | %s | %s | %s | %s | %s |\n' "$rel" "$mech" "$b" "$loaded" "$survives" "$why"
@@ -144,6 +154,7 @@ skill_body_total=0
 skill_desc_total=0
 skill_count=0
 over_cap=0
+at_risk=0
 
 if [[ -d "${SKILLS_DIR}" ]]; then
   while IFS= read -r skill_md; do
@@ -166,7 +177,7 @@ if [[ -d "${SKILLS_DIR}" ]]; then
     if [[ "$t" -gt 5000 ]]; then
       cap='**yes — tail is dropped**'; over_cap=$((over_cap + 1))
     elif [[ "$tw" -gt 5000 ]]; then
-      cap='at risk — over on the dense estimate'; over_cap=$((over_cap + 1))
+      cap='at risk — over on the dense estimate only'; at_risk=$((at_risk + 1))
     fi
 
     printf '| `%s` | %s | %s | %s | %s | %s | %s |\n' "$name" "$b" "$t" "$tw" "$cap" "$listed" "$desc_bytes"
@@ -182,12 +193,25 @@ printf '| Metric | Value |\n|---|---:|\n'
 printf '| Skills | %s |\n' "$skill_count"
 printf '| Total body bytes (loaded only when invoked) | %s |\n' "$skill_body_total"
 printf '| Startup listing cost (descriptions only) | %s |\n' "$skill_desc_total"
-printf '| Skills over the 5,000-token truncation cap | %s |\n' "$over_cap"
+printf '| Skills confirmed over the 5,000-token truncation cap | %s |\n' "$over_cap"
+printf '| Skills at risk on the dense estimate only | %s |\n' "$at_risk"
 
 printf '\n## Always-loaded budget\n\n'
-printf '| Component | Bytes |\n|---|---:|\n'
-printf '| `global/CLAUDE.md` | %s |\n' "$claude_md_bytes"
-printf '| `@`-referenced rules | %s |\n' "$total_always"
-printf '| Skill descriptions | %s |\n' "$skill_desc_total"
-printf '| **Total always-loaded** | **%s** |\n' "$((claude_md_bytes + total_always + skill_desc_total))"
-printf '\nCompare against the #108 post-fix baseline of 56,994 bytes for `global/CLAUDE.md` plus its `@`-referenced rules.\n'
+printf 'Components are kept separate rather than summed into one figure, because they are not\n'
+printf 'interchangeable and only some are comparable with the #108 baseline.\n\n'
+printf '| Component | Bytes | Comparable with #108 baseline |\n|---|---:|---|\n'
+printf '| `global/CLAUDE.md` | %s | yes |\n' "$claude_md_bytes"
+printf '| `@`-referenced rules (`include`) | %s | yes |\n' "$total_included"
+printf '| Bare rule files (`session_start`) | %s | no — #108 drove this to zero |\n' "$total_bare"
+printf '| Skill descriptions, this repo only | %s | no — not in the baseline |\n' "$skill_desc_total"
+printf '\n### Comparison with the #108 post-fix baseline\n\n'
+printf 'The baseline covered `global/CLAUDE.md` plus its `@`-referenced rules and nothing else,\n'
+printf 'so only those two rows may be compared against it.\n\n'
+printf '| | Bytes |\n|---|---:|\n'
+printf '| #108 post-fix baseline | 56994 |\n'
+printf '| Same components measured now | %s |\n' "$((claude_md_bytes + total_included))"
+printf '| Drift | %s |\n' "$((claude_md_bytes + total_included - 56994))"
+printf '\n**This is a repository-only lower bound, not the true always-loaded total.**\n'
+printf 'At least one always-loaded `@`-import lives outside this repository and cannot be\n'
+printf 'measured by a sweep of `rules/`; see `claude-config-load-findings.md`. Any budget set\n'
+printf 'from these numbers must be set against observed load rather than against this table.\n'

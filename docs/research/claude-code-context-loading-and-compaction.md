@@ -64,13 +64,15 @@ So the classification policy is not choosing between good and bad mechanisms. It
 
 **Interpretation:** This is a free byte reduction the repo is not currently using, and it applies cleanly to the lifecycle skills — `prd-done`, `prd-update-progress`, `issue-done` and similar all have side effects and are always invoked deliberately by name. Setting it removes their descriptions from the startup listing at no behavioral cost. Flagging for M2's policy and M7's skills inventory.
 
-**6. There is a hook that reports exactly which instruction files load and why — including at compaction.** 🟢 (existence and load reasons) / 🟡 (payload schema)
+**6. There is a hook that reports exactly which instruction files load and why — including at compaction.** 🟢 (existence, load reasons, and — since this was first written — the payload schema)
 
 **Source says:** "| `InstructionsLoaded` | When a CLAUDE.md or `.claude/rules/*.md` file is loaded into context. Fires at session start and when files are lazily loaded during a session |" ([Hooks reference](https://code.claude.com/docs/en/hooks))
 
 **Source says:** "| `InstructionsLoaded` | load reason | `session_start`, `nested_traversal`, `path_glob_match`, `include`, `compact` |" (same page)
 
-**Verified locally rather than taken on trust:** `strings` on the v2.1.220 binary contains `InstructionsLoaded` and all five load-reason values. The docs pages truncate before the full JSON payload schema, so the exact field names are not yet confirmed — that part is 🟡 and should be settled by registering the hook and reading one real payload.
+**Verified locally rather than taken on trust:** `strings` on the v2.1.220 binary contains `InstructionsLoaded` and all five load-reason values.
+
+**Schema resolved 2026-08-03, after this section was first written.** The docs pages truncate before the JSON payload schema, so it was recorded here as unconfirmed. It has since been observed directly by registering the hook and capturing real payloads: fields are `cwd`, `file_path`, `hook_event_name`, `load_reason`, `memory_type`, `session_id`, `transcript_path`. Method and captured output in [claude-config-load-findings.md](claude-config-load-findings.md).
 
 **Interpretation:** This is the right instrument for M2's load inventory. Decision 25 requires enumeration by re-runnable script rather than a model looking around, and this hook is the platform's own account of what loaded, which beats inferring mechanism from frontmatter. The `compact` matcher value also makes the open question in the Conflicting Findings section below directly testable.
 
@@ -155,7 +157,7 @@ Free win available independent of the policy: `disable-model-invocation: true` o
 ## Caveats
 
 - Verified against **2.1.220** only. Several findings are version-gated (`/doctor` trim at 2.1.206, symlink glob matching at 2.1.198, brace-expansion budget at 2.1.217, duplicate-skill fix at 2.1.202), so any of this is wrong for an older install.
-- The `InstructionsLoaded` **payload schema is unconfirmed.** Its existence and load-reason vocabulary are verified in the local binary; the field names are not. Read one real payload before writing a script that parses it.
+- The `InstructionsLoaded` payload schema **was** unconfirmed when this document was first written and has since been observed directly — see finding 6. Field names are now known.
 - `InstructionsLoaded` does not appear anywhere in the visible changelog, so its introduction version is unknown. Present at 2.1.220.
 - The changelog page truncated at 2.1.179, so older entries were not checked.
 - The `include` compaction behavior is unresolved. See Conflicting Findings; do not build on either answer yet.
