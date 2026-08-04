@@ -1,6 +1,6 @@
 # claude-config Load Findings
 
-**Last Updated:** 2026-08-03
+**Last Updated:** 2026-08-04
 **Produced for:** PRD #109 Milestone A2
 **Measured against:** Claude Code 2.1.220, with issue #108 already merged
 
@@ -110,7 +110,7 @@ Worth stating plainly: `writing-voice.md` is also the file most likely to keep g
 
 **What is *not* established: whether these two files actually double-load.** The compaction probe recorded the project `CLAUDE.md` returning with `load_reason: compact` but produced **no** `include` record for either import, while all twelve of `global/CLAUDE.md`'s imports did return as `include`. Three readings remain open and this evidence does not choose between them: project-level imports are not re-resolved after compaction the way user-level ones are; they load at `session_start` and the probe was installed too late to see it; or the import is not resolving at all. **Settling it needs one more probe-plus-compaction run** — the same method as finding 5, watching specifically for `parent_file_path` pointing at the project `CLAUDE.md`.
 
-**Byte exposure:** 10,937 bytes, against a recorded always-loaded total of 63,619. If they do load, the real figure is roughly **17% higher** than the inventory states, and Milestone C1's byte budget would be set against a number that is wrong in the unsafe direction.
+**Byte exposure:** 10,937 bytes, against the 63,619 the inventory recorded at the time. If they load, that figure is roughly **17% low**, and Milestone C1's byte budget would be set against a number wrong in the unsafe direction. (The recorded total has since been corrected to 70,228 for a separate reason — see finding 7.)
 
 ### Resolved 2026-08-04, and the repo had already made the call
 
@@ -130,9 +130,28 @@ So the decision was made, written down, and stated twice — and `.claude/CLAUDE
 
 **Both scripts now scan every `CLAUDE.md`.** The checker names which file carries the reference, because "pick one" is not actionable when the reader does not know where the reference lives. Test coverage added to both suites, each written to fail first.
 
-**The always-loaded total is unchanged at 63,619 bytes — and that is the point worth stating carefully.** It is unchanged because the chosen remedy restored the state the global file already described, not because the defect was harmless. Had the opposite remedy been chosen, the figure would be **74,556**. Milestone C1 can now budget against 63,619, and the tools that produce it can finally see the whole import graph.
+**The rule bytes were unchanged by this remedy, but the total was wrong for a second, independent reason — see finding 7.** Removing the stray imports restored the state the global file already described, so the two files stayed on-demand and the rules subtotal held at 63,619. Had the opposite remedy been chosen it would have been **74,556**. But the inventory was also omitting the project `CLAUDE.md`'s own 6,609 bytes, which are always-loaded in their own right. **The corrected always-loaded total is 70,228.**
 
 **Still unresolved, and unaffected by this fix:** whether project-level `@`-imports are re-resolved after compaction at all. The probe produced no `include` record for either, and that question outlives the two files that raised it — any future project-level import inherits it. Tracked as an open question on the PRD, owned by Milestone A4.
+
+---
+
+## 7. The project `CLAUDE.md` was never counted — the always-loaded total is 70,228, not 63,619
+
+**Found 2026-08-04, immediately after finding 6, and from the same blind spot.** Teaching the tools to *read* `.claude/CLAUDE.md` for imports did not make them *count* it. The inventory added `global/CLAUDE.md`'s bytes to the always-loaded total and silently omitted the project one, which is always-loaded in its own right — the compaction probe recorded it returning with `load_reason: compact`, exactly like the global file.
+
+| Component | Files | Bytes |
+|---|---:|---:|
+| `global/CLAUDE.md` | 1 | 16,137 |
+| `.claude/CLAUDE.md` | 1 | **6,609 — previously uncounted** |
+| `@`-referenced rules | 11 | 47,482 |
+| **Always-loaded total** | **13** | **70,228** |
+
+Reported as its own row rather than folded into one figure, because the #108 baseline never included it and a merged number invites a comparison that does not hold.
+
+**This is the third time the always-loaded set has turned out to be larger than the tooling said**, each time for a different reason: an unscoped index (finding 1), an import living outside the repository (finding 3), and now the project instructions file itself. The pattern is not carelessness about any one file — it is that **the measurement kept being built from a list of places someone remembered, rather than from the definition of what "always-loaded" means.** Milestone C1 should treat "is this derived or enumerated" as a standing question about every count this audit produces, and Milestone A4 should assume more of these exist.
+
+**Consequence:** the byte budget is set against **70,228**, and the figure is 10.4% higher than what Milestone A2 reported for most of its life.
 
 ---
 

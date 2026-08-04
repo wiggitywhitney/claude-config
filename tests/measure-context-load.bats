@@ -195,7 +195,9 @@ project_reference() {
 
     line="$(grep 'project-only' "$(INVENTORY)")"
     [[ "$line" == *'include'* ]]
-    [[ "$line" == *'| yes | yes |'* ]]
+    # Loaded at startup, yes. Surviving compaction is a separate claim and is untested
+    # for project-level imports — asserted in its own test below.
+    [[ "$line" == *'| yes |'* ]]
 }
 
 @test "a project-referenced rule is counted as an import, not as a bare rule" {
@@ -209,10 +211,72 @@ project_reference() {
     # regression.
     grep -q 'No bare rule files' "$(INVENTORY)"
 
+    # Three always-loaded items now: both CLAUDE.md files and the imported rule. The
+    # project CLAUDE.md exists here because project_reference created it.
     claude_bytes="$(wc -c < "$FAKE_REPO/global/CLAUDE.md" | tr -d ' ')"
+    project_bytes="$(wc -c < "$FAKE_REPO/.claude/CLAUDE.md" | tr -d ' ')"
     rule_bytes="$(wc -c < "$FAKE_REPO/rules/project-only.md" | tr -d ' ')"
-    expected=$((claude_bytes + rule_bytes))
+    expected=$((claude_bytes + project_bytes + rule_bytes))
+    grep -q "| \*\*Always-loaded total\*\* | \*\*3\*\* | \*\*${expected}\*\* |" "$(INVENTORY)"
+}
+
+@test "a project-only import is marked untested for compaction, not measured" {
+    bare_rule "project-only.md"
+    project_reference "project-only.md"
+    run "$SCRIPT" "$FAKE_REPO"
+
+    # Only user-level imports were measured surviving compaction. The project CLAUDE.md
+    # came back with load_reason: compact but produced no include record for either of
+    # its imports, so project-level re-resolution is an open question. Reporting "yes"
+    # here would have the script assert what the research explicitly says is unknown —
+    # the same defect as the old survives='untested' verdict, inverted.
+    line="$(grep 'project-only' "$(INVENTORY)")"
+    [[ "$line" == *'untested'* ]]
+    [[ "$line" != *'| yes | yes |'* ]]
+}
+
+@test "a rule referenced from both CLAUDE.md files keeps the measured verdict" {
+    bare_rule "both-sources.md"
+    reference "rules/both-sources.md"
+    project_reference "both-sources.md"
+    run "$SCRIPT" "$FAKE_REPO"
+
+    line="$(grep 'both-sources' "$(INVENTORY)")"
+    [[ "$line" == *'| yes | yes |'* ]]
+    [[ "$line" != *'untested'* ]]
+}
+
+@test "the project CLAUDE.md counts toward the always-loaded total" {
+    scoped_rule "ondemand.md" '"**/*.ts"'
+    mkdir -p "$FAKE_REPO/.claude"
+    printf '# Project instructions\n' > "$FAKE_REPO/.claude/CLAUDE.md"
+    run "$SCRIPT" "$FAKE_REPO"
+
+    # The project CLAUDE.md is itself always-loaded — the compaction probe recorded it
+    # returning with load_reason: compact. Counting global/CLAUDE.md but not this one
+    # understates the always-loaded set by its full size, which is the same class of
+    # omission as finding 3 (an import living outside the repo).
+    global_bytes="$(wc -c < "$FAKE_REPO/global/CLAUDE.md" | tr -d ' ')"
+    project_bytes="$(wc -c < "$FAKE_REPO/.claude/CLAUDE.md" | tr -d ' ')"
+    expected=$((global_bytes + project_bytes))
     grep -q "| \*\*Always-loaded total\*\* | \*\*2\*\* | \*\*${expected}\*\* |" "$(INVENTORY)"
+}
+
+@test "the project CLAUDE.md is reported as its own line item" {
+    mkdir -p "$FAKE_REPO/.claude"
+    printf '# Project instructions\n' > "$FAKE_REPO/.claude/CLAUDE.md"
+    scoped_rule "a.md" '"**/*.ts"'
+    run "$SCRIPT" "$FAKE_REPO"
+    grep -q '`.claude/CLAUDE.md`' "$(INVENTORY)"
+}
+
+@test "a repo with no project CLAUDE.md counts only the global one" {
+    scoped_rule "a.md" '"**/*.ts"'
+    [ ! -f "$FAKE_REPO/.claude/CLAUDE.md" ]
+    run "$SCRIPT" "$FAKE_REPO"
+
+    global_bytes="$(wc -c < "$FAKE_REPO/global/CLAUDE.md" | tr -d ' ')"
+    grep -q "| \*\*Always-loaded total\*\* | \*\*1\*\* | \*\*${global_bytes}\*\* |" "$(INVENTORY)"
 }
 
 @test "a paths:-scoped rule also referenced from the project CLAUDE.md is the both-mechanisms defect" {
@@ -418,9 +482,18 @@ description: x' 10
     rm -rf "$FAKE_REPO/rules" "$FAKE_REPO/global"
     cp -R "$REAL_ROOT/rules" "$FAKE_REPO/rules"
     cp -R "$REAL_ROOT/global" "$FAKE_REPO/global"
+    # The project CLAUDE.md must come along, or this test cannot see the very class of
+    # defect that motivated scanning it — a rule imported there while also paths:-scoped
+    # would look clean here.
+    mkdir -p "$FAKE_REPO/.claude"
+    cp "$REAL_ROOT/.claude/CLAUDE.md" "$FAKE_REPO/.claude/CLAUDE.md"
+
     run "$SCRIPT" "$FAKE_REPO"
     [ "$status" -eq 0 ]
-    # Every rule in the real set must land in exactly one mechanism, so none may be
-    # reported as carrying both.
+    # Every rule in the real set must land in exactly one mechanism.
     ! grep -q 'both — defect' "$(INVENTORY)"
+    # And none may be bare. Checking only the both-defect case would let a new unscoped
+    # rule — the #108 regression — pass unnoticed.
+    ! grep -q 'session_start' "$(INVENTORY)"
+    grep -q 'No bare rule files' "$(INVENTORY)"
 }

@@ -71,8 +71,9 @@ See `docs/research/claude-code-context-loading-and-compaction.md` for the platfo
 | Category | Files | Bytes |
 |---|---:|---:|
 | `global/CLAUDE.md` itself | 1 | 16137 |
+| `.claude/CLAUDE.md` itself | 1 | 6609 |
 | Always-loaded rules | 11 | 47482 |
-| **Always-loaded total** | **12** | **63619** |
+| **Always-loaded total** | **13** | **70228** |
 | On-demand path-scoped rules | 32 | 152254 |
 
 `global/CLAUDE.md` is 202 lines against the 200-line target Anthropic documents.

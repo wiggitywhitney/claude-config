@@ -99,6 +99,29 @@ project_reference() {
     [ "$status" -eq 0 ]
 }
 
+@test "an @-path inside a code span is a mention, not an import" {
+    # global/CLAUDE.md names reference-pointer rules inside backticks precisely because
+    # a code span is not an import. measure-context-load.sh has always stripped code
+    # before scanning; this checker did not, so a correctly paths:-scoped rule that
+    # happened to be mentioned in an example was rejected as both-mechanisms.
+    scoped_rule "pino-gotchas.md" '"**/*pino*"'
+    printf 'Write it as `@~/.claude/rules/pino-gotchas.md syntax` in prose.\n' \
+        >> "$FAKE_REPO/global/CLAUDE.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+}
+
+@test "an @-path inside a fenced code block is a mention, not an import" {
+    scoped_rule "pino-gotchas.md" '"**/*pino*"'
+    {
+        printf '```markdown\n'
+        printf '@~/.claude/rules/pino-gotchas.md\n'
+        printf '```\n'
+    } >> "$FAKE_REPO/global/CLAUDE.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+}
+
 @test "fails when a rule uses the ** / * wildcard as its scope" {
     scoped_rule "too-broad.md" '"**/*"'
     run "$SCRIPT" "$FAKE_REPO"

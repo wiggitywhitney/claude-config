@@ -1,7 +1,7 @@
 # Research: How Claude Code Loads Rules, Skills, and CLAUDE.md — and What Compaction Does to Each
 
 **Project:** claude-config
-**Last Updated:** 2026-08-03
+**Last Updated:** 2026-08-04
 **Claude Code version verified against:** 2.1.220 (read from `claude --version` on 2026-08-03)
 **Produced for:** PRD #109 Milestone A2
 
@@ -10,6 +10,7 @@
 | Date | Summary |
 |------|---------|
 | 2026-08-03 | Initial research. Extends `claude-code-autonomous-capabilities.md` (2026-05-31), which covered compaction but never mentioned `rules/` or `paths:` frontmatter. |
+| 2026-08-04 | Scoped the measured `include` result to user-level imports. Project-level imports are untested — the project `CLAUDE.md` returned with `load_reason: compact` but produced no `include` record for either of its own two imports. Added managed-policy `CLAUDE.md` to the `session_start` row. Withdrew the `disable-model-invocation` recommendation, which described a behavior change as free. |
 | 2026-08-03 | Resolved the open `@`-import question by direct measurement. Removed the Conflicting Findings section and replaced it with Resolved Questions carrying the captured payloads; corrected the `include` row of the load-reason table from "undetermined" to "yes"; narrowed recommendation 3 to the one fact still unmeasured. |
 
 ## Prior research this builds on

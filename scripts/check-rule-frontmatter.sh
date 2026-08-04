@@ -44,10 +44,17 @@ fi
 # adding or removing an @-reference needs no corresponding edit here. Kept per-source
 # rather than merged, so a failure message can name the file to edit — "pick one" is
 # not actionable when the reader does not know which of two files holds the reference.
+# Code spans and fenced blocks are stripped before scanning, matching what Claude Code's
+# import parser does and what measure-context-load.sh has always done. Without this, a
+# rule mentioned inside a markdown example — which global/CLAUDE.md does deliberately,
+# to name reference pointers without importing them — is read as a real import, and a
+# correctly paths:-scoped rule gets rejected as carrying both mechanisms.
 scan_references() {
     local md="$1"
     [[ -f "$md" ]] || return 0
-    grep -o '@~/\.claude/rules/[A-Za-z0-9._/-]*\.md' "$md" \
+    sed -e '/^[[:space:]]*```/,/^[[:space:]]*```/d' "$md" \
+        | sed -e 's/`[^`]*`//g' \
+        | grep -o '@~/\.claude/rules/[A-Za-z0-9._/-]*\.md' \
         | sed 's|@~/\.claude/rules/||' | sort -u
 }
 

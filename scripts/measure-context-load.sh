@@ -72,16 +72,27 @@ strip_code() {
 # *did* match is reported as unreferenced and silently vanishes from the always-loaded
 # total. Reading all of stdin costs nothing at this file size and removes the trap.
 # Regression test: "an @-reference is still found when global/CLAUDE.md exceeds the pipe buffer".
-# Scans every CLAUDE.md that can carry imports, not just the global one.
+# Scans every CLAUDE.md that can carry imports, not just the global one, and records
+# WHICH one matched in REF_SOURCE. The source is not cosmetic: only user-level imports
+# were measured surviving compaction, so collapsing both into one boolean would make the
+# report assert a measured verdict for the project-level case that the research
+# explicitly lists as unknown.
+REF_SOURCE=''
 is_at_referenced() {
   local rel="$1" md
+  REF_SOURCE=''
   for md in "${GLOBAL_CLAUDE_MD}" "${PROJECT_CLAUDE_MD}"; do
     [[ -f "$md" ]] || continue
     if strip_code "$md" | grep -E "@(~/\.claude/|\./)?${rel//./\\.}([[:space:]]|$|\))" >/dev/null; then
-      return 0
+      # global wins when both match: a measured verdict is available for that path.
+      if [[ "$md" == "${GLOBAL_CLAUDE_MD}" ]]; then
+        REF_SOURCE='global'
+        return 0
+      fi
+      REF_SOURCE='project'
     fi
   done
-  return 1
+  [[ -n "$REF_SOURCE" ]]
 }
 
 # A rule carries paths: frontmatter only if the key appears inside the leading --- block.
@@ -152,9 +163,10 @@ total_bare=0
 while IFS= read -r file; do
   rel="${file#"${REPO_ROOT}/"}"
   b="$(bytes_of "$file")"
-  scoped=no; referenced=no
+  scoped=no; referenced=no; ref_source=''
   has_paths_frontmatter "$file" && scoped=yes
   is_at_referenced "$rel" && referenced=yes
+  ref_source="$REF_SOURCE"
 
   if [[ "$scoped" == yes && "$referenced" == yes ]]; then
     mech='**both — defect**'; loaded='yes'; survives='yes'
@@ -163,8 +175,14 @@ while IFS= read -r file; do
     # Counted as included: it is @-referenced, which is what makes it always-loaded.
     total_included=$((total_included + b))
   elif [[ "$referenced" == yes ]]; then
-    mech='`include`'; loaded='yes'; survives='yes'
-    why='`@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220).'
+    mech='`include`'; loaded='yes'
+    if [[ "$ref_source" == global ]]; then
+      survives='yes'
+      why='`@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220).'
+    else
+      survives='untested'
+      why='`@`-referenced from `.claude/CLAUDE.md`; expanded at launch. **Project-level re-resolution after compaction is unmeasured** — the probe recorded no `include` record for a project-level import while all twelve user-level ones returned.'
+    fi
     total_always=$((total_always + b)); count_always=$((count_always + 1))
     total_included=$((total_included + b))
   elif [[ "$scoped" == yes ]]; then
@@ -184,11 +202,29 @@ done < <(find "${RULES_DIR}" -name '*.md' -type f | sort)
 claude_md_bytes="$(bytes_of "${GLOBAL_CLAUDE_MD}")"
 claude_md_lines="$(wc -l < "${GLOBAL_CLAUDE_MD}" | tr -d ' ')"
 
+# The project CLAUDE.md is always-loaded in its own right — the compaction probe
+# recorded it returning with load_reason: compact. Counting global/CLAUDE.md while
+# omitting this one understates the always-loaded set by its full size, the same class
+# of omission as the @-referenced file living outside this repository. Reported as its
+# own row rather than folded in, because the #108 baseline did not include it and a
+# merged figure would invite a comparison that does not hold.
+project_md_bytes=0
+project_md_count=0
+if [[ -f "${PROJECT_CLAUDE_MD}" ]]; then
+  project_md_bytes="$(bytes_of "${PROJECT_CLAUDE_MD}")"
+  project_md_count=1
+fi
+
 printf '\n### Rule totals\n\n'
 printf '| Category | Files | Bytes |\n|---|---:|---:|\n'
 printf '| `global/CLAUDE.md` itself | 1 | %s |\n' "$claude_md_bytes"
+if [[ "$project_md_count" -eq 1 ]]; then
+  printf '| `.claude/CLAUDE.md` itself | 1 | %s |\n' "$project_md_bytes"
+fi
 printf '| Always-loaded rules | %s | %s |\n' "$count_always" "$total_always"
-printf '| **Always-loaded total** | **%s** | **%s** |\n' "$((count_always + 1))" "$((total_always + claude_md_bytes))"
+printf '| **Always-loaded total** | **%s** | **%s** |\n' \
+  "$((count_always + 1 + project_md_count))" \
+  "$((total_always + claude_md_bytes + project_md_bytes))"
 printf '| On-demand path-scoped rules | %s | %s |\n' "$count_ondemand" "$total_ondemand"
 printf '\n`global/CLAUDE.md` is %s lines against the 200-line target Anthropic documents.\n' "$claude_md_lines"
 if [[ "$count_bare" -gt 0 ]]; then
