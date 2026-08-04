@@ -296,11 +296,14 @@ Note also that all three were self-inflicted by Claude writing compound one-line
   - **Milestone A2 already answered the platform half of this question; do not re-research it.** See [Research: global versus project-level skill installation](../docs/research/claude-code-skill-installation-scope.md). Global installation is documented and supported, so his position is a preference rather than a platform constraint. Two arguments survive: his own portability point, and a sharper one he may not have in mind — Cowork sessions, cloud sessions, and routines **do not read `~/.claude/skills/` at all**, so Whitney's entirely-personal skill set does not exist in any of them. What Milestone B2 adds is how his distribution mechanism works in practice and whether it is worth adopting, not whether global is possible.
 - For each capability, state plainly whether Whitney already has an equivalent, has a worse equivalent, or has nothing.
 - Cover the parallel-work angle explicitly: tmux, running multiple agents concurrently, and how his swarm handles or avoids it.
+- **Timeboxed community-practices sweep, one hour, inside this milestone (Decision 40).** Not a separate spike. Look **only** for practices that neither Viktor nor Michael uses *and* that the Milestone B1 documentation sweep did not surface — anything else is already covered by a better source. Stop at one hour whether or not something is found, and record what was searched so the negative result is auditable rather than invisible. Expected yield is low and that is the point of timeboxing rather than skipping: it costs an hour to find out instead of taking anyone's word for it.
+  - State plainly if nothing survived the filter. A sweep that reports no findings and says what it looked at is a successful sweep; one that pads its output to look productive is worse than not running it.
 
 **Success criteria:**
 - `docs/research/viktor-swarm-workflow.md` exists, covering roles, dispatch, coordination state, and skill distribution
 - Each capability is labeled: already have / have worse / have nothing
 - The global-versus-project skill question is answered against current platform behavior, not assertion
+- The one-hour community-practices sweep has run, with what was searched recorded and either the surviving findings listed or an explicit statement that nothing passed the filter
 - Decisions logged
 
 ---
@@ -720,11 +723,13 @@ A spec that summarizes findings instead of recording decisions has failed this m
 | 38 | **The classification policy gains a test 0 — should this exist at all — ahead of every classifying test.** Applies to rules, hooks, and skills alike. | Whitney identified that the proposed policy sorted everything and deleted nothing, so bloat would survive in a tidier arrangement. Test 0 turns it from a sorting exercise into a pruning pass at no cost, and Milestone A4 inherits it for hooks rather than inventing its own criterion. |
 | 39 | **The classification policy proposed on 2026-08-03 is accepted as a draft only, and is re-examined in Milestone C1 rather than ratified.** | It was written with one of three research inputs available. Milestone B3 may supersede parts of it outright — Michael reportedly has a generated rules table, which is a `derive` remedy for a problem the draft can only `assert` against, and Decision 17a ranks derive above assert. |
 
+| 40 | **The community-practices sweep runs as a one-hour timeboxed step inside Milestone B2, not as a fourth spike.** Scoped to practices that neither Viktor nor Michael uses and that Milestone B1's documentation sweep did not surface. What was searched is recorded either way, so a negative result is auditable. | Whitney raised it as a possible fourth research input. Skipping outright was rejected because two practitioners are a sample of two and the audit's goal is a workflow current with what is possible now. A full spike was rejected because the expected yield does not justify the ceremony: community writing is largely documentation restatement or unmeasured opinion, the documentation sweep covers the first more reliably, and Viktor and Michael are themselves the community sample — practitioners publishing real configuration rather than describing it. Timeboxing costs an hour to find out instead of taking that reasoning on trust. |
+
 ## Open Questions
 
 Carried from the decision log. These are answered during the milestones, not before.
 
-- **Is a July 2026 community-practices research spike worth running?** Raised by Whitney on 2026-08-03 alongside the capability spike. Claude recommended skipping it, or timeboxing it inside Milestone B2, on the grounds that community content is largely documentation rediscovery plus opinion and that Viktor and Michael are already two high-quality community samples with dedicated milestones. **Whitney has not decided, and no answer is recorded here.** Resolve before Phase B starts.
+- ~~Is a July 2026 community-practices research spike worth running?~~ **Resolved 2026-08-03: yes, timeboxed to one hour inside Milestone B2 (Decision 40).** Not a separate spike.
 - **When do the detailed milestone sections get reordered into phase order?** The checklist is in phase order; the sections below it are not. Deliberately deferred so the restructure could be reviewed without the reordering diff mixed in. *(Mechanical follow-up)*
 
 **Owners updated 2026-08-03 for the phase split.** Every question below names the milestone that *decides* it, and separately the milestones that supply its *inputs*. Before the restructure these were conflated, so a question was assigned to the milestone that gathered its evidence — which after the split is no longer the milestone allowed to answer it.
