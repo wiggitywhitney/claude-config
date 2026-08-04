@@ -54,7 +54,7 @@ See `docs/research/claude-code-context-loading-and-compaction.md` for the platfo
 | `rules/prd-dependency-management.md` | `path_glob_match` | 3356 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/presentation-slides.md` | `path_glob_match` | 7940 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/quarto-revealjs-capabilities.md` | `path_glob_match` | 7851 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
-| `rules/README.md` | `session_start` (bare) | 7477 | yes | yes | No frontmatter and no `@`-reference, so it loads unconditionally every session. |
+| `rules/README.md` | `path_glob_match` | 7617 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/sharp-gotchas.md` | `path_glob_match` | 2367 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/social-video-upload-gotchas.md` | `path_glob_match` | 5494 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/testing-rules.md` | `include` | 5230 | yes | untested | `@`-referenced from `global/CLAUDE.md`; expanded at launch. Compaction behavior unverified. |
@@ -69,13 +69,13 @@ See `docs/research/claude-code-context-loading-and-compaction.md` for the platfo
 | Category | Files | Bytes |
 |---|---:|---:|
 | `global/CLAUDE.md` itself | 1 | 16137 |
-| Always-loaded rules | 12 | 54959 |
-| **Always-loaded total** | **13** | **71096** |
-| On-demand path-scoped rules | 31 | 143416 |
+| Always-loaded rules | 11 | 47482 |
+| **Always-loaded total** | **12** | **63619** |
+| On-demand path-scoped rules | 32 | 151033 |
 
 `global/CLAUDE.md` is 202 lines against the 200-line target Anthropic documents.
 
-**1 bare rule file(s) found** with neither mechanism. Issue #108 drove this to zero; a non-zero count here is a regression.
+No bare rule files. Issue #108 drove this to zero and it has stayed there.
 
 ## Skills
 
@@ -136,7 +136,7 @@ interchangeable and only some are comparable with the #108 baseline.
 |---|---:|---|
 | `global/CLAUDE.md` | 16137 | yes |
 | `@`-referenced rules (`include`) | 47482 | yes |
-| Bare rule files (`session_start`) | 7477 | no — #108 drove this to zero |
+| Bare rule files (`session_start`) | 0 | no — #108 drove this to zero |
 | Skill descriptions, this repo only | 3114 | no — not in the baseline |
 
 ### Comparison with the #108 post-fix baseline

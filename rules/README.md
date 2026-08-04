@@ -1,3 +1,8 @@
+---
+paths: ["rules/**/*.md", "**/.claude/rules/**/*.md"]
+description: Index of every rule file, how each one loads, and what it covers
+---
+
 # Rules Index
 
 Every file in this directory reaches a Claude Code session through exactly one mechanism. This index records which one, and what each rule covers. It lives here rather than in `global/CLAUDE.md` because an index in `CLAUDE.md` costs tokens in every session, whether or not anyone needs it.

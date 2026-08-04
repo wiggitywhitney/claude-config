@@ -10,7 +10,13 @@ Platform behavior these findings depend on: [claude-code-context-loading-and-com
 
 ---
 
-## 1. `rules/README.md` loads in every session, and the checker that should catch it exempts it on a false premise
+## 1. `rules/README.md` loaded in every session, and the checker that should have caught it exempted it on a false premise — **fixed 2026-08-03**
+
+> **Resolved.** The file now carries `paths: ["rules/**/*.md", "**/.claude/rules/**/*.md"]`, so it loads when someone is working on rules rather than in every session. The `check-rule-frontmatter.sh` exemption is removed and its test now asserts the opposite of what it asserted before. **Verified by re-running the `InstructionsLoaded` probe: `rules/README.md` no longer appears in a fresh session's load list at all**, where it previously appeared with `load_reason: session_start`. That is roughly 3,100 tokens off every session.
+>
+> Fixed here rather than deferred to the spec after Whitney applied the CodeRabbit triage rubric: the deferral reasons are a different repo, work needing its own milestone, merge-conflict risk, or blocked investigation, and this was none of them. "PRD scope" was effort dressed as principle.
+>
+> **Note for the design milestone:** this is an `assert` remedy, the weakest tier. The index still has to be maintained by hand alongside the rules it describes, so it can still drift in content even though it no longer leaks context. Michael reportedly has a *generated* rules table, which would be a `derive` remedy and would remove the second place entirely. The finding below is preserved as written because the reasoning still applies to that decision.
 
 **7,477 bytes, ~3.1k tokens, every session.** Confirmed three independent ways:
 

@@ -86,8 +86,20 @@ bare_rule() {
     [[ "$output" == *"languages/shell.md"* ]]
 }
 
-@test "exempts rules/README.md, which is an index rather than a rule" {
+@test "does not exempt rules/README.md: an unscoped index loads every session" {
+    # Exempt until 2026-08-03 on the false premise that it never loads. Measured with
+    # an InstructionsLoaded hook, it loaded at session_start every session. The
+    # exemption is why that went unnoticed, so the index is now held to the same
+    # one-mechanism requirement as every other rule.
     printf -- '# Rules Index\n' > "$FAKE_REPO/rules/README.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"README.md"* ]]
+}
+
+@test "accepts rules/README.md once it carries paths: frontmatter" {
+    printf -- '---\npaths: ["rules/**/*.md"]\n---\n\n# Rules Index\n' \
+        > "$FAKE_REPO/rules/README.md"
     run "$SCRIPT" "$FAKE_REPO"
     [ "$status" -eq 0 ]
 }

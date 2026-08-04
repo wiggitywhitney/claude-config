@@ -11,9 +11,14 @@ REPO_ROOT="${1:-$(dirname "$SCRIPT_DIR")}"
 readonly RULES_DIR="$REPO_ROOT/rules"
 readonly CLAUDE_MD="$REPO_ROOT/global/CLAUDE.md"
 
-# rules/README.md is the human-facing index, not a rule. It is never loaded by
-# either mechanism, so holding it to the one-mechanism requirement is wrong.
-readonly EXEMPT_BASENAMES=("README.md")
+# No exemptions. rules/README.md was exempt until 2026-08-03 on the stated grounds
+# that it "is never loaded by either mechanism" — which was false. Measured with an
+# InstructionsLoaded hook, it loaded at session_start on every session, costing 7,477
+# bytes, because an unscoped .md file in rules/ loads unconditionally. The exemption is
+# why nobody noticed for four months: the one check that would have caught it had been
+# told to skip the one file that was wrong. It now carries paths: frontmatter and is
+# held to the same requirement as every other rule.
+readonly EXEMPT_BASENAMES=()
 
 if [[ ! -d "$RULES_DIR" ]]; then
     echo "check-rule-frontmatter: no rules directory at $RULES_DIR" >&2
@@ -39,7 +44,11 @@ is_exempt() {
     local base
     base="$(basename "$1")"
     local exempt
-    for exempt in "${EXEMPT_BASENAMES[@]}"; do
+    # The ${arr[@]+...} guard is required, not stylistic: under `set -u`, bash 3.2 —
+    # which is what /bin/bash is on macOS — treats "${arr[@]}" on an empty array as an
+    # unbound variable and aborts. The array is currently empty, so without this the
+    # script fails on every run under /bin/bash while passing under Homebrew bash 5.
+    for exempt in ${EXEMPT_BASENAMES[@]+"${EXEMPT_BASENAMES[@]}"}; do
         [[ "$base" == "$exempt" ]] && return 0
     done
     return 1
