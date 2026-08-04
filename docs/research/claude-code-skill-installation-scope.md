@@ -41,7 +41,7 @@ Evidence, in order:
 - Both variants declare `name: prd-done` and carry *different* `description` strings, so the loaded variant is observable from the skill listing:
   - Interactive: `Complete PRD implementation workflow - create branch, push changes, create PR, merge, and close issue`
   - YOLO: `Complete PRD implementation workflow - create PR, handle CodeRabbit review, merge, and close issue. Triggered by the /clear loop when all PRD items are done.`
-- All eight PRD skills are installed **personally** at `~/.claude/skills/prd-*`, symlinked to the claude-config directories, which resolve to the interactive `SKILL.md`.
+- All eight PRD skills are installed **personally** under `~/.claude/skills/`, symlinked to the claude-config directories, which resolve to the interactive `SKILL.md`. Seven match `prd-*`; the eighth is **`prds-get`**, which does not match that glob and is therefore the one any glob-derived list silently omits.
 - `cluster-whisperer` has the **project** override: `.claude/skills/prd-done/SKILL.md` → `claude-config/.claude/skills/prd-done/SKILL.v1-yolo.md`.
 - Live test, run in `cluster-whisperer` on 2026-08-03:
 
@@ -123,7 +123,7 @@ The recommendation is not to adopt his position wholesale. It is to recognise th
 
 1. **Correct the decision log.** Its claim that project skills shadow global ones is wrong, and three downstream conclusions rest on it. This should be logged as a decision-log correction in the same turn it is accepted, per the PRD's continuous-logging rule.
 
-2. **Decide what `/make-autonomous` should do,** given that what it does now is nothing. The finding removes the M5 assumption that deleting YOLO files is dangerous, which makes the autonomous-first consolidation *cheaper* than planned: there is no live autonomous behavior to preserve during the migration. This is Whitney's call, not mine to make.
+2. **Decide what `/make-autonomous` should do,** given that its skill swap does nothing while its `SessionStart` hook and permission entries remain active. Those two halves need separate dispositions, and the live half is the one nobody has been accounting for: nine repos are running an auto-resume loop plus loosened permissions against interactive skills. The finding also removes the assumption that deleting YOLO files is dangerous, which makes the autonomous-first consolidation *cheaper* than planned — there is no live autonomous *skill* behavior to preserve. This is Whitney's call, not mine to make.
 
 3. **Keep skills personal unless cloud or routine execution enters scope.** Portability is a real but currently theoretical benefit for a single-machine setup; the cloud-session limitation is the fact that would force the change.
 

@@ -18,6 +18,18 @@ if [[ ! -f "${GLOBAL_CLAUDE_MD}" ]]; then
   exit 1
 fi
 
+# The generated report states that this script overwrites the inventory, so it has to
+# actually do that rather than print to stdout and rely on the caller redirecting —
+# otherwise a plain run leaves stale evidence in place while the file claims to be
+# current. Build into a temp file and move it into place only on success, so a failure
+# partway through cannot truncate the existing inventory.
+OUTPUT_PATH="${REPO_ROOT}/docs/research/claude-config-load-inventory.md"
+output_tmp="$(mktemp "${OUTPUT_PATH}.tmp.XXXXXX")"
+trap 'rm -f "${output_tmp}"' EXIT
+
+exec 3>&1        # keep the real stdout for status messages
+exec > "${output_tmp}"
+
 # Claude Code's import parser skips markdown code spans and fenced code blocks, so a
 # path written inside backticks is a literal mention rather than an import. Stripping
 # both before scanning is what separates the 11 genuinely @-referenced rules from the
@@ -173,11 +185,15 @@ if [[ -d "${SKILLS_DIR}" ]]; then
 
     tw="$(est_tokens_conservative "$b")"
 
+    # Both figures are estimates derived from a bytes-per-token ratio calibrated
+    # against /context output for memory files. Neither is a measurement of how this
+    # particular file tokenizes, so the labels say "estimated" rather than
+    # "confirmed" — see the note under the totals.
     cap='no'
     if [[ "$t" -gt 5000 ]]; then
-      cap='**yes — tail is dropped**'; over_cap=$((over_cap + 1))
+      cap='**over on both estimates**'; over_cap=$((over_cap + 1))
     elif [[ "$tw" -gt 5000 ]]; then
-      cap='at risk — over on the dense estimate only'; at_risk=$((at_risk + 1))
+      cap='over on the dense estimate only'; at_risk=$((at_risk + 1))
     fi
 
     printf '| `%s` | %s | %s | %s | %s | %s | %s |\n' "$name" "$b" "$t" "$tw" "$cap" "$listed" "$desc_bytes"
@@ -193,8 +209,13 @@ printf '| Metric | Value |\n|---|---:|\n'
 printf '| Skills | %s |\n' "$skill_count"
 printf '| Total body bytes (loaded only when invoked) | %s |\n' "$skill_body_total"
 printf '| Startup listing cost (descriptions only) | %s |\n' "$skill_desc_total"
-printf '| Skills confirmed over the 5,000-token truncation cap | %s |\n' "$over_cap"
-printf '| Skills at risk on the dense estimate only | %s |\n' "$at_risk"
+printf '| Skills estimated over the 5,000-token cap on both ratios | %s |\n' "$over_cap"
+printf '| Skills over on the dense ratio only | %s |\n' "$at_risk"
+printf '\n**These counts are estimates, not observations.** The bytes-per-token ratio was\n'
+printf 'calibrated against `/context` output for *memory files*; no per-skill tokenization was\n'
+printf 'measured. A skill near the boundary could fall on either side. To turn these into\n'
+printf 'observations, invoke each skill and read its reported token count from `/context`.\n'
+printf 'Do not restate these numbers downstream as confirmed cap violations.\n'
 
 printf '\n## Always-loaded budget\n\n'
 printf 'Components are kept separate rather than summed into one figure, because they are not\n'
@@ -215,3 +236,9 @@ printf '\n**This is a repository-only lower bound, not the true always-loaded to
 printf 'At least one always-loaded `@`-import lives outside this repository and cannot be\n'
 printf 'measured by a sweep of `rules/`; see `claude-config-load-findings.md`. Any budget set\n'
 printf 'from these numbers must be set against observed load rather than against this table.\n'
+
+# Restore stdout and publish atomically.
+exec 1>&3
+mv "${output_tmp}" "${OUTPUT_PATH}"
+trap - EXIT
+echo "Wrote ${OUTPUT_PATH}"

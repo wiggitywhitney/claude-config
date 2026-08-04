@@ -84,8 +84,8 @@ After compaction an invoked body is re-injected but truncated to 5,000 tokens, k
 
 | Skill | Body bytes | Est. tokens | Worst case | Over 5k-token cap | In startup listing | Description bytes |
 |---|---:|---:|---:|---|---|---:|
-| `anki-yolo` | 33121 | 11828 | 13800 | **yes — tail is dropped** | yes | 95 |
-| `anki` | 33781 | 12064 | 14075 | **yes — tail is dropped** | yes | 126 |
+| `anki-yolo` | 33121 | 11828 | 13800 | **over on both estimates** | yes | 95 |
+| `anki` | 33781 | 12064 | 14075 | **over on both estimates** | yes | 126 |
 | `code-review` | 9801 | 3500 | 4083 | no | yes | 27 |
 | `continue` | 3913 | 1397 | 1630 | no | yes | 289 |
 | `cost-tracker` | 2649 | 946 | 1103 | no | yes | 337 |
@@ -100,16 +100,16 @@ After compaction an invoked body is re-injected but truncated to 5,000 tokens, k
 | `post-compact` | 2558 | 913 | 1065 | no | yes | 174 |
 | `prd-close` | 8402 | 3000 | 3500 | no | yes | 60 |
 | `prd-create` | 10538 | 3763 | 4390 | no | yes | 83 |
-| `prd-done` | 25130 | 8975 | 10470 | **yes — tail is dropped** | yes | 102 |
-| `prd-next` | 13468 | 4810 | 5611 | at risk — over on the dense estimate only | yes | 96 |
+| `prd-done` | 25130 | 8975 | 10470 | **over on both estimates** | yes | 102 |
+| `prd-next` | 13468 | 4810 | 5611 | over on the dense estimate only | yes | 96 |
 | `prd-start` | 8492 | 3032 | 3538 | no | yes | 38 |
 | `prd-update-decisions` | 7253 | 2590 | 3022 | no | yes | 85 |
-| `prd-update-progress` | 17336 | 6191 | 7223 | **yes — tail is dropped** | yes | 92 |
+| `prd-update-progress` | 17336 | 6191 | 7223 | **over on both estimates** | yes | 92 |
 | `prds-get` | 1898 | 677 | 790 | no | yes | 81 |
-| `research` | 14568 | 5202 | 6070 | **yes — tail is dropped** | yes | 167 |
+| `research` | 14568 | 5202 | 6070 | **over on both estimates** | yes | 167 |
 | `verify` | 4992 | 1782 | 2080 | no | no — user-invoked only | 0 |
-| `write-docs` | 14584 | 5208 | 6076 | **yes — tail is dropped** | yes | 207 |
-| `write-prompt` | 14671 | 5239 | 6112 | **yes — tail is dropped** | yes | 190 |
+| `write-docs` | 14584 | 5208 | 6076 | **over on both estimates** | yes | 207 |
+| `write-prompt` | 14671 | 5239 | 6112 | **over on both estimates** | yes | 190 |
 
 ### Skill totals
 
@@ -118,8 +118,14 @@ After compaction an invoked body is re-injected but truncated to 5,000 tokens, k
 | Skills | 26 |
 | Total body bytes (loaded only when invoked) | 281521 |
 | Startup listing cost (descriptions only) | 3114 |
-| Skills confirmed over the 5,000-token truncation cap | 7 |
-| Skills at risk on the dense estimate only | 1 |
+| Skills estimated over the 5,000-token cap on both ratios | 7 |
+| Skills over on the dense ratio only | 1 |
+
+**These counts are estimates, not observations.** The bytes-per-token ratio was
+calibrated against `/context` output for *memory files*; no per-skill tokenization was
+measured. A skill near the boundary could fall on either side. To turn these into
+observations, invoke each skill and read its reported token count from `/context`.
+Do not restate these numbers downstream as confirmed cap violations.
 
 ## Always-loaded budget
 

@@ -37,11 +37,11 @@ The index moved from one always-loaded location to another and saved nothing. Th
 
 **Not fixed here.** This PRD produces a spec. The disposition belongs to the spec, and the checker and its bats tests belong to M7's review.
 
-## 2. Seven skills exceed the compaction truncation cap, and one more is at risk
+## 2. Seven skills are estimated over the compaction truncation cap, and one more on the dense ratio
 
 After a compaction an invoked skill body is re-injected **truncated to 5,000 tokens, keeping the start of the file**, with a 25,000-token total budget across all invoked skills and oldest dropped first.
 
-| Skill | Bytes | Est. tokens | Status |
+| Skill | Bytes | Est. tokens | Status (estimated, not observed) |
 |---|---:|---:|---|
 | `anki` | 33,781 | ~12,064 | Over — more than double the cap |
 | `anki-yolo` | 33,121 | ~11,828 | Over |
@@ -56,7 +56,9 @@ Five of the eight are workflow skills whose **closing** steps get cut: merge, cl
 
 **Consequence for M5:** instruction order inside a `SKILL.md` is a correctness property, not a style preference. The generalized escalation contract belongs at the top of every consolidated file. Anything that must survive cannot be at the bottom.
 
-**Correction to an earlier version of this finding.** It first reported three skills over the cap, using a bytes/4 token estimate. That understated tokens by roughly 30%. Recalibrating against real `/context` output moved the count from three to eight. The original figure was an unevidenced estimate presented alongside measured byte counts, which made it look equally solid; it was not.
+**Correction to an earlier version of this finding.** It first reported three skills over the cap, using a bytes/4 token estimate. That understated tokens by roughly 30%. Recalibrating against real `/context` output moved the count to **seven over on both ratios, plus one over on the dense ratio only.**
+
+**These remain estimates, not observations, and should not be restated as confirmed.** The ratio was calibrated against `/context` output for *memory files*; no per-skill tokenization was measured, so a skill near the boundary could fall either way. `prd-next` at ~4,810 on the prose ratio and ~5,611 on the dense one is exactly that case. Turning these into observations means invoking each skill and reading its token count from `/context`. The earlier version of this finding made the opposite mistake — presenting an estimate alongside measured byte counts, which made it look equally solid.
 
 ## 3. The always-loaded set is larger than the #108 baseline records
 
