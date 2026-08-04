@@ -298,6 +298,22 @@ description: x' 10
     ! grep -q 'stale content' "$(INVENTORY)"
 }
 
+@test "a missing rules directory fails loudly instead of writing an empty rules table" {
+    scoped_rule "a.md" '"**/*.ts"'
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+    good_inventory="$(cat "$(INVENTORY)")"
+
+    # find fails inside the process substitution but the loop still exits 0, so without
+    # an explicit guard the script replaces a good inventory with one reporting zero
+    # rules — indistinguishable from a genuine measurement of an empty rules/ tree.
+    rm -rf "$FAKE_REPO/rules"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"not found"* ]]
+    [ "$(cat "$(INVENTORY)")" = "$good_inventory" ]
+}
+
 @test "a missing global/CLAUDE.md fails loudly instead of producing an empty inventory" {
     rm "$FAKE_REPO/global/CLAUDE.md"
     run "$SCRIPT" "$FAKE_REPO"

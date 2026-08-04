@@ -24,6 +24,16 @@ if [[ ! -f "${GLOBAL_CLAUDE_MD}" ]]; then
   exit 1
 fi
 
+# Checked before any output is created. Without this, a missing rules/ lets find fail
+# inside the process substitution while the loop still exits 0, so the script would
+# atomically replace a good inventory with one whose rules table is empty — the worst
+# possible failure for an evidence file, because it looks like a real measurement of
+# zero rules rather than a broken run.
+if [[ ! -d "${RULES_DIR}" ]]; then
+  echo "error: ${RULES_DIR} not found" >&2
+  exit 1
+fi
+
 # The generated report states that this script overwrites the inventory, so it has to
 # actually do that rather than print to stdout and rely on the caller redirecting —
 # otherwise a plain run leaves stale evidence in place while the file claims to be
