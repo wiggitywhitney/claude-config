@@ -62,11 +62,18 @@ So the classification policy is not choosing between good and bad mechanisms. It
 
 **Interpretation:** After a compaction, Claude loses awareness that uninvoked skills exist. This corroborates the prior research doc's version of the same finding. Practical consequence: a long session that compacts becomes progressively less likely to reach for a skill on its own.
 
-**5. `disable-model-invocation: true` makes a skill cost literally zero context until typed.** 🟢
+**5. `disable-model-invocation: true` makes a skill cost zero context until typed — and `typed` is the catch, because it also stops the model invoking it.** 🟢
 
 **Source says:** "Set `disable-model-invocation: true` on skills with side effects like committing, deploying, or sending messages. They stay out of context entirely until you need them." ([Explore the context window](https://code.claude.com/docs/en/context-window))
 
-**Interpretation:** This is a free byte reduction the repo is not currently using, and it applies cleanly to the lifecycle skills — `prd-done`, `prd-update-progress`, `issue-done` and similar all have side effects and are always invoked deliberately by name. Setting it removes their descriptions from the startup listing at no behavioral cost. Flagging for Milestone C1's policy and Milestone A4's skills inventory.
+**Interpretation, corrected — this is not a free win, and an earlier version of this document wrongly said it was.** The byte reduction is real: the description leaves the startup listing entirely. But the flag does exactly what its name says — it **removes the model's ability to invoke the skill at all.** The skill becomes reachable only by a human typing `/name`. That is a behavior change, not a no-op.
+
+**It conflicts directly with this repo's autonomy goal.** Decision 15 prioritizes autonomy and less oversight; the autonomous PRD loop is designed for Claude to reach `prd-update-progress` and `prd-done` on its own. Setting the flag on exactly those skills would break the loop, and the byte saving is small next to that. The trade is therefore per-skill and genuinely a decision rather than a cleanup:
+
+- **Sound candidates:** skills that only ever make sense when a human deliberately starts them, where model invocation is unwanted anyway.
+- **Wrong candidates:** any skill an autonomous run must reach by itself — which is most of the lifecycle set, and is why "the side-effect skills" was the wrong selection criterion. Side effects are the reason to *want* autonomous invocation of them, not to forbid it.
+
+Flagging for **Milestone C1** as a decision with a real cost on both sides, not for Milestone A4 as an inventory item.
 
 **6. There is a hook that reports exactly which instruction files load and why — including at compaction.** 🟢 (existence, load reasons, and — since this was first written — the payload schema)
 
@@ -134,7 +141,9 @@ One mechanism claim worth noting because it contradicts a common assumption: CLA
 
 **Answer: they are re-injected.** Observed directly on 2026-08-03 at 2.1.220 by registering an `InstructionsLoaded` hook, running `/compact` in an interactive session with ~230k tokens of history, and reading every payload written after the compaction. All eleven `@`-referenced rule files reappeared, plus the `@`-referenced `CURRENT-CONTEXT.md`.
 
-**The label is the trap.** The two root memory files reappear with `load_reason: compact`; their imports reappear with `load_reason: include` and a `parent_file_path` pointing back at the root. So the mechanism is *re-resolution*, not a distinct compaction path: compaction re-reads the root files from disk, and expanding them pulls their imports along. Filtering on `load_reason == "compact"` alone shows only the two roots and makes imports look dropped, which is the most likely origin of the issue #24460 report.
+**The label is the trap.** The two root memory files reappear with `load_reason: compact`; their imports reappear with `load_reason: include` and a `parent_file_path` pointing back at the root. So the mechanism is *re-resolution* rather than a distinct compaction path: the roots are re-injected and their `@`-imports are re-resolved through them.
+
+**Whether that re-resolution reads from disk or replays a cached expansion is not established here.** The payloads prove the records appear and name their parent; they say nothing about the source. The distinction matters in one practical case — editing a rule file mid-session and then compacting — so treat "picks up on-disk edits" as untested rather than implied. Filtering on `load_reason == "compact"` alone shows only the two roots and makes imports look dropped, which is the most likely origin of the issue #24460 report.
 
 Captured evidence, one line per file, trimmed to the fields that matter (all share the single post-compaction `prompt_id`):
 
@@ -179,7 +188,7 @@ Three things follow directly from the findings and are worth carrying into the c
 
 3. **Measure before deciding.** Two facts the policy depended on were unverified. The first — whether `@`-imports survive compaction — is now measured: **they do** (see Resolved Questions). The second, whether any `SKILL.md` exceeds the 5,000-token truncation cap, remains an *estimate* from `scripts/measure-context-load.sh` rather than a confirmed reading; the byte-to-token ratio is calibrated against one `/context` sample, so files near the cap could fall either side of it.
 
-Free win available independent of the policy: `disable-model-invocation: true` on the side-effect lifecycle skills removes their descriptions from every session's startup listing at no behavioral cost.
+**No free win here, contrary to an earlier version of this document.** `disable-model-invocation: true` does remove a skill's description from every session's startup listing, but it also removes the model's ability to invoke that skill — leaving it reachable only by a human typing `/name`. Recommending it for "the side-effect lifecycle skills" was backwards: those are precisely the skills an autonomous run has to reach on its own, and Decision 15 prioritizes autonomy. Milestone C1 decides it per skill, weighing bytes against reachability. See finding 5.
 
 ---
 

@@ -13,7 +13,9 @@
 **Claude Code version:** 2.1.221 (Claude Code)
 **Issue #108 status at measurement time:** merged (the bare-rule-file leak is already fixed; pre-#108 numbers are not comparable)
 
-Loading mechanism determines both the byte cost and whether content survives compaction.
+For rule files, the loading mechanism determines both the byte cost and whether content survives compaction.
+Skills differ: an invoked body is re-injected but truncated to 5,000 tokens from the bottom, so for skills
+size and instruction order also decide what survives. See the Skills section below.
 See `docs/research/claude-code-context-loading-and-compaction.md` for the platform rules this classification applies.
 
 ## Rules
