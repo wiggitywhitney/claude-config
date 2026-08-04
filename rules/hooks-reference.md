@@ -17,7 +17,7 @@ Install with `bash scripts/install-git-hooks.sh [repo-path]`. The installer is i
 - **pre-commit-verify.sh** — gates commit on build/typecheck/lint verification; docs-only early exit
 
 **commit-msg dispatcher** (`hooks/git/commit-msg`) runs:
-- **commit-message.sh** — blocks commits with AI/Claude/Anthropic/Co-Authored-By references
+- **commit-message.sh** — blocks commits with AI/Claude/Anthropic/Co-Authored-By references. **It matches the bare word anywhere in the message, including when the tool is the legitimate subject of the change.** In repos about Claude Code configuration this fires on ordinary descriptive prose ("how people run Claude unattended") with no attribution involved. Rephrase around the name — "long agent sessions", "the CLI", "the shipped binary" — rather than fighting the hook; the rule it enforces is about attribution, and the rewrite costs nothing.
   - **It matches the substring, not the intent, so the product name trips it too.** A commit message describing work on the tool itself — "adds a Claude Code capability spike", "documents Claude Code hook events" — is rejected with `Commit message contains AI/Claude reference: "Claude Code"`, even though it is naming a product rather than attributing authorship. This bites hardest in this repo, where the subject matter *is* the tool. Rephrase to "the platform", "the CLI", or the specific feature ("hook events", "skill precedence"). Confirmed 2026-08-03.
 
 **pre-push dispatcher** (`hooks/git/pre-push`) runs:
