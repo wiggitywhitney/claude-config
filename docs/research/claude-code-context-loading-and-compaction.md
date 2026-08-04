@@ -3,16 +3,17 @@
 **Project:** claude-config
 **Last Updated:** 2026-08-03
 **Claude Code version verified against:** 2.1.220 (read from `claude --version` on 2026-08-03)
-**Produced for:** PRD #109 M2
+**Produced for:** PRD #109 Milestone A2
 
 ## Update Log
 | Date | Summary |
 |------|---------|
 | 2026-08-03 | Initial research. Extends `claude-code-autonomous-capabilities.md` (2026-05-31), which covered compaction but never mentioned `rules/` or `paths:` frontmatter. |
+| 2026-08-03 | Resolved the open `@`-import question by direct measurement. Removed the Conflicting Findings section and replaced it with Resolved Questions carrying the captured payloads; corrected the `include` row of the load-reason table from "undetermined" to "yes"; narrowed recommendation 3 to the one fact still unmeasured. |
 
 ## Prior research this builds on
 
-`docs/research/claude-code-autonomous-capabilities.md` (2026-05-31) covers compaction triggers, the `PreCompact`/`PostCompact` hooks, and a preserve/drop/re-inject list. That list is **correct but incomplete in a way that matters here**: it says "CLAUDE.md files" are re-injected without distinguishing project-root from nested, and it does not mention `rules/` files at all. Both distinctions are load-bearing for M2's classification policy. This document refines rather than replaces it.
+`docs/research/claude-code-autonomous-capabilities.md` (2026-05-31) covers compaction triggers, the `PreCompact`/`PostCompact` hooks, and a preserve/drop/re-inject list. That list is **correct but incomplete in a way that matters here**: it says "CLAUDE.md files" are re-injected without distinguishing project-root from nested, and it does not mention `rules/` files at all. Both distinctions are load-bearing for the classification policy, which Decision 34 assigns to Milestone C1. This document refines rather than replaces it.
 
 ---
 
@@ -20,7 +21,7 @@
 
 Loading mechanism determines compaction survival, and nothing else does. Importance, position, and file size are irrelevant. There are five load reasons, and Claude Code names them itself: `session_start`, `nested_traversal`, `path_glob_match`, `include`, `compact`.
 
-The finding that drives M2's policy: **`paths:`-scoped rules do not survive compaction.** They enter message history when their trigger file is read, so compaction summarizes them away like any other message. They return only when a matching file is read again. Meanwhile the mechanism that *is* durable — unscoped rules and `@`-imports — is exactly the always-loaded set issue #108 spent its effort shrinking.
+The finding that drives the classification policy (Milestone C1): **`paths:`-scoped rules do not survive compaction.** They enter message history when their trigger file is read, so compaction summarizes them away like any other message. They return only when a matching file is read again. Meanwhile the mechanism that *is* durable — unscoped rules and `@`-imports — is exactly the always-loaded set issue #108 spent its effort shrinking.
 
 So the classification policy is not choosing between good and bad mechanisms. It is pricing a real trade-off: **durability across compaction costs always-loaded bytes, and there is no mechanism that gives both.**
 
@@ -50,7 +51,7 @@ So the classification policy is not choosing between good and bad mechanisms. It
 
 **Source says:** "Skill bodies are re-injected after compaction, but large skills are truncated to fit the per-skill cap, and the oldest invoked skills are dropped once the total budget is exceeded. Truncation keeps the start of the file, so put the most important instructions near the top of `SKILL.md`." (same page)
 
-**Interpretation:** Directly actionable for the skill consolidation in M5. A long `SKILL.md` silently loses its tail after a compaction, so ordering inside the file is a correctness property, not a style preference. The escalation contract M5 plans to generalize belongs near the top of every file for this reason. Worth measuring whether any current skill exceeds 5,000 tokens.
+**Interpretation:** Directly actionable for the skill consolidation in Milestone B4. A long `SKILL.md` silently loses its tail after a compaction, so ordering inside the file is a correctness property, not a style preference. The escalation contract Milestone B4 plans to generalize belongs near the top of every file for this reason. Worth measuring whether any current skill exceeds 5,000 tokens.
 
 **4. The skill *listing* is the one startup item that does not come back.** 🟢
 
@@ -62,7 +63,7 @@ So the classification policy is not choosing between good and bad mechanisms. It
 
 **Source says:** "Set `disable-model-invocation: true` on skills with side effects like committing, deploying, or sending messages. They stay out of context entirely until you need them." ([Explore the context window](https://code.claude.com/docs/en/context-window))
 
-**Interpretation:** This is a free byte reduction the repo is not currently using, and it applies cleanly to the lifecycle skills — `prd-done`, `prd-update-progress`, `issue-done` and similar all have side effects and are always invoked deliberately by name. Setting it removes their descriptions from the startup listing at no behavioral cost. Flagging for M2's policy and M7's skills inventory.
+**Interpretation:** This is a free byte reduction the repo is not currently using, and it applies cleanly to the lifecycle skills — `prd-done`, `prd-update-progress`, `issue-done` and similar all have side effects and are always invoked deliberately by name. Setting it removes their descriptions from the startup listing at no behavioral cost. Flagging for Milestone C1's policy and Milestone A4's skills inventory.
 
 **6. There is a hook that reports exactly which instruction files load and why — including at compaction.** 🟢 (existence, load reasons, and — since this was first written — the payload schema)
 
@@ -74,7 +75,7 @@ So the classification policy is not choosing between good and bad mechanisms. It
 
 **Schema resolved 2026-08-03, after this section was first written.** The docs pages truncate before the JSON payload schema, so it was recorded here as unconfirmed. It has since been observed directly by registering the hook and capturing real payloads: fields are `cwd`, `file_path`, `hook_event_name`, `load_reason`, `memory_type`, `session_id`, `transcript_path`. Method and captured output in [claude-config-load-findings.md](claude-config-load-findings.md).
 
-**Interpretation:** This is the right instrument for M2's load inventory. Decision 25 requires enumeration by re-runnable script rather than a model looking around, and this hook is the platform's own account of what loaded, which beats inferring mechanism from frontmatter. The `compact` matcher value also makes the open question in the Conflicting Findings section below directly testable.
+**Interpretation:** This is the right instrument for Milestone A2's load inventory. Decision 25 requires enumeration by re-runnable script rather than a model looking around, and this hook is the platform's own account of what loaded, which beats inferring mechanism from frontmatter. The `compact` matcher value also made the `@`-import question directly testable, and it is what settled it — see Resolved Questions below.
 
 **7. A rule with no frontmatter loads at the same priority as `.claude/CLAUDE.md`.** 🟢
 
@@ -90,7 +91,7 @@ So the classification policy is not choosing between good and bad mechanisms. It
 
 **Source says:** "it cuts content Claude can derive from the codebase, such as directory layouts, dependency lists, and architecture overviews, and keeps pitfalls, rationale, and conventions that differ from tool defaults." ([How Claude remembers your project](https://code.claude.com/docs/en/memory))
 
-**Interpretation:** Anthropic's own keep/cut line — cut what is derivable from the repo, keep what contradicts a default — is a sharper classification criterion than "is this important," and it is worth adopting into M2's policy rather than inventing one. `/doctor` is also a second measurement Whitney can run alongside `/context`, and it is available at 2.1.220.
+**Interpretation:** Anthropic's own keep/cut line — cut what is derivable from the repo, keep what contradicts a default — is a sharper classification criterion than "is this important," and it is worth adopting into Milestone C1's policy rather than inventing one. `/doctor` is also a second measurement Whitney can run alongside `/context`, and it is available at 2.1.220.
 
 **9. Re-invoking a loaded skill used to duplicate its instructions in context. Fixed at 2.1.202.** 🟢
 
@@ -107,7 +108,7 @@ The five load reasons, from Claude Code's own matcher vocabulary, mapped to what
 | Load reason | Produced by | Enters | Survives compaction |
 |---|---|---|---|
 | `session_start` | `~/.claude/CLAUDE.md`, project `CLAUDE.md`, `CLAUDE.local.md`, and unscoped `rules/*.md` | Startup, outside message history | Yes, re-injected from disk 🟢 |
-| `include` | `@path` imports expanded from a CLAUDE.md | Startup, alongside the referencing file | Undetermined — see Conflicting Findings 🟡 |
+| `include` | `@path` imports expanded from a CLAUDE.md | Startup, alongside the referencing file | Yes, re-resolved when the referencing file is re-injected 🟢 — measured, see Resolved Questions |
 | `path_glob_match` | `rules/*.md` carrying `paths:` frontmatter | Message history, when a matching file is read | **No** 🟢 |
 | `nested_traversal` | `CLAUDE.md` in a subdirectory below cwd | Message history, when a file in that subdirectory is read | **No** 🟢 |
 | `compact` | Re-injection after a compaction event | Startup position | n/a — this *is* the re-injection |
@@ -124,19 +125,42 @@ One mechanism claim worth noting because it contradicts a common assumption: CLA
 
 ---
 
-## Conflicting Findings
+## Resolved Questions
 
-### Whether `@`-imported files are re-injected after compaction
+### Whether `@`-imported files are re-injected after compaction — YES, measured
 
-This is unresolved and it matters more than any other open point here, because **all eleven of Whitney's always-loaded rule files reach context through `@`-reference**, not as unscoped rules. If `include` content is not re-injected, the eleven rules that were deliberately made always-loaded are absent for the remainder of every compacted session, and the repo's whole loading strategy rests on an untested assumption.
+**Answer: they are re-injected.** Observed directly on 2026-08-03 at 2.1.220 by registering an `InstructionsLoaded` hook, running `/compact` in an interactive session with ~230k tokens of history, and reading every payload written after the compaction. All eleven `@`-referenced rule files reappeared, plus the `@`-referenced `CURRENT-CONTEXT.md`.
+
+**The label is the trap.** The two root memory files reappear with `load_reason: compact`; their imports reappear with `load_reason: include` and a `parent_file_path` pointing back at the root. So the mechanism is *re-resolution*, not a distinct compaction path: compaction re-reads the root files from disk, and expanding them pulls their imports along. Filtering on `load_reason == "compact"` alone shows only the two roots and makes imports look dropped, which is the most likely origin of the issue #24460 report.
+
+Captured evidence, one line per file, trimmed to the fields that matter (all share the single post-compaction `prompt_id`):
+
+```json
+{"file_path":"~/.claude/CLAUDE.md","memory_type":"User","load_reason":"compact"}
+{"file_path":"…/claude-config/.claude/CLAUDE.md","memory_type":"Project","load_reason":"compact"}
+{"file_path":"~/.claude/rules/writing-voice.md","load_reason":"include","parent_file_path":"~/.claude/CLAUDE.md"}
+{"file_path":"~/.claude/rules/git-workflow.md","load_reason":"include","parent_file_path":"~/.claude/CLAUDE.md"}
+```
+
+…and eight more `include` records for `testing-rules`, `gh-fork-gotchas`, `issue-juggling`, `infrastructure-safety`, `datadog-environment`, `vals-secrets`, `aboutme-headers`, `adopting-new-technologies`, `macos-image-processing`, plus `~/Documents/Journal/CURRENT-CONTEXT.md`.
+
+**The same run confirmed the negative case, which is the stronger half of the result.** `rules/datadog-mcp-gotchas.md` was in context before the compaction — loaded via `path_glob_match` when `config/settings.json` was read — and produced **no** post-compaction record. A path-scoped rule that was live is genuinely gone until its glob fires again. `rules/README.md`, newly path-scoped in this same PRD, likewise did not return, confirming that fix.
+
+**Scope of the claim.** This was a manual `/compact`. Auto-compaction is documented as behaving identically and the payload structure of prior auto-compactions in the transcript matches, but only the manual trigger was observed. The measurement is one run at one version; the mechanism (re-resolution of the root file) is stable enough to rely on, but re-verify after a major version bump.
+
+**Consequence for the classification policy:** tier 4 buys what it claims. `@`-import is a durable mechanism, indistinguishable from an unscoped rule in both cost and survival. The trade-off in this document's summary stands unchanged — durability still costs always-loaded bytes — but the eleven rules Whitney deliberately made always-loaded are in fact always loaded.
+
+### Prior state of this question (retained for provenance)
+
+Before the measurement, the evidence pointed three ways and mattered more than any other open point here, because **all eleven of Whitney's always-loaded rule files reach context through `@`-reference**, not as unscoped rules.
 
 - **The official compaction table does not list imports at all.** Its rows are "Project-root CLAUDE.md and unscoped rules," "Auto memory," "Rules with `paths:` frontmatter," "Nested CLAUDE.md," "Invoked skill bodies," and "Hooks." ([context window docs](https://code.claude.com/docs/en/context-window)) Neither `include` nor "user-level CLAUDE.md" appears as a row.
 - **A secondary source infers survival from the loading mechanism:** because imports are "expanded and loaded into context at launch," they are part of the startup bundle and return with it. Presented explicitly as inference — "The docs don't state this word-for-word for user-level files specifically, so treat it as an inference from the loading mechanism rather than an explicit guarantee."
 - **[Issue #24460](https://github.com/anthropics/claude-code/issues/24460)** reports the opposite in practice, that CLAUDE.md contents get summarized along with conversation history after `/compact`. The issue is marked stale and was filed against an older version.
 
-**Interpretation:** The docs' silence is not evidence either way, and the inference is plausible but unverified. Per this PRD's rule that claims carry their evidence, the honest position is that **we do not currently know**, and no part of M2's policy should assume durability for `@`-imported rules until it is measured.
+**How it resolved:** the secondary source's inference was right and the issue report was wrong — or, more precisely, was reading the labels the way anyone reasonably would. The docs' omission of an `include` row from the compaction table is a real gap, not a signal.
 
-**This is cheaply testable and should be tested, not reasoned about.** Register an `InstructionsLoaded` hook with matcher `compact`, log every payload to a file, force a compaction, and read which paths appear with which reason. That produces a deterministic answer, satisfies Decision 25's script requirement, and settles whether the always-loaded set is actually always loaded. Recommending this as the first concrete step of M2's inventory work.
+**Method note worth keeping.** The test only works interactively. `/compact` is not dispatchable in headless `claude -p`, and transcript mining cannot answer it either — instruction content never appears in the transcript's message history at all, so re-injection happens outside the logged record. A passive `InstructionsLoaded` hook plus a human running `/compact` is the only instrument that reaches this. Hooks added to `settings.local.json` take effect mid-session with no restart, which is what makes the passive approach practical.
 
 ---
 
@@ -148,7 +172,7 @@ Three things follow directly from the findings and are worth carrying into the c
 
 2. **Adopt Anthropic's trim line rather than inventing one:** cut what Claude can derive from the codebase, keep pitfalls, rationale, and conventions that differ from tool defaults. It is more decidable than "is this important," and `/doctor` applies the same heuristic, so the policy and the tooling agree.
 
-3. **Measure before deciding.** Two facts the policy depends on are unverified: whether `@`-imports survive compaction, and whether any `SKILL.md` exceeds the 5,000-token truncation cap. Both are measurable with a script today, and the `InstructionsLoaded` hook makes the first one a direct observation rather than an inference.
+3. **Measure before deciding.** Two facts the policy depended on were unverified. The first — whether `@`-imports survive compaction — is now measured: **they do** (see Resolved Questions). The second, whether any `SKILL.md` exceeds the 5,000-token truncation cap, remains an *estimate* from `scripts/measure-context-load.sh` rather than a confirmed reading; the byte-to-token ratio is calibrated against one `/context` sample, so files near the cap could fall either side of it.
 
 Free win available independent of the policy: `disable-model-invocation: true` on the side-effect lifecycle skills removes their descriptions from every session's startup listing at no behavioral cost.
 
@@ -160,7 +184,7 @@ Free win available independent of the policy: `disable-model-invocation: true` o
 - The `InstructionsLoaded` payload schema **was** unconfirmed when this document was first written and has since been observed directly — see finding 6. Field names are now known.
 - `InstructionsLoaded` does not appear anywhere in the visible changelog, so its introduction version is unknown. Present at 2.1.220.
 - The changelog page truncated at 2.1.179, so older entries were not checked.
-- The `include` compaction behavior is unresolved. See Conflicting Findings; do not build on either answer yet.
+- The `include` compaction result rests on a single manual `/compact` at 2.1.220. Auto-compaction was not directly observed. Re-verify after a major version bump.
 - Docs pages for hooks truncated before the per-event schemas. The load-reason table was recoverable; the payload examples were not.
 
 ---

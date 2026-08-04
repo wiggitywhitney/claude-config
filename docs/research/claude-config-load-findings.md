@@ -1,7 +1,7 @@
 # claude-config Load Findings
 
 **Last Updated:** 2026-08-03
-**Produced for:** PRD #109 M2
+**Produced for:** PRD #109 Milestone A2
 **Measured against:** Claude Code 2.1.220, with issue #108 already merged
 
 Hand-written. The measurements this reasons about live in [claude-config-load-inventory.md](claude-config-load-inventory.md), which `scripts/measure-context-load.sh` generates and overwrites. **No script writes to this file.** The split is deliberate: an earlier version kept generated tables and hand-written analysis in one file, where any re-run of the script would have destroyed the analysis — a coupled-pair defect created while auditing coupled-pair defects.
@@ -41,7 +41,7 @@ The second sentence is false. The premise of the exemption is what kept it false
 
 The index moved from one always-loaded location to another and saved nothing. Three artifacts — the decision, the file's own first paragraph, and the checker's exemption comment — all record a benefit that was never delivered. An unusually clean instance of the pattern this audit is organized around, and the only one so far where a *check* is part of the pair.
 
-**Not fixed here.** This PRD produces a spec. The disposition belongs to the spec, and the checker and its bats tests belong to M7's review.
+**Not fixed here.** This PRD produces a spec. The disposition belongs to the spec, and the checker and its bats tests belong to Milestone A4's review.
 
 ## 2. Seven skills are estimated over the compaction truncation cap, and one more on the dense ratio
 
@@ -60,7 +60,7 @@ After a compaction an invoked skill body is re-injected **truncated to 5,000 tok
 
 Five of the eight are workflow skills whose **closing** steps get cut: merge, cleanup, verification, commit. `prd-done`'s three-channel CodeRabbit fetch and merge sequence sit in exactly the region that becomes unreachable in a compacted session.
 
-**Consequence for M5:** instruction order inside a `SKILL.md` is a correctness property, not a style preference. The generalized escalation contract belongs at the top of every consolidated file. Anything that must survive cannot be at the bottom.
+**Consequence for Milestone B4:** instruction order inside a `SKILL.md` is a correctness property, not a style preference. The generalized escalation contract belongs at the top of every consolidated file. Anything that must survive cannot be at the bottom.
 
 **Correction to an earlier version of this finding.** It first reported three skills over the cap, using a bytes/4 token estimate. That understated tokens by roughly 30%. Recalibrating against real `/context` output moved the count to **seven over on both ratios, plus one over on the dense ratio only.**
 
@@ -84,7 +84,7 @@ Worth stating plainly: `writing-voice.md` is also the file most likely to keep g
 
 ## Reconciliation against `/context` and `/memory`
 
-Run by Whitney on 2026-08-03 in this repository. Required by M2, since neither command can be invoked by Claude.
+Run by Whitney on 2026-08-03 in this repository. Required by Milestone A2, since neither command can be invoked by Claude.
 
 ### Memory files: 16 files, 29.5k tokens
 
@@ -130,18 +130,28 @@ This is a data point for the open question below, not an answer to it. It makes 
 
 ---
 
-## Open question that gates the classification policy
+## 5. `include` content **is** re-injected after compaction — measured 2026-08-03
 
-**Whether `include` content is re-injected after compaction. Still unresolved.**
+This was the last open question gating the classification policy, and the answer is yes. Every always-loaded rule in this system arrives via `include`, so the durability of the whole always-loaded set turned on it.
 
-Every always-loaded rule in this system arrives via `include`. The official compaction table has rows for "Project-root CLAUDE.md and unscoped rules" and for `paths:`-scoped rules, but **no row for imports and no row for user-level CLAUDE.md**. So the durability of the entire always-loaded set is unverified.
+**Result.** A manual `/compact` in a session with roughly 230k tokens of history produced 14 `InstructionsLoaded` records, all sharing one post-compaction `prompt_id`:
 
-Evidence so far, none of it conclusive:
+| File | `memory_type` | `load_reason` |
+|---|---|---|
+| `~/.claude/CLAUDE.md` | User | `compact` |
+| `claude-config/.claude/CLAUDE.md` | Project | `compact` |
+| The 11 `@`-referenced rules, plus `~/Documents/Journal/CURRENT-CONTEXT.md` | User | `include` |
 
-- `/memory` treats imports as belonging to `~/.claude/CLAUDE.md` — mildly favors re-injection.
-- Imports are "expanded and loaded into context at launch," and startup content is what gets re-injected — favors re-injection by inference.
-- [Issue #24460](https://github.com/anthropics/claude-code/issues/24460) reports CLAUDE.md being summarized rather than re-injected. Stale, older version.
+**Read the labels carefully — this is where the question went wrong for other people.** Imports come back as `include`, each carrying `parent_file_path: ~/.claude/CLAUDE.md`. Only the two root files carry `compact`. The mechanism is re-resolution: compaction re-reads the roots from disk, and expanding them pulls the imports along. Anyone filtering for `load_reason == "compact"` sees two files and concludes imports were dropped, which is the likeliest reading behind [issue #24460](https://github.com/anthropics/claude-code/issues/24460). The report was not fabricated; it was an artifact of the labeling.
 
-**The method to settle it is known and cheap:** the same `InstructionsLoaded` hook with matcher `compact` will name every file that re-enters context after a compaction. It needs a session long enough to actually compact, which the probe deliberately was not.
+**The negative control fired in the same run, and it is the more useful half.** `rules/datadog-mcp-gotchas.md` was live in context before the compaction, loaded via `path_glob_match` when `config/settings.json` was read to arm the probe. It produced **no** post-compaction record. A path-scoped rule that was in context is genuinely gone until its glob matches again — the docs' claim, now observed rather than trusted. `rules/README.md`, path-scoped earlier in this same milestone, also stayed absent, independently confirming finding 1's fix.
 
-Until it is run, no part of the classification policy should assume either answer. The stakes are concrete: if imports are not re-injected, then the eleven rules deliberately made always-loaded are absent for the remainder of every compacted session, and the durability half of the whole keep-as-rule-versus-move-to-CLAUDE.md trade-off is illusory.
+**Method, and three things that make it work.**
+
+1. **The probe must be interactive.** `/compact` is not dispatchable in headless `claude -p`, so the throwaway-settings approach that worked for the `session_start` case cannot reach this one. Transcript mining is also a dead end: instruction content never appears in the transcript's message history, so re-injection happens entirely outside the logged record.
+2. **Put the hook in `.claude/settings.local.json`.** It is gitignored, so no tracked file is mutated and the tracked-settings symlink defect does not apply. Back up the original first.
+3. **Verify the probe is live before compacting.** Hooks added to `settings.local.json` take effect mid-session with no restart — itself a finding worth keeping. Confirm by reading a file that triggers a path-scoped rule and checking that the log grew. A dead probe costs the session's whole context for no data, and the session cannot be un-compacted.
+
+**Consequence for the classification policy.** `@`-import is a durable mechanism, equivalent to an unscoped rule in both survival and cost. The trade-off stands as stated — durability is bought with always-loaded bytes — but it is now priced with a measurement instead of an assumption. Those bytes are paid in every session and re-paid after every compaction, so there is no hidden discount that would make the always-loaded set cheaper than the inventory says.
+
+**Scope.** One run, one version (2.1.220), manual trigger only. Auto-compaction is documented as identical and prior auto-compactions in the transcript carry matching metadata structure, but it was not directly observed. Re-verify after a major version bump.
