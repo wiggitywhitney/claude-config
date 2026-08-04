@@ -239,3 +239,36 @@ project_reference() {
     run "$SCRIPT" "$BATS_TEST_DIRNAME/.."
     [ "$status" -eq 0 ]
 }
+
+# Claude Code accepts three spellings for the same import, and measure-context-load.sh
+# has always matched all three. This scanner recognized only @~/.claude/rules/... until
+# 2026-08-04, so a rule imported as @rules/x.md was counted as an import by the inventory
+# and as having no mechanism at all here. Two tools disagreeing about one file is the
+# coupled-pair failure these scripts exist to detect, so the disagreement mattered more
+# than either verdict on its own. Both tests below were observed failing before the fix.
+@test "an @rules/ import is recognized as a loading mechanism" {
+    bare_rule "short-form.md"
+    printf '\n@rules/short-form.md\n' >> "$FAKE_REPO/global/CLAUDE.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+    [[ "$output" != *"short-form.md"* ]]
+}
+
+@test "an @./rules/ import is recognized as a loading mechanism" {
+    bare_rule "dot-form.md"
+    printf '\n@./rules/dot-form.md\n' >> "$FAKE_REPO/global/CLAUDE.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+    [[ "$output" != *"dot-form.md"* ]]
+}
+
+@test "a short-form import plus paths: frontmatter is still caught as both-mechanisms" {
+    scoped_rule "short-both.md" '"**/*.ts"'
+    printf '\n@rules/short-both.md\n' >> "$FAKE_REPO/global/CLAUDE.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    # Recognizing the short form must not come at the cost of the defect it exists to
+    # find: before the fix this passed silently, which is the worse of the two failures.
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"short-both.md"* ]]
+    [[ "$output" == *"both @-referenced"* ]]
+}

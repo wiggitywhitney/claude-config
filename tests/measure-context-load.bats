@@ -548,5 +548,59 @@ description: x' 10
     # And the stated total must actually contain those bytes, not just list the row.
     claude_bytes="$(wc -c < "$FAKE_REPO/global/CLAUDE.md" | tr -d ' ')"
     rule_bytes="$(wc -c < "$FAKE_REPO/rules/from-project.md" | tr -d ' ')"
-    grep -q "Always-loaded total across every component above:\*\* $((claude_bytes + project_bytes + rule_bytes)) bytes" "$(INVENTORY)"
+    grep -q "Configuration and rules subtotal:\*\* $((claude_bytes + project_bytes + rule_bytes)) bytes" "$(INVENTORY)"
+}
+
+# A rule that is both paths:-scoped and @-imported is a defect the inventory flags. Its
+# compaction verdict still has to follow the import's source: only user-level imports were
+# observed re-resolving, so a defect imported solely from the project CLAUDE.md must read
+# untested. Reporting "yes" there asserts a measured verdict for the one case the research
+# lists as unknown — inside the row whose whole purpose is to flag a problem.
+@test "a both-mechanisms rule imported only from the project CLAUDE.md is untested for compaction" {
+    scoped_rule "dual-project.md" '"**/*.ts"'
+    project_reference "dual-project.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+
+    line="$(grep 'dual-project' "$(INVENTORY)")"
+    [[ "$line" == *'both — defect'* ]]
+    [[ "$line" == *'untested'* ]]
+}
+
+@test "a both-mechanisms rule imported from the global CLAUDE.md still reports survives yes" {
+    scoped_rule "dual-global.md" '"**/*.ts"'
+    reference "rules/dual-global.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+
+    # The global case has a measured verdict; splitting by source must not downgrade it.
+    line="$(grep 'dual-global' "$(INVENTORY)")"
+    [[ "$line" == *'both — defect'* ]]
+    [[ "$line" != *'untested'* ]]
+}
+
+# Skill descriptions load into the startup listing every session, so they are part of the
+# real always-loaded cost. The budget listed them as a component and then omitted them
+# from the stated total, which made the total contradict its own table.
+@test "the budget separates the configuration subtotal from the total including skills" {
+    bare_rule "from-project.md"
+    project_reference "from-project.md"
+    make_skill "listed-skill" "description: A skill whose description loads at startup" 400
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+
+    claude_bytes="$(wc -c < "$FAKE_REPO/global/CLAUDE.md" | tr -d ' ')"
+    project_bytes="$(wc -c < "$FAKE_REPO/.claude/CLAUDE.md" | tr -d ' ')"
+    rule_bytes="$(wc -c < "$FAKE_REPO/rules/from-project.md" | tr -d ' ')"
+    config_subtotal=$((claude_bytes + project_bytes + rule_bytes))
+
+    # The subtotal keeps the meaning earlier measurements and Decision 42 refer to.
+    grep -q "Configuration and rules subtotal:\*\* ${config_subtotal} bytes" "$(INVENTORY)"
+
+    # And the second figure must exceed it by exactly the skill-description bytes, so a
+    # skill listed in the table can never again be absent from the total.
+    desc_line="$(grep 'Skill descriptions, this repo only' "$(INVENTORY)")"
+    desc_bytes="$(printf '%s' "$desc_line" | awk -F'|' '{gsub(/ /,"",$3); print $3}')"
+    [ "$desc_bytes" -gt 0 ]
+    grep -q "including skill descriptions:\*\* $((config_subtotal + desc_bytes)) bytes" "$(INVENTORY)"
 }

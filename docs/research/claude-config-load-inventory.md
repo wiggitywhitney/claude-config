@@ -13,7 +13,10 @@
 **Claude Code version:** 2.1.221 (Claude Code)
 **Issue #108 status at measurement time:** merged (the bare-rule-file leak is already fixed; pre-#108 numbers are not comparable)
 
-For rule files, the loading mechanism determines both the byte cost and whether content survives compaction.
+For rule files, the loading mechanism determines the byte cost, and it determines compaction survival
+in the two cases that were measured: `paths:`-scoped rules do **not** survive, and rules imported from
+`global/CLAUDE.md` do. **Imports from `.claude/CLAUDE.md` are unmeasured** and the rows below report them
+as `untested` rather than inferring a verdict from the global result.
 Skills differ: an invoked body is re-injected but truncated to 5,000 tokens from the bottom, so for skills
 size and instruction order also decide what survives. See the Skills section below.
 See `docs/research/claude-code-context-loading-and-compaction.md` for the platform rules this classification applies.
@@ -144,10 +147,17 @@ interchangeable and only some are comparable with the #108 baseline.
 | Bare rule files (`session_start`) | 0 | no — #108 drove this to zero |
 | Skill descriptions, this repo only | 3114 | no — not in the baseline |
 
-**Always-loaded total across every component above:** 70228 bytes.
-The project `CLAUDE.md` and its imports are listed because they load every session.
-Omitting them is how the total was undercounted by the size of `.claude/CLAUDE.md`
-before 2026-08-04; a budget set from the baseline rows alone repeats that error.
+**Configuration and rules subtotal:** 70228 bytes.
+Both `CLAUDE.md` files, their imports, and any bare rule files. This is the figure
+Decision 42 records. The project `CLAUDE.md` and its imports belong in it because they
+load every session; omitting them is how the total was undercounted before 2026-08-04.
+
+**Always-loaded total including skill descriptions:** 73342 bytes.
+Skill descriptions load into the startup listing every session, so a byte budget that
+omits them understates the real cost. They are shown as a separate total rather than
+folded into the subtotal above, because the subtotal is what earlier measurements and
+Decision 42 refer to and silently changing its meaning would break that comparison.
+Both figures are repository-only; see the bound stated below.
 
 ### Comparison with the #108 post-fix baseline
 

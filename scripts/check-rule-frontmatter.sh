@@ -58,6 +58,13 @@ fi
 scan_references() {
     local md="$1"
     [[ -f "$md" ]] || return 0
+    # Matches all three import spellings Claude Code accepts, normalized to a bare
+    # rules-relative path. measure-context-load.sh has always matched `@rules/x.md` and
+    # `@./rules/x.md` alongside `@~/.claude/rules/x.md`; this scanner recognized only the
+    # third, so a rule written either of the other two ways counted as an import in the
+    # inventory and as having *no* mechanism here. Two tools disagreeing about one file is
+    # the coupled-pair failure these scripts exist to detect.
+    #
     # `grep -o` exits 1 on no match, and under `pipefail` that becomes the pipeline's
     # status. Harmless today — the caller uses command substitution and the script has no
     # `set -e`, so a CLAUDE.md with no imports correctly yields an empty list. It becomes a
@@ -66,8 +73,8 @@ scan_references() {
     # The guard keeps 1 as success and lets real errors through.
     sed -e '/^[[:space:]]*```/,/^[[:space:]]*```/d' "$md" \
         | sed -e 's/`[^`]*`//g' \
-        | { grep -o '@~/\.claude/rules/[A-Za-z0-9._/-]*\.md' || [[ $? -eq 1 ]]; } \
-        | sed 's|@~/\.claude/rules/||' | sort -u
+        | { grep -oE '@(~/\.claude/|\./)?rules/[A-Za-z0-9._/-]*\.md' || [[ $? -eq 1 ]]; } \
+        | sed -E 's#^@(~/\.claude/|\./)?rules/##' | sort -u
 }
 
 global_referenced=$(scan_references "$CLAUDE_MD")
