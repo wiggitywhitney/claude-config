@@ -118,9 +118,15 @@ make_skill() {
 
 @test "an @-path inside a code span is a mention, not an import" {
     bare_rule "mentioned.md"
-    # Backticked, exactly how global/CLAUDE.md names reference-pointer rules that are
-    # deliberately NOT imported. Misreading these inflates the always-loaded total.
-    printf 'Read `@~/.claude/rules/mentioned.md` when debugging.\n' >> "$FAKE_REPO/global/CLAUDE.md"
+    # The path must be followed by whitespace INSIDE the span. An earlier version of
+    # this test wrote `@...mentioned.md` with the closing backtick immediately after
+    # .md — which the matcher rejects anyway, since a backtick is not whitespace, EOL,
+    # or ")". So it passed whether or not strip_code ran, and tested nothing. Mutation
+    # testing on 2026-08-04 caught that. This shape mirrors the real case in
+    # global/CLAUDE.md, which mentions `@~/.claude/rules/<technology>-gotchas.md syntax`
+    # inside a span while genuinely not importing it.
+    printf 'Reference rules with `@~/.claude/rules/mentioned.md syntax` in prose.\n' \
+        >> "$FAKE_REPO/global/CLAUDE.md"
     run "$SCRIPT" "$FAKE_REPO"
 
     line="$(grep 'mentioned' "$(INVENTORY)")"
@@ -235,7 +241,11 @@ project_reference() {
 }
 
 @test "paths: below the frontmatter block does not count as scoping" {
-    printf -- '---\ndescription: x\n---\n\nThis rule discusses paths: in prose.\n' \
+    # `paths:` must sit at the start of a line below the block, or the test proves
+    # nothing: an earlier version wrote "This rule discusses paths: in prose", which no
+    # ^paths: pattern matches regardless of where the frontmatter boundary is drawn.
+    # Mutation testing on 2026-08-04 caught that.
+    printf -- '---\ndescription: x\n---\n\npaths: ["**/*.ts"] written in prose, not frontmatter.\n' \
         > "$FAKE_REPO/rules/prose.md"
     run "$SCRIPT" "$FAKE_REPO"
 
