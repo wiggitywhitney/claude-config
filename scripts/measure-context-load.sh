@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ABOUTME: Enumerates every rules/ file and skill, reports its Claude Code loading
-# ABOUTME: mechanism and byte cost, and emits the PRD #109 M2 load inventory as markdown.
+# ABOUTME: mechanism and byte cost, and emits the PRD #109 Milestone A2 load inventory as markdown.
 
 set -euo pipefail
 
@@ -41,9 +41,12 @@ strip_code() {
 }
 
 # An @-reference to a rule file, outside code, in any of the accepted path forms.
+# Uses [[:space:]] rather than \s: \s is a GNU extension that POSIX ERE and BSD grep
+# do not define, so on macOS's system grep it would match a literal "s" and misclassify
+# any reference followed by prose starting with that letter.
 is_at_referenced() {
   local rel="$1"
-  strip_code "${GLOBAL_CLAUDE_MD}" | grep -qE "@(~/\.claude/|\./)?${rel//./\\.}(\s|$|\))"
+  strip_code "${GLOBAL_CLAUDE_MD}" | grep -qE "@(~/\.claude/|\./)?${rel//./\\.}([[:space:]]|$|\))"
 }
 
 # A rule carries paths: frontmatter only if the key appears inside the leading --- block.
@@ -120,8 +123,8 @@ while IFS= read -r file; do
     # Counted as included: it is @-referenced, which is what makes it always-loaded.
     total_included=$((total_included + b))
   elif [[ "$referenced" == yes ]]; then
-    mech='`include`'; loaded='yes'; survives='untested'
-    why='`@`-referenced from `global/CLAUDE.md`; expanded at launch. Compaction behavior unverified.'
+    mech='`include`'; loaded='yes'; survives='yes'
+    why='`@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220).'
     total_always=$((total_always + b)); count_always=$((count_always + 1))
     total_included=$((total_included + b))
   elif [[ "$scoped" == yes ]]; then

@@ -6,6 +6,7 @@
 **Produced for:** PRD #109 Milestone A2
 
 ## Update Log
+
 | Date | Summary |
 |------|---------|
 | 2026-08-03 | Initial research. Extends `claude-code-autonomous-capabilities.md` (2026-05-31), which covered compaction but never mentioned `rules/` or `paths:` frontmatter. |

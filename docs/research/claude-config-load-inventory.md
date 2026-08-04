@@ -20,31 +20,31 @@ See `docs/research/claude-code-context-loading-and-compaction.md` for the platfo
 
 | Path | Loading mechanism | Bytes | Loaded in a fresh session | Survives compaction | Why |
 |---|---|---:|---|---|---|
-| `rules/aboutme-headers.md` | `include` | 730 | yes | untested | `@`-referenced from `global/CLAUDE.md`; expanded at launch. Compaction behavior unverified. |
-| `rules/adopting-new-technologies.md` | `include` | 3511 | yes | untested | `@`-referenced from `global/CLAUDE.md`; expanded at launch. Compaction behavior unverified. |
+| `rules/aboutme-headers.md` | `include` | 730 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
+| `rules/adopting-new-technologies.md` | `include` | 3511 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
 | `rules/bats-bash-testing.md` | `path_glob_match` | 3986 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/branch-protection.md` | `path_glob_match` | 1083 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
-| `rules/datadog-environment.md` | `include` | 685 | yes | untested | `@`-referenced from `global/CLAUDE.md`; expanded at launch. Compaction behavior unverified. |
+| `rules/datadog-environment.md` | `include` | 685 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
 | `rules/datadog-log-trace-gotchas.md` | `path_glob_match` | 3305 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/datadog-mcp-gotchas.md` | `path_glob_match` | 2687 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/datadog-span-based-metrics-gotchas.md` | `path_glob_match` | 7168 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/ddot-gotchas.md` | `path_glob_match` | 4154 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/eval-github-pat.md` | `path_glob_match` | 4240 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
-| `rules/gh-fork-gotchas.md` | `include` | 1205 | yes | untested | `@`-referenced from `global/CLAUDE.md`; expanded at launch. Compaction behavior unverified. |
-| `rules/git-workflow.md` | `include` | 9975 | yes | untested | `@`-referenced from `global/CLAUDE.md`; expanded at launch. Compaction behavior unverified. |
+| `rules/gh-fork-gotchas.md` | `include` | 1205 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
+| `rules/git-workflow.md` | `include` | 9975 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
 | `rules/gog-cli-gotchas.md` | `path_glob_match` | 3869 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/hooks-reference.md` | `path_glob_match` | 6951 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
-| `rules/infrastructure-safety.md` | `include` | 868 | yes | untested | `@`-referenced from `global/CLAUDE.md`; expanded at launch. Compaction behavior unverified. |
+| `rules/infrastructure-safety.md` | `include` | 868 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
 | `rules/is-scoring-gotchas.md` | `path_glob_match` | 9861 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
-| `rules/issue-juggling.md` | `include` | 804 | yes | untested | `@`-referenced from `global/CLAUDE.md`; expanded at launch. Compaction behavior unverified. |
+| `rules/issue-juggling.md` | `include` | 804 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
 | `rules/kyverno-gotchas.md` | `path_glob_match` | 11164 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/languages/go.md` | `path_glob_match` | 3454 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/languages/javascript.md` | `path_glob_match` | 510 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/languages/python.md` | `path_glob_match` | 111 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
-| `rules/languages/shell.md` | `path_glob_match` | 517 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
+| `rules/languages/shell.md` | `path_glob_match` | 1738 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/languages/typescript.md` | `path_glob_match` | 1872 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/linkedin-api-gotchas.md` | `path_glob_match` | 4042 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
-| `rules/macos-image-processing.md` | `include` | 1574 | yes | untested | `@`-referenced from `global/CLAUDE.md`; expanded at launch. Compaction behavior unverified. |
+| `rules/macos-image-processing.md` | `include` | 1574 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
 | `rules/microblog-api-gotchas.md` | `path_glob_match` | 9839 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/mmdc-gotchas.md` | `path_glob_match` | 4256 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/otel-logs-bridge-gotchas.md` | `path_glob_match` | 4228 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
@@ -57,11 +57,11 @@ See `docs/research/claude-code-context-loading-and-compaction.md` for the platfo
 | `rules/README.md` | `path_glob_match` | 7617 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/sharp-gotchas.md` | `path_glob_match` | 2367 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/social-video-upload-gotchas.md` | `path_glob_match` | 5494 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
-| `rules/testing-rules.md` | `include` | 5230 | yes | untested | `@`-referenced from `global/CLAUDE.md`; expanded at launch. Compaction behavior unverified. |
+| `rules/testing-rules.md` | `include` | 5230 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
 | `rules/typescript-cli-gotchas.md` | `path_glob_match` | 3249 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
-| `rules/vals-secrets.md` | `include` | 1075 | yes | untested | `@`-referenced from `global/CLAUDE.md`; expanded at launch. Compaction behavior unverified. |
+| `rules/vals-secrets.md` | `include` | 1075 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
 | `rules/weaver-gotchas.md` | `path_glob_match` | 6639 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
-| `rules/writing-voice.md` | `include` | 21825 | yes | untested | `@`-referenced from `global/CLAUDE.md`; expanded at launch. Compaction behavior unverified. |
+| `rules/writing-voice.md` | `include` | 21825 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
 | `rules/yt-dlp-gotchas.md` | `path_glob_match` | 4278 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 
 ### Rule totals
@@ -71,7 +71,7 @@ See `docs/research/claude-code-context-loading-and-compaction.md` for the platfo
 | `global/CLAUDE.md` itself | 1 | 16137 |
 | Always-loaded rules | 11 | 47482 |
 | **Always-loaded total** | **12** | **63619** |
-| On-demand path-scoped rules | 32 | 151033 |
+| On-demand path-scoped rules | 32 | 152254 |
 
 `global/CLAUDE.md` is 202 lines against the 200-line target Anthropic documents.
 
