@@ -45,6 +45,13 @@ run bats_pipe echo "test" \| grep "test"   # note: \| not |
 
 **GNU date shadows macOS date.** On this machine, `/opt/homebrew/opt/coreutils/libexec/gnubin/date` is first in PATH. The macOS system date is at `/bin/date` (not `/usr/bin/date`). Scripts and tests using macOS `date -v-1d` syntax must call `/bin/date` explicitly.
 
+**A passing test is not evidence the test can fail.** A suite retrofitted onto working code can assert things that hold for reasons unrelated to the behavior named in the test. Verify by reintroducing the defect the test claims to catch and confirming it goes red. Two examples found this way in `tests/measure-context-load.bats` on 2026-08-04:
+
+- A test proving a backticked `` `@path` `` is a mention rather than an import put the closing backtick immediately after the path — which the matcher rejects anyway, since a backtick is not whitespace. It passed whether or not the stripping code ran.
+- A test proving `paths:` below the frontmatter block does not count wrote it mid-sentence in prose, where no `^paths:` pattern matches it regardless.
+
+**When mutating, remove the behavior — do not relocate it.** Pointing a guard at a different nonexistent path makes it fire unconditionally, so the test still passes and the mutation reports a false failure against a sound test. Delete the block instead.
+
 **BSD grep rejects patterns starting with `-` as unknown options.** macOS ships BSD grep (`/usr/bin/grep`). If the grep pattern could start with a dash (e.g., a task line like `- [ ] ...`), always add `--` after the flags to end option parsing: `grep -qF -- "- [ ] pattern" file`.
 
 **`setup_file()` runs once per file, not per test.** Use `setup()` / `teardown()` for per-test temp directory isolation.
