@@ -111,6 +111,20 @@ Started 2026-08-02. Source: the claude-config scoping session of 2026-08-02, rec
   - **`permission_suggestions` came back empty on a real prompt.** A `python3` heredoc prompted despite `Bash(python3:*)` being allowlisted, and the UI had no rule to offer. This is the mechanism behind "227 entries prevented nothing": for some classes the failure is not a gap in the list but a class the list cannot express. It sharpens the remedy question from "which entries are missing" to "which classes are expressible at all."
   - **The hook writes after a delay.** Reading the log in the same turn as the prompt shows it empty, which is indistinguishable from a dead probe. This nearly caused a live instrument to be declared broken; A2's "verify the probe before relying on it" rule needs the companion "and wait before concluding it failed."
 
+  **First frequency measurement, 2026-08-04, ~7.5 hours of capture — the evidence Milestone A3 was written to produce and previously could not.** 197 events: **16 `PermissionRequest` against 182 `PreToolUse`, a prompt rate of 8.8%.** Shape of the 16, first line classified:
+
+  | Shape | Count |
+  |---|---:|
+  | Heredoc (`<<'PY'`, `<<'BATS'`) | 6 |
+  | Pipeline containing an unallowlisted command (`awk`, `sed`, `for`, `bats`) | 6 |
+  | Command substitution `$(...)` | 2 |
+  | `cd` prefix | 1 |
+  | Non-Bash tool (`Edit`, path access) | 1 |
+
+  **Read this as a baseline for measuring a change, not as a description of Whitney's normal friction.** It is one day of Claude's own work on this milestone — heavy on Python and bats authoring, which is what makes heredocs the top class. A different day's work would produce a different distribution. The `PreToolUse` denominator is what makes it a rate rather than a tally, and it is the number a before/after comparison must use.
+
+  **Heredocs are the largest single class and every instance was self-inflicted.** Each was a multi-line Python or bats block written inline instead of via the Write tool with a plain invocation afterwards. That is the "reach for a shell one-liner when a dedicated tool exists" habit — the same discipline already recorded as violated for command shape, the approval instruction, and TDD ordering, making this the fourth instance of the pattern in one PRD and the second observed on 2026-08-04 alone. It is also cheap to eliminate and, like the `python3` case above, a class no allowlist entry can express: the prompt offers nothing to grant.
+
   Recurrence count is now the useful signal: the command-shape discipline has been written down, agreed to, and then violated again in a *later session* than the one that produced it — five separate times within this one session, across `for` loops, `cd` chains, and shell redirects. Milestone A3 should treat "documented but not enforced" as the null hypothesis and design for enforcement.
 - **Interactive/YOLO divergence survey (all eight PRD skill pairs — the seven `prd-*` skills plus `prds-get` — 2026-08-02).** Produced by issue #110 so Milestone B4 can start from it rather than rediscovering it. Every pair was diffed with `diff -u SKILL.md SKILL.v1-yolo.md`. *Intentional* means an autonomy difference that should persist; *accidental* means a fix that failed to mirror.
 

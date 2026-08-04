@@ -33,6 +33,9 @@ paths: ["**/*.sh"]
   **The outer level of `${arr[@]+"${arr[@]}"}` must stay unquoted.** It looks like an unquoted expansion that a linter or a later reader should "fix" to `"${arr[@]+"${arr[@]}"}"`, and doing that breaks it — the whole point is that the `+` alternate substitutes the *already-quoted* inner expansion, so wrapping the outer level collapses the array into one word. Leave it as written; the quoting is inside, where it belongs.
 
   Test with `/bin/bash` explicitly, not just `bash`, before trusting a script that a hook will run.
+- **An alternation inside a `sed` substitution collides with `|` as the delimiter.** `sed -E 's|^@(a/|b/)?x||'` fails with `RE error: parentheses not balanced`, because the first `|` of the alternation closes the pattern. It is easy to introduce when converting a working `grep -E` pattern into a `sed` expression, since the grep version has no delimiter to collide with. Pick a delimiter that cannot appear in the pattern — `#` or `,` — rather than escaping: `sed -E 's#^@(a/|b/)?x##'`.
+
+  The failure is loud on stderr but does not stop the pipeline, so under `set -uo pipefail` without `set -e` the substitution silently produces no output and downstream logic sees an empty result. In `check-rule-frontmatter.sh` on 2026-08-04 that turned every `@`-referenced rule into an apparent "no loading mechanism" failure — eleven false failures from one delimiter. Run the script once after editing any `sed` expression; `bash -n` passes it, because the error is in the regex at runtime rather than in the shell syntax.
 - Quote all variable expansions: `"$var"` not `$var`.
 - Use `[[ ]]` over `[ ]` for conditionals (bash-specific but safer).
 - Use `$(command)` over backticks for command substitution.
