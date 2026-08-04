@@ -154,6 +154,25 @@ make_skill() {
     [[ "$line" == *'include'* ]]
 }
 
+@test "an @-reference is still found when global/CLAUDE.md exceeds the pipe buffer" {
+    bare_rule "early.md"
+    reference "rules/early.md"
+    # Pad past the 64 KB pipe buffer. With `grep -q`, grep exits as soon as it matches
+    # near the top, closing the pipe; sed then dies of SIGPIPE, and under `pipefail`
+    # that non-zero status propagates — so a rule that DID match gets classified as
+    # unreferenced and silently drops out of the always-loaded total.
+    for _ in $(seq 1 2000); do
+        printf 'Padding prose to push this file past the pipe buffer boundary.\n' \
+            >> "$FAKE_REPO/global/CLAUDE.md"
+    done
+    [ "$(wc -c < "$FAKE_REPO/global/CLAUDE.md")" -gt 65536 ]
+
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+    line="$(grep 'early' "$(INVENTORY)")"
+    [[ "$line" == *'include'* ]]
+}
+
 @test "a nested rule path is matched" {
     bare_rule "languages/shell.md"
     reference "rules/languages/shell.md"

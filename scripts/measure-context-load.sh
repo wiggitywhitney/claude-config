@@ -60,9 +60,16 @@ strip_code() {
 # Uses [[:space:]] rather than \s: \s is a GNU extension that POSIX ERE and BSD grep
 # do not define, so on macOS's system grep it would match a literal "s" and misclassify
 # any reference followed by prose starting with that letter.
+# Deliberately `grep -E ... >/dev/null` rather than `grep -qE`. With -q, grep exits the
+# instant it matches; if the match is near the top of a file larger than the 64 KB pipe
+# buffer, the upstream sed in strip_code is still writing and dies of SIGPIPE. Under
+# `set -o pipefail` that non-zero status becomes the pipeline's status, so a rule that
+# *did* match is reported as unreferenced and silently vanishes from the always-loaded
+# total. Reading all of stdin costs nothing at this file size and removes the trap.
+# Regression test: "an @-reference is still found when global/CLAUDE.md exceeds the pipe buffer".
 is_at_referenced() {
   local rel="$1"
-  strip_code "${GLOBAL_CLAUDE_MD}" | grep -qE "@(~/\.claude/|\./)?${rel//./\\.}([[:space:]]|$|\))"
+  strip_code "${GLOBAL_CLAUDE_MD}" | grep -E "@(~/\.claude/|\./)?${rel//./\\.}([[:space:]]|$|\))" >/dev/null
 }
 
 # A rule carries paths: frontmatter only if the key appears inside the leading --- block.

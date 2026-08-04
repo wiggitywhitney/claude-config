@@ -62,7 +62,7 @@ After a compaction an invoked skill body is re-injected **truncated to 5,000 tok
 | `research` | 14,568 | ~5,202 | Over |
 | `prd-next` | 13,468 | ~4,810 | At risk — over on the dense estimate |
 
-Five of the eight are workflow skills whose **closing** steps get cut: merge, cleanup, verification, commit. `prd-done`'s three-channel CodeRabbit fetch and merge sequence sit in exactly the region that becomes unreachable in a compacted session.
+Five of the eight are workflow skills whose **closing** steps are the ones estimated to fall past the cap: merge, cleanup, verification, commit. `prd-done`'s three-channel CodeRabbit fetch and merge sequence are estimated to sit in the region compaction would truncate. Stated as an estimate deliberately — the byte positions are measured, but where the 5,000-token boundary lands inside a given file is not, so which specific instructions get cut is inferred from the ratio rather than observed.
 
 **Consequence for Milestone B4:** instruction order inside a `SKILL.md` is a correctness property, not a style preference. The generalized escalation contract belongs at the top of every consolidated file. Anything that must survive cannot be at the bottom.
 
