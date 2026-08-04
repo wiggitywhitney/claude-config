@@ -5,9 +5,15 @@
 set -euo pipefail
 
 # Resolve the repo root from this script's location so the output is identical
-# regardless of the working directory it is invoked from.
+# regardless of the working directory it is invoked from. An explicit first argument
+# overrides it, which is how the bats suite points the script at a fixture tree —
+# the same convention check-rule-frontmatter.sh uses.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+if [[ $# -gt 0 ]]; then
+  REPO_ROOT="$(cd "$1" && pwd)"
+else
+  REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+fi
 
 GLOBAL_CLAUDE_MD="${REPO_ROOT}/global/CLAUDE.md"
 RULES_DIR="${REPO_ROOT}/rules"
