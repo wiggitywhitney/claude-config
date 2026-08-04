@@ -117,11 +117,13 @@ The five load reasons, from Claude Code's own matcher vocabulary, mapped to what
 
 | Load reason | Produced by | Enters | Survives compaction |
 |---|---|---|---|
-| `session_start` | `~/.claude/CLAUDE.md`, project `CLAUDE.md`, `CLAUDE.local.md`, and unscoped `rules/*.md` | Startup, outside message history | Yes, re-injected from disk 🟢 |
-| `include` | `@path` imports expanded from a CLAUDE.md | Startup, alongside the referencing file | Yes, re-resolved when the referencing file is re-injected 🟢 — measured, see Resolved Questions |
+| `session_start` | Managed-policy `CLAUDE.md`, `~/.claude/CLAUDE.md`, project `CLAUDE.md`, `CLAUDE.local.md`, and unscoped `rules/*.md` | Startup, outside message history | Yes, re-injected from disk 🟢 |
+| `include` | `@path` imports expanded from **any** CLAUDE.md, user-level or project-level | Startup, alongside the referencing file | Yes for user-level imports 🟢 — measured, see Resolved Questions. **Project-level imports untested** — see the caveat below |
 | `path_glob_match` | `rules/*.md` carrying `paths:` frontmatter | Message history, when a matching file is read | **No** 🟢 |
 | `nested_traversal` | `CLAUDE.md` in a subdirectory below cwd | Message history, when a file in that subdirectory is read | **No** 🟢 |
 | `compact` | Re-injection after a compaction event | Startup position | n/a — this *is* the re-injection |
+
+**Caveat on the `include` row, added 2026-08-04.** The measurement covered imports from `~/.claude/CLAUDE.md` only. In the same capture, the project `CLAUDE.md` returned with `load_reason: compact` but produced **no** `include` records for its own two `@`-imports, while all twelve of the user-level imports did return. Whether project-level imports are re-resolved, load only at `session_start`, or fail to resolve at all is unsettled — see finding 6 in [claude-config-load-findings.md](claude-config-load-findings.md). Do not assume the user-level result generalizes to project-level imports.
 
 Load order, broadest to most specific: managed policy, then user (`~/.claude/`), then project, then local. Rules follow the same shape — "User-level rules are loaded before project rules, giving project rules higher priority." ([memory docs](https://code.claude.com/docs/en/memory))
 

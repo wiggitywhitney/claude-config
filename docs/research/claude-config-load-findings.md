@@ -86,6 +86,36 @@ Worth stating plainly: `writing-voice.md` is also the file most likely to keep g
 
 ---
 
+## 6. Two rules carry both mechanisms, and neither the checker nor this inventory can see it — the project `CLAUDE.md` is unscanned
+
+**Found 2026-08-04, from a CodeRabbit finding about untraversed import graphs. It makes the always-loaded figure in the inventory unreliable, so read it before quoting that number.**
+
+`rules/hooks-reference.md` (6,951 bytes) and `rules/bats-bash-testing.md` (3,986 bytes) each carry `paths:` frontmatter **and** are `@`-referenced — from `claude-config/.claude/CLAUDE.md`, not from `global/CLAUDE.md`:
+
+```text
+.claude/CLAUDE.md:98  Full reference: @~/.claude/rules/hooks-reference.md
+.claude/CLAUDE.md:103 Bats gotchas and patterns: @~/.claude/rules/bats-bash-testing.md
+```
+
+`~/.claude/rules` is a symlink to this repo's `rules/`, so those imports resolve to the very same files that carry the `paths:` frontmatter. That is the both-mechanisms case the repo's own rule forbids in as many words: *"must **not** also define `paths:`, which would load them twice."*
+
+**Both tools that exist to catch this are blind to it, for the same reason.** `scripts/check-rule-frontmatter.sh` derives the `@`-referenced set by reading `global/CLAUDE.md` and only that file; `scripts/measure-context-load.sh` does the same. Neither knows a second `CLAUDE.md` also carries imports. So:
+
+| | Reports | Actually |
+|---|---|---|
+| `check-rule-frontmatter.sh` | "All rules have exactly one loading mechanism." | Two rules have two |
+| `claude-config-load-inventory.md` | Both `path_glob_match`, not loaded at startup, does not survive compaction | `@`-referenced from a loaded `CLAUDE.md` |
+
+**This is the third instance of the audit's organizing pattern, and the second where a *check* is one half of the pair.** Finding 1 was a checker told to skip the one file that violated the rule. This is a checker whose definition of "the always-loaded set" comes from one file when the system has two. Both produce a confident pass over a real violation, which is worse than no check.
+
+**What is *not* established: whether these two files actually double-load.** The compaction probe recorded the project `CLAUDE.md` returning with `load_reason: compact` but produced **no** `include` record for either import, while all twelve of `global/CLAUDE.md`'s imports did return as `include`. Three readings remain open and this evidence does not choose between them: project-level imports are not re-resolved after compaction the way user-level ones are; they load at `session_start` and the probe was installed too late to see it; or the import is not resolving at all. **Settling it needs one more probe-plus-compaction run** — the same method as finding 5, watching specifically for `parent_file_path` pointing at the project `CLAUDE.md`.
+
+**Byte exposure:** 10,937 bytes, against a recorded always-loaded total of 63,619. If they do load, the real figure is roughly **17% higher** than the inventory states, and Milestone C1's byte budget would be set against a number that is wrong in the unsafe direction.
+
+**Remedy is a decision, not a cleanup, so it is deferred to a human rather than chosen here.** Making the checker and the inventory scan every `CLAUDE.md` is right regardless — that is the `derive` remedy and it converts an invisible violation into a visible one. But it only exposes the real question, which is per-file: drop the `@`-reference and let the globs do the work, or drop `paths:` and pay the bytes deliberately.
+
+---
+
 ## Reconciliation against `/context` and `/memory`
 
 Run by Whitney on 2026-08-03 in this repository. Required by Milestone A2, since neither command can be invoked by Claude.
