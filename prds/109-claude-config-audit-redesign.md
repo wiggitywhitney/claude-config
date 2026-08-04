@@ -181,7 +181,18 @@ Also read [Research: Claude Code context loading and compaction](../docs/researc
 - Run `/research whether Claude Code skills can be installed globally or only per-project, and what changed recently` — this is needed for Milestone B2, where Viktor's "never global" position has to be evaluated on current facts.
 - Produce a measured inventory at `docs/research/claude-config-load-inventory.md` — a table with one row per file in `rules/` and per skill, with columns: path / loading mechanism / bytes / loaded in a fresh session (yes-no) / why. Totals at the bottom. Record the measurement date and whether issue #108 had merged at the time, since that changes the numbers.
 - Ask Whitney to run `/context` and `/memory` and paste the output. Claude cannot invoke these — they are user-typed commands. Reconcile her output against the inventory and note any discrepancy.
-- **Settle whether `@`-imported rules survive compaction.** Still unresolved and it gates the classification policy in Milestone C1. Every always-loaded rule in this setup arrives via `@`-reference, and the official compaction table has no row for imports or for user-level `CLAUDE.md`, so the durability of the entire always-loaded set is unverified. Method: register an `InstructionsLoaded` hook with matcher `compact` through a throwaway `--settings` file, run a session long enough to compact, and read which paths reappear. Do not reason about this; measure it.
+- **Settle whether `@`-imported rules survive compaction. This is the only remaining work in this milestone.** It gates the classification policy in Milestone C1. Every always-loaded rule in this setup arrives via `@`-reference, and the official compaction table has no row for imports or for user-level `CLAUDE.md`, so the durability of the entire always-loaded set is unverified. **Do not reason about this; measure it.**
+
+  Method, verified working on 2026-08-03 for the `session_start` case. Write a throwaway settings file outside the repository, so nothing tracked is mutated — the tracked-settings symlink defect makes that mandatory rather than tidy:
+
+  ```bash
+  printf '%s' '{"hooks":{"InstructionsLoaded":[{"hooks":[{"type":"command","command":"cat >> /tmp/instr-compact.jsonl"}]}]}}' > /tmp/compact-probe-settings.json
+  claude -p --settings /tmp/compact-probe-settings.json "<prompt that will fill context and force a compaction>"
+  ```
+
+  Each payload is one JSON object with fields `cwd`, `file_path`, `hook_event_name`, `load_reason`, `memory_type`, `session_id`, `transcript_path`. Read the `load_reason` and `file_path` of every record written *after* the compaction: any path reappearing with reason `compact` was re-injected. The eleven `@`-referenced rules appearing there answers the question yes; their absence answers it no.
+
+  The hard part is forcing a compaction in a headless run, since a short prompt will not do it. Options: a prompt that reads many large files, or a `--settings` run against a model with a smaller context window. Delete the scratch files when finished. Full context in [claude-config-load-findings.md](../docs/research/claude-config-load-findings.md).
 
 **Success criteria:**
 - `/research` output for both questions is captured in `docs/research/` with sources
@@ -396,6 +407,7 @@ Recording why the old gate existed, because the reason still matters in Phase C:
 - Assess whether advisory PostToolUse hooks are earning their cost. An advisory hook that fires constantly and is usually already satisfied is noise that trains the reader to skim.
 - Inventory the skills directory the same way — unused skills, skills superseded by others, skills that should be rules or hooks instead.
 - Review `scripts/`, `templates/`, `profiles/`, `config/`, and `hooks/archive/` for dead material.
+- **`PROGRESS.md` has duplicate section headings under `## [Unreleased]` — `### Added`, `### Changed`, and `### Fixed` each appear twice.** Noticed 2026-08-03 while adding an entry, and deliberately not fixed then because it was unrelated to the work in hand. It violates the repo's own no-duplicate-sections rule, and the practical cost is that an entry can land in either copy, so the file no longer groups what it claims to group. Worth checking whether the pre-push `progress-md-pr.sh` hook could catch it, since a check that already reads this file is the cheapest place to enforce structure.
 - Check whether `setup.sh` still reflects what the repo actually installs.
 - Note the `/issue-create` gap found during scoping: the skill has no branch for bringing an already-created issue into compliance.
 - **Fix the tracked settings symlink — this is a diagnosed defect with a candidate fix, not an open question.** `~/.claude/settings.json` symlinks to the tracked `config/settings.json`, so every settings write Claude Code makes becomes a git diff here. Observed twice: a model change in the working tree on 2026-08-02, and on 2026-08-03 `"model": "opus[1m]"` rewritten to `"sonnet[1m]"` mid-session and reverted rather than committed. Committing it would have flipped the tracked default to the weaker model. Removing the `model` key does not help — `/model` rewrites it. The candidate fix is to stop tracking the live file, since `settings.template.json` plus `setup.sh`'s resolve-and-merge already provides the provisioning path; the repo carries both and needs only the template. Evaluate that fix, then check every remaining symlink target under `~/.claude/` for the same shape and identify which tracked files tooling can mutate.
