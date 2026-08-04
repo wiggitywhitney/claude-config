@@ -11,7 +11,7 @@ REPO_ROOT="${1:-$(dirname "$SCRIPT_DIR")}"
 readonly RULES_DIR="$REPO_ROOT/rules"
 readonly CLAUDE_MD="$REPO_ROOT/global/CLAUDE.md"
 
-# Every CLAUDE.md that can carry @-imports, not just the global one. Until 2026-08-04
+# The second of the two CLAUDE.md files this check reads — not just the global one. Until 2026-08-04
 # this script read global/CLAUDE.md alone, so rules/hooks-reference.md and
 # rules/bats-bash-testing.md — both paths:-scoped AND @-referenced from
 # .claude/CLAUDE.md — passed as correctly configured. ~/.claude/rules symlinks to this
@@ -19,6 +19,12 @@ readonly CLAUDE_MD="$REPO_ROOT/global/CLAUDE.md"
 # which is the exact both-mechanisms case this check exists to reject. A check whose
 # notion of "the always-loaded set" comes from one file cannot see a violation living
 # in another, and it reports a confident pass while doing so.
+#
+# Two files is the whole scan, and it is a known limit rather than a complete answer. A
+# repo-root CLAUDE.md or a nested one picked up by directory traversal could carry an
+# @-import this check cannot see — the same blind spot as before, one level out. Neither
+# is in use here today. Discovering the candidates from the supported locations is the
+# durable fix and is tracked as an open question on the PRD.
 readonly PROJECT_CLAUDE_MD="$REPO_ROOT/.claude/CLAUDE.md"
 
 # No exemptions. rules/README.md was exempt until 2026-08-03 on the stated grounds
@@ -52,9 +58,15 @@ fi
 scan_references() {
     local md="$1"
     [[ -f "$md" ]] || return 0
+    # `grep -o` exits 1 on no match, and under `pipefail` that becomes the pipeline's
+    # status. Harmless today — the caller uses command substitution and the script has no
+    # `set -e`, so a CLAUDE.md with no imports correctly yields an empty list. It becomes a
+    # real failure the moment anyone adds `set -e` or checks this function's status, and
+    # "no imports" is indistinguishable from a genuine grep error (status 2+) until then.
+    # The guard keeps 1 as success and lets real errors through.
     sed -e '/^[[:space:]]*```/,/^[[:space:]]*```/d' "$md" \
         | sed -e 's/`[^`]*`//g' \
-        | grep -o '@~/\.claude/rules/[A-Za-z0-9._/-]*\.md' \
+        | { grep -o '@~/\.claude/rules/[A-Za-z0-9._/-]*\.md' || [[ $? -eq 1 ]]; } \
         | sed 's|@~/\.claude/rules/||' | sort -u
 }
 

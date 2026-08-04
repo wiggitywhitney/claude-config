@@ -20,6 +20,14 @@ GLOBAL_CLAUDE_MD="${REPO_ROOT}/global/CLAUDE.md"
 # rules referenced from here as on-demand, understating the always-loaded total by their
 # full byte count and hiding two both-mechanisms violations from the inventory. Optional:
 # a repo without one is normal, not an error.
+#
+# These two paths are the whole scan, and that is a known limit rather than a complete
+# answer. Claude Code also loads a repo-root CLAUDE.md and nested CLAUDE.md files during
+# directory traversal, and an @-import in any of them would be invisible here — the same
+# class of blind spot that reading global/CLAUDE.md alone produced, one level out. Neither
+# location is in use in this repo today, which is why the fix stopped here. Deriving the
+# candidate list from the supported configuration locations is the durable fix; it is an
+# open question on the PRD rather than a silent omission.
 PROJECT_CLAUDE_MD="${REPO_ROOT}/.claude/CLAUDE.md"
 RULES_DIR="${REPO_ROOT}/rules"
 SKILLS_DIR="${REPO_ROOT}/.claude/skills"
@@ -157,7 +165,13 @@ count_bare=0
 # `include` bytes are what the #108 baseline measured, while bare-rule bytes are
 # what #108 drove to zero. Summing them produces a figure that cannot be compared
 # with the baseline and reads as though it can.
-total_included=0
+# Split by source, not merged. The #108 baseline covered imports from global/CLAUDE.md
+# only, so a project-level import added later would show up as baseline drift if the two
+# were summed — a real import in the wrong column, indistinguishable from the global set
+# growing. Their compaction behavior also differs: user-level imports are observed to
+# re-resolve, project-level is unmeasured.
+total_included_global=0
+total_included_project=0
 total_bare=0
 
 while IFS= read -r file; do
@@ -173,7 +187,13 @@ while IFS= read -r file; do
     why='Carries `paths:` **and** is `@`-referenced, so it loads twice. Violates the one-mechanism rule.'
     total_always=$((total_always + b)); count_always=$((count_always + 1))
     # Counted as included: it is @-referenced, which is what makes it always-loaded.
-    total_included=$((total_included + b))
+    # Attributed by ref_source so a project-sourced defect does not land in the global
+    # column and read as #108 baseline drift.
+    if [[ "$ref_source" == global ]]; then
+      total_included_global=$((total_included_global + b))
+    else
+      total_included_project=$((total_included_project + b))
+    fi
   elif [[ "$referenced" == yes ]]; then
     mech='`include`'; loaded='yes'
     if [[ "$ref_source" == global ]]; then
@@ -184,7 +204,11 @@ while IFS= read -r file; do
       why='`@`-referenced from `.claude/CLAUDE.md`; expanded at launch. **Project-level re-resolution after compaction is unmeasured** — the probe recorded no `include` record for a project-level import while all twelve user-level ones returned.'
     fi
     total_always=$((total_always + b)); count_always=$((count_always + 1))
-    total_included=$((total_included + b))
+    if [[ "$ref_source" == global ]]; then
+      total_included_global=$((total_included_global + b))
+    else
+      total_included_project=$((total_included_project + b))
+    fi
   elif [[ "$scoped" == yes ]]; then
     mech='`path_glob_match`'; loaded='no'; survives='**no**'
     why='Loads only when a matching file is read; summarized away by compaction.'
@@ -301,16 +325,25 @@ printf 'Components are kept separate rather than summed into one figure, because
 printf 'interchangeable and only some are comparable with the #108 baseline.\n\n'
 printf '| Component | Bytes | Comparable with #108 baseline |\n|---|---:|---|\n'
 printf '| `global/CLAUDE.md` | %s | yes |\n' "$claude_md_bytes"
-printf '| `@`-referenced rules (`include`) | %s | yes |\n' "$total_included"
+printf '| `@`-referenced rules from `global/CLAUDE.md` (`include`) | %s | yes |\n' "$total_included_global"
+printf '| `.claude/CLAUDE.md` | %s | no — not in the baseline |\n' "$project_md_bytes"
+printf '| `@`-referenced rules from `.claude/CLAUDE.md` (`include`) | %s | no — not in the baseline |\n' "$total_included_project"
 printf '| Bare rule files (`session_start`) | %s | no — #108 drove this to zero |\n' "$total_bare"
 printf '| Skill descriptions, this repo only | %s | no — not in the baseline |\n' "$skill_desc_total"
+printf '\n**Always-loaded total across every component above:** %s bytes.\n' \
+  "$((claude_md_bytes + project_md_bytes + total_included_global + total_included_project + total_bare))"
+printf 'The project `CLAUDE.md` and its imports are listed because they load every session.\n'
+printf 'Omitting them is how the total was undercounted by the size of `.claude/CLAUDE.md`\n'
+printf 'before 2026-08-04; a budget set from the baseline rows alone repeats that error.\n'
 printf '\n### Comparison with the #108 post-fix baseline\n\n'
-printf 'The baseline covered `global/CLAUDE.md` plus its `@`-referenced rules and nothing else,\n'
-printf 'so only those two rows may be compared against it.\n\n'
+printf 'The baseline covered `global/CLAUDE.md` plus **its own** `@`-referenced rules and\n'
+printf 'nothing else, so only those two rows may be compared against it. Project-sourced\n'
+printf 'imports are excluded here deliberately: counting them would report a real project\n'
+printf 'import as growth in the global set.\n\n'
 printf '| | Bytes |\n|---|---:|\n'
 printf '| #108 post-fix baseline | 56994 |\n'
-printf '| Same components measured now | %s |\n' "$((claude_md_bytes + total_included))"
-printf '| Drift | %s |\n' "$((claude_md_bytes + total_included - 56994))"
+printf '| Same components measured now | %s |\n' "$((claude_md_bytes + total_included_global))"
+printf '| Drift | %s |\n' "$((claude_md_bytes + total_included_global - 56994))"
 printf '\n**This is a repository-only lower bound, not the true always-loaded total.**\n'
 printf 'At least one always-loaded `@`-import lives outside this repository and cannot be\n'
 printf 'measured by a sweep of `rules/`; see `claude-config-load-findings.md`. Any budget set\n'

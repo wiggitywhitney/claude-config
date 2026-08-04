@@ -24,7 +24,7 @@ See `docs/research/claude-code-context-loading-and-compaction.md` for the platfo
 |---|---|---:|---|---|---|
 | `rules/aboutme-headers.md` | `include` | 730 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
 | `rules/adopting-new-technologies.md` | `include` | 3511 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
-| `rules/bats-bash-testing.md` | `path_glob_match` | 3986 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
+| `rules/bats-bash-testing.md` | `path_glob_match` | 4996 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/branch-protection.md` | `path_glob_match` | 1083 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/datadog-environment.md` | `include` | 685 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
 | `rules/datadog-log-trace-gotchas.md` | `path_glob_match` | 3305 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
@@ -35,7 +35,7 @@ See `docs/research/claude-code-context-loading-and-compaction.md` for the platfo
 | `rules/gh-fork-gotchas.md` | `include` | 1205 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
 | `rules/git-workflow.md` | `include` | 9975 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
 | `rules/gog-cli-gotchas.md` | `path_glob_match` | 3869 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
-| `rules/hooks-reference.md` | `path_glob_match` | 6951 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
+| `rules/hooks-reference.md` | `path_glob_match` | 7413 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/infrastructure-safety.md` | `include` | 868 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
 | `rules/is-scoring-gotchas.md` | `path_glob_match` | 9861 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/issue-juggling.md` | `include` | 804 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
@@ -43,7 +43,7 @@ See `docs/research/claude-code-context-loading-and-compaction.md` for the platfo
 | `rules/languages/go.md` | `path_glob_match` | 3454 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/languages/javascript.md` | `path_glob_match` | 510 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/languages/python.md` | `path_glob_match` | 111 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
-| `rules/languages/shell.md` | `path_glob_match` | 1738 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
+| `rules/languages/shell.md` | `path_glob_match` | 3169 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/languages/typescript.md` | `path_glob_match` | 1872 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/linkedin-api-gotchas.md` | `path_glob_match` | 4042 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/macos-image-processing.md` | `include` | 1574 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
@@ -74,7 +74,7 @@ See `docs/research/claude-code-context-loading-and-compaction.md` for the platfo
 | `.claude/CLAUDE.md` itself | 1 | 6609 |
 | Always-loaded rules | 11 | 47482 |
 | **Always-loaded total** | **13** | **70228** |
-| On-demand path-scoped rules | 32 | 152254 |
+| On-demand path-scoped rules | 32 | 155157 |
 
 `global/CLAUDE.md` is 202 lines against the 200-line target Anthropic documents.
 
@@ -138,14 +138,23 @@ interchangeable and only some are comparable with the #108 baseline.
 | Component | Bytes | Comparable with #108 baseline |
 |---|---:|---|
 | `global/CLAUDE.md` | 16137 | yes |
-| `@`-referenced rules (`include`) | 47482 | yes |
+| `@`-referenced rules from `global/CLAUDE.md` (`include`) | 47482 | yes |
+| `.claude/CLAUDE.md` | 6609 | no — not in the baseline |
+| `@`-referenced rules from `.claude/CLAUDE.md` (`include`) | 0 | no — not in the baseline |
 | Bare rule files (`session_start`) | 0 | no — #108 drove this to zero |
 | Skill descriptions, this repo only | 3114 | no — not in the baseline |
 
+**Always-loaded total across every component above:** 70228 bytes.
+The project `CLAUDE.md` and its imports are listed because they load every session.
+Omitting them is how the total was undercounted by the size of `.claude/CLAUDE.md`
+before 2026-08-04; a budget set from the baseline rows alone repeats that error.
+
 ### Comparison with the #108 post-fix baseline
 
-The baseline covered `global/CLAUDE.md` plus its `@`-referenced rules and nothing else,
-so only those two rows may be compared against it.
+The baseline covered `global/CLAUDE.md` plus **its own** `@`-referenced rules and
+nothing else, so only those two rows may be compared against it. Project-sourced
+imports are excluded here deliberately: counting them would report a real project
+import as growth in the global set.
 
 | | Bytes |
 |---|---:|

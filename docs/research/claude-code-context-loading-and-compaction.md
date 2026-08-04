@@ -29,6 +29,8 @@ The finding that drives the classification policy (Milestone C1): **`paths:`-sco
 
 So the classification policy is not choosing between good and bad mechanisms. It is pricing a real trade-off: **durability across compaction costs always-loaded bytes, and there is no mechanism that gives both.**
 
+**Scope limit on the `@`-import half, stated here because this summary is what downstream work reads.** The durability result was measured for imports from `~/.claude/CLAUDE.md`. Imports from a *project* `.claude/CLAUDE.md` were not established by that run — the project root returned with `load_reason: compact` but produced no `include` record for either of its imports, which is consistent with three different explanations and settles none of them. Treat project-level import durability as unmeasured until a second probe runs; see the open question in the Resolved Questions section below. Milestone C1's byte budget depends on the answer, so an unqualified "`@`-imports are durable" read from this summary would put unmeasured bytes in a measured column.
+
 ---
 
 ## Surprises and Gotchas

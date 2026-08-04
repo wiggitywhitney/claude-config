@@ -497,3 +497,56 @@ description: x' 10
     ! grep -q 'session_start' "$(INVENTORY)"
     grep -q 'No bare rule files' "$(INVENTORY)"
 }
+
+# The #108 baseline covered global/CLAUDE.md plus its own imports and nothing else.
+# Before 2026-08-04 the script summed global-sourced and project-sourced includes into one
+# figure and compared that against the baseline, so adding a project-level import — a real
+# import in the wrong column — reported as growth in the global set. The two tests below
+# pin the split. All three tests added here were run against the pre-split script and
+# observed to fail, then against the current one and observed to pass.
+@test "a project-sourced import is excluded from the #108 baseline comparison" {
+    bare_rule "project-only.md"
+    project_reference "project-only.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+
+    # The comparison must count global/CLAUDE.md alone here, since no rule is referenced
+    # from it. Were the project import folded in, "measured now" would exceed this.
+    claude_bytes="$(wc -c < "$FAKE_REPO/global/CLAUDE.md" | tr -d ' ')"
+    grep -q "| Same components measured now | ${claude_bytes} |" "$(INVENTORY)"
+    grep -q "| Drift | $((claude_bytes - 56994)) |" "$(INVENTORY)"
+}
+
+@test "global-sourced and project-sourced imports are reported on separate budget rows" {
+    bare_rule "from-global.md"
+    reference "rules/from-global.md"
+    bare_rule "from-project.md"
+    project_reference "from-project.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+
+    global_rule_bytes="$(wc -c < "$FAKE_REPO/rules/from-global.md" | tr -d ' ')"
+    project_rule_bytes="$(wc -c < "$FAKE_REPO/rules/from-project.md" | tr -d ' ')"
+    # Distinct byte counts per source, not one merged figure.
+    grep -q "referenced rules from \`global/CLAUDE.md\` (\`include\`) | ${global_rule_bytes} |" "$(INVENTORY)"
+    grep -q "referenced rules from \`.claude/CLAUDE.md\` (\`include\`) | ${project_rule_bytes} |" "$(INVENTORY)"
+}
+
+# The budget table omitted .claude/CLAUDE.md entirely while the rule totals counted it,
+# so the generated budget reproduced the 6,609-byte undercount that scanning the project
+# file was supposed to have fixed. A budget is the artifact a byte target gets set from,
+# which makes an omission there worse than one in a status line.
+@test "the always-loaded budget includes the project CLAUDE.md and its imports" {
+    bare_rule "from-project.md"
+    project_reference "from-project.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+
+    project_bytes="$(wc -c < "$FAKE_REPO/.claude/CLAUDE.md" | tr -d ' ')"
+    grep -q "| \`.claude/CLAUDE.md\` | ${project_bytes} |" "$(INVENTORY)"
+
+    # And the stated total must actually contain those bytes, not just list the row.
+    claude_bytes="$(wc -c < "$FAKE_REPO/global/CLAUDE.md" | tr -d ' ')"
+    rule_bytes="$(wc -c < "$FAKE_REPO/rules/from-project.md" | tr -d ' ')"
+    grep -q "Always-loaded total across every component above:\*\* $((claude_bytes + project_bytes + rule_bytes)) bytes" "$(INVENTORY)"
+}
