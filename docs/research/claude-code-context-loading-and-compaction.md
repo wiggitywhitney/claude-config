@@ -19,7 +19,9 @@
 
 ## Summary
 
-Loading mechanism determines compaction survival, and nothing else does. Importance, position, and file size are irrelevant. There are five load reasons, and Claude Code names them itself: `session_start`, `nested_traversal`, `path_glob_match`, `include`, `compact`.
+**For instruction files** — CLAUDE.md and `rules/*.md` — the loading mechanism alone determines whether content is re-injected after compaction. Importance and position are irrelevant, and so is size: an unscoped rule comes back whole no matter how large. There are five load reasons, and Claude Code names them itself: `session_start`, `nested_traversal`, `path_glob_match`, `include`, `compact`.
+
+**Skills are the exception, and it is a real one.** An invoked skill body is re-injected but *truncated* to 5,000 tokens from the bottom, so for skills both size and instruction order decide what survives — see finding 3. Do not carry the instruction-file rule over to skills.
 
 The finding that drives the classification policy (Milestone C1): **`paths:`-scoped rules do not survive compaction.** They enter message history when their trigger file is read, so compaction summarizes them away like any other message. They return only when a matching file is read again. Meanwhile the mechanism that *is* durable — unscoped rules and `@`-imports — is exactly the always-loaded set issue #108 spent its effort shrinking.
 
@@ -73,7 +75,7 @@ So the classification policy is not choosing between good and bad mechanisms. It
 
 **Verified locally rather than taken on trust:** `strings` on the v2.1.220 binary contains `InstructionsLoaded` and all five load-reason values.
 
-**Schema resolved 2026-08-03, after this section was first written.** The docs pages truncate before the JSON payload schema, so it was recorded here as unconfirmed. It has since been observed directly by registering the hook and capturing real payloads: fields are `cwd`, `file_path`, `hook_event_name`, `load_reason`, `memory_type`, `session_id`, `transcript_path`. Method and captured output in [claude-config-load-findings.md](claude-config-load-findings.md).
+**Schema resolved 2026-08-03, after this section was first written.** The docs pages truncate before the JSON payload schema, so it was recorded here as unconfirmed. It has since been observed directly by registering the hook and capturing real payloads. Fields present on **every** record: `cwd`, `file_path`, `hook_event_name`, `load_reason`, `memory_type`, `session_id`, `transcript_path`, `prompt_id`. Additional fields appear **conditionally, keyed to the load reason** — `include` records carry `parent_file_path`, and `path_glob_match` records carry `globs` and `trigger_file_path`. **Treat this list as observed rather than complete**; other reasons may carry fields not yet seen, since only three of the five reasons have been captured. The two conditional groups matter in practice: `parent_file_path` is what makes import re-injection attributable to its parent, `trigger_file_path` names the file whose read pulled a scoped rule in, and `prompt_id` is what groups a compaction's records into one batch. Method and captured output in [claude-config-load-findings.md](claude-config-load-findings.md).
 
 **Interpretation:** This is the right instrument for Milestone A2's load inventory. Decision 25 requires enumeration by re-runnable script rather than a model looking around, and this hook is the platform's own account of what loaded, which beats inferring mechanism from frontmatter. The `compact` matcher value also made the `@`-import question directly testable, and it is what settled it — see Resolved Questions below.
 
@@ -142,7 +144,7 @@ Captured evidence, one line per file, trimmed to the fields that matter (all sha
 {"file_path":"~/.claude/rules/git-workflow.md","load_reason":"include","parent_file_path":"~/.claude/CLAUDE.md"}
 ```
 
-…and eight more `include` records for `testing-rules`, `gh-fork-gotchas`, `issue-juggling`, `infrastructure-safety`, `datadog-environment`, `vals-secrets`, `aboutme-headers`, `adopting-new-technologies`, `macos-image-processing`, plus `~/Documents/Journal/CURRENT-CONTEXT.md`.
+…and ten more `include` records: `testing-rules`, `gh-fork-gotchas`, `issue-juggling`, `infrastructure-safety`, `datadog-environment`, `vals-secrets`, `aboutme-headers`, `adopting-new-technologies`, `macos-image-processing`, plus `~/Documents/Journal/CURRENT-CONTEXT.md`. Twelve `include` records in total — the eleven `@`-referenced rules and the one `@`-referenced file outside this repository.
 
 **The same run confirmed the negative case, which is the stronger half of the result.** `rules/datadog-mcp-gotchas.md` was in context before the compaction — loaded via `path_glob_match` when `config/settings.json` was read — and produced **no** post-compaction record. A path-scoped rule that was live is genuinely gone until its glob fires again. `rules/README.md`, newly path-scoped in this same PRD, likewise did not return, confirming that fix.
 

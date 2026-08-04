@@ -6,6 +6,7 @@
 **Produced for:** PRD #109 Milestone A2, consumed by Milestone B2 (Viktor's "never global" position) and Milestone B4 (skill consolidation and migration)
 
 ## Update Log
+
 | Date | Summary |
 |------|---------|
 | 2026-08-03 | Initial research. Includes a live test that contradicts a recorded finding in the audit decision log — see "The YOLO symlinks are inert." |

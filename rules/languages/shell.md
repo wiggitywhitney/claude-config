@@ -16,6 +16,8 @@ paths: ["**/*.sh"]
   for item in ${EXEMPT[@]+"${EXEMPT[@]}"}; do ...; done
   ```
 
+  **The outer level of `${arr[@]+"${arr[@]}"}` must stay unquoted.** It looks like an unquoted expansion that a linter or a later reader should "fix" to `"${arr[@]+"${arr[@]}"}"`, and doing that breaks it — the whole point is that the `+` alternate substitutes the *already-quoted* inner expansion, so wrapping the outer level collapses the array into one word. Leave it as written; the quoting is inside, where it belongs.
+
   Test with `/bin/bash` explicitly, not just `bash`, before trusting a script that a hook will run.
 - Quote all variable expansions: `"$var"` not `$var`.
 - Use `[[ ]]` over `[ ]` for conditionals (bash-specific but safer).

@@ -18,9 +18,13 @@ Platform behavior these findings depend on: [claude-code-context-loading-and-com
 >
 > **Note for the design milestone:** this is an `assert` remedy, the weakest tier. The index still has to be maintained by hand alongside the rules it describes, so it can still drift in content even though it no longer leaks context. Michael reportedly has a *generated* rules table, which would be a `derive` remedy and would remove the second place entirely. The finding below is preserved as written because the reasoning still applies to that decision.
 
-**7,477 bytes, ~3.1k tokens, every session.** Confirmed three independent ways:
+### Original finding, as measured before the fix
 
-| Method | Evidence |
+**Everything from here to the end of this section describes the pre-fix state and is retained as the evidence record.** It is not a description of how the repo behaves now — see the Resolved note above for that. Read every present-tense claim below as "as of the morning of 2026-08-03, before the fix landed."
+
+**7,477 bytes, ~3.1k tokens, every session.** Confirmed three independent ways, all three measured pre-fix:
+
+| Method | Evidence (pre-fix) |
 |---|---|
 | `scripts/measure-context-load.sh` | Classified `session_start` (bare) — no `paths:`, no `@`-reference |
 | `InstructionsLoaded` hook | Reported `load_reason: session_start` for `claude-config/rules/README.md` |
@@ -41,7 +45,7 @@ The second sentence is false. The premise of the exemption is what kept it false
 
 The index moved from one always-loaded location to another and saved nothing. Three artifacts — the decision, the file's own first paragraph, and the checker's exemption comment — all record a benefit that was never delivered. An unusually clean instance of the pattern this audit is organized around, and the only one so far where a *check* is part of the pair.
 
-**Not fixed here.** This PRD produces a spec. The disposition belongs to the spec, and the checker and its bats tests belong to Milestone A4's review.
+**Original disposition, superseded the same day:** *"Not fixed here. This PRD produces a spec. The disposition belongs to the spec, and the checker and its bats tests belong to Milestone A4's review."* Overturned when Whitney applied the CodeRabbit triage rubric — see the Resolved note at the top of this section. **What remains open is only the `derive` follow-up**: replacing the hand-maintained index with a generated one, which is Milestone C1's call informed by Milestone B3. The unconditional load and the false checker exemption are both fixed.
 
 ## 2. Seven skills are estimated over the compaction truncation cap, and one more on the dense ratio
 
@@ -86,13 +90,15 @@ Worth stating plainly: `writing-voice.md` is also the file most likely to keep g
 
 Run by Whitney on 2026-08-03 in this repository. Required by Milestone A2, since neither command can be invoked by Claude.
 
-### Memory files: 16 files, 29.5k tokens
+**This is the pre-fix baseline.** It was captured before `rules/README.md` was scoped, which is why that file appears in the table below at 3.1k tokens. The post-fix verification is separate and is recorded in finding 1: a later probe in a fresh session showed the file absent from the load list entirely. The two results are a before and an after, not a contradiction — but re-running `/context` today would show 15 memory files rather than 16, and roughly 26.4k tokens rather than 29.5k.
+
+### Memory files: 16 files, 29.5k tokens (pre-fix)
 
 Every file the script and hook predicted appeared, with no extras and none missing. Per-file token counts sum to ~29.59k against the reported 29.5k, which is rounding.
 
 | Reconciliation question | Answer |
 |---|---|
-| Does `rules/README.md` appear? | **Yes**, 3.1k tokens. Third independent confirmation of finding 1 |
+| Does `rules/README.md` appear? | **Yes**, 3.1k tokens. Third independent confirmation of finding 1. Since fixed — it no longer appears |
 | Does `CURRENT-CONTEXT.md` appear? | **Yes**, 305 tokens. Confirms finding 3 |
 | Do the totals match the script? | Yes, once tokens are calibrated against bytes — see below |
 
@@ -113,7 +119,9 @@ Prose sits near 2.8 bytes per token; table-heavy content reaches 2.4, tokenizing
 
 `/memory` lists the `@`-referenced rules as **`L`** entries, each annotated "Saved in `~/.claude/CLAUDE.md`". So the platform models them as *imports belonging to* user CLAUDE.md rather than as independent memory files.
 
-This is a data point for the open question below, not an answer to it. It makes re-injection more plausible — if they are part of `~/.claude/CLAUDE.md`'s expansion, they would travel with it — but the docs' compaction table names "project-root CLAUDE.md" specifically and has no row for imports or for user-level CLAUDE.md. Recorded as evidence, still unresolved.
+At the time this was written it was a data point rather than an answer: it made re-injection more plausible — if they are part of `~/.claude/CLAUDE.md`'s expansion, they would travel with it — but the docs' compaction table names "project-root CLAUDE.md" specifically and has no row for imports or for user-level CLAUDE.md.
+
+**Finding 5 has since settled it by measurement, and `/memory`'s model turned out to be the right intuition.** Imports do travel with the parent, and the observed payloads make the relationship explicit through `parent_file_path`. Recorded here as the evidence that pointed the right way, not as an open question.
 
 ### Skill listing cost is only partly controllable from this repo
 
