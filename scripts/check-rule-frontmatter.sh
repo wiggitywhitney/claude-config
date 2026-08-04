@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ABOUTME: Verifies every rules/ file has exactly one loading mechanism.
-# ABOUTME: A rule is either paths:-scoped or @-referenced from global/CLAUDE.md — never both, never neither.
+# ABOUTME: A rule is either paths:-scoped or @-referenced from a CLAUDE.md — never both, never neither.
 
 set -uo pipefail
 
@@ -10,6 +10,16 @@ REPO_ROOT="${1:-$(dirname "$SCRIPT_DIR")}"
 
 readonly RULES_DIR="$REPO_ROOT/rules"
 readonly CLAUDE_MD="$REPO_ROOT/global/CLAUDE.md"
+
+# Every CLAUDE.md that can carry @-imports, not just the global one. Until 2026-08-04
+# this script read global/CLAUDE.md alone, so rules/hooks-reference.md and
+# rules/bats-bash-testing.md — both paths:-scoped AND @-referenced from
+# .claude/CLAUDE.md — passed as correctly configured. ~/.claude/rules symlinks to this
+# repo's rules/, so those imports resolve to the same files carrying the frontmatter,
+# which is the exact both-mechanisms case this check exists to reject. A check whose
+# notion of "the always-loaded set" comes from one file cannot see a violation living
+# in another, and it reports a confident pass while doing so.
+readonly PROJECT_CLAUDE_MD="$REPO_ROOT/.claude/CLAUDE.md"
 
 # No exemptions. rules/README.md was exempt until 2026-08-03 on the stated grounds
 # that it "is never loaded by either mechanism" — which was false. Measured with an
@@ -30,14 +40,28 @@ if [[ ! -f "$CLAUDE_MD" ]]; then
     exit 1
 fi
 
-# Collect the @-referenced set from CLAUDE.md rather than hardcoding a list, so
-# adding or removing an @-reference needs no corresponding edit here.
-referenced=$(grep -o '@~/\.claude/rules/[A-Za-z0-9._/-]*\.md' "$CLAUDE_MD" \
-    | sed 's|@~/\.claude/rules/||' | sort -u)
+# Collect the @-referenced set from each CLAUDE.md rather than hardcoding a list, so
+# adding or removing an @-reference needs no corresponding edit here. Kept per-source
+# rather than merged, so a failure message can name the file to edit — "pick one" is
+# not actionable when the reader does not know which of two files holds the reference.
+scan_references() {
+    local md="$1"
+    [[ -f "$md" ]] || return 0
+    grep -o '@~/\.claude/rules/[A-Za-z0-9._/-]*\.md' "$md" \
+        | sed 's|@~/\.claude/rules/||' | sort -u
+}
 
-is_referenced() {
+global_referenced=$(scan_references "$CLAUDE_MD")
+project_referenced=$(scan_references "$PROJECT_CLAUDE_MD")
+
+# Echoes the source path when referenced, empty otherwise.
+reference_source() {
     local rel="$1"
-    printf '%s\n' "$referenced" | grep -qxF "$rel"
+    if printf '%s\n' "$global_referenced" | grep -qxF "$rel"; then
+        echo "global/CLAUDE.md"
+    elif printf '%s\n' "$project_referenced" | grep -qxF "$rel"; then
+        echo ".claude/CLAUDE.md"
+    fi
 }
 
 is_exempt() {
@@ -87,13 +111,15 @@ while IFS= read -r file; do
         fi
     fi
 
-    if is_referenced "$rel"; then
+    ref_source="$(reference_source "$rel")"
+
+    if [[ -n "$ref_source" ]]; then
         if [[ "$has_paths" == true ]]; then
-            report "$rel" "both @-referenced from global/CLAUDE.md and paths:-scoped — pick one"
+            report "$rel" "both @-referenced from $ref_source and paths:-scoped — pick one"
         fi
     else
         if [[ "$has_paths" == false ]]; then
-            report "$rel" "no paths: frontmatter and not @-referenced from global/CLAUDE.md — it loads in every session"
+            report "$rel" "no paths: frontmatter and not @-referenced from any CLAUDE.md — it loads in every session"
         fi
     fi
 
@@ -106,7 +132,7 @@ if [[ "$failures" -gt 0 ]]; then
     echo "" >&2
     echo "$failures rule-loading problem(s) found. Every rules/ file needs exactly one" >&2
     echo "loading mechanism: paths: frontmatter for on-demand rules, or an" >&2
-    echo "@-reference in global/CLAUDE.md for rules that apply to every session." >&2
+    echo "@-reference in a CLAUDE.md for rules that apply to every session." >&2
     exit 1
 fi
 

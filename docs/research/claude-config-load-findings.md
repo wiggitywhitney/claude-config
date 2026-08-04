@@ -112,7 +112,27 @@ Worth stating plainly: `writing-voice.md` is also the file most likely to keep g
 
 **Byte exposure:** 10,937 bytes, against a recorded always-loaded total of 63,619. If they do load, the real figure is roughly **17% higher** than the inventory states, and Milestone C1's byte budget would be set against a number that is wrong in the unsafe direction.
 
-**Remedy is a decision, not a cleanup, so it is deferred to a human rather than chosen here.** Making the checker and the inventory scan every `CLAUDE.md` is right regardless — that is the `derive` remedy and it converts an invisible violation into a visible one. But it only exposes the real question, which is per-file: drop the `@`-reference and let the globs do the work, or drop `paths:` and pay the bytes deliberately.
+### Resolved 2026-08-04, and the repo had already made the call
+
+Whitney chose to fix both scripts immediately. Doing so turned the invisible violation into a failing check that named the file to edit:
+
+```text
+FAIL  rules/bats-bash-testing.md: both @-referenced from .claude/CLAUDE.md and paths:-scoped — pick one
+FAIL  rules/hooks-reference.md: both @-referenced from .claude/CLAUDE.md and paths:-scoped — pick one
+```
+
+**The per-file remedy then turned out not to be an open question at all.** `global/CLAUDE.md` already refers to both files — as backticked pointers carrying an explicit annotation:
+
+> - Hook details (**reference pointer, not auto-loaded** — read only when a hook fires unexpectedly or you need to know what a specific hook checks): `~/.claude/rules/hooks-reference.md`
+> - Bats gotchas and patterns (**reference pointer, not auto-loaded** — read only when writing or debugging a bash test suite): `~/.claude/rules/bats-bash-testing.md`
+
+So the decision was made, written down, and stated twice — and `.claude/CLAUDE.md` contradicted it by importing the same two files for real. **This is the purest instance of the organizing pattern found so far:** not a decision that drifted out of date, but one recorded in two places where the two disagreed from the start, with no error surface to reveal it. The remedy was alignment with an existing decision rather than a new judgment, so it was applied directly: both imports in `.claude/CLAUDE.md` are now backticked pointers matching the global file's wording.
+
+**Both scripts now scan every `CLAUDE.md`.** The checker names which file carries the reference, because "pick one" is not actionable when the reader does not know where the reference lives. Test coverage added to both suites, each written to fail first.
+
+**The always-loaded total is unchanged at 63,619 bytes — and that is the point worth stating carefully.** It is unchanged because the chosen remedy restored the state the global file already described, not because the defect was harmless. Had the opposite remedy been chosen, the figure would be **74,556**. Milestone C1 can now budget against 63,619, and the tools that produce it can finally see the whole import graph.
+
+**Still unresolved, and unaffected by this fix:** whether project-level `@`-imports are re-resolved after compaction at all. The probe produced no `include` record for either, and that question outlives the two files that raised it — any future project-level import inherits it. Tracked as an open question on the PRD, owned by Milestone A4.
 
 ---
 

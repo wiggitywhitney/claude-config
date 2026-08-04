@@ -173,6 +173,58 @@ make_skill() {
     [[ "$line" == *'include'* ]]
 }
 
+# The project .claude/CLAUDE.md carries @-imports too. Until 2026-08-04 the script read
+# global/CLAUDE.md alone, so rules referenced only from the project file were reported as
+# on-demand — understating the always-loaded total by their full byte count.
+project_reference() {
+    mkdir -p "$FAKE_REPO/.claude"
+    printf 'Full reference: @~/.claude/rules/%s\n' "$1" >> "$FAKE_REPO/.claude/CLAUDE.md"
+}
+
+@test "a rule @-referenced only from the project CLAUDE.md counts as include" {
+    bare_rule "project-only.md"
+    project_reference "project-only.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+
+    line="$(grep 'project-only' "$(INVENTORY)")"
+    [[ "$line" == *'include'* ]]
+    [[ "$line" == *'| yes | yes |'* ]]
+}
+
+@test "a project-referenced rule is counted as an import, not as a bare rule" {
+    bare_rule "project-only.md"
+    project_reference "project-only.md"
+    run "$SCRIPT" "$FAKE_REPO"
+
+    # Asserting the always-loaded total alone would pass either way: a misclassified
+    # bare rule lands in the same bucket. The bare count is what discriminates, and it
+    # matters on its own — issue #108 drove it to zero and a non-zero count reads as a
+    # regression.
+    grep -q 'No bare rule files' "$(INVENTORY)"
+
+    claude_bytes="$(wc -c < "$FAKE_REPO/global/CLAUDE.md" | tr -d ' ')"
+    rule_bytes="$(wc -c < "$FAKE_REPO/rules/project-only.md" | tr -d ' ')"
+    expected=$((claude_bytes + rule_bytes))
+    grep -q "| \*\*Always-loaded total\*\* | \*\*2\*\* | \*\*${expected}\*\* |" "$(INVENTORY)"
+}
+
+@test "a paths:-scoped rule also referenced from the project CLAUDE.md is the both-mechanisms defect" {
+    scoped_rule "doubled-project.md" '"**/*.sh"'
+    project_reference "doubled-project.md"
+    run "$SCRIPT" "$FAKE_REPO"
+
+    line="$(grep 'doubled-project' "$(INVENTORY)")"
+    [[ "$line" == *'both — defect'* ]]
+}
+
+@test "a missing project CLAUDE.md is not an error" {
+    scoped_rule "fine.md" '"**/*.ts"'
+    [ ! -f "$FAKE_REPO/.claude/CLAUDE.md" ]
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+}
+
 @test "a nested rule path is matched" {
     bare_rule "languages/shell.md"
     reference "rules/languages/shell.md"

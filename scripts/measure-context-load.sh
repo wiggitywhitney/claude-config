@@ -16,6 +16,11 @@ else
 fi
 
 GLOBAL_CLAUDE_MD="${REPO_ROOT}/global/CLAUDE.md"
+# A second CLAUDE.md carries @-imports as well. Scanning only the global one reported
+# rules referenced from here as on-demand, understating the always-loaded total by their
+# full byte count and hiding two both-mechanisms violations from the inventory. Optional:
+# a repo without one is normal, not an error.
+PROJECT_CLAUDE_MD="${REPO_ROOT}/.claude/CLAUDE.md"
 RULES_DIR="${REPO_ROOT}/rules"
 SKILLS_DIR="${REPO_ROOT}/.claude/skills"
 
@@ -67,9 +72,16 @@ strip_code() {
 # *did* match is reported as unreferenced and silently vanishes from the always-loaded
 # total. Reading all of stdin costs nothing at this file size and removes the trap.
 # Regression test: "an @-reference is still found when global/CLAUDE.md exceeds the pipe buffer".
+# Scans every CLAUDE.md that can carry imports, not just the global one.
 is_at_referenced() {
-  local rel="$1"
-  strip_code "${GLOBAL_CLAUDE_MD}" | grep -E "@(~/\.claude/|\./)?${rel//./\\.}([[:space:]]|$|\))" >/dev/null
+  local rel="$1" md
+  for md in "${GLOBAL_CLAUDE_MD}" "${PROJECT_CLAUDE_MD}"; do
+    [[ -f "$md" ]] || continue
+    if strip_code "$md" | grep -E "@(~/\.claude/|\./)?${rel//./\\.}([[:space:]]|$|\))" >/dev/null; then
+      return 0
+    fi
+  done
+  return 1
 }
 
 # A rule carries paths: frontmatter only if the key appears inside the leading --- block.

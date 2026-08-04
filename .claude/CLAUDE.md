@@ -95,12 +95,12 @@ Git enforcement (branch protection, commit message, build verification, push sec
 bash scripts/install-git-hooks.sh [repo-path]
 ```
 
-Idempotent — safe to re-run. Never touches `post-commit` (reserved for commit-story). Full reference: @~/.claude/rules/hooks-reference.md
+Idempotent — safe to re-run. Never touches `post-commit` (reserved for commit-story). Full reference (reference pointer, not auto-loaded — read only when a hook fires unexpectedly or you need to know what a specific hook checks): `~/.claude/rules/hooks-reference.md`
 
 ## Testing
 
 - All bash hook and script files MUST have bats test coverage. Place tests in `tests/<script-name>.bats`.
-- Bats gotchas and patterns: @~/.claude/rules/bats-bash-testing.md
+- Bats gotchas and patterns (reference pointer, not auto-loaded — read only when writing or debugging a bash test suite): `~/.claude/rules/bats-bash-testing.md`
 
 ## Secrets Management (vals)
 

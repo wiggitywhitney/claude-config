@@ -61,6 +61,44 @@ bare_rule() {
     [[ "$output" == *"pick one"* ]]
 }
 
+# A second CLAUDE.md carries @-imports too. Until 2026-08-04 this script read only
+# global/CLAUDE.md, so two rules that were both paths:-scoped and @-referenced from
+# .claude/CLAUDE.md passed as correctly configured.
+project_reference() {
+    mkdir -p "$FAKE_REPO/.claude"
+    printf 'Full reference: @~/.claude/rules/%s\n' "$1" >> "$FAKE_REPO/.claude/CLAUDE.md"
+}
+
+@test "honors an @-reference from the project .claude/CLAUDE.md" {
+    bare_rule "project-referenced.md"
+    project_reference "project-referenced.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+}
+
+@test "fails when a rule is paths:-scoped and @-referenced from the project CLAUDE.md" {
+    scoped_rule "hooks-reference.md" '"**/*.sh"'
+    project_reference "hooks-reference.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"hooks-reference.md"* ]]
+    [[ "$output" == *"pick one"* ]]
+}
+
+@test "names which CLAUDE.md carries the reference so the fix is unambiguous" {
+    scoped_rule "hooks-reference.md" '"**/*.sh"'
+    project_reference "hooks-reference.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [[ "$output" == *".claude/CLAUDE.md"* ]]
+}
+
+@test "a missing project CLAUDE.md is not an error" {
+    scoped_rule "fine.md" '"**/*.ts"'
+    [ ! -f "$FAKE_REPO/.claude/CLAUDE.md" ]
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+}
+
 @test "fails when a rule uses the ** / * wildcard as its scope" {
     scoped_rule "too-broad.md" '"**/*"'
     run "$SCRIPT" "$FAKE_REPO"
