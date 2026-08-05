@@ -118,7 +118,7 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 - [ ] Milestone C2: Spec file written and signed off *(Phase C work, sequenced after Milestone D1)*
 - [ ] Milestone D2: Audit-agent verification pass against the decision log and session transcript
 
-**Why Milestone D1 precedes Milestone C2, when its phase letter suggests otherwise.** Milestone D1 assigns a verdict to every piece of PRD #84, and one of its three verdicts is "the learnings live, the code does not" — which requires writing those learnings *into the spec*. Milestone C2 also asks Whitney the open questions surfaced across earlier milestones before drafting. If Milestone C2 ran first, its signed-off spec would either be missing Milestone D1's learnings or would have to be edited after sign-off, and a signed-off document that gets edited afterwards is not signed off. Running Milestone D1 first is the simpler of the two fixes; the alternative — a separate Milestone D1 input consumed by a later spec revision with explicit re-signoff — was rejected as more machinery for the same result. This is the one place where phase letter and execution order disagree, and the letters were kept rather than renumbered to avoid a second scripted migration.
+**Why Milestone D1 precedes Milestone C2, when its phase letter suggests otherwise.** Milestone D1 assigns a verdict to every piece of PRD #84, and one of its three verdicts is "the learnings live, the code does not" — so those learnings have to reach the spec. **They reach it by handoff, not by Milestone D1 writing into the spec directly (Decision 54):** Milestone D1 writes `docs/research/prd-84-verdict-3-learnings.md` and Milestone C2 absorbs it while drafting. The original wording here told Milestone D1 to write into a file that Milestone C2 had not created yet, which was a real deadlock rather than a wording slip. Milestone C2 also asks Whitney the open questions surfaced across earlier milestones before drafting. If Milestone C2 ran first, its signed-off spec would either be missing Milestone D1's learnings or would have to be edited after sign-off, and a signed-off document that gets edited afterwards is not signed off. Running Milestone D1 first is the simpler of the two fixes; the alternative — a separate Milestone D1 input consumed by a later spec revision with explicit re-signoff — was rejected as more machinery for the same result. This is the one place where phase letter and execution order disagree, and the letters were kept rather than renumbered to avoid a second scripted migration.
 
 ---
 
@@ -548,7 +548,7 @@ Every piece of work on the branch receives exactly one:
 
 1. **Trash.** No value in the code and no lesson worth recording. It goes away with the branch and is never mentioned again.
 2. **The code lives.** It is merged to main, and PRD #84's approach for that piece becomes part of the canonical workflow the spec describes.
-3. **The learnings live, the code does not.** What was discovered is written into the spec; the implementation is discarded with the branch.
+3. **The learnings live, the code does not.** What was discovered is written to a handoff document, `docs/research/prd-84-verdict-3-learnings.md`, and Milestone C2 incorporates it into the spec; the implementation is discarded with the branch. **Do not write into the spec from this milestone — it does not exist yet** (Decision 54). Milestone C2 creates and signs off that file, and this milestone runs before it.
 
 **Assign no verdict before this milestone runs, and record none in this PRD.** The facts below are recorded precisely so that whoever performs this milestone can reach their own conclusions from evidence rather than inheriting someone else's. A presumptive verdict written here would decide the question in advance while appearing to leave it open.
 
@@ -597,7 +597,7 @@ Either way, #98 does not survive this milestone as an open issue pointing at del
 - Assign one of the three verdicts to every row of the work table, with the reasoning for each.
 - Resolve #98 per the two branches above, and record which applied.
 - Present the completed table to Whitney and get her approval before acting on any row. Approval covers the set, not each row separately.
-- Write the verdict-3 learnings into the spec. This happens inside PRD #109; do not schedule it elsewhere.
+- Write the verdict-3 learnings to `docs/research/prd-84-verdict-3-learnings.md`, one entry per row that took verdict 3, each stating what was discovered and what the spec should do with it. This happens inside PRD #109; do not schedule it elsewhere. **The spec itself is written by Milestone C2, which runs after this milestone and is required to absorb this file** (Decision 54).
 - If any row took verdict 2, merge that work to main through a PR, following the normal review gate.
 - Confirm no journal content exists only on the branch. If any does, rescue it to main first.
 - Delete the branch, locally and on any remote it reached.
@@ -607,7 +607,7 @@ Either way, #98 does not survive this milestone as an open issue pointing at del
 **Success criteria:**
 - Every row of the work table carries exactly one verdict and the reasoning behind it
 - Whitney has approved the completed verdict table
-- Every verdict-3 learning is present in the spec, verifiable by pointing at where
+- Every verdict-3 learning is present in `docs/research/prd-84-verdict-3-learnings.md`, verifiable by pointing at where. **Do not check the spec for them — it does not exist yet; Milestone C2 owns that half of the contract**
 - No journal content exists only on the deleted branch, shown by the diff command rather than asserted
 - `feature/prd-84-autonomous-prd-execution` does not exist
 - Issue #84 is closed with the verdicts recorded, and its PRD file is in `prds/done/` with the stale-copy warning removed
@@ -688,6 +688,7 @@ Each carries its inputs, so a cold reader knows what evidence to gather before a
 
 **To implement:**
 - Before writing, ask Whitney the real open questions surfaced across Milestone A2–Milestone D1 — one at a time, per the Process section. Do not guess at her preferences to avoid asking.
+- **Absorb `docs/research/prd-84-verdict-3-learnings.md`, written by Milestone D1 (Decision 54).** Every entry in it becomes part of the spec, restated in the spec's own terms rather than pasted — a learning from a discarded implementation is an input to a decision, not a decision. If that file does not exist, Milestone D1 either has not run or produced no verdict-3 rows; confirm which before proceeding, because a missing file and an empty one mean different things.
 - Structure the spec around decisions, not findings. Each entry states what was decided, what was rejected, and why.
 - Record explicitly **what stays intact under every scenario** — the fallback path to the current way of working must be legible. Whitney has to be able to revert if the new approach does not pan out.
 - Identify which implementation PRDs the spec should spawn and in what order. Do not create them in this milestone; recommend them and let Whitney decide the number and sequencing.
@@ -717,6 +718,7 @@ A spec that summarizes findings instead of recording decisions has failed this m
 
 **Success criteria:**
 - `docs/claude-config-redesign-spec.md` exists with all six required sections present and populated
+- Every entry in `docs/research/prd-84-verdict-3-learnings.md` is reflected in the spec, verifiable by pointing at where — or that file is confirmed absent because Milestone D1 assigned no verdict-3 rows (Decision 54)
 - Every pair in `## Coupled pairs` has a disposition in `## Decisions` — collapse, derive, assert, or accept — with no pair left unaddressed, and every `assert` justified by why collapse and derive were rejected
 - The fallback path is documented — what stays intact under every proposed scenario
 - Recommended implementation PRDs are listed with an order, and Whitney has decided on them
@@ -767,7 +769,7 @@ A spec that summarizes findings instead of recording decisions has failed this m
 - **Within Phase B:** all depend on Milestone A1's clones. Milestone B1 runs first, so the other spikes are read with the platform's capabilities already known. Milestone B4 depends on Milestone B2, since the three-way diff needs Viktor's repos read.
 - **Phase C depends on all of Phase A and all of Phase B.** This is the constraint the restructure exists to enforce: no design decision before every input exists.
 - **Milestone D1 depends on Milestone B2, Milestone B3, Milestone B4, and Milestone C1** — it needs the signed-off consolidation design, because a piece of PRD #84 cannot take the code-lives verdict if it modifies a file that consolidation restructures.
-- **Milestone C2 depends on Milestone D1**, so the spec can record Milestone D1's verdict-3 learnings before it is signed off rather than after. Milestone D2 depends on Milestone C2.
+- **Milestone C2 depends on Milestone D1**, so the spec can record Milestone D1's verdict-3 learnings before it is signed off rather than after. The dependency is a **file handoff**, `docs/research/prd-84-verdict-3-learnings.md`, not Milestone D1 editing the spec (Decision 54). Milestone D2 depends on Milestone C2.
 - **Resulting execution order:** A1 → A2 → {A3, A4} → B1 → B2 → {B3, B4} → C1 → D1 → C2 → D2.
 
 ## Decision Log
@@ -839,6 +841,7 @@ A spec that summarizes findings instead of recording decisions has failed this m
 | 51 | **Mode strictness is not what drives the prompt rate, so the remedy had to change the approval mechanism rather than loosen the mode.** | Measured 2026-08-04 with `scripts/measure-prompt-rate.sh`: 8.6% overall (21 prompts / 243 tool calls), with `acceptEdits` at 9.3% and `default`/Manual at 6.1% on 49 calls. The *looser* mode had the *higher* rate. This matches the documentation, which widens `acceptEdits` to file edits and a short list of filesystem commands while leaving every other Bash command on the prompting path — both modes gate an inline heredoc identically. Recorded because "just use a looser mode" is the obvious remedy and the data says it is the wrong one. |
 | 52 | **Windows are compared by tool-call count and rate, never by elapsed hours.** The measurement script prints elapsed time only as a span, labelled as including idle gaps. | Whitney's correction, 2026-08-04: a nine-hour window can be mostly time away from the keyboard, or time blocked waiting on an approval, so hours measure elapsed time rather than work. The rate already defends against this — it is why Decision 44's instrument uses `PreToolUse` as the denominator — but printing hours beside the rate invites reading the span as effort. Supersedes the "state the length of both windows" success criterion's implication that length is the comparison unit; length is still printed, as context and not as a metric. |
 | 53 | **Phase B runs before any further hand-rolled measurement in this PRD.** | Whitney raised the sequencing directly and the day's evidence backs it: the most valuable finding in Milestone A3 came from ~20 minutes of reading official documentation, not from the instrument that was built to find it. That is the same pattern Decision 37 recorded when it put Milestone B1 ahead of the practitioner spikes, now observed a second time with a measured cost attached. Nothing about the phase order changes; what changes is that no future milestone should build an instrument before checking whether the platform already answers the question. |
+| 54 | **Milestone D1's verdict-3 learnings reach the spec by handoff, not by Milestone D1 writing into it.** Milestone D1 writes `docs/research/prd-84-verdict-3-learnings.md`; Milestone C2 is required to absorb that file, restated in the spec's own terms; Milestone D1's success criterion verifies the handoff rather than a spec section. | Milestone D1 was instructed to write those learnings "into the spec" while the execution order runs it *before* Milestone C2 — the milestone that creates and signs off that file. So the instruction required writing into a document that does not exist yet. Found by CodeRabbit on 2026-08-04; a real deadlock, not a wording slip. Reordering was rejected for the reason the current order exists: a signed-off spec later edited to add Milestone D1's learnings is not signed off. The handoff keeps the sign-off-once property and matches Decision 37's separation rule, where findings live in a research document and the spec records decisions. Whitney chose this over reordering and over leaving it. |
 
 ## Open Questions
 
