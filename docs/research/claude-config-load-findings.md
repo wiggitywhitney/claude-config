@@ -74,6 +74,8 @@ Five of the eight are workflow skills whose **closing** steps are the ones estim
 
 `~/Documents/Journal/CURRENT-CONTEXT.md` is `@`-referenced from `global/CLAUDE.md` and loads every session (~305 tokens). It is outside this repository, so #108's count of "11 `@`-referenced rule files" excludes it by construction and no sweep of `rules/` will ever find it.
 
+> **Superseded 2026-08-05: the reference was removed and this file no longer loads.** The measurement above stands as recorded. What it could not see is that the file had been empty since April — the nightly job that fills it fails every night with "Operation not permitted," because macOS protects `~/Documents` from scheduled tasks. So the always-loaded set was carrying a placeholder announcing its own absence. The finding's general point survives its subject and is the reason to keep this entry: **`measure-context-load.sh` does not follow `@`-references outside the repository, so a future out-of-repo import will be just as invisible.** There are none today.
+
 **Implication for the byte budget:** count imports by *observed load*, from the `InstructionsLoaded` hook or `/context`, never by globbing a directory. A directory-scoped budget is guaranteed to understate the real total, and the amount it understates by is invisible.
 
 ## 4. The `@`-referenced set has grown 16% since #108, and one file is 46% of it

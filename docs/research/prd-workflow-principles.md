@@ -126,7 +126,7 @@ State lives in five places. The model is deliberately distributed — each surfa
 - **Milestone checkboxes** (`[ ]`, `[x]`, `[~]`, `[!]`) — the only authoritative record of "what is done." Machine-readable; hooks grep them.
 - **Decision Log table** — rationale + date + impact, durable. Rows are additive; the cascade hook watches for new ones.
 - **Implementation approach, requirements, success criteria, code examples, risks** — all live in the PRD and are updated in place as decisions land.
-- **Status field** (`In Progress`, `Complete`) — used by `auto-reanchor.sh` and `/continue` to find the active PRD via grep.
+- **Status field** (`Draft`, `Complete`) — set to `Draft` by `/prd-create` and rewritten to `Complete` by `/prd-close`. Nothing reads it to identify the active PRD. Three things once did, all by grepping for `In Progress`, a value nothing ever wrote: `auto-reanchor.sh`, `/post-compact`, and `/continue`, all removed 2026-08-05. The active PRD is identified from the branch name (`feature/prd-NNN-*`), which `/prd-next` and `/prd-start` already do.
 
 The PRD is the instruction set for future AI implementors. Milestone text is read as a prompt — which is why `/prd-create` runs `/write-prompt` over it before commit, and why `/prd-update-decisions` cascades updates into downstream milestone descriptions.
 
@@ -316,11 +316,11 @@ State survives compaction if it lives outside the conversation. State that lives
 
 **Recovery mechanisms currently in place:**
 
-1. **`PostCompact` hook → `auto-reanchor.sh`** fires automatically after `/compact`. It greps `prds/` for "Status.*In Progress", reads the first `[ ]` milestone, reports branch + recent commits + dirty files, and instructs: "Re-read CLAUDE.md and the active PRD now to restore full context."
+1. **Compaction itself.** The harness carries a summary of the conversation into the next context window along with whatever was not summarized, and re-provides `CLAUDE.md` rather than leaving it in the conversation where it could be summarized away. This is why the three purpose-built recovery mechanisms below were removed on 2026-08-05 — see [the repo audit](claude-config-repo-audit.md).
 
-2. **`/post-compact` skill** is the manual counterpart — same goal, same sources, slightly richer (reads `_execution-state.md` from the plan-execute skill if present). Explicit constraint: "Do NOT start implementing work during this skill. Orientation only."
+2. **`/prd-next` and `/issue-next`** are the surviving session-start recovery paths, split by work type. Both identify the active work from the branch name rather than from a status field.
 
-3. **`/continue` skill** is the heavier session-start recovery — reads PROGRESS.md narrative, TaskList, and layered journal context (today's raw entries, yesterday's daily summary, most recent weekly and monthly summaries). Asks for user confirmation before resuming.
+3. **Removed 2026-08-05, recorded so their absence is not mistaken for an oversight.** A `PostCompact` hook (`auto-reanchor.sh`) could never have worked: it wrote to stderr on exit 0, which reaches only the debug log, and `PostCompact` supports no context injection at any rate. `/post-compact` re-read a `CLAUDE.md` that compaction no longer strips. `/continue` was never used, and was the only reader of layered journal context. That capability was retired the same day rather than rehomed: `CURRENT-CONTEXT.md`, the nightly-generated file that had been `@`-referenced into every session, turned out to have been empty since April because its scheduled job could not read `~/Documents` under macOS file protection. Four months of working without it was treated as sufficient evidence that it was not needed, so the reference, the schedule, and the capability were all dropped.
 
 4. **Atomic commits** are the key architectural resilience mechanism. Because every `/prd-update-progress` commits code + PRD + PROGRESS.md together, `git log` is a sufficient reconstruction surface: the state on disk after the last commit is consistent, and the PROGRESS.md narrative + PRD checkbox flips are self-describing.
 
@@ -427,13 +427,8 @@ Fires on `Write|Edit` to active PRD files (`prds/*.md` but not `prds/done/*.md`)
 
 Advisory because the check cannot reliably detect whether a decision row was added — it defers the judgment to Claude on every PRD edit. Pairs with `/prd-update-decisions`' explicit propagation step; the hook is a backstop.
 
-### `auto-reanchor.sh` (Claude Code PostCompact — ADVISORY)
-Fires after compaction. Detects the active PRD via grep of "Status.*In Progress", extracts the first unchecked milestone, and emits:
-
-> `Active PRD: <name> | Next milestone: <text>`
-> `ACTION: Re-read CLAUDE.md and the active PRD now to restore full context.`
-
-This is the automated half of the compaction-resilience story; `/post-compact` is the manual half.
+### `auto-reanchor.sh` (removed 2026-08-05)
+Registered on `PostCompact`, it emitted an orientation block naming the active PRD and the next unchecked milestone. It never reached the model: it wrote to stderr and exited 0, and stderr from a hook exiting 0 goes to the debug log only. `PostCompact` also supports no context injection, so no output shape would have worked there. Its PRD detection was broken independently, grepping for a status value nothing wrote. Kept in this document as a removed entry because "the automated half of the compaction-resilience story" was load-bearing in the design and its absence is deliberate.
 
 ### Push/PR-level hooks that indirectly gate PRD work
 - **`pre-push-verify.sh`** gates push on security verification; escalates to "expanded security + tests" when an open PR exists; runs advisory CodeRabbit CLI after.

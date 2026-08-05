@@ -103,7 +103,9 @@ Check `~/.claude/settings.json` for how Whitney's existing SessionStart behavior
 
 **`/summary-weekly` skill** — CLI gathers data, LLM narrates trends and suggests 1-2 focus areas for next week. Complements what the journal already does but adds the workflow-health angle. Skill at `~/Documents/Repositories/forrester-workflow/claude-config/skills/summary-weekly/SKILL.md`.
 
-**CURRENT-CONTEXT.md auto-population** — Whitney's CURRENT-CONTEXT.md is manually populated and currently stale. Michael's session harvester + weekly digest pipeline auto-regenerates context from git activity, session data, and journal entries. A nightly cron job that populates CURRENT-CONTEXT.md deterministically from git log + session JSONL files is the right direction.
+**CURRENT-CONTEXT.md auto-population** — Michael's session harvester and weekly digest pipeline auto-regenerate context from git activity, session data, and journal entries.
+
+> **Rejected 2026-08-05. Do not propose this again without new evidence.** The nightly job this recommends was in fact built, and it had been failing every night since April: macOS blocks scheduled tasks from reading `~/Documents`, so it never once wrote the file. Four months passed with the always-loaded set carrying an empty placeholder and nobody noticing, because a file reading "not yet generated" is indistinguishable from one never set up. Given four months of evidence that the work was unaffected, the reference, the schedule, and the capability were removed rather than repaired.
 
 **Per-session decision log** — Michael has `decisions/<repo-name>.md` per-repo decision logs. Whitney captures decisions in PRD milestones but has no lightweight per-repo decision log.
 

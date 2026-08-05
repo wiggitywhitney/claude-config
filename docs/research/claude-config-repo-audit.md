@@ -8,19 +8,33 @@ Every enumeration behind the inventories below is produced by a committed, re-ru
 
 ## Test suite baseline, recorded before any A4 change
 
-Recorded 2026-08-05 on branch `feature/prd-109-claude-config-audit-redesign`, before this milestone modified anything. The milestone requires this baseline first, so that later work is neither blamed for these failures nor allowed to dismiss them as already broken.
+Recorded 2026-08-05 on branch `feature/prd-109-claude-config-audit-redesign`. The milestone requires this baseline first, so that later work is neither blamed for these failures nor allowed to dismiss them as already broken.
 
 Command: `for f in tests/*.bats; do bats "$f"; done`, counting `ok` and `not ok` lines per suite.
 
+**This table was wrong when first written, and the error is worth more than the numbers.** It was labelled "before this milestone modified anything" and totalled 346 passing. Two suites were missing from it: `tests/audit-enumerate.bats`, the enumerator's own 29 tests, which this same document describes two sections below; and one test added to `tests/check-rule-frontmatter.bats` the same day by this milestone's `@`-reference fix. So a document asserting a baseline omitted the 29 tests it also reports building. The PRD compounded it by instructing future readers not to re-run the baseline — an unevidenced completion claim of exactly the class Milestone A4 is cataloguing, sitting inside A4's own evidence section. Re-derived by running every suite individually, 2026-08-05.
+
+The label was also wrong in a second way: "before any A4 change" has no referent, because building the enumerator and fixing the scanners were themselves A4 work. Three distinct numbers, all with 14 failures:
+
+| Snapshot | Pass | Fail |
+|---|---|---|
+| As originally recorded (incomplete) | 346 | 14 |
+| Same commit, with the omitted suite and test restored | 376 | 14 |
+| Current, after the hook inventory added two suites' worth of tests and deleted `tests/auto-reanchor.bats` with its script | 369 | 14 |
+
+**The 14 failures are identical across all three, which is the claim that actually matters.** They remain the two documented groups below. No change made in this milestone has added a failure.
+
+Per-suite, current:
+
 | Suite | Pass | Fail |
 |---|---|---|
-| `tests/auto-reanchor.bats` | 17 | 0 |
+| `tests/audit-enumerate.bats` | 29 | 0 |
 | `tests/backup-private-files.bats` | 11 | 0 |
 | `tests/bootstrap.bats` | 38 | 0 |
 | `tests/cascade-decision-check.bats` | 10 | 0 |
 | `tests/check-coderabbit-required.bats` | 6 | 0 |
 | `tests/check-prompt-generality.bats` | 9 | 0 |
-| `tests/check-rule-frontmatter.bats` | 28 | 0 |
+| `tests/check-rule-frontmatter.bats` | 29 | 0 |
 | `tests/cost-tracker.bats` | 26 | 0 |
 | `tests/e2e-backup.bats` | 8 | 0 |
 | `tests/e2e-bootstrap.bats` | 11 | 0 |
@@ -29,12 +43,13 @@ Command: `for f in tests/*.bats; do bats "$f"; done`, counting `ok` and `not ok`
 | `tests/install-git-hooks.bats` | 11 | 10 |
 | `tests/measure-context-load.bats` | 44 | 0 |
 | `tests/measure-prompt-rate.bats` | 14 | 0 |
+| `tests/post-write-codeblock-check.bats` | 6 | 0 |
 | `tests/progress-md-pr.bats` | 5 | 0 |
-| `tests/suggest-branch-cleanup.bats` | 8 | 0 |
+| `tests/suggest-branch-cleanup.bats` | 12 | 0 |
 | `tests/suggest-planning-handoff.bats` | 19 | 0 |
 | `tests/suggest-write-prompt.bats` | 24 | 0 |
 | `tests/sync-repos.bats` | 11 | 0 |
-| **Total** | **346** | **14** |
+| **Total** | **369** | **14** |
 
 The failure count matches what the PRD documented on 2026-08-04. Two details in the PRD's description of these failures are wrong, and both change what the fix would be.
 
@@ -98,7 +113,9 @@ So the installed symlinks in `.git/hooks/` are live. The tests fail on the insta
 ./scripts/audit-enumerate.sh repos    # every directory under ~/Documents/Repositories with a .claude/
 ```
 
-Counts as of 2026-08-05: **17 Claude Code hook entries** across 15 distinct scripts, plus 3 native git hooks; **26 skills**; **80 coupled pairs**; **26 repos** carrying Claude Code configuration.
+Counts when the enumerator was built, 2026-08-05: **17 Claude Code hook entries** across 15 distinct scripts, plus 3 native git hooks; **26 skills**; **80 coupled pairs**; **26 repos** carrying Claude Code configuration.
+
+**After the same day's removals: 14 hook entries across 12 scripts plus the 3 git hooks, 24 skills, 87 pairs, 26 repos.** `PostCompact` is no longer a configured event. The pair count rose while three scripts were deleted because that class counts branch-versus-main differences, which today's commits added — further evidence for Decision 57 that it is not measuring what its name claims.
 
 ### The hook count was wrong, and the reason is the finding
 
@@ -191,3 +208,56 @@ Recorded because the milestone's instruction is to ask of every check, *what wou
 
 Both are covered by tests that failed before the fix. After it, `rule-names-script` pairs fell from 15 to 11 and broken non-branch targets from 5 to 0 — so every one of the original "broken reference" findings was an artifact of the check rather than a defect in the repo. A verdict list built from that first run would have recommended repairing four things that were never broken.
 
+### A relationship-aware hook existed, and Milestone C1 should inherit its design before rebuilding it
+
+`scripts/check-contributing-freshness.sh` was removed on 2026-08-05. Its mechanism is the finding, and it survives here because Milestone C1 is scheduled to design a coupled-pair warning hook from scratch.
+
+**Correct a claim in the PRD when next updating it.** Milestone A4 states that of the existing hooks, "twelve fire on a file operation and two on a lifecycle event (`SessionStart`, `PostCompact`); none fires on a relationship between files." The first half was already corrected — the unit is 17 registered entries across 15 distinct scripts, not 14. The second half was also false, and this hook was the counterexample. Route the correction through `/prd-update-decisions` rather than editing the PRD directly.
+
+**What it did.** learning-center keeps a `CLAUDE.local.md` that condenses that repo's contributing rules and points at `docs/lab-development/pr-checklist.md` as the fuller source. Two files, one body of knowledge. The hook stored the commit SHA of the last reconciliation in `.git/info/contributing-reviewed-sha` and warned at session start when the authoritative files had moved past it.
+
+**Why that mechanism matters more than the hook did.** The enumerator's three derivation classes all infer pairs from filename shape, which is why they found none of the three real pairs discovered by hand — those were the same knowledge under different names. This mechanism does not infer the pair at all: the pair is declared and the reconciliation point is recorded. That is the shape that works exactly where derivation fails. The tension to resolve in Milestone C1 is that a declared pair is an `assert`, and Decision 17a ranks `derive` above `assert` — but for pairs no filename pattern can relate, an assert may be the only option available, and this was a working instance rather than a proposal.
+
+**The trap it teaches, which is the more valuable half.** It answered "have the authoritative docs changed?" with `git log` against the local checkout, so it could only see changes already fetched and merged. The learning-center clone has **never been fetched** — no `FETCH_HEAD` exists — and sits 45 commits ahead and 4 behind an `origin/main` last known on 2026-05-22. So a drift detector built to catch other people's edits was structurally blind to them, and would have reported "fresh" indefinitely. This is the fourth instance in this audit of a check that passes confidently while unable to see where the violation would live, after the two Milestone A2 found and the enumerator's gitignored-settings gap. **Any coupled-pair mechanism C1 designs must state which side of the pair it can actually observe.**
+
+**A second finding fell out of the same investigation.** That unfetched clone, 45 commits ahead on branch `TRAIN-3466-k8s-updates-DASH`, is a stalled-work and potential data-loss instance in a repo nobody was watching — and an instance of the branch-versus-main coupled-pair class, found by following a thread rather than by enumeration. It belongs in the evidence this milestone owes the stalled-work detector.
+
+**Why removal still cost nothing.** The hook never produced output in its life: it became a registered `SessionStart` hook only on 2026-08-02, recovered from a May stash, and the files it watched last changed 2026-05-07 in local history. It served one dormant repo, its state lived in untracked `.git/info/` so a fresh clone started unarmed and no teammate had it, and both the mechanism and the trap are recorded above. Its cost was never the reason to remove it — a `SessionStart` hook runs twice per session, not per tool call.
+
+
+## Hook inventory
+
+**Status: 10 of 15 original scripts settled with Whitney on 2026-08-05, 5 pending.** Rendered from `./scripts/audit-enumerate.sh hooks`, not typed by hand. Re-run it to reproduce the rows; the verdict column is the judgment half and is not derivable.
+
+**State the unit whenever a hook count appears.** Two scripts (`suggest-planning-handoff.sh`, `suggest-write-prompt.sh`) are each registered twice, once on `Write|Edit` and once on `Bash`, so "how many hooks" has two correct answers. The set went from **17 registered entries across 15 distinct scripts** to **14 across 12**. `PostCompact` is no longer a configured event.
+
+### Settled
+
+| Script | Event | Fires on | Verdict |
+|---|---|---|---|
+| `cascade-decision-check.sh` | PostToolUse | any edit to `prds/*.md`, excluding `prds/done/` | **keep as is** — fires on every PRD edit, not only Decision Log additions, and that dumbness is the point: the cost is one paragraph, the failure mode of a precise version is a missed cascade, and Whitney values that the cascade never gets missed |
+| `suggest-write-prompt.sh` | PostToolUse ×2 | `SKILL.md`, `CLAUDE.md`, anything under `prds/` or `rules/`, `*-prompt.md`, `*-spec.md`, plus successful `gh issue create` | **keep as is** — a narrowing to `Write`-only for `prds/` was offered and declined |
+| `suggest-planning-handoff.sh` | PostToolUse ×2 | `Write` to `prds/`, plus successful `gh issue create` | **keep as is** — cheapest hook in the set and its content (decisions from *this conversation*) is the one thing no static rule can supply. Known defect left unfixed by choice: its `prds/` match includes `prds/done/`, which `cascade-decision-check.sh` excludes, so two scripts answer "what is an active PRD" differently |
+| `check-aboutme.sh` | PreToolUse | `Write`/`Edit` on `.py .sh .ts .tsx .js .jsx` | **keep as is** — verified blocking, exempting, and fix-and-retry paths. **23 of 84 tracked code files lack the header it enforces; backfilling them was explicitly declined 2026-08-05 and is not to be re-raised.** The hook only sees files someone touches, so it cannot reach the rest |
+| `post-write-codeblock-check.sh` | PostToolUse | any `Write`/`Edit`; the checker decides what is markdown | **repaired** — deleted a passthrough layer whose whole body re-invoked the Python checker, added the ABOUTME header it was missing, first tests written (6) |
+| `suggest-branch-cleanup.sh` | PostToolUse | successful `gh pr merge` only | **repaired** — no longer advises deleting a branch `gh` already deleted; handles `--delete-branch`, `-d`, and `=false` (12 tests) |
+| `check-running-clusters.sh` | SessionStart | every session | **repaired, and it had never worked** — see below (44 tests) |
+| `vale-on-edit.sh` | *removed* | markdown edits in repos with `.vale.ini` | **removed** — one repo of 26 had that config, last committed to in May; a project linter does not belong in the global set |
+| `check-contributing-freshness.sh` | *removed* | every session | **removed** — never produced output in its life; mechanism and blind spot preserved above as input to Milestone C1 |
+| `auto-reanchor.sh` | *removed* | PostCompact | **removed** — could not work: stderr on exit 0 reaches only the debug log, and `PostCompact` supports no context injection |
+
+### The cluster alarm's cloud half had never fired
+
+Recorded separately because it is the most expensive defect found. `check-running-clusters.sh` warns about clusters left running, with GKE billed hourly and Kind free. The GKE query ran against whatever project the local `gcloud` config named, discarded the command's error, and treated failure as "nothing running". No project was configured, so the call failed every time and the alarm was silent by construction — **the half with money attached, silent; the free half, working.**
+
+Three compounding faults: the error was swallowed by `2>/dev/null || true`; the query filtered to two hardcoded name prefixes, so the forgotten cluster least likely to be found is the one that never got a conventional name; and the tests stubbed `gcloud` and asserted only the success path, which is the repo's own rule against mocking local CLIs, and is what hid it. Now resolves the project explicitly, reports a missing configuration or failed call as a *problem* rather than as an absence of clusters, drops the filter, and emits the documented `hookSpecificOutput` envelope rather than a bare object that worked only through a `SessionStart` convenience. **Positive detection is still verified against stubs only** — the one accessible project has zero clusters.
+
+`~/.claude/rules/infrastructure-safety.md` waived mandatory teardown gates on the strength of this alarm. That sentence was corrected the same day.
+
+### Pending
+
+`check-coderabbit-required.sh`, `pre-pr-hook.sh`, `gogcli-safety-hook.py`, `google-mcp-safety-hook.py`, `prd-loop-continue.sh` (declared in gitignored `.claude/settings.local.json`), and the three native git hooks — `pre-commit`, `commit-msg`, `pre-push`.
+
+### Method note
+
+Every verdict above came from running the hook against a payload, not from reading it. That found: the cluster alarm's dead cloud half, `auto-reanchor`'s unreachable output channel, `check-contributing-freshness` never having fired, and the `--delete-branch` redundancy. It also produced one false alarm — four `check-aboutme` cases appeared to pass silently until the test payload turned out to be malformed JSON, which the hook fails open on. Reading alone would have missed all four real defects and would not have caught the false one either.

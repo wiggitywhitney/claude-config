@@ -189,14 +189,6 @@ When setting up a new spiny-orb evaluation target or running `spiny-orb instrume
 
 - Project CLAUDE.md overrides global. When rules conflict, ask the user.
 
-## Current Life Context
-
-Whitney's current context (location, schedule, active projects, upcoming deadlines, recent git activity) is pre-loaded from a nightly-generated file:
-
-@~/Documents/Journal/CURRENT-CONTEXT.md
-
-Check the freshness timestamp in that file. If it is more than 48 hours old, treat it as background only and rely on Whitney's direct answers for current state.
-
 ## Hooks Reference
 
 - Hook details (reference pointer, not auto-loaded — read only when a hook fires unexpectedly or you need to know what a specific hook checks): `~/.claude/rules/hooks-reference.md`
