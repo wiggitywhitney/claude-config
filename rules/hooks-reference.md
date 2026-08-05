@@ -5,6 +5,23 @@ description: Reference for all PreToolUse and PostToolUse hooks and what they en
 
 # Hooks Reference
 
+## How a hook reaches Claude, and how to get it wrong
+
+Two hooks in this repo were written on false assumptions about this and did nothing for months. Confirmed against the official hooks documentation, 2026-08-05.
+
+- **Stderr from a hook that exits 0 goes to the debug log only. Claude never sees it, and neither does the transcript.** A hook that prints its message to stderr and exits 0 is a no-op with no symptom. To surface something to Claude from a `PostToolUse` hook, exit 2 instead.
+- **Stdout on exit 0 is parsed for JSON output fields and otherwise written to the debug log**, except for `SessionStart`, `UserPromptSubmit`, and `UserPromptExpansion`, where plain stdout is added as context directly. Relying on that exception works but is a side door; prefer the documented envelope.
+- **The documented way to add context is nested, not top-level.** A bare `{"additionalContext": "..."}` is not a recognised field:
+
+  ```json
+  {"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "..."}}
+  ```
+
+- **`PostCompact` supports no context injection at all** — it is a side-effects-only event, alongside `SessionEnd`, `Notification`, and `CwdChanged`. There is no way to add context after a compaction, so re-anchoring must be invoked deliberately. `PreCompact`, by contrast, can block.
+- **Write injected text as factual statements, not as imperative system instructions.** Out-of-band command phrasing can trigger prompt-injection defenses, which surfaces the text to the user instead of treating it as context.
+
+**Before trusting any new hook, exercise it** — pipe a realistic payload to it and read what comes back. Every hook defect found in the 2026-08-05 audit was invisible from reading the script and obvious from running it. When building a test payload, construct the JSON with `python3 -c 'import json...'` rather than `printf`, which expands `\n` into real newlines and produces invalid JSON that hooks silently skip.
+
 ## Native git hooks (installed via `scripts/install-git-hooks.sh`)
 
 These run inside the git process itself, providing stronger enforcement than Claude Code hooks because they intercept git operations directly. However, users can bypass them with `--no-verify` (e.g., `git commit --no-verify`, `git push --no-verify`), so they provide strong local enforcement but are not absolute.
