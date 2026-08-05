@@ -104,6 +104,36 @@ add_event() {
   [[ "$output" == *"no PreToolUse events"* ]]
 }
 
+@test "does not classify an ask-rule name appearing as an argument" {
+  # 'echo rm ...' does not invoke rm, and 'printf git merge' does not invoke
+  # git merge. Because ask-rule has the highest precedence, a loose match here
+  # would also mask the command's real class.
+  add_event PreToolUse default Bash "echo plain" "2026-08-04T10:00:00Z"
+  add_event PermissionRequest default Bash "echo rm \$TMPDIR" "2026-08-04T10:01:00Z"
+
+  run "$SCRIPT" --log "$LOG"
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"ask-rule"* ]]
+  [[ "$output" == *"expansion"* ]]
+}
+
+@test "still classifies a real rm invocation as ask-rule" {
+  add_event PreToolUse default Bash "echo plain" "2026-08-04T10:00:00Z"
+  add_event PermissionRequest default Bash "rm -f /tmp/scratch" "2026-08-04T10:01:00Z"
+
+  run "$SCRIPT" --log "$LOG"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"ask-rule"* ]]
+}
+
+@test "rejects a valued option given with no value" {
+  for flag in --log --since --until; do
+    run "$SCRIPT" --log "$LOG" "$flag"
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"requires a value"* ]]
+  done
+}
+
 @test "fails loudly on a malformed timestamp rather than counting a partial window" {
   add_event PreToolUse default Bash "echo a" "2026-08-04T10:00:00Z"
   add_event PreToolUse default Bash "echo b" "2026-08-04T10:010:00Z"

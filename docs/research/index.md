@@ -2,8 +2,8 @@
 
 | File | Description | Last Updated |
 |------|-------------|--------------|
-| [michael-forrester-workflow.md](michael-forrester-workflow.md) | Michael Forrester's LLM coding workflow — ideas for claude-config and journal repos. **Stale**; updated by PRD #109 M6 | 2026-04-07 |
-| [michael-autonomous-execution-principles.md](michael-autonomous-execution-principles.md) | Michael Forrester's autonomous execution patterns. **Stale**; updated by PRD #109 M6 | 2026-04-18 |
+| [michael-forrester-workflow.md](michael-forrester-workflow.md) | Michael Forrester's LLM coding workflow — ideas for claude-config and journal repos. **Stale**; updated by PRD #109 Milestone B3 | 2026-04-07 |
+| [michael-autonomous-execution-principles.md](michael-autonomous-execution-principles.md) | Michael Forrester's autonomous execution patterns. **Stale**; updated by PRD #109 Milestone B3 | 2026-04-18 |
 | [prd-workflow-principles.md](prd-workflow-principles.md) | How the current PRD skills work, what state lives where, the atomic-commit invariant | 2026-04-18 |
 | [bats-core.md](bats-core.md) | bats-core v1.12/v1.13 changes, run + function visibility, stdin/pipe behavior, macOS issues | 2026-04-11 |
 | [claude-code-autonomous-capabilities.md](claude-code-autonomous-capabilities.md) | 2026 platform constraints on autonomous execution — self-clear, compaction, Ralph loops | 2026-05-31 |

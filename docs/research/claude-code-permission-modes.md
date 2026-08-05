@@ -26,7 +26,9 @@ Milestone B1 re-runs this pass against whatever version ships then. The version 
 
 ## Summary
 
-Claude Code has a permission mode built for exactly the problem Milestone A3 is measuring — it is called **auto mode**, and the documentation section describing it is titled "Eliminate permission prompts with auto mode." It replaces the approval prompt with a separate classifier model that reviews each action. Whitney is not using it: the recorded sessions run in `default` (Manual) and `acceptEdits`, and neither of those changes how a Bash command is approved.
+Claude Code has a permission mode built for exactly the problem Milestone A3 is measuring — it is called **auto mode**, and the documentation section describing it is titled "Eliminate permission prompts with auto mode." It replaces the approval prompt with a separate classifier model that reviews each action.
+
+**State of play, so the two are not confused.** The measurement window in this document is the **pre-adoption** baseline: those sessions ran in `default` (Manual) and `acceptEdits`, and neither of those changes how a Bash command is approved. **Auto mode was then adopted provisionally on 2026-08-04** and is the current default in `config/settings.json`. So every rate below describes the setup as it was *before* the change this document recommends.
 
 Two findings shape what auto mode would and would not fix here:
 
@@ -53,12 +55,17 @@ That distinction is load-bearing, because ask rules are the one thing that survi
 
 ### The recorded sessions ran in two modes, and the mode is not what drives the prompt rate
 
-**Verified-here.** 🟢 `~/.claude/settings.json` sets no `permissions.defaultMode` key, so sessions start in `default` (Manual); `acceptEdits` is reached mid-session with `Shift+Tab`. Both appear in the log. Measured 2026-08-04 at ~18:20 local, across 271 records:
+**Verified-here.** 🟢 Before auto mode was adopted, `~/.claude/settings.json` set no `permissions.defaultMode` key, so sessions started in `default` (Manual) and reached `acceptEdits` mid-session with `Shift+Tab`. Both appear in the log.
+
+**Every figure below comes from one run of `scripts/measure-prompt-rate.sh` over one named window** — `--since 2026-08-04T15:00:00Z --until 2026-08-05T00:40:00Z`, which resolves to observed bounds `15:10:40Z .. 00:39:57Z`. An earlier draft of this table mixed an unbounded run with the PRD's bounded one and so did not reconcile; that is exactly the defect a single named window prevents.
 
 | Mode | `PermissionRequest` | `PreToolUse` | Rate |
 |------|--------------------:|-------------:|-----:|
-| `acceptEdits` | 18 | 203 | 8.9% |
+| `acceptEdits` | 18 | 194 | 9.3% |
 | `default` (Manual) | 3 | 49 | 6.1% |
+| **Total** | **21** | **243** | **8.6%** |
+
+Prompts by inferred trigger class over the same window: heredoc 7, other 6, expansion 4, non-Bash 3, ask-rule 1.
 
 **Interpretation:** the looser of the two modes shows the *higher* prompt rate, on a small sample for Manual (49 calls). Whatever the mode is doing, it is not the variable that explains the observed prompts — which is exactly what the documentation predicts, because `acceptEdits` widens file edits and a short list of filesystem commands and leaves every other Bash command on the prompting path. Both modes gate an inline `python3` heredoc identically.
 

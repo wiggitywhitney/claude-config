@@ -120,7 +120,7 @@ The five load reasons, from Claude Code's own matcher vocabulary, mapped to what
 
 | Load reason | Produced by | Enters | Survives compaction |
 |---|---|---|---|
-| `session_start` | Managed-policy `CLAUDE.md`, `~/.claude/CLAUDE.md`, project `CLAUDE.md`, `CLAUDE.local.md`, and unscoped `rules/*.md` | Startup, outside message history | Yes, re-injected from disk 🟢 |
+| `session_start` | Managed-policy `CLAUDE.md`, `~/.claude/CLAUDE.md`, project `CLAUDE.md`, `CLAUDE.local.md`, and unscoped `rules/*.md` | Startup, outside message history | Yes, re-injected 🟢 — whether from disk or from cache was not measured; see Resolved Questions |
 | `include` | `@path` imports expanded from **any** CLAUDE.md, user-level or project-level | Startup, alongside the referencing file | Yes for user-level imports 🟢 — measured, see Resolved Questions. **Project-level imports untested** — see the caveat below |
 | `path_glob_match` | `rules/*.md` carrying `paths:` frontmatter | Message history, when a matching file is read | **No** 🟢 |
 | `nested_traversal` | `CLAUDE.md` in a subdirectory below cwd | Message history, when a file in that subdirectory is read | **No** 🟢 |

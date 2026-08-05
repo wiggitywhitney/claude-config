@@ -36,18 +36,30 @@ LOG=""
 SINCE=""
 UNTIL=""
 
+# A valued option with no value must report the documented usage error rather
+# than tripping `shift 2` under `set -e`, which exits with a bare shell error.
+require_value() {
+  if [ "$2" -lt 2 ]; then
+    printf 'measure-prompt-rate.sh: %s requires a value\n' "$1" >&2
+    exit 2
+  fi
+}
+
 while [ $# -gt 0 ]; do
   case "$1" in
     --log)
-      LOG="${2:-}"
+      require_value "$1" "$#"
+      LOG="$2"
       shift 2
       ;;
     --since)
-      SINCE="${2:-}"
+      require_value "$1" "$#"
+      SINCE="$2"
       shift 2
       ;;
     --until)
-      UNTIL="${2:-}"
+      require_value "$1" "$#"
+      UNTIL="$2"
       shift 2
       ;;
     -h|--help)
@@ -89,7 +101,8 @@ EVENTS=$(
     def classify:
       if (.tool_name // "") != "Bash" then "non-bash"
       else (.tool_input.command // "") as $c
-        | if ($c | test("(^|[^a-zA-Z0-9_])rm([^a-zA-Z0-9_]|$)")) or ($c | test("git +merge")) then "ask-rule"
+        | if ($c | test("(^[[:space:]]*|[;&|][[:space:]]*)rm([[:space:]]|$)"))
+             or ($c | test("(^[[:space:]]*|[;&|][[:space:]]*)git[[:space:]]+merge")) then "ask-rule"
           elif ($c | test("<<")) then "heredoc"
           elif ($c | test("\\$\\(|`|\\$\\{|\\$[A-Za-z_]")) then "expansion"
           elif ($c | test("(^|[;&|] *)cd ")) then "cd-chain"

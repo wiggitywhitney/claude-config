@@ -31,7 +31,7 @@ paths: ["**/*.sh"]
   ```
 
   Reserve `-q` for when grep reads a file directly (`grep -q pat file`) — no pipe, no trap. Confirmed by reproduction in `tests/measure-context-load.bats`, 2026-08-04.
-- **`\s` is a GNU extension. BSD grep — which is `/usr/bin/grep` on macOS — treats it as a literal `s`.** A pattern like `"foo\.md(\s|$)"` silently stops matching `foo.md ` and starts matching `foo.mds`. It fails quietly rather than erroring, and it works on Linux CI while failing on the developer's laptop. Use the POSIX class `[[:space:]]` instead. The same applies to `\d`, `\w`, and `\b`.
+- **`\s` is a GNU extension. BSD grep — which is `/usr/bin/grep` on macOS — treats it as a literal `s`.** A pattern like `"foo\.md(\s|$)"` silently stops matching `foo.md` followed by a space, and starts matching `foo.mds`. It fails quietly rather than erroring, and it works on Linux CI while failing on the developer's laptop. Use the POSIX class `[[:space:]]` instead. The same applies to `\d`, `\w`, and `\b`.
 - **With `set -u`, expanding a possibly-empty array needs a guard, or the script aborts on macOS.** `/bin/bash` is 3.2, which treats `"${arr[@]}"` on an empty array as an unbound variable and exits 1. Bash 5 from Homebrew does not, so a script can pass when run as `bash script.sh` and fail as `/bin/bash script.sh` or from a git hook. Write `${arr[@]+"${arr[@]}"}` whenever the array can be empty — including arrays that are non-empty today but might be emptied later, which is how this bug usually arrives.
 
   ```bash
