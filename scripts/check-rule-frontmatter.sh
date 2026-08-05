@@ -71,10 +71,17 @@ scan_references() {
     # real failure the moment anyone adds `set -e` or checks this function's status, and
     # "no imports" is indistinguishable from a genuine grep error (status 2+) until then.
     # The guard keeps 1 as success and lets real errors through.
+    #
+    # The trailing boundary group — whitespace, end-of-line, or a closing paren — matches what
+    # is_at_referenced in measure-context-load.sh already required. Without it, `@rules/foo.md.bak`
+    # was read here as a reference to `rules/foo.md` and not there, so the two scripts disagreed
+    # about which rules are @-referenced and a paths:-scoped rule could be reported as carrying
+    # both mechanisms. Two implementations of one definition is itself the coupled-pair shape these
+    # checks exist to catch; the second sed strips the boundary character the grep had to capture.
     sed -e '/^[[:space:]]*```/,/^[[:space:]]*```/d' "$md" \
         | sed -e 's/`[^`]*`//g' \
-        | { grep -oE '@(~/\.claude/|\./)?rules/[A-Za-z0-9._/-]*\.md' || [[ $? -eq 1 ]]; } \
-        | sed -E 's#^@(~/\.claude/|\./)?rules/##' | sort -u
+        | { grep -oE '@(~/\.claude/|\./)?rules/[A-Za-z0-9._/-]*\.md([[:space:]]|$|\))' || [[ $? -eq 1 ]]; } \
+        | sed -E -e 's#^@(~/\.claude/|\./)?rules/##' -e 's#[[:space:])]$##' | sort -u
 }
 
 global_referenced=$(scan_references "$CLAUDE_MD")

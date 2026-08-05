@@ -16,6 +16,17 @@ Use **bats-core** (installed via `brew install bats-core`) for all bash script t
 
 **`run` executes in a subshell.** Shell variable changes inside `run` don't persist. Exported env vars work fine.
 
+**Flags on `run` need an explicit version declaration or the suite prints a warning on every run.** `run --separate-stderr`, `run --keep-empty-lines`, and the `run -N` exit-code form all require bats 1.5.0+, and bats emits `BW02: Using flags on run requires at least BATS_VERSION=1.5.0` unless the file declares it. The warning does not fail the suite, so it survives as permanent noise in output that is supposed to be pristine. Declare it near the top of the file, above the first test:
+```bash
+bats_require_minimum_version 1.5.0
+```
+
+**A repo-level git hook test can fail for reasons that have nothing to do with the hook.** `core.hooksPath`, when set in global or system git config, overrides `.git/hooks` for **every** repository — including the temporary fixture repos a test creates. On a machine where it points somewhere root-owned, an installer under test writes at the managed path and fails with `Permission denied`, and every downstream assertion about `.git/hooks/<name>` then fails as a consequence. The symptom looks like a broken installer; the cause is machine configuration. Check it before debugging the script:
+```bash
+git config --get core.hooksPath
+```
+A test suite that asserts against `.git/hooks` cannot pass on such a machine as written. Either set `core.hooksPath=` (empty) for the fixture repo inside `setup()`, or assert against the path git will actually use.
+
 **`run my_function` works when `my_function` is defined in the .bats file.** `run` uses command substitution `$()` internally — a subshell of the current process, not a new `bash -c` invocation. Functions defined in the test file (or sourced via `load`) are visible without `export -f`.
 
 **`export -f` is only needed inside `run bash -c "..."`** — because `bash -c` spawns a new process that can't see parent-shell functions. Pattern:

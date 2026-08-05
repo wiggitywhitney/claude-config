@@ -53,6 +53,19 @@ bare_rule() {
     [[ "$output" == *"loads in every session"* ]]
 }
 
+# The reference scan must stop at the end of the .md, the same way is_at_referenced in
+# measure-context-load.sh does — it requires whitespace, end-of-line, or a closing paren after
+# the extension. Without that boundary the two scripts disagree about what counts as an
+# @-reference, and a paths:-scoped rule gets reported as carrying both mechanisms because some
+# unrelated longer path happens to start with its name.
+@test "does not treat @rules/NAME.md.bak as a reference to NAME.md" {
+    scoped_rule "example.md" '"**/*.ts"'
+    printf 'Backup lives at @rules/example.md.bak\n' >> "$FAKE_REPO/global/CLAUDE.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"exactly one loading mechanism"* ]]
+}
+
 @test "fails when a rule is both @-referenced and paths:-scoped" {
     scoped_rule "always-loaded.md" '"**/*.ts"'
     run "$SCRIPT" "$FAKE_REPO"

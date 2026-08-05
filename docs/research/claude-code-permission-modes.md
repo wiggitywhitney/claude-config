@@ -184,7 +184,7 @@ One caveat about stating boundaries in conversation rather than in rules (🟢 d
 Rationale, in order of weight:
 
 1. It is the platform's own answer to the exact question Milestone A3 exists to ask, and the docs name it as such.
-2. It targets the classes that dominate the measured baseline. Heredocs were the largest single class at 6 of 16, and every one of them is a command-shape failure that the classifier path bypasses entirely.
+2. It targets the classes that dominate the measured baseline. Heredocs were the largest single class at 7 of 21 in the full window recorded above — the earlier partial window of 16 prompts put it at 6, and quoting that figure here contradicted this document's own evidence table. And every one of them is a command-shape failure that the classifier path bypasses entirely.
 3. Every prerequisite is verified present: model qualifies, org has not disabled it, no managed setting overrides it.
 4. It is genuinely reversible — `Shift+Tab` leaves it for the session, deleting one key reverts it permanently, and dropped allow rules are restored on exit.
 5. It is cheaper to try than the sandbox, which needs `excludedCommands` work for `gh` and `docker` on macOS before it would be usable.

@@ -108,9 +108,9 @@ The PRD recorded 14 Claude Code hooks — 5 `PreToolUse`, 7 `PostToolUse`, 1 `Se
 
 | Script | Event | Matcher |
 |---|---|---|
-| `suggest-planning-handoff.sh` | `PostToolUse` | `Write|Edit` |
+| `suggest-planning-handoff.sh` | `PostToolUse` | `Write\|Edit` |
 | `suggest-planning-handoff.sh` | `PostToolUse` | `Bash` |
-| `suggest-write-prompt.sh` | `PostToolUse` | `Write|Edit` |
+| `suggest-write-prompt.sh` | `PostToolUse` | `Write\|Edit` |
 | `suggest-write-prompt.sh` | `PostToolUse` | `Bash` |
 
 So 17 registered entries and 15 distinct scripts are both correct, for different questions. This repeats the class-individuation problem Milestone A3 hit with permission trigger classes, and the same remedy applies: state the unit rather than quoting a bare number.
@@ -118,6 +118,14 @@ So 17 registered entries and 15 distinct scripts are both correct, for different
 **One hook is invisible to any sweep that reads tracked settings only.** 16 of the 17 entries live in `config/settings.json`. The seventeenth — a `SessionStart` hook running `prd-loop-continue.sh` — is declared in `.claude/settings.local.json`, which is gitignored.
 
 That is the third occurrence of one defect shape. Milestone A2 found it twice: a rules index that loaded unconditionally while the tooling called it on-demand, and an always-loaded import living outside the repository. Each time, a count was enumerated from places someone remembered rather than derived from what membership means. The enumerator reads four settings files for this reason, and a fifth appearing later has to be added there rather than counted by hand — which is a mitigation, not a fix, because the list of files is still a remembered list.
+
+### A coupled pair inside the coupled-pair tooling
+
+Surfaced by CodeRabbit on 2026-08-05 and fixed the same day. `check-rule-frontmatter.sh` and `measure-context-load.sh` each answer "is this rule `@`-referenced," and they answered differently. The measurer required a boundary after the extension — whitespace, end-of-line, or a closing paren. The checker did not, so `@rules/example.md.bak` counted as a reference to `rules/example.md` in one script and not the other, and a `paths:`-scoped rule could be reported as carrying both loading mechanisms because an unrelated longer path happened to start with its name.
+
+Two implementations of one definition, drifting apart with nothing to notice — the exact shape this milestone is cataloguing, living inside the tooling built to catch it. Both now require the boundary, with a regression test that fails without the fix.
+
+Worth carrying into Milestone C1: the remedy applied here is the weakest of the three the PRD ranks. `derive` would be one implementation used by both scripts; what landed is two implementations that currently agree. The stronger fix was out of scope for a review-response, and it belongs on the list.
 
 ### The enumerator's own first run produced five false positives
 
