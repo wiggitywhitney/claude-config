@@ -12,3 +12,4 @@
 | [claude-config-load-inventory.md](claude-config-load-inventory.md) | **Generated** by `scripts/measure-context-load.sh` — per-file loading mechanism, bytes, and always-loaded totals | 2026-08-03 |
 | [claude-config-load-findings.md](claude-config-load-findings.md) | Hand-written analysis of the inventory: the `rules/README.md` leak, skill truncation, and the `/context` reconciliation | 2026-08-03 |
 | [claude-config-audit-decisions.md](claude-config-audit-decisions.md) | Running decision log for PRD #109 — the authoritative record of decisions, findings, and open questions | 2026-08-03 |
+| [claude-code-permission-modes.md](claude-code-permission-modes.md) | The six permission modes, the sandboxed Bash tool, and auto mode — checked against version 2.1.222 and Whitney's live settings | 2026-08-04 |

@@ -126,6 +126,20 @@ Started 2026-08-02. Source: the claude-config scoping session of 2026-08-02, rec
   **Heredocs are the largest single class and every instance was self-inflicted.** Each was a multi-line Python or bats block written inline instead of via the Write tool with a plain invocation afterwards. That is the "reach for a shell one-liner when a dedicated tool exists" habit — the same discipline already recorded as violated for command shape, the approval instruction, and TDD ordering, making this the fourth instance of the pattern in one PRD and the second observed on 2026-08-04 alone. It is also cheap to eliminate and, like the `python3` case above, a class no allowlist entry can express: the prompt offers nothing to grant.
 
   Recurrence count is now the useful signal: the command-shape discipline has been written down, agreed to, and then violated again in a *later session* than the one that produced it — five separate times within this one session, across `for` loops, `cd` chains, and shell redirects. Milestone A3 should treat "documented but not enforced" as the null hypothesis and design for enforcement.
+
+  **Superseded by the script-produced baseline, 2026-08-04 (Decision 51). Use this one for any before/after comparison.** `scripts/measure-prompt-rate.sh` over the window ending 2026-08-05T00:40Z: **21 `PermissionRequest` against 243 `PreToolUse`, a rate of 8.6%.** The hand-read 8.8% above was not wrong, just earlier and narrower; the script exists because Decision 25 forbids reading a rate off a log by eye, and the split it produced is the part hand-reading missed:
+
+  | Permission mode | Prompts | Tool calls | Rate |
+  |---|---:|---:|---:|
+  | `acceptEdits` | 18 | 194 | 9.3% |
+  | `default` (Manual) | 3 | 49 | 6.1% |
+
+  **The looser mode had the higher rate**, which is the disproof of "just use a looser mode" and the argument for changing the approval mechanism instead. It also matches the documentation: `acceptEdits` widens file edits and a short list of filesystem commands, and leaves every other Bash command on the prompting path, so both modes gate an inline heredoc identically.
+
+  Two methodology findings from producing it, both worth more than the numbers:
+
+  - **An ad hoc `grep -o '"permission_mode":"[a-z]*"'` silently dropped every `acceptEdits` record**, because the character class excludes the capital E — and `acceptEdits` was the majority case. It produced a confident, internally consistent, wrong claim that every session had run in Manual mode, which was stated to Whitney before the fixture that exposed it. Caught and corrected the same session. This is what Decision 25 is actually defending against: not sloppiness, but a wrong answer that looks clean. The script now carries a regression test for mixed-mode input, and a second for an awk name collision — passing the log path in as a variable named `log` shadowed awk's logarithm built-in and printed `-inf` as the header.
+  - **Elapsed hours are not a comparison unit (Decision 52).** Whitney's correction: a nine-hour window can be mostly time away from the keyboard, or time blocked waiting on an approval, so hours measure elapsed time rather than work. The script still prints the span, now labelled as including idle gaps, and names tool-call count as the sample size that matters.
 - **Interactive/YOLO divergence survey (all eight PRD skill pairs — the seven `prd-*` skills plus `prds-get` — 2026-08-02).** Produced by issue #110 so Milestone B4 can start from it rather than rediscovering it. Every pair was diffed with `diff -u SKILL.md SKILL.v1-yolo.md`. *Intentional* means an autonomy difference that should persist; *accidental* means a fix that failed to mirror.
 
   | Pair | Divergence | Class | Disposition |

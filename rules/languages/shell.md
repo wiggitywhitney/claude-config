@@ -6,6 +6,18 @@ paths: ["**/*.sh"]
 
 - Start scripts with `#!/usr/bin/env bash` for portability.
 - Use `set -uo pipefail` at the top of scripts. Add `set -e` only when early exit on any error is desired.
+- **Never name an `awk -v` variable `log`, `index`, `length`, `split`, `sub`, `gsub`, `int`, `sin`, `cos`, or `exp`.** These are awk built-in functions, and assigning one produces no error — the reference silently evaluates to something else. Passing a file path in as `-v log="$FILE"` and printing it with `%s` yields `-inf`, because `log` resolves to the logarithm function rather than the string. Verified 2026-08-04.
+
+  ```bash
+  # Wrong: prints -inf, no error, no warning
+  awk -v log="$LOGFILE" 'END { printf "measured %s\n", log }'
+
+  # Right: any name that is not a built-in
+  awk -v logpath="$LOGFILE" 'END { printf "measured %s\n", logpath }'
+  ```
+
+- **A `[a-z]*` character class in a `grep` pattern silently excludes camelCase values, which makes a wrong count look clean.** Counting JSON field values with `grep -o '"key":"[a-z]*"'` drops every value containing a capital — and because the surviving matches are internally consistent, the resulting total looks trustworthy. Verified 2026-08-04, where it dropped the majority case and produced a confident wrong conclusion. Use `[A-Za-z]` when the value's case is not guaranteed, and prefer `jq` over `grep` for structured data, where the field is addressed by name rather than by pattern.
+
 - **`pipefail` plus `grep -q` at the end of a pipe is a silent-wrong-answer trap.** `grep -q` exits the moment it matches. If the upstream command is still writing, it takes SIGPIPE and exits 141, and `pipefail` promotes that to the pipeline's status — so a pipeline that **did** find its match reports failure. Nothing errors; the caller just gets the wrong boolean.
 
   It is size-dependent, which is what makes it dangerous: below the 64 KB pipe buffer the upstream finishes in one write and the bug never appears, so it ships green and surfaces later when an input file grows.

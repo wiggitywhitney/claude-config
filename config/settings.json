@@ -100,7 +100,8 @@
       "Bash(gh pr merge*)",
       "Bash(npm publish*)",
       "Bash(rm *)"
-    ]
+    ],
+    "defaultMode": "auto"
   },
   "model": "sonnet[1m]",
   "hooks": {
