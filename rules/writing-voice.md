@@ -51,6 +51,12 @@ Overused pattern that reads as filler.
 **No generic three-part lists.**
 Forces ideas into a template instead of letting them breathe.
 
+**No sentence fragments — even for punchy hooks.** Every sentence needs a subject and a verb. A fragment like "Different rules, different logins, no way to share identity between applications." is not acceptable, even when the underlying idea is good. Keep the concept, give it a real sentence: "Every site had different rules, different logins, and no way to share identity between applications."
+(Confirmed: rejected from the sent version of the Keycloak Thunder episode post draft, 2026-08-05 — Whitney liked the idea but said "I don't use incomplete sentences like that.")
+
+**In episode and talk social posts, refer to herself in first person, never third person.** Don't write "walks Whitney through" or "Whitney and Alex cover" — write "walks me through" or "Alex and I cover." She is the host speaking in her own voice, not a third party being described.
+(Confirmed: corrected in the Keycloak Thunder episode post draft, 2026-08-05.)
+
 **Always include the subject.** Never drop it.
 - Do: "I am happy to help." / "She recommended I reach out."
 - Don't: "Happy to help." / "Recommended I reach out."
