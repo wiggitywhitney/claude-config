@@ -38,7 +38,7 @@ See `docs/research/claude-code-context-loading-and-compaction.md` for the platfo
 | `rules/gh-fork-gotchas.md` | `include` | 1205 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
 | `rules/git-workflow.md` | `include` | 9975 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
 | `rules/gog-cli-gotchas.md` | `path_glob_match` | 3869 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
-| `rules/hooks-reference.md` | `path_glob_match` | 7413 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
+| `rules/hooks-reference.md` | `path_glob_match` | 9379 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/infrastructure-safety.md` | `include` | 1248 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
 | `rules/is-scoring-gotchas.md` | `path_glob_match` | 9861 | no | **no** | Loads only when a matching file is read; summarized away by compaction. |
 | `rules/issue-juggling.md` | `include` | 804 | yes | yes | `@`-referenced from `global/CLAUDE.md`; expanded at launch, and re-resolved through its parent after a compaction (observed at 2.1.220). |
@@ -77,7 +77,7 @@ See `docs/research/claude-code-context-loading-and-compaction.md` for the platfo
 | `.claude/CLAUDE.md` itself | 1 | 6609 |
 | Always-loaded rules | 11 | 48810 |
 | **Always-loaded total** | **13** | **71177** |
-| On-demand path-scoped rules | 32 | 158850 |
+| On-demand path-scoped rules | 32 | 160816 |
 
 `global/CLAUDE.md` is 194 lines against the 200-line target Anthropic documents.
 

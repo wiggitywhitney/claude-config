@@ -14,7 +14,30 @@ PROBLEMS=""
 # ── Kind clusters ──────────────────────────────────────────────────
 
 if command -v kind &>/dev/null; then
-    KIND_OUTPUT=$(kind get clusters 2>/dev/null || true)
+    # A failed listing is not an empty listing. Discarding the error here would
+    # report "no Kind clusters" whenever the container runtime is unreachable,
+    # which is the same silent-success defect the GKE half had.
+    KIND_OUTPUT=$(kind get clusters 2>&1)
+    KIND_STATUS=$?
+
+    # An unreachable container runtime is the one failure worth staying quiet about:
+    # no daemon means no Kind cluster can be running, so there is nothing to warn
+    # about, and Colima is stopped most of the time here. Warning on it would put a
+    # notice in every session that is always true and never actionable.
+    if (( KIND_STATUS != 0 )) && [[ "$KIND_OUTPUT" == *"failed to connect to the docker API"* ]]; then
+        KIND_STATUS=0
+        KIND_OUTPUT=""
+    fi
+
+    if (( KIND_STATUS != 0 )); then
+        KIND_ERROR=$(printf '%s' "$KIND_OUTPUT" | head -1)
+        KIND_ERROR=${KIND_ERROR//\\/\\\\}
+        KIND_ERROR=${KIND_ERROR//%/%%}
+        PROBLEMS="${PROBLEMS}Kind check failed, so local clusters cannot be detected.\n"
+        PROBLEMS="${PROBLEMS}  kind said: ${KIND_ERROR}\n\n"
+        KIND_OUTPUT=""
+    fi
+
     if [[ -n "$KIND_OUTPUT" ]]; then
         while IFS= read -r cluster; do
             [[ -z "$cluster" ]] && continue
@@ -64,7 +87,7 @@ if command -v gcloud &>/dev/null; then
             elif [[ "$name" == kubecon-gitops* ]]; then
                 REMINDERS="${REMINDERS}  Teardown: ./scripts/teardown-cluster.sh\n\n"
             else
-                REMINDERS="${REMINDERS}  Teardown: gcloud container clusters delete ${name} --zone ${zone}\n\n"
+                REMINDERS="${REMINDERS}  Teardown: gcloud container clusters delete ${name} --zone ${zone} --project ${GKE_PROJECT}\n\n"
             fi
         done <<< "$GKE_OUTPUT"
     fi

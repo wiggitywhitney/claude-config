@@ -617,3 +617,12 @@ description: x' 10
     [ "$desc_bytes" -gt 0 ]
     grep -q "including skill descriptions:\*\* $((config_subtotal + desc_bytes)) bytes" "$(INVENTORY)"
 }
+
+@test "aborts when a CLAUDE.md exists but cannot be scanned for @-references" {
+    scoped_rule "scoped.md" '"**/*.ts"'
+    chmod 000 "$FAKE_REPO/global/CLAUDE.md"
+    run bash "$SCRIPT" "$FAKE_REPO"
+    chmod 644 "$FAKE_REPO/global/CLAUDE.md"
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"failed to scan"* ]]
+}

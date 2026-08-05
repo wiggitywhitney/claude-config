@@ -105,6 +105,27 @@ project_reference() {
     [[ "$output" == *".claude/CLAUDE.md"* ]]
 }
 
+@test "aborts when a CLAUDE.md exists but cannot be scanned" {
+    scoped_rule "scoped.md" '"**/*.ts"'
+    chmod 000 "$FAKE_REPO/global/CLAUDE.md"
+    run bash "$SCRIPT" "$FAKE_REPO"
+    chmod 644 "$FAKE_REPO/global/CLAUDE.md"
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"failed to scan"* ]]
+    [[ "$output" != *"All rules have exactly one loading mechanism"* ]]
+}
+
+@test "aborts when the project CLAUDE.md exists but cannot be scanned" {
+    scoped_rule "scoped.md" '"**/*.ts"'
+    mkdir -p "$FAKE_REPO/.claude"
+    printf '# Project\n' > "$FAKE_REPO/.claude/CLAUDE.md"
+    chmod 000 "$FAKE_REPO/.claude/CLAUDE.md"
+    run bash "$SCRIPT" "$FAKE_REPO"
+    chmod 644 "$FAKE_REPO/.claude/CLAUDE.md"
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"failed to scan"* ]]
+}
+
 @test "a missing project CLAUDE.md is not an error" {
     scoped_rule "fine.md" '"**/*.ts"'
     [ ! -f "$FAKE_REPO/.claude/CLAUDE.md" ]

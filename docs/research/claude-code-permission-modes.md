@@ -28,7 +28,15 @@ Milestone B1 re-runs this pass against whatever version ships then. The version 
 
 Claude Code has a permission mode built for exactly the problem Milestone A3 is measuring — it is called **auto mode**, and the documentation section describing it is titled "Eliminate permission prompts with auto mode." It replaces the approval prompt with a separate classifier model that reviews each action.
 
-**State of play, so the two are not confused.** The measurement window in this document is the **pre-adoption** baseline: those sessions ran in `default` (Manual) and `acceptEdits`, and neither of those changes how a Bash command is approved. **Auto mode was then adopted provisionally on 2026-08-04** and is the current default in `config/settings.json`. So every rate below describes the setup as it was *before* the change this document recommends.
+**State of play, so the two are not confused.** The measurement window in this document is the **pre-adoption** baseline: those sessions ran in `default` (Manual) and `acceptEdits`, and neither of those changes how a Bash command is approved. **Auto mode was then adopted provisionally on 2026-08-04** by setting `permissions.defaultMode` in `config/settings.json`, which takes effect because `~/.claude/settings.json` is a symlink to that tracked file.
+
+**Do not assume `setup.sh` put it there, and do not use `setup.sh` to undo it.** `setup.sh --install` merges `settings.template.json` into `~/.claude/settings.json`; it never installs `config/settings.json`, the template carries no `permissions.defaultMode`, and the merge preserves an existing one. `setup.sh --uninstall` removes symlinks and leaves `~/.claude/settings.json` in place, reporting a backup path rather than restoring it. So the live configuration and the documented provisioning path disagree about which file is authoritative — recorded here as an input to Milestone A4's settings-symlink evaluation, not resolved. To roll auto mode back, remove the key directly:
+
+```bash
+python3 -c 'import json; from pathlib import Path; p=Path.home()/".claude/settings.json"; d=json.loads(p.read_text()); d.setdefault("permissions", {}).pop("defaultMode", None); p.write_text(json.dumps(d, indent=2)+"\n")'
+```
+
+Because of the symlink, that edit lands in the tracked file and shows up as a git diff here. So every rate below describes the setup as it was *before* the change this document recommends.
 
 Two findings shape what auto mode would and would not fix here:
 
@@ -67,9 +75,11 @@ That distinction is load-bearing, because ask rules are the one thing that survi
 
 Prompts by inferred trigger class over the same window: heredoc 7, other 6, expansion 4, non-Bash 3, ask-rule 1.
 
-**Interpretation:** the looser of the two modes shows the *higher* prompt rate, on a small sample for Manual (49 calls). Whatever the mode is doing, it is not the variable that explains the observed prompts — which is exactly what the documentation predicts, because `acceptEdits` widens file edits and a short list of filesystem commands and leaves every other Bash command on the prompting path. Both modes gate an inline `python3` heredoc identically.
+**Interpretation, stated no more strongly than the data allows: this window did not establish a mode effect.** The looser of the two modes shows the *higher* prompt rate, on a small sample for Manual (49 calls). That is an observation from a single mixed window, so it shows correlation and cannot establish that permission mode has no effect, nor that changing mode could not reduce prompts. Rejecting a mode-based remedy outright would need matched before-and-after windows, which this is not.
 
-This is the sharpest available argument that the remedy has to change the *mechanism* rather than loosen the mode: two modes, a 3× difference in strictness for edits, and no meaningful difference in prompt rate.
+What it does do is fail to contradict the documentation, which predicts exactly this: `acceptEdits` widens file edits and a short list of filesystem commands while leaving every other Bash command on the prompting path, and both modes gate an inline `python3` heredoc identically.
+
+So it is suggestive, not decisive, evidence that the remedy has to change the *mechanism* rather than loosen the mode.
 
 **A methodology warning worth keeping.** The first version of this finding claimed all sessions ran in Manual mode. It was produced by `grep -o '"permission_mode":"[a-z]*"'`, whose character class silently excludes `acceptEdits` — the majority case. The wrong answer looked clean and internally consistent. Decision 25's rule about measuring with a committed script rather than an ad hoc read exists for this failure mode, and this is a live instance of it: the fix is that `scripts/measure-prompt-rate.sh` has a test asserting mixed-mode input is counted, so the same slip cannot recur silently.
 

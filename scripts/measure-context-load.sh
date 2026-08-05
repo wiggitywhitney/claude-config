@@ -92,7 +92,21 @@ is_at_referenced() {
   REF_SOURCE=''
   for md in "${GLOBAL_CLAUDE_MD}" "${PROJECT_CLAUDE_MD}"; do
     [[ -f "$md" ]] || continue
-    if strip_code "$md" | grep -E "@(~/\.claude/|\./)?${rel//./\\.}([[:space:]]|$|\))" >/dev/null; then
+    # A file that exists but cannot be read must not be reported as containing no
+    # imports — that would silently undercount the always-loaded set, which is the
+    # one number this inventory exists to produce.
+    local stripped
+    if ! stripped="$(strip_code "$md")"; then
+      echo "error: failed to scan $md for @-references" >&2
+      exit 1
+    fi
+    local grep_status=0
+    grep -E "@(~/\.claude/|\./)?${rel//./\\.}([[:space:]]|$|\))" >/dev/null <<<"$stripped" || grep_status=$?
+    if (( grep_status > 1 )); then
+      echo "error: failed to scan $md for @-references" >&2
+      exit 1
+    fi
+    if (( grep_status == 0 )); then
       # global wins when both match: a measured verdict is available for that path.
       if [[ "$md" == "${GLOBAL_CLAUDE_MD}" ]]; then
         REF_SOURCE='global'

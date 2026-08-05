@@ -84,8 +84,18 @@ scan_references() {
         | sed -E -e 's#^@(~/\.claude/|\./)?rules/##' -e 's#[[:space:])]$##' | sort -u
 }
 
-global_referenced=$(scan_references "$CLAUDE_MD")
-project_referenced=$(scan_references "$PROJECT_CLAUDE_MD")
+# A scan that fails is not a scan that found nothing. Without these guards a read
+# error yields an empty reference set, and every @-referenced rule is then reported
+# as having no loading mechanism at all — a confident wrong answer, which is the
+# defect class this script exists to catch.
+if ! global_referenced=$(scan_references "$CLAUDE_MD"); then
+    echo "error: failed to scan $CLAUDE_MD for @-references" >&2
+    exit 1
+fi
+if ! project_referenced=$(scan_references "$PROJECT_CLAUDE_MD"); then
+    echo "error: failed to scan $PROJECT_CLAUDE_MD for @-references" >&2
+    exit 1
+fi
 
 # Echoes the source path when referenced, empty otherwise.
 reference_source() {

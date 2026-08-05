@@ -296,7 +296,11 @@ def run_tests():
 
         exit_code, stdout, stderr = run_hook(make_session_input(), bin_dir=bin_dir)
         t.assert_equal("kind error → exit 0 (graceful)", exit_code, 0)
-        t.assert_equal("kind error → no stdout", stdout.strip(), "")
+        # Previously asserted silence. Silence here is the defect: a failed listing
+        # is not an empty listing, and reporting nothing hides that Kind was never
+        # actually inspected.
+        t.assert_contains("kind error → reports the failure rather than staying silent",
+                          stdout, "Kind check failed")
 
     # ─── Section 9: documented output envelope ───
     t.section("Output uses the documented hookSpecificOutput envelope")
@@ -321,6 +325,48 @@ def run_tests():
                           hso.get("additionalContext", ""), "test-cluster")
         t.assert_equal("no bare top-level additionalContext",
                        "additionalContext" in parsed, False)
+
+    # ─── Section 9b: Kind failures are reported, not swallowed ───
+    t.section("Kind check failure is visible, not silent")
+
+    with TempDir() as bin_dir:
+        args_file = os.path.join(bin_dir, "args.txt")
+        make_stub(bin_dir, "kind", stdout="", exit_code=1)
+        make_recording_gcloud_stub(bin_dir, args_file, project="demo-proj", clusters=[])
+
+        exit_code, stdout, stderr = run_hook(make_session_input(), bin_dir=bin_dir)
+        t.assert_equal("failing kind → exit 0", exit_code, 0)
+        t.assert_contains("failing kind → reports the check could not run",
+                          stdout, "Kind check failed")
+
+    # A container runtime that is not running means no Kind cluster can exist,
+    # so that specific failure is not worth a warning at every session start.
+    with TempDir() as bin_dir:
+        args_file = os.path.join(bin_dir, "args.txt")
+        path = os.path.join(bin_dir, "kind")
+        with open(path, "w") as f:
+            f.write("#!/usr/bin/env bash\n")
+            f.write('echo "ERROR: failed to list clusters: failed to connect to the docker API at unix:///x/docker.sock" >&2\n')
+            f.write("exit 1\n")
+        os.chmod(path, os.stat(path).st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+        make_recording_gcloud_stub(bin_dir, args_file, project="demo-proj", clusters=[])
+
+        exit_code, stdout, stderr = run_hook(make_session_input(), bin_dir=bin_dir)
+        t.assert_equal("unreachable container runtime → exit 0", exit_code, 0)
+        t.assert_equal("unreachable container runtime → stays silent", stdout.strip(), "")
+
+    # ─── Section 9c: teardown commands name the project explicitly ───
+    t.section("Generic GKE teardown names the project")
+
+    with TempDir() as bin_dir:
+        args_file = os.path.join(bin_dir, "args.txt")
+        make_stub(bin_dir, "kind", stdout="", exit_code=0)
+        make_recording_gcloud_stub(bin_dir, args_file, project="demo-proj",
+                                   clusters=["unconventional-name\tus-central1-a"])
+
+        exit_code, stdout, stderr = run_hook(make_session_input(), bin_dir=bin_dir)
+        t.assert_contains("generic teardown passes --project",
+                          stdout, "--project demo-proj")
 
     # ─── Section 10: the GKE check must never fail silently ───
     t.section("GKE check failure is visible, not silent")
