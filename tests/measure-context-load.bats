@@ -496,6 +496,19 @@ description: x' 10
     # rule — the #108 regression — pass unnoticed.
     ! grep -q 'session_start' "$(INVENTORY)"
     grep -q 'No bare rule files' "$(INVENTORY)"
+
+    # The three assertions above are all negative — they pass if traversal skips a
+    # rule file or a whole nested directory, because a rule that was never visited
+    # cannot be misclassified. Assert positively that every copied rule has a row,
+    # so a traversal that silently stops being recursive fails here.
+    local missing=0 rel
+    while IFS= read -r rel; do
+        if ! grep -qF -- "\`$rel\`" "$(INVENTORY)"; then
+            printf 'no inventory row for %s\n' "$rel" >&2
+            missing=1
+        fi
+    done < <(cd "$FAKE_REPO" && find rules -name '*.md' -not -name 'README.md' | sort)
+    [ "$missing" -eq 0 ]
 }
 
 # The #108 baseline covered global/CLAUDE.md plus its own imports and nothing else.
