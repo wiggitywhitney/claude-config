@@ -20,7 +20,7 @@ The label was also wrong in a second way: "before any A4 change" has no referent
 |---|---|---|
 | As originally recorded (incomplete) | 346 | 14 |
 | Same commit, with the omitted suite and test restored | 376 | 14 |
-| Current, after the hook inventory added two suites' worth of tests and deleted `tests/auto-reanchor.bats` with its script | 369 | 14 |
+| Current, after the hook inventory added tests across five suites and deleted `tests/auto-reanchor.bats` with its script | 376 | 14 |
 
 **The 14 failures are identical across all three, which is the claim that actually matters.** They remain the two documented groups below. No change made in this milestone has added a failure.
 
@@ -28,20 +28,20 @@ Per-suite, current:
 
 | Suite | Pass | Fail |
 |---|---|---|
-| `tests/audit-enumerate.bats` | 29 | 0 |
+| `tests/audit-enumerate.bats` | 30 | 0 |
 | `tests/backup-private-files.bats` | 11 | 0 |
 | `tests/bootstrap.bats` | 38 | 0 |
 | `tests/cascade-decision-check.bats` | 10 | 0 |
-| `tests/check-coderabbit-required.bats` | 6 | 0 |
+| `tests/check-coderabbit-required.bats` | 9 | 0 |
 | `tests/check-prompt-generality.bats` | 9 | 0 |
-| `tests/check-rule-frontmatter.bats` | 29 | 0 |
+| `tests/check-rule-frontmatter.bats` | 31 | 0 |
 | `tests/cost-tracker.bats` | 26 | 0 |
 | `tests/e2e-backup.bats` | 8 | 0 |
 | `tests/e2e-bootstrap.bats` | 11 | 0 |
 | `tests/e2e-sync-repos.bats` | 6 | 0 |
 | `tests/git-hook-checks.bats` | 40 | 4 |
 | `tests/install-git-hooks.bats` | 11 | 10 |
-| `tests/measure-context-load.bats` | 44 | 0 |
+| `tests/measure-context-load.bats` | 45 | 0 |
 | `tests/measure-prompt-rate.bats` | 14 | 0 |
 | `tests/post-write-codeblock-check.bats` | 6 | 0 |
 | `tests/progress-md-pr.bats` | 5 | 0 |
@@ -49,7 +49,7 @@ Per-suite, current:
 | `tests/suggest-planning-handoff.bats` | 19 | 0 |
 | `tests/suggest-write-prompt.bats` | 24 | 0 |
 | `tests/sync-repos.bats` | 11 | 0 |
-| **Total** | **369** | **14** |
+| **Total** | **376** | **14** |
 
 The failure count matches what the PRD documented on 2026-08-04. Two details in the PRD's description of these failures are wrong, and both change what the fix would be.
 
@@ -227,7 +227,7 @@ Both are covered by tests that failed before the fix. After it, `rule-names-scri
 
 ## Hook inventory
 
-**Status: 10 of 15 original scripts settled with Whitney on 2026-08-05, 5 pending.** Rendered from `./scripts/audit-enumerate.sh hooks`, not typed by hand. Re-run it to reproduce the rows; the verdict column is the judgment half and is not derivable.
+**Status: 11 of 15 original scripts settled with Whitney, 4 pending.** Rendered from `./scripts/audit-enumerate.sh hooks`, not typed by hand. Re-run it to reproduce the rows; the verdict column is the judgment half and is not derivable.
 
 **State the unit whenever a hook count appears.** Two scripts (`suggest-planning-handoff.sh`, `suggest-write-prompt.sh`) are each registered twice, once on `Write|Edit` and once on `Bash`, so "how many hooks" has two correct answers. The set went from **17 registered entries across 15 distinct scripts** to **14 across 12**. `PostCompact` is no longer a configured event.
 
@@ -239,6 +239,7 @@ Both are covered by tests that failed before the fix. After it, `rule-names-scri
 | `suggest-write-prompt.sh` | PostToolUse ×2 | `SKILL.md`, `CLAUDE.md`, anything under `prds/` or `rules/`, `*-prompt.md`, `*-spec.md`, plus successful `gh issue create` | **keep as is** — a narrowing to `Write`-only for `prds/` was offered and declined |
 | `suggest-planning-handoff.sh` | PostToolUse ×2 | `Write` to `prds/`, plus successful `gh issue create` | **keep as is** — cheapest hook in the set and its content (decisions from *this conversation*) is the one thing no static rule can supply. Known defect left unfixed by choice: its `prds/` match includes `prds/done/`, which `cascade-decision-check.sh` excludes, so two scripts answer "what is an active PRD" differently |
 | `check-aboutme.sh` | PreToolUse | `Write`/`Edit` on `.py .sh .ts .tsx .js .jsx` | **keep as is** — verified blocking, exempting, and fix-and-retry paths. **23 of 84 tracked code files lack the header it enforces; backfilling them was explicitly declined 2026-08-05 and is not to be re-raised.** The hook only sees files someone touches, so it cannot reach the rest |
+| `check-coderabbit-required.sh` | PreToolUse | `gh pr merge`, unless `.skip-coderabbit` exists | **repaired** — the only hook in the set that fails *closed* everywhere, which is right for a gate. But its channel counting returned `"0\n0"` whenever a `gh api` call failed, so all three numeric comparisons errored with `[: integer expected` and it reported "no CodeRabbit review found" when the lookup had actually failed. Same decision either way; wrong cause, and the two need different responses. Now counts once, and denies with a distinct "could not be verified" message (9 tests) |
 | `post-write-codeblock-check.sh` | PostToolUse | any `Write`/`Edit`; the checker decides what is markdown | **repaired** — deleted a passthrough layer whose whole body re-invoked the Python checker, added the ABOUTME header it was missing, first tests written (6) |
 | `suggest-branch-cleanup.sh` | PostToolUse | successful `gh pr merge` only | **repaired** — no longer advises deleting a branch `gh` already deleted; handles `--delete-branch`, `-d`, and `=false` (12 tests) |
 | `check-running-clusters.sh` | SessionStart | every session | **repaired, and it had never worked** — see below (44 tests) |
@@ -256,7 +257,9 @@ Three compounding faults: the error was swallowed by `2>/dev/null || true`; the 
 
 ### Pending
 
-`check-coderabbit-required.sh`, `pre-pr-hook.sh`, `gogcli-safety-hook.py`, `google-mcp-safety-hook.py`, `prd-loop-continue.sh` (declared in gitignored `.claude/settings.local.json`), and the three native git hooks — `pre-commit`, `commit-msg`, `pre-push`.
+`pre-pr-hook.sh`, `gogcli-safety-hook.py`, `google-mcp-safety-hook.py`, `prd-loop-continue.sh` (declared in gitignored `.claude/settings.local.json`), and the three native git hooks — `pre-commit`, `commit-msg`, `pre-push`.
+
+**`commit-msg` has already demonstrated itself unprompted**, rejecting a commit on 2026-08-05 whose message contained the word "Claude." That is evidence of enforcement on a live commit, not a test.
 
 ### Method note
 
