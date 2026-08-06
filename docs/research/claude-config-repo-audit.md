@@ -227,7 +227,7 @@ Both are covered by tests that failed before the fix. After it, `rule-names-scri
 
 ## Hook inventory
 
-**Status: 11 of 15 original scripts settled with Whitney, 4 pending.** Rendered from `./scripts/audit-enumerate.sh hooks`, not typed by hand. Re-run it to reproduce the rows; the verdict column is the judgment half and is not derivable.
+**Status: 12 of 15 original scripts settled with Whitney, 3 pending.** Rendered from `./scripts/audit-enumerate.sh hooks`, not typed by hand. Re-run it to reproduce the rows; the verdict column is the judgment half and is not derivable.
 
 **State the unit whenever a hook count appears.** Two scripts (`suggest-planning-handoff.sh`, `suggest-write-prompt.sh`) are each registered twice, once on `Write|Edit` and once on `Bash`, so "how many hooks" has two correct answers. The set went from **17 registered entries across 15 distinct scripts** to **14 across 12**. `PostCompact` is no longer a configured event.
 
@@ -240,6 +240,7 @@ Both are covered by tests that failed before the fix. After it, `rule-names-scri
 | `suggest-planning-handoff.sh` | PostToolUse ×2 | `Write` to `prds/`, plus successful `gh issue create` | **keep as is** — cheapest hook in the set and its content (decisions from *this conversation*) is the one thing no static rule can supply. Known defect left unfixed by choice: its `prds/` match includes `prds/done/`, which `cascade-decision-check.sh` excludes, so two scripts answer "what is an active PRD" differently |
 | `check-aboutme.sh` | PreToolUse | `Write`/`Edit` on `.py .sh .ts .tsx .js .jsx` | **keep as is** — verified blocking, exempting, and fix-and-retry paths. **23 of 84 tracked code files lack the header it enforces; backfilling them was explicitly declined 2026-08-05 and is not to be re-raised.** The hook only sees files someone touches, so it cannot reach the rest |
 | `check-coderabbit-required.sh` | PreToolUse | `gh pr merge`, unless `.skip-coderabbit` exists | **repaired** — the only hook in the set that fails *closed* everywhere, which is right for a gate. But its channel counting returned `"0\n0"` whenever a `gh api` call failed, so all three numeric comparisons errored with `[: integer expected` and it reported "no CodeRabbit review found" when the lookup had actually failed. Same decision either way; wrong cause, and the two need different responses. Now counts once, and denies with a distinct "could not be verified" message (9 tests) |
+| `pre-pr-hook.sh` | PreToolUse | `gh pr create`; also reached via the push tier when the branch has an open PR | **keep the hook, fix what it verifies** — the hook works; the command it runs covers a fraction of the repo. See below |
 | `post-write-codeblock-check.sh` | PostToolUse | any `Write`/`Edit`; the checker decides what is markdown | **repaired** — deleted a passthrough layer whose whole body re-invoked the Python checker, added the ABOUTME header it was missing, first tests written (6) |
 | `suggest-branch-cleanup.sh` | PostToolUse | successful `gh pr merge` only | **repaired** — no longer advises deleting a branch `gh` already deleted; handles `--delete-branch`, `-d`, and `=false` (12 tests) |
 | `check-running-clusters.sh` | SessionStart | every session | **repaired, and it had never worked** — see below (44 tests) |
@@ -257,10 +258,36 @@ Three compounding faults: the error was swallowed by `2>/dev/null || true`; the 
 
 ### Pending
 
-`pre-pr-hook.sh`, `gogcli-safety-hook.py`, `google-mcp-safety-hook.py`, `prd-loop-continue.sh` (declared in gitignored `.claude/settings.local.json`), and the three native git hooks — `pre-commit`, `commit-msg`, `pre-push`.
+`gogcli-safety-hook.py`, `google-mcp-safety-hook.py`, `prd-loop-continue.sh` (declared in gitignored `.claude/settings.local.json`), and the three native git hooks — `pre-commit`, `commit-msg`, `pre-push`.
 
 **`commit-msg` has already demonstrated itself unprompted**, rejecting a commit on 2026-08-05 whose message contained the word "Claude." That is evidence of enforcement on a live commit, not a test.
 
 ### Method note
 
 Every verdict above came from running the hook against a payload, not from reading it. That found: the cluster alarm's dead cloud half, `auto-reanchor`'s unreachable output channel, `check-contributing-freshness` never having fired, and the `--delete-branch` redundancy. It also produced one false alarm — four `check-aboutme` cases appeared to pass silently until the test payload turned out to be malformed JSON, which the hook fails open on. Reading alone would have missed all four real defects and would not have caught the false one either.
+
+### Nothing automated has ever run most of this repo's tests
+
+The three local tiers are commit → build/typecheck/lint, push → standard security escalating to tests when the branch has an open PR, and `gh pr create` → expanded security plus tests. The test command they all resolve to comes from `.claude/verify.json`:
+
+```json
+{"commands": {"test": "python3 .claude/skills/verify/tests/run_tests.py"}}
+```
+
+That runner discovers `test_*.py` files **inside `.claude/skills/verify/tests/` only**. Measured 2026-08-06:
+
+| Suite | Tests | Runtime | Run by any gate before 2026-08-06 |
+|---|---|---:|---|
+| `.claude/skills/verify/tests/` | 466 | 89s | yes |
+| `tests/*.bats` | 376 | 208s | **no** |
+| `tests/test_*.py` | 4 suites | 18s | **no** |
+
+There were also **no CI workflows at all** — no `.github/workflows/` directory existed. Grepping every hook and script for `bats` returned two hits, a permission entry and a file counter. So the only thing that ever ran the bats suite was a person typing the command.
+
+**This answers a question the PRD carried open.** Milestone A4 recorded that "fourteen tests fail on `main` today, and nothing tracks them." Nothing tracks them because no gate looks at the suite they live in. Every tier reported green over fourteen red tests, indefinitely, because the failures were never inside the thing being checked.
+
+**Resolved by adding CI rather than by making the local gate slower (2026-08-06).** Wiring the full suite into the local tiers would have added three and a half minutes to *every push* during a review cycle, since the push tier escalates to tests whenever a PR is open. `.github/workflows/tests.yml` runs all three suites on a macOS runner instead, in parallel with the CodeRabbit wait that already happens, at no cost in local waiting. The local tiers are deliberately unchanged.
+
+**A reminder was considered and rejected.** Under Decision 17a an advisory notice is the weakest tier, and a reminder to run a three-and-a-half-minute suite is one a reader correctly ignores most of the time. The same reasoning that removed advisory noise elsewhere in this audit applies to adding it here.
+
+**The first CI run is also an experiment.** Ten of the fourteen failures blame `core.hooksPath`, which is Datadog-managed policy on this machine, and four blame `~/.gitignore_global`. A runner has neither, so those tests may pass there — which would establish that the failures are environment-specific rather than defects, and change what fixing them means.

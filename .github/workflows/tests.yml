@@ -1,0 +1,65 @@
+name: Tests
+
+# Until 2026-08-06 nothing automated ran most of this repo's tests. The local
+# verification tiers run only the Python suite under .claude/skills/verify/tests,
+# so the bats suite and the Python suites in tests/ were never executed by any
+# gate — which is why fourteen failures sat on main untracked. Those local tiers
+# stay as they are, deliberately: the bats suite takes about three and a half
+# minutes and the push tier re-runs tests on every push once a PR is open.
+# Slow suites belong on a runner, where they cost no waiting.
+#
+# macOS matches the machine these tests were written against. The point of this
+# workflow is to answer "do they pass", not "are they portable"; portability is
+# worth its own decision rather than being smuggled in as CI noise.
+
+# Runs on every branch rather than only on pull requests, so a suite's state is
+# known before a PR exists. workflow_dispatch is listed for completeness but is
+# not usable until this file reaches the default branch — GitHub only offers
+# manual runs for workflows present on the default branch.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+# A push to a branch with an open PR would otherwise trigger two identical runs.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # tests/audit-enumerate.bats declares bats_require_minimum_version 1.5.0.
+      # Homebrew's bats-core is well past that; Ubuntu's apt package is not.
+      - name: Install bats-core
+        run: brew install bats-core
+
+      - name: Report versions
+        run: |
+          bats --version
+          python3 --version
+          git --version
+
+      # Every suite runs even when an earlier one fails, so one red suite cannot
+      # hide the state of the others.
+      - name: Verify suite
+        if: always()
+        run: python3 .claude/skills/verify/tests/run_tests.py
+
+      - name: Bats suite
+        if: always()
+        run: bats tests/*.bats
+
+      - name: Python suites in tests/
+        if: always()
+        run: |
+          status=0
+          for f in tests/test_*.py; do
+            echo "── $f"
+            python3 "$f" || status=1
+          done
+          exit $status
