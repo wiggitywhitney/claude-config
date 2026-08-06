@@ -240,7 +240,7 @@ TaskCreate entries are not a bookkeeping nicety — they are a required, cyclic 
 4. `/prd-update-progress` commits, which flips checkboxes `[ ]` → `[x]`.
 5. On the next `/prd-next` invocation (usually after `/clear` in YOLO mode), the skill detects the milestone boundary and explicitly **marks prior-milestone tasks `completed` or `deleted`, then creates a fresh set for the new milestone**. The YOLO skill's Step 4 spells this out: *"When a new milestone starts, mark prior milestone tasks as `completed` or `deleted`, then create fresh tasks."*
 
-**Why this matters for autonomous design.** An autonomous executor that doesn't implement this cleanup will accumulate stale tasks from completed milestones. The task list becomes polluted, `/continue` starts surfacing "in progress" tasks that are actually finished (their checkbox is already `[x]` on disk), and any prioritizer looking at TaskList for "what's next" gets noise. The state machine is:
+**Why this matters for autonomous design.** An autonomous executor that doesn't implement this cleanup will accumulate stale tasks from completed milestones. The task list becomes polluted, session-resume surfaces "in progress" tasks that are actually finished (their checkbox is already `[x]` on disk), and any prioritizer looking at TaskList for "what's next" gets noise. The state machine is:
 
 ```text
         ┌────────────────────────────────────┐
@@ -329,7 +329,7 @@ The slogan "commits are truth" undersells the weakness. Commits happen *only at 
 - **What got lost** is not "what we decided" (the Decision Log captures that) and not "what we did" (git diff captures that). It is specifically *the path we took and the alternatives we rejected* — the rationale for why the code ended up the way it did when the milestone text did not prescribe a single path.
 - **When implementation reasonably diverges from the milestone description** (unforeseen complexity, an assumption that turns out to be wrong, a refactor the milestone didn't anticipate), the rationale for the divergence lives only in the conversation. If compaction fires before the commit, the next instance sees code that doesn't match the milestone and has no context for why.
 - **The Decision Log captures *crystallized* decisions**, not in-flight ones. By design: `/prd-update-decisions` is invoked at milestone boundaries alongside `/prd-update-progress`, not mid-implementation. This is intentional (it prevents decision-log churn on exploratory moves), but it means compaction mid-milestone wipes the exploration.
-- **`_execution-state.md`** (from the plan-execute skill) is the closest existing primitive but is not standardized across the PRD workflow — `auto-reanchor.sh` only mentions it as an optional bonus.
+- **`_execution-state.md`** (from the plan-execute skill) is the closest existing primitive but is not standardized across the PRD workflow — the removed `auto-reanchor.sh` mentioned it only as an optional bonus, and nothing references it now.
 
 ### Design implications for an autonomous system
 
@@ -395,7 +395,7 @@ The atomic-commit rule encodes a tight coupling: **one commit = one (or more) mi
 
 - The right fix is a third path the current system does not implement: **an orthogonal scratch/checkpoint mechanism that is not tied to milestone checkboxes**. Options include per-subtask WIP commits on a disposable shadow branch, or a mid-milestone `.prd-scratch.md` that is durable but not committed. The autonomous PRD should choose one deliberately, knowing it will have to reconcile with the atomic-commit invariant on the feature branch.
 
-**This is the single most important design constraint the new PRD must address**: either preserve atomicity and solve mid-milestone durability some other way, or break atomicity explicitly and update the recovery mechanism (`auto-reanchor.sh`, `/continue`, `/post-compact`) to match. Doing nothing means the new system will either lose context at compaction (§5) or silently break recovery (§6).
+**This is the single most important design constraint the new PRD must address**: either preserve atomicity and solve mid-milestone durability some other way, or break atomicity explicitly and update whatever recovery mechanism replaces the ones removed on 2026-08-05 (`auto-reanchor.sh`, `/continue`, `/post-compact`) to match. Doing nothing means the new system will either lose context at compaction (§5) or silently break recovery (§6).
 
 ---
 
@@ -471,7 +471,7 @@ Things that stood out while extracting:
 
 **Tension — "YOLO mode" vs skill-internal gates (resolved structurally).** Project CLAUDE.md instructs Claude to proceed without trivial confirmations, but the *careful* skill texts contain explicit "Do you want to work on this task?" and "Proceed with closure? (yes/no)" prompts. The resolution is structural rather than conversational: the careful and YOLO variants are separate files (§1.5), and `/make-autonomous` / `/make-careful` toggle which is active. An autonomous executor should not re-solve this via conversational override; it should ensure YOLO variants are installed via `/make-autonomous`. The open design question shifts: **should autonomous-mode execution invoke careful SKILL.md variants at all, ever?** (E.g., fall back to careful for `/prd-create` authoring conversations.) The two files are currently isomorphic in process but differ on pause triggers — the YOLO Autonomous Decision Protocol is the spec for where pauses remain load-bearing.
 
-**Tension — `/prd-next` creates TaskCreate entries but doesn't use them itself.** The skill creates tasks at step 6b, then immediately hands off to the user for implementation at step 8. The tasks exist primarily for `/continue` and for the next `/prd-next` invocation to recognize the milestone boundary. An autonomous system may either ignore TaskCreate entirely or use them as the primary execution queue.
+**Tension — `/prd-next` creates TaskCreate entries but doesn't use them itself.** The skill creates tasks at step 6b, then immediately hands off to the user for implementation at step 8. The tasks existed primarily for `/continue`, now removed, and for the next `/prd-next` invocation to recognize the milestone boundary. An autonomous system may either ignore TaskCreate entirely or use them as the primary execution queue.
 
 **Tension — the conservative completion policy is at odds with autonomy.** `/prd-update-progress` says "DO NOT mark complete unless there is direct evidence" and relies on conservative interpretation backed by user confirmation. An autonomous system can't defer to a user; it must make those calls itself, or it must commit eagerly and expect the acceptance phase to catch gaps. `/prd-done`'s three-level-verification sub-agent (Exists → Substantive → Wired) may be the right primitive to lift into per-milestone verification.
 

@@ -384,7 +384,7 @@ def run_tests():
 
         t.assert_equal("configured project → exit 0", exit_code, 0)
         t.assert_contains("passes the project explicitly", recorded, "--project demo-proj")
-        t.assert_not_contains("passes no hardcoded name filter", recorded, "--filter")
+        t.assert_not_contains("passes no hardcoded cluster-name filter", recorded, "--filter=name~")
         t.assert_contains("reports a cluster whose name matches no known prefix",
                           stdout, "oddly-named-cluster")
 
@@ -395,7 +395,11 @@ def run_tests():
         make_recording_gcloud_stub(bin_dir, args_file, project="", clusters=[])
 
         exit_code, stdout, stderr = run_hook(make_session_input(), bin_dir=bin_dir)
+        with open(args_file) as f:
+            recorded = f.read()
         t.assert_equal("unset project → exit 0", exit_code, 0)
+        t.assert_not_contains("unset project → never attempts the listing",
+                              recorded, "container clusters list")
         t.assert_contains("unset project → warns that the check did not run",
                           stdout, "no gcloud project")
         t.assert_contains("unset project → names the fix", stdout, "gcloud config set project")

@@ -32,11 +32,13 @@ Claude Code has a permission mode built for exactly the problem Milestone A3 is 
 
 **Do not assume `setup.sh` put it there, and do not use `setup.sh` to undo it.** `setup.sh --install` merges `settings.template.json` into `~/.claude/settings.json`; it never installs `config/settings.json`, the template carries no `permissions.defaultMode`, and the merge preserves an existing one. `setup.sh --uninstall` removes symlinks and leaves `~/.claude/settings.json` in place, reporting a backup path rather than restoring it. So the live configuration and the documented provisioning path disagree about which file is authoritative — recorded here as an input to Milestone A4's settings-symlink evaluation, not resolved. To roll auto mode back, remove the key directly:
 
+Because the path is a symlink, the edit lands in the tracked file and shows up as a git diff here. Back the target up and replace it atomically rather than truncating it in place, so an interrupted write cannot leave the live settings unparseable:
+
 ```bash
-python3 -c 'import json; from pathlib import Path; p=Path.home()/".claude/settings.json"; d=json.loads(p.read_text()); d.setdefault("permissions", {}).pop("defaultMode", None); p.write_text(json.dumps(d, indent=2)+"\n")'
+python3 -c 'import json, os, shutil, tempfile; from pathlib import Path; p=(Path.home()/".claude/settings.json").resolve(); shutil.copy2(p, str(p)+".backup"); d=json.loads(p.read_text()); d.setdefault("permissions", {}).pop("defaultMode", None); fd, tmp = tempfile.mkstemp(dir=str(p.parent)); os.write(fd, (json.dumps(d, indent=2)+"\n").encode()); os.close(fd); os.replace(tmp, p)'
 ```
 
-Because of the symlink, that edit lands in the tracked file and shows up as a git diff here. So every rate below describes the setup as it was *before* the change this document recommends.
+`resolve()` targets the file the symlink points at, so the symlink itself is preserved. So every rate below describes the setup as it was *before* the change this document recommends.
 
 Two findings shape what auto mode would and would not fix here:
 

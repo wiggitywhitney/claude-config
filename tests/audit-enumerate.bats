@@ -300,3 +300,9 @@ skill() {
     after="$(find "$TMPDIR/search" -type f -exec shasum {} \; | sort)"
     [ "$before" = "$after" ]
 }
+
+@test "repos exits non-zero when the search root is not a directory" {
+    run "$SCRIPT" repos "$FAKE_REPO" "$TMPDIR/does-not-exist"
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"not a directory"* ]]
+}

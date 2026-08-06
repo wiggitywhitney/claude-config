@@ -56,6 +56,20 @@ run bats_pipe echo "test" \| grep "test"   # note: \| not |
 
 **GNU date shadows macOS date.** On this machine, `/opt/homebrew/opt/coreutils/libexec/gnubin/date` is first in PATH. The macOS system date is at `/bin/date` (not `/usr/bin/date`). Scripts and tests using macOS `date -v-1d` syntax must call `/bin/date` explicitly.
 
+**The same shadowing bites `stat`, and its flags mean opposite things.** BSD `stat -f %Lp` prints a file's permission bits; GNU `stat -f` asks for *filesystem* information and fails with `cannot read file system information for '%Lp'`. Because coreutils is first in PATH here, a test written against the macOS syntax fails on this machine while looking correct. Use a fallback that works under either:
+
+```bash
+stat_mode() {
+    stat -c %a "$1" 2>/dev/null || stat -f %Lp "$1"
+}
+```
+
+**`[ cond ] && skip "..."` fails the test whenever the condition is false.** Bats runs test bodies under error-checking semantics, so the `&&` returning non-zero is treated as a failure rather than as "did not skip." Write it as a statement instead:
+
+```bash
+if [ "$(id -u)" -eq 0 ]; then skip "chmod 000 does not block root"; fi
+```
+
 **A passing test is not evidence the test can fail.** A suite retrofitted onto working code can assert things that hold for reasons unrelated to the behavior named in the test. Verify by reintroducing the defect the test claims to catch and confirming it goes red. Two examples found this way in `tests/measure-context-load.bats` on 2026-08-04:
 
 - A test proving a backticked `` `@path` `` is a mention rather than an import put the closing backtick immediately after the path — which the matcher rejects anyway, since a backtick is not whitespace. It passed whether or not the stripping code ran.

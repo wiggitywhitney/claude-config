@@ -18,6 +18,11 @@ EOF
     chmod +x "$SCRIPT"
 }
 
+# GNU coreutils shadows BSD stat on this machine, and the two disagree on -f.
+stat_mode() {
+    stat -c %a "$1" 2>/dev/null || stat -f %Lp "$1"
+}
+
 teardown() {
     rm -rf "$TMPDIR"
 }
@@ -107,9 +112,11 @@ project_reference() {
 
 @test "aborts when a CLAUDE.md exists but cannot be scanned" {
     scoped_rule "scoped.md" '"**/*.ts"'
+    if [ "$(id -u)" -eq 0 ]; then skip "chmod 000 does not block root"; fi
+    orig_mode="$(stat_mode "$FAKE_REPO/global/CLAUDE.md")"
     chmod 000 "$FAKE_REPO/global/CLAUDE.md"
     run bash "$SCRIPT" "$FAKE_REPO"
-    chmod 644 "$FAKE_REPO/global/CLAUDE.md"
+    chmod "$orig_mode" "$FAKE_REPO/global/CLAUDE.md"
     [ "$status" -ne 0 ]
     [[ "$output" == *"failed to scan"* ]]
     [[ "$output" != *"All rules have exactly one loading mechanism"* ]]
@@ -119,9 +126,11 @@ project_reference() {
     scoped_rule "scoped.md" '"**/*.ts"'
     mkdir -p "$FAKE_REPO/.claude"
     printf '# Project\n' > "$FAKE_REPO/.claude/CLAUDE.md"
+    if [ "$(id -u)" -eq 0 ]; then skip "chmod 000 does not block root"; fi
+    orig_mode="$(stat_mode "$FAKE_REPO/.claude/CLAUDE.md")"
     chmod 000 "$FAKE_REPO/.claude/CLAUDE.md"
     run bash "$SCRIPT" "$FAKE_REPO"
-    chmod 644 "$FAKE_REPO/.claude/CLAUDE.md"
+    chmod "$orig_mode" "$FAKE_REPO/.claude/CLAUDE.md"
     [ "$status" -ne 0 ]
     [[ "$output" == *"failed to scan"* ]]
 }

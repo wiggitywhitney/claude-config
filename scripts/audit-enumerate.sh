@@ -328,7 +328,11 @@ search = Path(os.environ["AE_SEARCH_ROOT"])
 rows = []
 
 if not search.is_dir():
-    print(f"warning: search root does not exist: {search}", file=__import__("sys").stderr)
+    # An unreadable or missing search root must not read as "no repos carry Claude Code
+    # configuration" — an empty result and a failed sweep look identical downstream.
+    import sys
+    print(f"error: search root is not a directory: {search}", file=sys.stderr)
+    sys.exit(1)
 
 def skills_of(claude_dir):
     """Two counts, deliberately separate: what is installed, and what actually runs.

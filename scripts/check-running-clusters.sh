@@ -32,7 +32,6 @@ if command -v kind &>/dev/null; then
     if (( KIND_STATUS != 0 )); then
         KIND_ERROR=$(printf '%s' "$KIND_OUTPUT" | head -1)
         KIND_ERROR=${KIND_ERROR//\\/\\\\}
-        KIND_ERROR=${KIND_ERROR//%/%%}
         PROBLEMS="${PROBLEMS}Kind check failed, so local clusters cannot be detected.\n"
         PROBLEMS="${PROBLEMS}  kind said: ${KIND_ERROR}\n\n"
         KIND_OUTPUT=""
@@ -71,7 +70,6 @@ if command -v gcloud &>/dev/null; then
         if (( GKE_STATUS != 0 )); then
             GKE_ERROR=$(printf '%s' "$GKE_OUTPUT" | head -1)
             GKE_ERROR=${GKE_ERROR//\\/\\\\}
-            GKE_ERROR=${GKE_ERROR//%/%%}
             PROBLEMS="${PROBLEMS}GKE check failed for project ${GKE_PROJECT}, so cloud clusters cannot be detected.\n"
             PROBLEMS="${PROBLEMS}  gcloud said: ${GKE_ERROR}\n\n"
             GKE_OUTPUT=""
@@ -115,5 +113,12 @@ import sys, json
 text = sys.stdin.read().rstrip()
 print(json.dumps(text))
 " 2>/dev/null)
+
+# An empty JSON_MESSAGE would emit invalid JSON, which a hook runner skips
+# silently — the same invisible failure this script was just repaired to avoid.
+if [[ -z "$JSON_MESSAGE" ]]; then
+    echo "check-running-clusters: failed to encode the reminder message" >&2
+    exit 0
+fi
 
 printf '{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": %s}}\n' "$JSON_MESSAGE"
