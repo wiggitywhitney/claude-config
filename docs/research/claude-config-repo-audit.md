@@ -76,7 +76,23 @@ Each failing assertion is then the expected consequence: `[ -L "$GIT_REPO/.git/h
 
 **The four `progress-md:` failures in `git-hook-checks.bats` are exactly as documented.** Every one fails at `git add prds/01-feature.md` with `The following paths are ignored by one of your .gitignore files: prds`. `~/.gitignore_global` excludes `prds/`; this repo negates it with `!prds/` but the test's temporary fixture does not, so the fixture inherits the exclusion.
 
-**Both groups are environment-dependent rather than product defects, and neither can pass anywhere on this machine as written.** That is the shared shape: each test asserts against a path that a machine-level configuration has redirected or excluded out from under it.
+**Corrected 2026-08-07 by running the suites on a clean CI runner. The `core.hooksPath` diagnosis above was overstated, and the correction matters more than the original finding.**
+
+The ten `install-git-hooks` failures were attributed to `core.hooksPath` as though that were established. On a macOS GitHub Actions runner, which has no managed hooks path and no `~/.gitignore_global`, **they fail identically** — same assertion, `[ -L "$GIT_REPO/.git/hooks/pre-commit" ]`, at the same line. So `core.hooksPath` is at most a contributing cause on this machine, not the explanation. The four `progress-md` failures do behave as diagnosed: they are absent from the runner's failures, consistent with the global-gitignore cause.
+
+**The runner also failed 43 tests that pass here**, which reframes the whole thing:
+
+| Suite | Failures on this machine | Failures on a clean runner |
+|---|---:|---:|
+| verify (`.claude/skills/verify/tests/`) | 0 | 26 |
+| bats (`tests/*.bats`) | 14 | 27 |
+| python (`tests/test_*.py`) | 0 | 0 |
+
+The verify-suite failures are one module: the commit-message check returns `exit=2` for every input, including messages it should pass through. The extra bats failures are suites that clone and pull real repositories, and one that needs an authenticated `gh`.
+
+**So the reason nothing automated ever ran these tests is probably not that no gate looked at them. It is that large parts of the suite cannot run anywhere but this laptop.** They were never automatable, so they were never automated. That is a stronger and less comfortable finding than the original, and it is the one to carry into Milestone C1: a test suite that encodes its author's machine is a coupled pair between the tests and one computer, with nothing holding the two together.
+
+**Neither group of failures is a product defect. Both are tests asserting against paths a machine-level configuration has moved out from under them — and now, tests asserting against a machine that only exists in one place.**
 
 ### The native git hooks do fire in real use
 
@@ -286,7 +302,11 @@ There were also **no CI workflows at all** — no `.github/workflows/` directory
 
 **This answers a question the PRD carried open.** Milestone A4 recorded that "fourteen tests fail on `main` today, and nothing tracks them." Nothing tracks them because no gate looks at the suite they live in. Every tier reported green over fourteen red tests, indefinitely, because the failures were never inside the thing being checked.
 
-**Resolved by adding CI rather than by making the local gate slower (2026-08-06).** Wiring the full suite into the local tiers would have added three and a half minutes to *every push* during a review cycle, since the push tier escalates to tests whenever a PR is open. `.github/workflows/tests.yml` runs all three suites on a macOS runner instead, in parallel with the CodeRabbit wait that already happens, at no cost in local waiting. The local tiers are deliberately unchanged.
+**A workflow was written and run, and it is deliberately not merged (2026-08-07).** Wiring the full suite into the local tiers would have added three and a half minutes to *every push* during a review cycle, since the push tier escalates to tests whenever a PR is open. So the suites belong on a runner instead, overlapping the CodeRabbit wait that already happens, at no cost in local waiting. `.github/workflows/tests.yml` does that and lives on the unmerged branch `feature/ci-test-workflow`, not here.
+
+**It is unmerged because its first run is red, and a permanently-failing check is worse than no check** — it trains the reader to ignore it, which is the advisory-noise problem this audit spent its time removing. The first run's results are recorded in the corrected baseline section above: 26 verify failures and 27 bats failures on a clean runner, against 14 here. Merging CI is blocked on making the suite runnable off this machine, which is its own work rather than a milestone finding.
+
+**Two things the run established that nothing else could.** It disproved the `core.hooksPath` diagnosis, and it revealed 43 tests that pass here only because this machine has network access, credentials, and real repositories sitting where the tests expect them.
 
 **A reminder was considered and rejected.** Under Decision 17a an advisory notice is the weakest tier, and a reminder to run a three-and-a-half-minute suite is one a reader correctly ignores most of the time. The same reasoning that removed advisory noise elsewhere in this audit applies to adding it here.
 
