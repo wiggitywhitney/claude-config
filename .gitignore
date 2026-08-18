@@ -6,3 +6,4 @@ _autonomous-run.log
 .DS_Store
 !prds/
 research/repos/
+.claude/settings.local.json.bak-*

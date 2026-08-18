@@ -1,6 +1,6 @@
 ---
 name: make-autonomous
-description: Enable autonomous PRD mode for the current project. Installs YOLO skill symlinks, SessionStart hooks, and permissions.
+description: Enable autonomous PRD mode for the current project. Installs YOLO skill symlinks and permissions.
 category: project-management
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
@@ -12,8 +12,7 @@ Enable autonomous PRD mode for the current project. This installs YOLO skill var
 ## What This Does
 
 1. **Creates symlinks to YOLO skill variants** in `.claude/skills/` pointing to `SKILL.v1-yolo.md` files in the claude-config repo
-2. **Installs SessionStart hook** enabling the `/clear` → auto-resume loop via `prd-loop-continue.sh`
-3. **Adjusts permissions** to reduce friction for autonomous git and skill operations
+2. **Adjusts permissions** to reduce friction for autonomous git and skill operations
 
 ## PRD Skills Installed
 
@@ -68,37 +67,7 @@ done
 
 **Important**: Use absolute paths for symlink targets so they work regardless of working directory.
 
-### Step 3: Install SessionStart Hook
-
-Read `.claude/settings.local.json` (create with `{}` if it doesn't exist). Add a SessionStart hook:
-
-**Target structure to merge into settings.local.json:**
-
-```json
-{
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "clear",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$CLAUDE_CONFIG_DIR/scripts/prd-loop-continue.sh"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-**Merge rules:**
-- If no `hooks` key exists, add it
-- If `hooks` exists but no `SessionStart`, add the `SessionStart` array
-- If `SessionStart` already exists, check for a `prd-loop-continue` entry before adding (avoid duplicates)
-- Never overwrite existing PreToolUse, PostToolUse, or other hook entries
-
-### Step 4: Adjust Permissions
+### Step 3: Adjust Permissions
 
 Add permission entries to `.claude/settings.local.json` under `permissions.allow`. These reduce confirmation prompts during autonomous PRD work:
 
@@ -147,7 +116,7 @@ Add permission entries to `.claude/settings.local.json` under `permissions.allow
 - If `permissions.allow` already exists, add only entries that don't already exist (deduplicate)
 - Never remove existing permission entries
 
-### Step 5: Verification
+### Step 4: Verification
 
 After all changes, verify the symlinks are correct:
 

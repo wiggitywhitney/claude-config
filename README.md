@@ -24,7 +24,6 @@ Shared Claude Code testing infrastructure, safety config, and developer tooling.
 | `/make-careful` Skill | [`.claude/skills/make-careful/`](.claude/skills/make-careful/) | Disable autonomous PRD mode per-project |
 | ABOUTME Hook | [`.claude/skills/verify/scripts/check-aboutme.sh`](.claude/skills/verify/scripts/check-aboutme.sh) | Enforces ABOUTME file headers in code files |
 | CodeRabbit CLI Hook | [`.claude/skills/verify/scripts/coderabbit-review.sh`](.claude/skills/verify/scripts/coderabbit-review.sh) | Advisory CodeRabbit CLI review on push |
-| PRD Loop Hook | [`scripts/prd-loop-continue.sh`](scripts/prd-loop-continue.sh) | SessionStart hook for PRD work continuation after `/clear` |
 | Branch Protection Rule | [`rules/branch-protection.md`](rules/branch-protection.md) | Docs-only exemption for main branch commits |
 | CLAUDE.md Templates | [`templates/`](templates/) | Starter templates for new projects |
 | CLAUDE.md Authoring Guide | [`guides/claude-md-guide.md`](guides/claude-md-guide.md) | How to write effective CLAUDE.md files |
@@ -258,8 +257,7 @@ PRD skills operate in one of two modes, controlled per-project:
 Run `/make-autonomous` in your project directory. This:
 
 1. **Creates symlinks to YOLO skill variants** — skill descriptions include active trigger language (e.g., "INVOKE AUTOMATICALLY after completing a PRD task") that drives Claude to invoke skills proactively
-2. **Installs a SessionStart hook** — `prd-loop-continue.sh` in `.claude/settings.local.json` provides a reminder to resume PRD work after `/clear`
-3. **Adds frictionless permissions** — auto-allows git operations, skill invocations, and web tools in `.claude/settings.local.json`
+2. **Adds frictionless permissions** — auto-allows git operations, skill invocations, and web tools in `.claude/settings.local.json`
 
 All changes are local (`.claude/settings.local.json` is auto-gitignored by Claude Code).
 
@@ -336,7 +334,6 @@ The acceptance gate tier is **advisory** — it never blocks PR creation, but Cl
 | `check-aboutme.sh` | Write/Edit | Blocks code files missing ABOUTME headers (PreToolUse) |
 | `coderabbit-review.sh` | `git push` | Advisory CodeRabbit CLI review (runs after blocking checks) |
 | `post-write-codeblock-check.sh` | Write/Edit | Warns about Markdown code blocks missing language specifiers (PostToolUse) |
-| `prd-loop-continue.sh` | `/clear` | SessionStart hook that resumes PRD work (installed per-project by `/make-autonomous`) |
 
 ### Dotfile opt-outs
 
@@ -484,7 +481,7 @@ The full `~/.claude/settings.json` hook configuration used in production:
 }
 ```
 
-The `prd-loop-continue.sh` SessionStart hook is **not** included in global settings — it is installed per-project by `/make-autonomous` into `.claude/settings.local.json`.
+A per-project SessionStart hook that auto-resumed PRD work after `/clear` was removed on 2026-08-18; it never worked, because imperative injected text is surfaced to the user rather than acted on.
 
 Replace `/path/to/claude-config` with the absolute path to your clone of this repo.
 
@@ -558,7 +555,6 @@ claude-config/
   scripts/                             # Standalone hooks and utilities
     google-mcp-safety-hook.py          # Google API MCP safety hook
     gogcli-safety-hook.py              # gogcli MCP safety hook
-    prd-loop-continue.sh               # SessionStart hook for PRD work continuation
   templates/
     claude-md-general.md               # General CLAUDE.md template
     claude-md-nodejs.md                # Node.js/TypeScript template

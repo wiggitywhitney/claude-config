@@ -243,7 +243,7 @@ Both are covered by tests that failed before the fix. After it, `rule-names-scri
 
 ## Hook inventory
 
-**Status: 14 of 15 original scripts settled with Whitney, 1 pending.** Rendered from `./scripts/audit-enumerate.sh hooks`, not typed by hand. Re-run it to reproduce the rows; the verdict column is the judgment half and is not derivable.
+**Status: all 15 original scripts settled with Whitney. The three native git hooks remain.** Rendered from `./scripts/audit-enumerate.sh hooks`, not typed by hand. Re-run it to reproduce the rows; the verdict column is the judgment half and is not derivable.
 
 **State the unit whenever a hook count appears.** Two scripts (`suggest-planning-handoff.sh`, `suggest-write-prompt.sh`) are each registered twice, once on `Write|Edit` and once on `Bash`, so "how many hooks" has two correct answers. The set went from **17 registered entries across 15 distinct scripts** to **14 across 12**. `PostCompact` is no longer a configured event.
 
@@ -258,6 +258,7 @@ Both are covered by tests that failed before the fix. After it, `rule-names-scri
 | `check-coderabbit-required.sh` | PreToolUse | `gh pr merge`, unless `.skip-coderabbit` exists | **repaired** — the only hook in the set that fails *closed* everywhere, which is right for a gate. But its channel counting returned `"0\n0"` whenever a `gh api` call failed, so all three numeric comparisons errored with `[: integer expected` and it reported "no CodeRabbit review found" when the lookup had actually failed. Same decision either way; wrong cause, and the two need different responses. Now counts once, and denies with a distinct "could not be verified" message (9 tests) |
 | `pre-pr-hook.sh` | PreToolUse | `gh pr create`; also reached via the push tier when the branch has an open PR | **keep the hook, fix what it verifies** — the hook works; the command it runs covers a fraction of the repo. See below |
 | `gogcli-safety-hook.py` | PreToolUse | `Bash` commands invoking the Google CLI | **keep, unchanged, and do not "fix" its over-blocking** — see below |
+| `prd-loop-continue.sh` | *removed* | `SessionStart` matcher `clear`, declared in gitignored `.claude/settings.local.json` | **removed** — the autonomous loop primitive, and it never worked; see below |
 | `post-write-codeblock-check.sh` | PostToolUse | any `Write`/`Edit`; the checker decides what is markdown | **repaired** — deleted a passthrough layer whose whole body re-invoked the Python checker, added the ABOUTME header it was missing, first tests written (6) |
 | `suggest-branch-cleanup.sh` | PostToolUse | successful `gh pr merge` only | **repaired** — no longer advises deleting a branch `gh` already deleted; handles `--delete-branch`, `-d`, and `=false` (12 tests) |
 | `check-running-clusters.sh` | SessionStart | every session | **repaired, and it had never worked** — see below (44 tests) |
@@ -275,7 +276,7 @@ Three compounding faults: the error was swallowed by `2>/dev/null || true`; the 
 
 ### Pending
 
-`prd-loop-continue.sh` (declared in gitignored `.claude/settings.local.json`), and the three native git hooks — `pre-commit`, `commit-msg`, `pre-push`.
+The three native git hooks — `pre-commit`, `commit-msg`, `pre-push`.
 
 **`commit-msg` has already demonstrated itself unprompted**, rejecting a commit on 2026-08-05 whose message contained the word "Claude." That is evidence of enforcement on a live commit, not a test.
 
@@ -343,3 +344,24 @@ The judgement matches the one applied to `vale-on-edit.sh`: a guard for somethin
 `scripts/gogcli-safety-hook.py` is 292 lines of blocking logic guarding irreversible actions that reach other people, and `tests/` contains nothing for it, while every other blocking hook in the set has a suite. The same was true of the 96-line YouTube hook removed above — so of the two safety hooks that existed, neither was ever tested and one turned out to be guarding an unreachable path.
 
 The cause is the paragraph above: a hook matching on command text is awkward to test, because the harness has to carry the trigger string without tripping it. Awkward-to-test code tends to stay untested, and blocking logic protecting irreversible actions is the worst possible place for that to be true. **The "keep" verdict on these two rests entirely on one manual exercise run, not on anything re-runnable** — which is exactly the kind of unevidenced standing claim this milestone is cataloguing elsewhere.
+
+---
+
+### The autonomous loop primitive never worked, and step 2 of 3 was a no-op for months
+
+`scripts/prd-loop-continue.sh` was a `SessionStart` hook with matcher `clear`. On a `feature/prd-NNN-*` branch it found the PRD, counted unchecked items, and injected a directive to invoke `/prd-next` (or `/prd-done` when nothing remained). Exercised 2026-08-18 it produced exactly that, and its count was correct — 9 unchecked, matching the checklist.
+
+**Whitney's report is the decisive evidence: it has never worked.** The documented mechanism agrees. The official hooks documentation cautions to "write the text as factual statements rather than imperative system instructions," because "text framed as out-of-band system commands can trigger Claude's prompt-injection defenses, which causes Claude to surface the text to you instead of treating it as context." The injected text read `MANDATORY ACTION REQUIRED`, `You MUST invoke /prd-next immediately`, `INVOKE /prd-next NOW`. Unlike `auto-reanchor.sh` it was at least on a supported event, where plain stdout does become context — so the mechanism was right and the framing defeated it.
+
+**Two further defects found while exercising it:**
+
+- **Its second counter was dead.** It counted unchecked work two ways: markdown checkboxes, and milestone headings lacking a completion marker. The heading pattern required a digit immediately after "Milestone", and this PRD names its milestones `Milestone A4`, `Milestone B1`, `Milestone C2`. **Twelve headings, zero matched.** The total was right only because the checkbox counter carried it; a heading-style PRD with letter IDs would have reported zero remaining and directed the session to `/prd-done`.
+- **It contradicted Decision 4.** "100% human decides… never decides ahead of Whitney" against "Do not ask for confirmation. Do not summarize or explain." Both deliberate, the conflict live in the configuration rather than on paper. Removal resolves it in favour of Decision 4.
+
+**The removal was sequenced to avoid trading a no-op for a breakage.** Eight repositories carried a live registration — claude-config, cluster-whisperer, commit-story-v2, content-manager, kubecon-2026-gitops, KubeHound-Demo, scaling-on-satisfaction, spinybacked-orbweaver. Deleting the script first would have left eight `SessionStart` hooks pointing at a missing file, firing on every `/clear`. So: `/make-autonomous` stopped installing it, all eight registrations were stripped (each file backed up first, all still parse), and only then were the script and its tests deleted.
+
+**This is an exception to the milestone's no-other-repos rule, taken deliberately.** The files edited are gitignored local settings; no repository's tracked content changed. Recorded as an exception rather than a precedent.
+
+**What it means beyond the hook.** `/make-autonomous` advertised three actions and one of them did nothing, so the summary at the top of that skill was wrong for as long as the hook existed. The YOLO skill variants also instructed the reader to install it and warned when it was absent — guidance to install something that could not work. That is a subsystem-level finding for the skills inventory: **the autonomous mode's loop primitive was inert, so whatever made the loop appear to run was the YOLO skill descriptions' trigger language, not the hook.** Milestone C1 should not treat the loop as a working mechanism it merely needs to tidy.
+
+**One piece of dead configuration deliberately left in place:** `content-manager`'s local settings carry a permission-allowlist string naming this hook, for a command that checked whether it was installed. Harmless and now pointless, in another repo's gitignored file.

@@ -66,9 +66,13 @@ done
 
 **Important**: Use absolute paths for symlink targets so they work regardless of working directory.
 
-### Step 3: Remove SessionStart Hook
+### Step 3: Remove the legacy SessionStart Hook
 
-Read `.claude/settings.local.json`. Remove the `prd-loop-continue.sh` SessionStart hook entry:
+**The hook itself was retired on 2026-08-18** — `scripts/prd-loop-continue.sh` no longer exists, and `/make-autonomous` no longer installs it. It injected an imperative directive to auto-invoke `/prd-next` after `/clear`, and it never worked: the official hooks documentation warns that out-of-band imperative text trips prompt-injection defenses and gets surfaced to the user rather than acted on.
+
+This step remains because repositories where `/make-autonomous` ran before that date may still carry the registration, which would now point at a missing script. The eight known instances were cleaned up on 2026-08-18; keep this step for any that were missed. If the entry is absent, do nothing and say so.
+
+Read `.claude/settings.local.json`. Remove any `prd-loop-continue.sh` SessionStart hook entry:
 
 **What to remove:**
 - Find the `hooks.SessionStart` array
