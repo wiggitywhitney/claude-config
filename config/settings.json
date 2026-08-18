@@ -107,15 +107,6 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "mcp__.*(youtube).*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/scripts/google-mcp-safety-hook.py"
-          }
-        ]
-      },
-      {
         "matcher": "Write|Edit",
         "hooks": [
           {

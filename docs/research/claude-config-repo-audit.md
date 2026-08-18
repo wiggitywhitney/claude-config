@@ -243,7 +243,7 @@ Both are covered by tests that failed before the fix. After it, `rule-names-scri
 
 ## Hook inventory
 
-**Status: 12 of 15 original scripts settled with Whitney, 3 pending.** Rendered from `./scripts/audit-enumerate.sh hooks`, not typed by hand. Re-run it to reproduce the rows; the verdict column is the judgment half and is not derivable.
+**Status: 14 of 15 original scripts settled with Whitney, 1 pending.** Rendered from `./scripts/audit-enumerate.sh hooks`, not typed by hand. Re-run it to reproduce the rows; the verdict column is the judgment half and is not derivable.
 
 **State the unit whenever a hook count appears.** Two scripts (`suggest-planning-handoff.sh`, `suggest-write-prompt.sh`) are each registered twice, once on `Write|Edit` and once on `Bash`, so "how many hooks" has two correct answers. The set went from **17 registered entries across 15 distinct scripts** to **14 across 12**. `PostCompact` is no longer a configured event.
 
@@ -257,6 +257,7 @@ Both are covered by tests that failed before the fix. After it, `rule-names-scri
 | `check-aboutme.sh` | PreToolUse | `Write`/`Edit` on `.py .sh .ts .tsx .js .jsx` | **keep as is** — verified blocking, exempting, and fix-and-retry paths. **23 of 84 tracked code files lack the header it enforces; backfilling them was explicitly declined 2026-08-05 and is not to be re-raised.** The hook only sees files someone touches, so it cannot reach the rest |
 | `check-coderabbit-required.sh` | PreToolUse | `gh pr merge`, unless `.skip-coderabbit` exists | **repaired** — the only hook in the set that fails *closed* everywhere, which is right for a gate. But its channel counting returned `"0\n0"` whenever a `gh api` call failed, so all three numeric comparisons errored with `[: integer expected` and it reported "no CodeRabbit review found" when the lookup had actually failed. Same decision either way; wrong cause, and the two need different responses. Now counts once, and denies with a distinct "could not be verified" message (9 tests) |
 | `pre-pr-hook.sh` | PreToolUse | `gh pr create`; also reached via the push tier when the branch has an open PR | **keep the hook, fix what it verifies** — the hook works; the command it runs covers a fraction of the repo. See below |
+| `gogcli-safety-hook.py` | PreToolUse | `Bash` commands invoking the Google CLI | **keep, unchanged, and do not "fix" its over-blocking** — see below |
 | `post-write-codeblock-check.sh` | PostToolUse | any `Write`/`Edit`; the checker decides what is markdown | **repaired** — deleted a passthrough layer whose whole body re-invoked the Python checker, added the ABOUTME header it was missing, first tests written (6) |
 | `suggest-branch-cleanup.sh` | PostToolUse | successful `gh pr merge` only | **repaired** — no longer advises deleting a branch `gh` already deleted; handles `--delete-branch`, `-d`, and `=false` (12 tests) |
 | `check-running-clusters.sh` | SessionStart | every session | **repaired, and it had never worked** — see below (44 tests) |
@@ -274,7 +275,7 @@ Three compounding faults: the error was swallowed by `2>/dev/null || true`; the 
 
 ### Pending
 
-`gogcli-safety-hook.py`, `google-mcp-safety-hook.py`, `prd-loop-continue.sh` (declared in gitignored `.claude/settings.local.json`), and the three native git hooks — `pre-commit`, `commit-msg`, `pre-push`.
+`prd-loop-continue.sh` (declared in gitignored `.claude/settings.local.json`), and the three native git hooks — `pre-commit`, `commit-msg`, `pre-push`.
 
 **`commit-msg` has already demonstrated itself unprompted**, rejecting a commit on 2026-08-05 whose message contained the word "Claude." That is evidence of enforcement on a live commit, not a test.
 
@@ -310,4 +311,35 @@ There were also **no CI workflows at all** — no `.github/workflows/` directory
 
 **A reminder was considered and rejected.** Under Decision 17a an advisory notice is the weakest tier, and a reminder to run a three-and-a-half-minute suite is one a reader correctly ignores most of the time. The same reasoning that removed advisory noise elsewhere in this audit applies to adding it here.
 
-**The first CI run is also an experiment.** Ten of the fourteen failures blame `core.hooksPath`, which is Datadog-managed policy on this machine, and four blame `~/.gitignore_global`. A runner has neither, so those tests may pass there — which would establish that the failures are environment-specific rather than defects, and change what fixing them means.
+**The first CI run was also an experiment, and its result is recorded in the corrected baseline section above — it disproved this prediction.** Ten of the fourteen failures blame `core.hooksPath`, which is Datadog-managed policy on this machine, and four blame `~/.gitignore_global`. A runner has neither, so those tests may pass there — which would establish that the failures are environment-specific rather than defects, and change what fixing them means.
+
+---
+
+### The Google CLI safety hook over-blocks on purpose, and that is the right call
+
+Verified 2026-08-17 across every category it claims to cover: sends, deletions, calendar events with attendees, drive permission changes, and writes to non-allowlisted spreadsheets are each denied with a specific reason, while reads and unrelated commands pass silently.
+
+**It matches the text of the command rather than an invocation.** Echoing a blocked command is denied, and so is a shell loop that merely carries such a string as test data. That is not hypothetical: it blocked the first attempt to exercise it, and the test payloads had to be assembled from string fragments inside Python before the hook could be tested at all. It then blocked the attempt to *document* this behaviour, because the write was a shell heredoc containing the example — this section had to be written with the file-editing tools instead, which the hook does not watch.
+
+`suggest-branch-cleanup.sh` guards against exactly this shape, anchoring its match at a command boundary so that echoing the command stays silent. Two hooks in one repo, one false-positive shape, one guarded and one not.
+
+**The inconsistency is correct and must be preserved.** This is the only hook in the set where a false negative sends an irreversible message to a real person, while a false positive costs one retyped command. That asymmetry justifies over-blocking here and justifies the opposite call for an advisory. **Anyone later reconciling these two hooks for consistency would be trading a cheap annoyance for an expensive failure.** Recorded so the reconciliation does not happen by tidiness.
+
+### The YouTube MCP safety hook guarded a server that cannot start — removed
+
+`scripts/google-mcp-safety-hook.py` denied delete and upload on YouTube MCP tools. Verified 2026-08-17 that it did exactly that, and correctly allowed listing and transcript downloads.
+
+**It was removed because the capability it guarded is unreachable.** `~/.claude.json` configures a `youtube` MCP server whose command is `~/.claude/scripts/youtube-mcp-wrapper.sh`, **and that file does not exist**, so the server cannot start. That is why no upload or delete tool appears in a session at all. The only working YouTube server is `youtube-transcripts`, which exposes a download tool the hook allowed anyway.
+
+The judgement matches the one applied to `vale-on-edit.sh`: a guard for something not present is removed, and rebuilt deliberately if the thing returns. Restoring an upload-capable server is a deliberate act, and the right moment to add a guard back.
+
+**Two pieces of dead configuration fell out of this, both outside the repo:**
+
+- The `youtube` MCP server entry in `~/.claude.json` points at a missing wrapper script. It should be removed or repaired; it currently fails silently at every session start.
+- `~/.claude/scripts/` contains exactly one file, `gogcli-safety-hook.py`, a copy of the script tracked here at `scripts/gogcli-safety-hook.py`. The registered hook path is the repo copy, so the other is an orphaned duplicate. **This is a same-basename-in-a-different-directory pair — one of the two candidate derivation classes Decision 57 asks Milestone C1 to test — and it is the third real pair found by following a thread rather than by enumeration.**
+
+### Neither safety hook has any test coverage
+
+`scripts/gogcli-safety-hook.py` is 292 lines of blocking logic guarding irreversible actions that reach other people, and `tests/` contains nothing for it, while every other blocking hook in the set has a suite. The same was true of the 96-line YouTube hook removed above — so of the two safety hooks that existed, neither was ever tested and one turned out to be guarding an unreachable path.
+
+The cause is the paragraph above: a hook matching on command text is awkward to test, because the harness has to carry the trigger string without tripping it. Awkward-to-test code tends to stay untested, and blocking logic protecting irreversible actions is the worst possible place for that to be true. **The "keep" verdict on these two rests entirely on one manual exercise run, not on anything re-runnable** — which is exactly the kind of unevidenced standing claim this milestone is cataloguing elsewhere.
