@@ -7,12 +7,14 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 
 # Disable Autonomous PRD Mode
 
-Swap a project from autonomous (YOLO) PRD mode to careful mode. This replaces YOLO skill symlinks with careful variants, removes the `/clear` → auto-resume SessionStart hook, and removes autonomous permissions.
+Swap a project from autonomous (YOLO) PRD mode to careful mode. This replaces YOLO skill symlinks with careful variants, removes autonomous permissions, and cleans up a legacy `SessionStart` hook registration if the project still carries one.
+
+**The hook is legacy, not current.** `/make-autonomous` stopped installing it on 2026-08-18 and the script it pointed at is gone, so Step 3 below is cleanup for projects registered before that date — not the removal of something this repo still sets up. See Step 3 for why it never worked.
 
 ## What This Does
 
 1. **Swaps symlinks to careful skill variants** in `.claude/skills/` pointing to `SKILL.md` files in the claude-config repo
-2. **Removes SessionStart hook** that enables the `/clear` → auto-resume loop
+2. **Removes a legacy SessionStart hook registration**, if present — it was meant to auto-resume after `/clear` and never did
 3. **Removes autonomous permissions** added by `/make-autonomous`
 
 ## PRD Skills After Swap

@@ -306,7 +306,13 @@ if [[ -d "${SKILLS_DIR}" ]]; then
     t="$(est_tokens "$b")"
 
     desc="$(sed -n '2,/^---$/p' "$skill_md" | grep -E '^description:' | head -1 | cut -d: -f2- || true)"
-    desc_bytes="${#desc}"
+    # Strip the whitespace separating "description:" from its value — that is YAML
+    # syntax, not description content, and charging it inflates the budget.
+    desc="${desc#"${desc%%[![:space:]]*}"}"
+    # Count bytes, not characters. ${#desc} counts characters in a UTF-8 locale,
+    # which undercounts any non-ASCII description while the report labels the
+    # column as bytes.
+    desc_bytes="$(LC_ALL=C printf '%s' "$desc" | wc -c | tr -d '[:space:]')"
 
     listed='yes'
     if sed -n '2,/^---$/p' "$skill_md" | grep -E '^disable-model-invocation:[[:space:]]*(true|yes|on|1)' >/dev/null; then

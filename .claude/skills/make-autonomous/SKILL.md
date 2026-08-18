@@ -7,7 +7,9 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 
 # Enable Autonomous PRD Mode
 
-Enable autonomous PRD mode for the current project. This installs YOLO skill variants (with active trigger descriptions) via symlinks and the SessionStart hook, and frictionless permissions.
+Enable autonomous PRD mode for the current project. This installs YOLO skill variants (with active trigger descriptions) via symlinks, and frictionless permissions.
+
+**There is no automatic resume after `/clear`, and this skill does not install a hook.** It advertised a `SessionStart` hook until 2026-08-18; that hook was removed because it never worked — text injected as an out-of-band command is surfaced to the reader rather than acted on. Whatever made the loop appear to continue was the YOLO skill descriptions' trigger language, not a hook. **After `/clear`, the user runs `/prd-next` again.**
 
 ## What This Does
 
@@ -147,7 +149,7 @@ Changes made:
 To revert: run /make-careful
 
 The autonomous loop:
-  /prd-start → /prd-next → implement → /prd-update-progress → /clear → invoke /prd-next again → repeat
+  /prd-start → /prd-next → implement → /prd-update-progress → /clear → user runs /prd-next again → repeat
 ```
 
 ## Important Notes

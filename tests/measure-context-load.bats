@@ -404,7 +404,27 @@ description: abc' 10
 
     line="$(grep '`listed`' "$(INVENTORY)")"
     [[ "$line" == *'| yes |'* ]]
-    grep -q '| Startup listing cost (descriptions only) | 4 |' "$(INVENTORY)"
+    # 3, not 4: the whitespace separating "description:" from its value is YAML
+    # syntax, not description content, and must not be charged to the budget.
+    grep -q '| Startup listing cost (descriptions only) | 3 |' "$(INVENTORY)"
+}
+
+@test "extra whitespace after description: is not charged to the listing cost" {
+    make_skill "padded" 'name: padded
+description:      abc' 10
+    run "$SCRIPT" "$FAKE_REPO"
+
+    grep -q '| Startup listing cost (descriptions only) | 3 |' "$(INVENTORY)"
+}
+
+@test "a non-ASCII description is measured in bytes, not characters" {
+    # "café" is 4 characters but 5 bytes — é is two bytes in UTF-8. The report
+    # labels this column as bytes, so the byte count is the correct answer.
+    make_skill "accented" 'name: accented
+description: café' 10
+    run "$SCRIPT" "$FAKE_REPO"
+
+    grep -q '| Startup listing cost (descriptions only) | 5 |' "$(INVENTORY)"
 }
 
 @test "a repo with no skills directory still produces an inventory" {
