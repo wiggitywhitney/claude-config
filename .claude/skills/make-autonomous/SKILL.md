@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 
 # Enable Autonomous PRD Mode
 
-Enable autonomous PRD mode for the current project. This installs YOLO skill variants (with active trigger descriptions) via symlinks, the `/clear` → auto-resume SessionStart hook, and frictionless permissions.
+Enable autonomous PRD mode for the current project. This installs YOLO skill variants (with active trigger descriptions) via symlinks and the SessionStart hook, and frictionless permissions.
 
 ## What This Does
 
@@ -139,7 +139,6 @@ Autonomous PRD mode enabled for [project-name].
 
 Changes made:
   Skills       — YOLO variant symlinks created in .claude/skills/
-  Hooks        — SessionStart hook installed (.claude/settings.local.json)
   Permissions  — PRD skill and git permissions added (.claude/settings.local.json)
 
 ⚠️  Restart Claude Code to pick up the new skill definitions.
@@ -148,12 +147,12 @@ Changes made:
 To revert: run /make-careful
 
 The autonomous loop:
-  /prd-start → /prd-next → implement → /prd-update-progress → /clear → auto-resume → repeat
+  /prd-start → /prd-next → implement → /prd-update-progress → /clear → invoke /prd-next again → repeat
 ```
 
 ## Important Notes
 
-- `.claude/settings.local.json` is auto-gitignored by Claude Code — hook and permission changes are local only
+- `.claude/settings.local.json` is auto-gitignored by Claude Code — permission changes are local only
 - Symlinks in `.claude/skills/` should be added to `.gitignore` if the project doesn't want them tracked
 - This skill only adds — it never removes existing content or settings
 - If the project already has PRD skill files (not symlinks) in `.claude/skills/`, warn the user before overwriting

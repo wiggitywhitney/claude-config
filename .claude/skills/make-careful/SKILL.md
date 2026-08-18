@@ -83,6 +83,8 @@ Read `.claude/settings.local.json`. Remove any `prd-loop-continue.sh` SessionSta
 
 ### Step 4: Remove Autonomous Permissions
 
+**Include `Skill(prds-get)`.** `/make-autonomous` adds it and earlier versions of this list omitted it, so a project switched back to careful mode kept one autonomous skill permission. Verify the allowlist before and after the switch rather than assuming the list is complete.
+
 Remove the permission entries that `/make-autonomous` added from `.claude/settings.local.json` under `permissions.allow`.
 
 **Entries to remove** (these are the entries installed by `/make-autonomous`):

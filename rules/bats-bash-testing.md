@@ -25,7 +25,15 @@ bats_require_minimum_version 1.5.0
 ```bash
 git config --get core.hooksPath
 ```
-A test suite that asserts against `.git/hooks` cannot pass on such a machine as written. Either set `core.hooksPath=` (empty) for the fixture repo inside `setup()`, or assert against the path git will actually use.
+A test suite that asserts against `.git/hooks` cannot pass on such a machine as written.
+
+**Do not "fix" it by setting `core.hooksPath=` to an empty value.** An empty setting resolves to `./`, not to the fixture's default `$GIT_DIR/hooks`, so the tests move from failing to failing differently. Either point the fixture at its own absolute hooks directory, or assert against the path git will actually use:
+
+```bash
+git -C "$GIT_REPO" config core.hooksPath "$GIT_REPO/.git/hooks"
+# or, to assert wherever git resolves it:
+hooks_dir="$(git -C "$GIT_REPO" rev-parse --git-path hooks)"
+```
 
 **`run my_function` works when `my_function` is defined in the .bats file.** `run` uses command substitution `$()` internally — a subshell of the current process, not a new `bash -c` invocation. Functions defined in the test file (or sourced via `load`) are visible without `export -f`.
 

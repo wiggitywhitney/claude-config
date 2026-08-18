@@ -151,7 +151,7 @@ After `/prd-update-progress` completes:
 
 ### If unchecked PRD items remain (any milestone):
 1. Run `/clear` to reset context — this is a **verification checkpoint**
-2. The fresh instance re-reads the PRD, verifies actual state against checkboxes, and picks up the next task (which may be in the next milestone)
+2. **Invoke `/prd-next` explicitly in the fresh session** — nothing resumes on its own. The fresh instance then re-reads the PRD, verifies actual state against checkboxes, and picks up the next task, which may be in the next milestone
 3. The loop continues from Step 1
 
 The loop runs across milestone boundaries. `/clear` provides the verification checkpoint — the fresh instance re-reads the PRD from scratch, so milestone transitions are naturally validated.

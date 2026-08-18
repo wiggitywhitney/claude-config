@@ -312,7 +312,7 @@ There were also **no CI workflows at all** — no `.github/workflows/` directory
 
 **A reminder was considered and rejected.** Under Decision 17a an advisory notice is the weakest tier, and a reminder to run a three-and-a-half-minute suite is one a reader correctly ignores most of the time. The same reasoning that removed advisory noise elsewhere in this audit applies to adding it here.
 
-**The first CI run was also an experiment, and its result is recorded in the corrected baseline section above — it disproved this prediction.** Ten of the fourteen failures blame `core.hooksPath`, which is Datadog-managed policy on this machine, and four blame `~/.gitignore_global`. A runner has neither, so those tests may pass there — which would establish that the failures are environment-specific rather than defects, and change what fixing them means.
+**The first CI run was an experiment, and it disproved the prediction that motivated it.** The prediction was that ten of the fourteen failures blame `core.hooksPath` from managed policy and four blame `~/.gitignore_global`, so a runner having neither would show them passing. What happened: the four gitignore-caused failures did pass, the ten did not — they reproduce identically on a clean runner — and 43 further tests failed there that pass here. The corrected baseline section above carries the numbers. The lesson is that the experiment was worth running precisely because the reasoning behind the prediction was sound and still wrong.
 
 ---
 

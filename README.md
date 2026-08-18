@@ -249,7 +249,7 @@ PRD skills operate in one of two modes, controlled per-project:
 |---|---|---|
 | **Invocation** | User-driven — you run each skill manually | Auto-chaining — skills invoke each other |
 | **Confirmations** | Pauses for approval at each step | Proceeds without trivial confirmations |
-| **Loop behavior** | No auto-resume after `/clear` | User runs `/clear` then `/prd-next` or `/prd-done` (auto-resume planned) |
+| **Loop behavior** | No auto-resume after `/clear` | Also no auto-resume — user runs `/clear` then `/prd-next` or `/prd-done` |
 | **Best for** | Unfamiliar projects, sensitive repos, learning | Trusted projects with well-defined PRDs |
 
 ### Enabling autonomous mode
@@ -271,7 +271,7 @@ When autonomous mode is enabled, PRD work flows continuously:
         → implement with TDD (hooks enforce quality)
             → /prd-update-progress (commits, updates PRD)
                 → /clear (resets context)
-                    → SessionStart hook detects PRD branch
+                    → user or Claude invokes /prd-next again
                         → /prd-next (picks up next task)
                             → ... (repeats until all tasks done)
                                 → /prd-done (creates PR, CodeRabbit review, merge)
@@ -279,11 +279,11 @@ When autonomous mode is enabled, PRD work flows continuously:
 
 The `/clear` step is intentional — it resets the context window so each task starts fresh, preventing context bloat from accumulating implementation details across tasks.
 
-**Current limitation**: `/prd-update-progress` ends the autonomous loop. The user must manually run `/clear`, then `/prd-next` (or `/prd-done` when the PRD is complete). Fully automated cross-session looping is not yet possible — `/clear` cannot be invoked programmatically, and the SessionStart hook may not reliably trigger the next skill.
+**This is a real limitation, not a gap waiting on a hook.** `/prd-update-progress` ends the autonomous loop, and the user must run `/clear` then `/prd-next` (or `/prd-done` when the PRD is complete). A SessionStart hook attempted to close it and was removed on 2026-08-18 for never having worked, so closing it needs a different mechanism. Fully automated cross-session looping is not yet possible — `/clear` cannot be invoked programmatically, and the SessionStart hook may not reliably trigger the next skill.
 
 ### Reverting to careful mode
 
-Run `/make-careful` in your project directory. This swaps symlinks to careful skill variants, removes the SessionStart hook, and removes autonomous permissions. The project retains PRD skills but they require manual invocation.
+Run `/make-careful` in your project directory. This swaps symlinks to careful skill variants, removes autonomous permissions, and clears the retired SessionStart registration from any project installed before 2026-08-18. The project retains PRD skills but they require manual invocation.
 
 ### How it works: symlink-based mode switching
 
