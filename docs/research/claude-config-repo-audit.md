@@ -131,7 +131,7 @@ So the installed symlinks in `.git/hooks/` are live. The tests fail on the insta
 
 Counts when the enumerator was built, 2026-08-05: **17 Claude Code hook entries** across 15 distinct scripts, plus 3 native git hooks; **26 skills**; **80 coupled pairs**; **26 repos** carrying Claude Code configuration.
 
-**After the same day's removals: 14 hook entries across 12 scripts plus the 3 git hooks, 24 skills, 87 pairs, 26 repos.** `PostCompact` is no longer a configured event. The pair count rose while three scripts were deleted because that class counts branch-versus-main differences, which today's commits added — further evidence for Decision 57 that it is not measuring what its name claims.
+**After that same day's removals, 2026-08-05: 14 hook entries across 12 scripts plus the 3 git hooks, 24 skills, 87 pairs, 26 repos.** Two more scripts were removed later, so the hook figure here is a dated snapshot and not the current set — **measured 2026-08-18: 12 entries across 10 scripts**. `PostCompact` is no longer a configured event. The pair count rose while three scripts were deleted because that class counts branch-versus-main differences, which today's commits added — further evidence for Decision 57 that it is not measuring what its name claims.
 
 ### The hook count was wrong, and the reason is the finding
 
@@ -243,9 +243,11 @@ Both are covered by tests that failed before the fix. After it, `rule-names-scri
 
 ## Hook inventory
 
-**Status: all 15 original scripts settled with Whitney. The three native git hooks remain.** Rendered from `./scripts/audit-enumerate.sh hooks`, not typed by hand. Re-run it to reproduce the rows; the verdict column is the judgment half and is not derivable.
+**Status: all 15 original Claude Code scripts settled with Whitney. The three native git hooks were deliberately not audited — see below.** Rendered from `./scripts/audit-enumerate.sh hooks`, not typed by hand. Re-run it to reproduce the rows; the verdict column is the judgment half and is not derivable.
 
-**State the unit whenever a hook count appears.** Two scripts (`suggest-planning-handoff.sh`, `suggest-write-prompt.sh`) are each registered twice, once on `Write|Edit` and once on `Bash`, so "how many hooks" has two correct answers. The set went from **17 registered entries across 15 distinct scripts** to **14 across 12**. `PostCompact` is no longer a configured event.
+**State the unit whenever a hook count appears.** Two scripts (`suggest-planning-handoff.sh`, `suggest-write-prompt.sh`) are each registered twice, once on `Write|Edit` and once on `Bash`, so "how many hooks" has two correct answers. The set went from **17 registered entries across 15 distinct scripts** to **12 across 10**, measured 2026-08-18 with `./scripts/audit-enumerate.sh hooks`. Ten scripts kept or repaired, five removed. `PostCompact` is no longer a configured event.
+
+**This line read "14 across 12" until 2026-08-18, and the error is the same one the audit keeps finding.** It was written after three removals and not updated after the next two, so it undercounted the removals — and a reader reconciling it against the table below would land on a third figure again, because `google-mcp-safety-hook.py` is settled in prose under its own heading rather than as a table row. Five scripts were removed in total: `prd-loop-continue.sh`, `vale-on-edit.sh`, `check-contributing-freshness.sh`, `auto-reanchor.sh`, and `google-mcp-safety-hook.py`. **Any count here must come from the enumerator, not from counting rows in the table underneath it.**
 
 ### Settled
 
@@ -274,11 +276,26 @@ Three compounding faults: the error was swallowed by `2>/dev/null || true`; the 
 
 `~/.claude/rules/infrastructure-safety.md` waived mandatory teardown gates on the strength of this alarm. That sentence was corrected the same day.
 
-### Pending
+### Deliberately not audited: the three native git hooks
 
-The three native git hooks — `pre-commit`, `commit-msg`, `pre-push`.
+**Whitney's call, 2026-08-18. This is a recorded choice, not an omission, and Milestone C1 inherits the gap knowingly.** The three dispatchers — `pre-commit`, `commit-msg`, `pre-push` — and the eight check scripts they run carry **no verdict**. Nobody should later read the settled table above as covering them.
 
-**`commit-msg` has already demonstrated itself unprompted**, rejecting a commit on 2026-08-05 whose message contained the word "Claude." That is evidence of enforcement on a live commit, not a test.
+What the gap covers, so C1 knows its exact shape. The dispatchers are thin — 36, 36, and 41 lines, each resolving its own symlink and then running checks with an accumulate-rather-than-fail-fast `run_check`. The enforcement lives in the eight checks:
+
+| Dispatcher | Checks it runs |
+|---|---|
+| `pre-commit` | `branch-protection.sh`, `progress-md.sh`, `pre-commit-verify.sh`, `check-prompt-generality.sh` |
+| `commit-msg` | `commit-message.sh` |
+| `pre-push` | `test-tiers.sh`, `progress-md-pr.sh`, `pre-push-verify.sh` |
+
+All eight are named in at least one bats file, which distinguishes them from the two safety hooks that had no coverage at all. Coverage was not assessed for adequacy — only for existence.
+
+**What argued for auditing, preserved so the decision can be re-opened on its own reasoning rather than re-derived.** These are the only hooks in the setup that stop a real git operation rather than a tool call, so their pass-through path has months of live exercise behind it and needs nothing; their *blocking* path has none. A hook that has quietly stopped blocking is indistinguishable from one with nothing to block, and that shape was found four times elsewhere in this audit — the cluster alarm's silent cloud half, `auto-reanchor`'s unreachable output channel, `check-contributing-freshness` never once producing output, and the CodeRabbit gate reporting "no review found" when the lookup had failed. One of the eight is already known partly defective: `pre-push-verify.sh` resolved to a test command running 466 tests while 376 bats tests went unrun.
+
+**Two facts worth keeping regardless, both cheap and both already established.**
+
+- **`commit-msg` has demonstrated itself unprompted**, rejecting a commit on 2026-08-05 whose message contained the word "Claude." That is enforcement observed on a live commit, not a test — and it is the only blocking path in the eight with live evidence behind it.
+- **Repo-local `core.hooksPath` overrides the Datadog global one, so these hooks *can* be exercised end to end in a temp fixture.** Probed 2026-08-18: in a throwaway repo, `git config core.hooksPath <fixture>` resolved to the fixture rather than `/usr/local/dd/global_hooks`, and a fixture `pre-commit` printed its marker during a real `git commit`. **The marker was observed; the resulting block was not — the probe's pipeline swallowed git's exit code.** So the override is confirmed and the block is not. This matters twice over: it removes the method obstacle if this audit is ever re-opened, and it is a candidate fix for the 10 failing `install-git-hooks.bats` tests, whose diagnosed cause is that same global override reaching test fixtures. Not attempted here.
 
 ### Method note
 
