@@ -17,7 +17,7 @@ Sources read:
 - `rules/hooks-reference.md`
 - `hooks/git/checks/progress-md.sh`
 - `.claude/skills/verify/scripts/cascade-decision-check.sh`
-- `scripts/prd-loop-continue.sh`
+- ~~`scripts/prd-loop-continue.sh`~~ — deleted 2026-08-18 (Decision 58); listed here only so a reader of the original inventory knows it was removed rather than overlooked
 - `config/settings.json`
 
 ---
@@ -102,8 +102,8 @@ Every PRD skill ships in **two parallel files**: `SKILL.md` (careful, human-gate
 
 ### The mode-toggle skills
 
-- **`/make-autonomous`** installs YOLO mode for a project: creates symlinks from `.claude/skills/prd-*/SKILL.md` → `$CLAUDE_CONFIG/.claude/skills/prd-*/SKILL.v1-yolo.md`, installs the `SessionStart[matcher=clear]` → `prd-loop-continue.sh` hook in `.claude/settings.local.json`, and adds a frictionless permission allowlist (git, gh, ls, Skill invocations, WebFetch/WebSearch).
-- **`/make-careful`** reverses it: swaps symlinks to point at the careful `SKILL.md`, removes the SessionStart hook, removes the permission entries.
+- **`/make-autonomous`** installs YOLO mode for a project: creates symlinks from `.claude/skills/prd-*/SKILL.md` → `$CLAUDE_CONFIG/.claude/skills/prd-*/SKILL.v1-yolo.md`, and adds a frictionless permission allowlist (git, gh, ls, Skill invocations, WebFetch/WebSearch). **It installed a `SessionStart[matcher=clear]` → `prd-loop-continue.sh` hook until 2026-08-18; that hook is deleted and no longer installed (Decision 58), so it does two things now, not three.**
+- **`/make-careful`** reverses it: swaps symlinks to point at the careful `SKILL.md`, removes the permission entries, and clears the legacy `SessionStart` registration from projects configured before that hook was retired.
 
 Both skills are idempotent and only touch `.claude/settings.local.json` (auto-gitignored, so mode is a per-clone local choice).
 

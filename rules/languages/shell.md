@@ -48,6 +48,17 @@ paths: ["**/*.sh"]
 - **An alternation inside a `sed` substitution collides with `|` as the delimiter.** `sed -E 's|^@(a/|b/)?x||'` fails with `RE error: parentheses not balanced`, because the first `|` of the alternation closes the pattern. It is easy to introduce when converting a working `grep -E` pattern into a `sed` expression, since the grep version has no delimiter to collide with. Pick a delimiter that cannot appear in the pattern — `#` or `,` — rather than escaping: `sed -E 's#^@(a/|b/)?x##'`.
 
   The failure is loud on stderr but does not stop the pipeline, so under `set -uo pipefail` without `set -e` the substitution silently produces no output and downstream logic sees an empty result. In `check-rule-frontmatter.sh` on 2026-08-04 that turned every `@`-referenced rule into an apparent "no loading mechanism" failure — eleven false failures from one delimiter. Run the script once after editing any `sed` expression; `bash -n` passes it, because the error is in the regex at runtime rather than in the shell syntax.
+- **`${#var}` counts characters, not bytes, so it silently undercounts any non-ASCII value.** In a UTF-8 locale `é` is one character and two bytes, so a script that reports `${#desc}` under a column labelled "bytes" is wrong for every accented or non-Latin string — and right for ASCII, which is why it ships. Use `LC_ALL=C printf '%s' "$var" | wc -c | tr -d '[:space:]'`; the `LC_ALL=C` is what makes it a byte count, and the `tr` strips the leading padding `wc` adds on macOS.
+
+  ```bash
+  # Wrong when the value contains any non-ASCII character
+  n="${#desc}"
+
+  # Right: bytes, on both macOS and Linux
+  n="$(LC_ALL=C printf '%s' "$desc" | wc -c | tr -d '[:space:]')"
+  ```
+
+  **Two byte-counting errors in one expression can cancel out and hide each other.** In `measure-context-load.sh` on 2026-08-18, `cut -d: -f2-` left the space after `description:` in the value *and* `${#desc}` counted characters — so for `description: café` the extra space compensated for `é`'s second byte and the total was accidentally correct. Neither error was visible from any test until they were separated. When a measurement is wrong, check whether it is wrong twice: strip the YAML separator with `"${v#"${v%%[![:space:]]*}"}"` before counting.
 - Quote all variable expansions: `"$var"` not `$var`.
 - Use `[[ ]]` over `[ ]` for conditionals (bash-specific but safer).
 - Use `$(command)` over backticks for command substitution.
