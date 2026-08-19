@@ -55,7 +55,9 @@ The failure count matches what the PRD documented on 2026-08-04. Two details in 
 
 **The ten failures are all in `install-git-hooks.bats`. `bootstrap.bats` passes 38 of 38.** The PRD attributes the ten to those two suites jointly.
 
-**They are not "exiting 127, command not found."** The observed cause is `core.hooksPath`. Git's global config on this machine sets `core.hooksPath = /usr/local/dd/global_hooks`, a root-owned Datadog-managed directory:
+**They are not "exiting 127, command not found."** **⚠️ Read the 2026-08-07 correction below before using anything in the next three paragraphs — a clean CI runner disproved this diagnosis, and a reader who stopped here on 2026-08-18 acted on it and was wrong.** The paragraphs are kept because the mechanism they describe is real on this machine and because the disproof is only legible against the claim it retired. The cause of the ten failures is **unknown**.
+
+The mechanism, as observed on this laptop: `core.hooksPath`. Git's global config on this machine sets `core.hooksPath = /usr/local/dd/global_hooks`, a root-owned Datadog-managed directory:
 
 ```text
 $ git config --global --get core.hooksPath
@@ -390,3 +392,60 @@ The cause is the paragraph above: a hook matching on command text is awkward to 
 **Correcting something recorded in conversation and nearly recorded here: `research/repos/` is not dead material.** It was twice described during this milestone as an 86 MB stray worth a verdict in the dead-material sweep. It is Milestone A1's deliverable — six reference clones including `dot-ai` and `dot-agent-deck`, which Milestones B2 and B4 read — and it is gitignored deliberately at `.gitignore` line 8. 86 MB is what six clones weigh. The dead-material sweep should skip it.
 
 **Cleanup note on the eight-repo edit.** Each `settings.local.json` was backed up before editing, and six of those eight backups sat in repositories where git could see them — one `git add .` away from committing personal configuration into a shared repo. After confirming every live file still parses and no `SessionStart` registration remains, the backups were relocated to `~/.claude-config-backups/2026-08-18-prd-loop-removal/` rather than deleted, so the safety net survives outside every working tree. `content-manager` retains one permission-allowlist string naming the retired hook; its hooks block is confirmed empty.
+
+---
+
+## Skills inventory
+
+**Status: enumerated and classified 2026-08-19. Fourteen lifecycle skills carry a deliberate deferral rather than a verdict — see below.** Rendered from `./scripts/audit-enumerate.sh skills`, run twice against two different roots. The verdict column is the judgment half and is not derivable.
+
+**Measured 2026-08-19.** Two runs, because one was not enough and the reason is the finding:
+
+```bash
+./scripts/audit-enumerate.sh skills           # repo root — 24 skills, 276,855 bytes
+./scripts/audit-enumerate.sh skills "$HOME"   # user level — 25 definitions: 24 skills + 1 command
+```
+
+### The audit had been running this tool at half its reach, and the tool was never the problem
+
+Every skills figure in this audit before today came from the repo-root run. That run reports 24 skills and cannot see anything installed directly at user level, because it scans a repository and `~/.claude/` is not one. The second invocation — same script, same subcommand, different `repo_root` — sees the user level and finds **two live definitions that exist nowhere else**:
+
+| Definition | Kind | Bytes | Where it lives | Tracked in `claude-config`? | Tracked in `claude-personal`? |
+|---|---|---|---|---|---|
+| `podcast-review-loop` | skill | 3,817 | `~/.claude/skills/podcast-review-loop/` | no | no |
+| `design-decisions` | command | 1,074 | `~/.claude/commands/design-decisions.md` | no | no |
+
+Both load in every session on this machine. Neither is in either configuration repository, and `scripts/backup-private-files.sh` does not cover them — it syncs `journal/` and `.claude/design-decisions.md` per repo, so `~/.claude/` is outside its scope entirely.
+
+**This is the same defect shape the audit has now hit five times, and the correction to the earlier framing matters.** The tool is not blind: it handles `.claude/commands/` (it is how `design-decisions` was found) and it accepts the root as an argument. The gap was that nobody passed the second root. A first draft of this section said the enumerator "cannot see user-level skills," which would have sent someone to modify a script that already worked — the same error as claiming a documented remedy existed for the ten failing tests. **Run it against both roots; do not change it.**
+
+**`design-decisions` is the instance Milestone A4 predicted and had not yet found.** The milestone says to include `.claude/commands/` because a command file is a third place a definition can live, and a sweep reading only `.claude/skills/` would report a repo as clean while a command file does something. That was written as a hypothetical. It is real, it is `/design-decisions`, it has been reachable since 2026-03-02, and no skills sweep in this audit saw it until today.
+
+**The data-loss half is the part that needs a decision, not the byte count.** `podcast-review-loop` is 3,817 bytes existing in exactly one place, on one laptop, tracked by nothing and backed up by nothing. Milestone A4 already records that PRD #84's branch being the sole copy of five journal files makes stalled-work detection "a data-loss concern, not only a throughput one." This is the same concern reached by a different route: not work stranded on a branch, but configuration that was never committed anywhere. A machine rebuild provisioned from `claude-config` plus `claude-personal` — which is exactly what those two repos exist to make possible — silently loses both definitions.
+
+### `cost-tracker` is reachable only from inside this repository
+
+Twenty-three of the repo's 24 skills are symlinked into `~/.claude/skills/` and work in any directory. `cost-tracker` is not symlinked. It resolves today only because sessions run from `claude-config`, where `.claude/skills/` loads as project-level skills — so the one skill whose subject is cross-repo spend is the one that cannot be invoked from another repo. Whether that is deliberate is Whitney's call; nothing in the repo records an intent either way.
+
+### Verdicts
+
+Nothing is stale enough to remove on age: every one of the 24 is tracked, and the oldest last touched is 2026-03-11.
+
+| Skill | Bytes | Last touched | Verdict |
+|---|---:|---|---|
+| `anki` | 33,781 | 2026-08-02 | **keep** — with `anki-yolo` it is 66,902 bytes, 24% of all skill bytes in the repo. That is a consolidation candidate for Milestone C1, not a removal: the two differ by approval behaviour, the same careful/YOLO axis the lifecycle families use |
+| `anki-yolo` | 33,121 | 2026-08-02 | **keep, consolidation candidate** — see above |
+| `write-prompt` | 14,671 | 2026-04-08 | **keep** — load-bearing; a hook advises invoking it on every prompt-shaped file, and this audit used it |
+| `write-docs` | 14,584 | 2026-04-06 | **keep** — mandated by `CLAUDE.md` for user-facing docs |
+| `research` | 14,568 | 2026-04-06 | **keep** — mandated before adopting any new technology |
+| `code-review` | 9,801 | 2026-04-18 | **keep** — a symlinked plugin skill; its exclusion rules live in `rules/git-workflow.md` |
+| `verify` | 4,992 | 2026-08-06 | **keep** — hosts the hook scripts and the test runner the gates resolve to |
+| `cost-tracker` | 2,649 | 2026-04-18 | **repair or accept, Whitney's call** — the only repo skill not symlinked user-level; see above |
+| `make-autonomous` | 6,217 | 2026-08-18 | **repaired 2026-08-19** — advertised a `SessionStart` hook it no longer installs and an automatic resume after `/clear` that no mechanism performs |
+| `make-careful` | 8,071 | 2026-08-18 | **repaired 2026-08-19** — its summary described removing that hook as current work, contradicting its own Step 3 |
+| `podcast-review-loop` | 3,817 | untracked | **decision needed** — commit it to one of the two repos, or accept that it is machine-local and unrecoverable |
+| `design-decisions` | 1,074 | untracked | **decision needed** — same, and it is a command rather than a skill, so it is also the one instance proving A4's third-place hypothesis |
+
+**The fourteen lifecycle skills — the eight `prd-*` and six `issue-*` — are inventoried here and carry no verdict, deliberately.** Their sizes and dates are in the enumerator output; `prd-done` at 25,130 bytes and `prd-update-progress` at 17,839 are the two largest. Assigning them remove / consolidate / repair / keep verdicts here would duplicate work this PRD has already assigned elsewhere and would reach it with less evidence: Milestone B4 produces the three-way diff against Viktor's ancestor and current skills, and Milestone C1 decides whether the two families collapse into one lifecycle with two entry points. **A verdict reached here would be a verdict reached before Milestone B4 exists, which is the sequencing defect the phase structure was created to remove.** What this milestone owes them is the measurement, and that is recorded.
+
+**One measurement they should carry forward.** Milestone B4 is told to check whether any `SKILL.md` exceeds the 5,000-token post-compaction truncation cap, since a long file silently loses its tail. `prd-done` and `prd-update-progress` are the candidates by size, and the estimate available today is a byte-to-token ratio calibrated against a single `/context` sample — an estimate, not a reading. Do not treat either as confirmed on that basis.
