@@ -234,7 +234,23 @@ def test_all_hook_paths_exist(t):
                         exists, True
                     )
 
-    t.assert_equal(f"checked {checked} hook paths (expected 11)", checked, 11)
+    # Derive the expected count from the template rather than hardcoding it. A literal
+    # here fails every time a hook is added or removed, which makes the failure read as
+    # "someone changed the hooks" rather than "a hook path is broken" — and the number was
+    # already stale on 2026-08-19 after a removed hook was cleaned out of the template.
+    # What this test is for is that every referenced path exists; the count only guards
+    # against the loop silently checking nothing.
+    expected = sum(
+        1
+        for matchers in json.load(open(os.path.join(REPO_DIR, "settings.template.json")))
+        .get("hooks", {})
+        .values()
+        for matcher in matchers
+        for hook in matcher.get("hooks", [])
+        if hook.get("command")
+    )
+    t.assert_equal(f"checked {checked} hook paths (template declares {expected})", checked, expected)
+    t.assert_equal("at least one hook path was checked", checked > 0, True)
 
 
 def test_validate_flag(t):
@@ -259,7 +275,7 @@ def test_custom_template(t):
                         "hooks": [
                             {
                                 "type": "command",
-                                "command": "$CLAUDE_CONFIG_DIR/scripts/google-mcp-safety-hook.py"
+                                "command": "$CLAUDE_CONFIG_DIR/scripts/gogcli-safety-hook.py"
                             }
                         ]
                     }
@@ -921,11 +937,79 @@ def test_symlinks_errors_on_regular_directory(t):
         t.assert_contains("error mentions rules", stderr, "rules")
 
 
+
+def test_symlinks_creates_every_skill_in_the_repo(t):
+    """--symlinks should provision every skill directory, not a hand-maintained subset.
+
+    A hardcoded list drifts: on 2026-08-19 it named 6 of the repo's 24 skills, so a
+    machine provisioned by the documented path came up with no /prd-next or /prd-done.
+    The set is derivable from .claude/skills/, so derive it.
+    """
+    t.section("Symlinks: every repo skill is provisioned")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+        os.makedirs(os.path.join(claude_dir, "skills"))
+
+        exit_code, stdout, stderr = run_setup("--symlinks", "--claude-dir", claude_dir)
+        t.assert_equal("exits 0", exit_code, 0)
+        if exit_code != 0:
+            t.assert_equal(f"stderr: {stderr}", False, True)
+            return
+
+        skills_src = os.path.join(REPO_DIR, ".claude", "skills")
+        expected_names = sorted(
+            name for name in os.listdir(skills_src)
+            if os.path.isfile(os.path.join(skills_src, name, "SKILL.md"))
+        )
+        missing = [
+            name for name in expected_names
+            if not os.path.islink(os.path.join(claude_dir, "skills", name))
+        ]
+        t.assert_equal(
+            f"all {len(expected_names)} repo skills symlinked (missing: {missing})",
+            missing, [],
+        )
+
+
+def test_symlinks_creates_command_symlinks(t):
+    """--symlinks should provision .claude/commands/*.md as user-level commands.
+
+    A command file produces a slash command exactly as a skill does, so a repo that
+    tracks one but never installs it leaves the definition unreachable on a new machine.
+    """
+    t.section("Symlinks: commands are provisioned")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+        os.makedirs(os.path.join(claude_dir, "skills"))
+
+        exit_code, stdout, stderr = run_setup("--symlinks", "--claude-dir", claude_dir)
+        t.assert_equal("exits 0", exit_code, 0)
+        if exit_code != 0:
+            t.assert_equal(f"stderr: {stderr}", False, True)
+            return
+
+        commands_src = os.path.join(REPO_DIR, ".claude", "commands")
+        expected = sorted(n for n in os.listdir(commands_src) if n.endswith(".md"))
+        missing = [
+            n for n in expected
+            if not os.path.islink(os.path.join(claude_dir, "commands", n))
+        ]
+        t.assert_equal(
+            f"all {len(expected)} repo commands symlinked (missing: {missing})",
+            missing, [],
+        )
+
+
 def test_symlinks_standalone_scripts_in_repo(t):
-    """Standalone scripts (safety hooks) should exist in repo scripts/ directory."""
+    """Standalone scripts (safety hooks) should exist in repo scripts/ directory.
+
+    google-mcp-safety-hook.py was removed on 2026-08-18 — it guarded a YouTube MCP server
+    that cannot start. This assertion is what should have caught the four places that
+    deletion was recorded, but the suite crashed in an earlier test and never reached it.
+    """
     t.section("Symlinks: standalone scripts in repo")
     scripts_dir = os.path.join(REPO_DIR, "scripts")
-    for script_name in ["google-mcp-safety-hook.py", "gogcli-safety-hook.py"]:
+    for script_name in ["gogcli-safety-hook.py"]:
         path = os.path.join(scripts_dir, script_name)
         t.assert_equal(f"{script_name} exists in repo", os.path.isfile(path), True)
         if os.path.isfile(path):
@@ -1316,6 +1400,8 @@ def run_tests():
     test_symlinks_errors_on_regular_file(t)
     test_symlinks_errors_on_regular_directory(t)
     test_symlinks_standalone_scripts_in_repo(t)
+    test_symlinks_creates_every_skill_in_the_repo(t)
+    test_symlinks_creates_command_symlinks(t)
     test_symlinks_creates_claude_dir_if_missing(t)
 
     # Milestone 4: install

@@ -101,15 +101,6 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "mcp__.*(calendar|youtube|drive|sheet|spreadsheet).*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$CLAUDE_CONFIG_DIR/scripts/google-mcp-safety-hook.py"
-          }
-        ]
-      },
-      {
         "matcher": "Write|Edit",
         "hooks": [
           {

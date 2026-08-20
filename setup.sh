@@ -117,24 +117,28 @@ create_symlinks() {
     # rules/ → repo rules/
     ensure_symlink "$CLAUDE_CONFIG_DIR/rules" "$CLAUDE_DIR/rules" "rules"
 
-    # skills/verify → repo .claude/skills/verify
+    # Every skill in the repo, derived rather than listed.
+    # A hardcoded list drifts: on 2026-08-19 this named 6 of 24 skills, so provisioning a
+    # machine by the documented path produced no /prd-next and no /prd-done. The set is
+    # sitting in .claude/skills/, so read it instead of remembering it.
     mkdir -p "$CLAUDE_DIR/skills"
-    ensure_symlink "$CLAUDE_CONFIG_DIR/.claude/skills/verify" "$CLAUDE_DIR/skills/verify" "skills/verify"
+    for skill_src in "$CLAUDE_CONFIG_DIR/.claude/skills"/*; do
+        [[ -f "$skill_src/SKILL.md" ]] || continue
+        skill_name="$(basename "$skill_src")"
+        ensure_symlink "$skill_src" "$CLAUDE_DIR/skills/$skill_name" "skills/$skill_name"
+    done
 
-    # skills/research → repo .claude/skills/research
-    ensure_symlink "$CLAUDE_CONFIG_DIR/.claude/skills/research" "$CLAUDE_DIR/skills/research" "skills/research"
-
-    # skills/write-prompt → repo .claude/skills/write-prompt
-    ensure_symlink "$CLAUDE_CONFIG_DIR/.claude/skills/write-prompt" "$CLAUDE_DIR/skills/write-prompt" "skills/write-prompt"
-
-    # skills/write-docs → repo .claude/skills/write-docs
-    ensure_symlink "$CLAUDE_CONFIG_DIR/.claude/skills/write-docs" "$CLAUDE_DIR/skills/write-docs" "skills/write-docs"
-
-    # skills/make-autonomous and skills/make-careful → repo .claude/skills/
-    # Both directions must be globally reachable: /make-autonomous installs the YOLO
-    # skill symlinks and hooks into a project, /make-careful removes them again.
-    ensure_symlink "$CLAUDE_CONFIG_DIR/.claude/skills/make-autonomous" "$CLAUDE_DIR/skills/make-autonomous" "skills/make-autonomous"
-    ensure_symlink "$CLAUDE_CONFIG_DIR/.claude/skills/make-careful" "$CLAUDE_DIR/skills/make-careful" "skills/make-careful"
+    # Every command in the repo. A .claude/commands/<name>.md file produces /<name> exactly
+    # as a skill does, so a tracked command that is never installed is unreachable on a new
+    # machine — which is how /design-decisions came to exist only in one place.
+    if [[ -d "$CLAUDE_CONFIG_DIR/.claude/commands" ]]; then
+        mkdir -p "$CLAUDE_DIR/commands"
+        for cmd_src in "$CLAUDE_CONFIG_DIR/.claude/commands"/*.md; do
+            [[ -f "$cmd_src" ]] || continue
+            cmd_name="$(basename "$cmd_src")"
+            ensure_symlink "$cmd_src" "$CLAUDE_DIR/commands/$cmd_name" "commands/$cmd_name"
+        done
+    fi
 
     echo "Symlinks complete." >&2
 }
@@ -149,16 +153,20 @@ if [[ "$UNINSTALL_MODE" == true ]]; then
     fi
 
     # Remove symlinks only if they point to this repo
+    # Derived from the repo, matching --symlinks. A hardcoded list here would strand any
+    # link whose name it had not been updated with.
     SYMLINKS_TO_CHECK=(
         "$CLAUDE_DIR/CLAUDE.md"
         "$CLAUDE_DIR/rules"
-        "$CLAUDE_DIR/skills/verify"
-        "$CLAUDE_DIR/skills/research"
-        "$CLAUDE_DIR/skills/write-prompt"
-        "$CLAUDE_DIR/skills/write-docs"
-        "$CLAUDE_DIR/skills/make-autonomous"
-        "$CLAUDE_DIR/skills/make-careful"
     )
+    for skill_src in "$CLAUDE_CONFIG_DIR/.claude/skills"/*; do
+        [[ -f "$skill_src/SKILL.md" ]] || continue
+        SYMLINKS_TO_CHECK+=("$CLAUDE_DIR/skills/$(basename "$skill_src")")
+    done
+    for cmd_src in "$CLAUDE_CONFIG_DIR/.claude/commands"/*.md; do
+        [[ -f "$cmd_src" ]] || continue
+        SYMLINKS_TO_CHECK+=("$CLAUDE_DIR/commands/$(basename "$cmd_src")")
+    done
 
     for link_path in "${SYMLINKS_TO_CHECK[@]}"; do
         if [[ -L "$link_path" ]]; then

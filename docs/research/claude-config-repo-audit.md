@@ -88,7 +88,9 @@ The ten `install-git-hooks` failures were attributed to `core.hooksPath` as thou
 |---|---:|---:|
 | verify (`.claude/skills/verify/tests/`) | 0 | 26 |
 | bats (`tests/*.bats`) | 14 | 27 |
-| python (`tests/test_*.py`) | 0 | 0 |
+| python (`tests/test_*.py`) | 0 ⚠️ | 0 ⚠️ |
+
+⚠️ **Both zeros are meaningless and were taken as reassurance for twelve days.** `tests/test_setup.py` was crashing at test 3 of 156 with an uncaught `FileNotFoundError`, so the run produced no failure lines to count — the tally saw zero failures because it saw nothing at all. Diagnosed and repaired 2026-08-19; see the `setup.sh` section below. **A zero in a failure column means "nothing failed" only if a total accompanies it.**
 
 The verify-suite failures are one module: the commit-message check returns `exit=2` for every input, including messages it should pass through. The extra bats failures are suites that clone and pull real repositories, and one that needs an authenticated `gh`.
 
@@ -449,3 +451,37 @@ Nothing is stale enough to remove on age: every one of the 24 is tracked, and th
 **The fourteen lifecycle skills — the eight `prd-*` and six `issue-*` — are inventoried here and carry no verdict, deliberately.** Their sizes and dates are in the enumerator output; `prd-done` at 25,130 bytes and `prd-update-progress` at 17,839 are the two largest. Assigning them remove / consolidate / repair / keep verdicts here would duplicate work this PRD has already assigned elsewhere and would reach it with less evidence: Milestone B4 produces the three-way diff against Viktor's ancestor and current skills, and Milestone C1 decides whether the two families collapse into one lifecycle with two entry points. **A verdict reached here would be a verdict reached before Milestone B4 exists, which is the sequencing defect the phase structure was created to remove.** What this milestone owes them is the measurement, and that is recorded.
 
 **One measurement they should carry forward.** Milestone B4 is told to check whether any `SKILL.md` exceeds the 5,000-token post-compaction truncation cap, since a long file silently loses its tail. `prd-done` and `prd-update-progress` are the candidates by size, and the estimate available today is a byte-to-token ratio calibrated against a single `/context` sample — an estimate, not a reading. Do not treat either as confirmed on that basis.
+
+### `setup.sh` did not reflect what the repo installs, and had stopped working entirely
+
+Milestone A4 asks whether `setup.sh` still reflects what the repo actually installs. It did not, in two independent ways, and the second one had broken provisioning outright.
+
+**It provisioned 6 of 24 skills.** `--symlinks` carried a hand-written list — `verify`, `research`, `write-prompt`, `write-docs`, `make-autonomous`, `make-careful` — while `.claude/skills/` holds 24. The 18 missing include every `prd-*` and every `issue-*` skill, so a machine provisioned by the documented path came up with **no `/prd-next` and no `/prd-done`**: the lifecycle this entire PRD is about. The 17 that work on this laptop do so because someone made those symlinks by hand at some point, and nothing records when or why. `--uninstall` carried the same list, so it would also have stranded any link the list had not been updated with.
+
+Fixed by derivation rather than by extending the list: both loops now read `.claude/skills/*/SKILL.md` and `.claude/commands/*.md`. Decision 17a ranks `derive` above `assert`, and this is why — a list of names cannot drift out of step with the directory it is a copy of if it *is* the directory. Verified by mutation: reinstating the six-name filter makes the new test fail and name all 18 missing skills.
+
+**`setup.sh` exited 1 on every invocation, so it installed nothing at all.** It validates that each hook path in the template exists, and `settings.template.json` still pointed at `scripts/google-mcp-safety-hook.py` — the YouTube MCP guard removed earlier in this same milestone:
+
+```text
+$ bash setup.sh --output /tmp/x/settings.json
+Error: Hook script paths do not exist:
+  .../scripts/google-mcp-safety-hook.py
+exit=1
+```
+
+**That single deletion was recorded in four places and cleaned in one.** This is the coupled-pair failure this milestone catalogues, found by following a thread rather than by any filename-derived rule — the same way all the other real pairs were found:
+
+| Place the deleted hook was recorded | State before 2026-08-19 |
+|---|---|
+| `config/settings.json` (live) | cleaned at removal time |
+| `settings.template.json` | **stale** — broke `setup.sh` for every user |
+| `tests/test_setup.py`, custom-template fixture | **stale** — crashed the suite |
+| `tests/test_setup.py`, `test_symlinks_standalone_scripts_in_repo` | **stale** — asserted the deleted file exists |
+
+**The fourth row is the one that should have caught this, and it never ran.** It asserts the script exists and would have failed loudly. It never executed, because the second row crashed the suite in an earlier test — `python3 tests/test_setup.py` raised `FileNotFoundError` at test 3 of 156 and aborted. The suite has no per-test isolation, so one exception ends the run.
+
+**And the crash was invisible to the measurement.** The CI comparison table above records `tests/test_*.py` as 0 failures on both machines. That was true in the only sense the tally could see: a crashed run emits no failure lines. **Zero failures and "the suite never got past test 3" are the same reading.** Every other count corrected in this audit was wrong about a quantity; this one was wrong about whether anything had been measured at all. When a suite reports no failures, check that it reported a total.
+
+After repair: **156 of 156 passing**, up from a run that aborted after 2. Four tests were added or repaired — two asserting the derived provisioning, and the hardcoded `expected 11` hook-path count replaced by a figure derived from the template, since a literal there fails whenever a hook is added or removed and makes the failure read as "someone changed the hooks" rather than "a hook path is broken".
+
+**One test was written and did not run, which is worth recording because it nearly shipped.** This suite registers tests by explicit call inside `run_tests()`, so the two new functions did nothing when appended to the file — and appending them after the `if __name__ == "__main__"` block meant they were not even defined when `run_tests()` executed. Both were caught by watching the total rise by one instead of three. A test that exists, is correct, and is never called is indistinguishable from coverage.
