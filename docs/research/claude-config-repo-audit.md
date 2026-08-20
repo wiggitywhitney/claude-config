@@ -35,13 +35,12 @@ Per-suite, current:
 | `tests/check-coderabbit-required.bats` | 9 | 0 |
 | `tests/check-prompt-generality.bats` | 9 | 0 |
 | `tests/check-rule-frontmatter.bats` | 31 | 0 |
-| `tests/cost-tracker.bats` | 26 | 0 |
 | `tests/e2e-backup.bats` | 8 | 0 |
 | `tests/e2e-bootstrap.bats` | 11 | 0 |
 | `tests/e2e-sync-repos.bats` | 6 | 0 |
 | `tests/git-hook-checks.bats` | 40 | 4 |
 | `tests/install-git-hooks.bats` | 11 | 10 |
-| `tests/measure-context-load.bats` | 45 | 0 |
+| `tests/measure-context-load.bats` | 47 | 0 |
 | `tests/measure-prompt-rate.bats` | 14 | 0 |
 | `tests/post-write-codeblock-check.bats` | 6 | 0 |
 | `tests/progress-md-pr.bats` | 5 | 0 |
@@ -49,7 +48,9 @@ Per-suite, current:
 | `tests/suggest-planning-handoff.bats` | 19 | 0 |
 | `tests/suggest-write-prompt.bats` | 24 | 0 |
 | `tests/sync-repos.bats` | 11 | 0 |
-| **Total** | **376** | **14** |
+| **Total** | **352** | **14** |
+
+**Table re-measured 2026-08-20 and it no longer matches the 376 above it, deliberately.** Two changes since: `tests/measure-context-load.bats` gained two tests for the description byte-counting repair (45 → 47), and `tests/cost-tracker.bats` was deleted with its skill (26 → 0), so 376 − 26 + 2 = 352. **The 14 failures are unchanged and identical in name**, which is the property the baseline exists to protect — no work in this milestone has added a failure, across every re-measurement.
 
 The failure count matches what the PRD documented on 2026-08-04. Two details in the PRD's description of these failures are wrong, and both change what the fix would be.
 
@@ -406,7 +407,8 @@ The cause is the paragraph above: a hook matching on command text is awkward to 
 **Measured 2026-08-19.** Two runs, because one was not enough and the reason is the finding:
 
 ```bash
-./scripts/audit-enumerate.sh skills           # repo root — 24 skills, 276,855 bytes
+./scripts/audit-enumerate.sh skills           # repo root — 24 skills, 276,855 bytes (2026-08-19)
+                                              # now 23 skills + 1 command after Decision 62
 ./scripts/audit-enumerate.sh skills "$HOME"   # user level — 25 definitions: 24 skills + 1 command
 ```
 
@@ -427,7 +429,17 @@ Both load in every session on this machine. Neither is in either configuration r
 
 **The data-loss half is the part that needs a decision, not the byte count.** `podcast-review-loop` is 3,817 bytes existing in exactly one place, on one laptop, tracked by nothing and backed up by nothing. Milestone A4 already records that PRD #84's branch being the sole copy of five journal files makes stalled-work detection "a data-loss concern, not only a throughput one." This is the same concern reached by a different route: not work stranded on a branch, but configuration that was never committed anywhere. A machine rebuild provisioned from `claude-config` plus `claude-personal` — which is exactly what those two repos exist to make possible — silently loses both definitions.
 
-### `cost-tracker` is reachable only from inside this repository
+### `cost-tracker` was reachable only from inside this repository, and is now removed
+
+**Resolved 2026-08-20 by the one piece of evidence an audit cannot generate: its author has never used it (Decision 62).** The skill, `scripts/cost-tracker.sh`, and 26 bats tests — 25 KB across three files — are deleted. Nothing in `README.md`, no skill, rule, or hook invoked it; every remaining mention is historical except PRD #84's unfinished Milestone 7, which Milestone D1 is now warned about. Git history keeps it recoverable.
+
+**The finding worth carrying is about the question, not the skill.** This inventory had framed it as an inconsistency to repair — 23 skills symlinked globally and this one not — and recommended fixing it. That framing assumed the skill should exist and only asked where it should be reachable from. **A usage question was never asked, and it was the one that mattered.** Milestone C1 should apply test 0 before the classification tests for exactly this reason: "should this exist at all" outranks "where should this live", and an inventory that only measures placement will keep recommending tidier arrangements of things nobody wants.
+
+**Two figures moved, and one of them is the byte-counting repair showing up in real data.** Re-running `scripts/measure-context-load.sh` after the removal drops the skill body total to 274,206 bytes and the startup listing cost to 2,283. Part of that is `cost-tracker` leaving; part is the description measurement itself being corrected on 2026-08-18, which had been charging the whitespace that separates a YAML field name from its value. `anki` moved 126 → 125 description bytes and `code-review` 27 → 26 — one byte each, in every skill, which is what that fix predicted and what confirms it against real input rather than a fixture.
+
+**The always-loaded total is unchanged at 72,258 bytes,** because skill *bodies* load only on invocation; only the descriptions are always paid. Milestone C1's byte budget should not expect skill deletions to move that number much.
+
+The original finding, kept because it is the evidence that prompted the question:
 
 Twenty-three of the repo's 24 skills are symlinked into `~/.claude/skills/` and work in any directory. `cost-tracker` is not symlinked. It resolves today only because sessions run from `claude-config`, where `.claude/skills/` loads as project-level skills — so the one skill whose subject is cross-repo spend is the one that cannot be invoked from another repo. Whether that is deliberate is Whitney's call; nothing in the repo records an intent either way.
 
@@ -444,7 +456,7 @@ Nothing is stale enough to remove on age: every one of the 24 is tracked, and th
 | `research` | 14,568 | 2026-04-06 | **keep** — mandated before adopting any new technology |
 | `code-review` | 9,801 | 2026-04-18 | **keep** — a symlinked plugin skill; its exclusion rules live in `rules/git-workflow.md` |
 | `verify` | 4,992 | 2026-08-06 | **keep** — hosts the hook scripts and the test runner the gates resolve to |
-| `cost-tracker` | 2,649 | 2026-04-18 | **repair or accept, Whitney's call** — the only repo skill not symlinked user-level; see above |
+| `cost-tracker` | 2,649 | 2026-04-18 | **removed 2026-08-20 (Decision 62)** — Whitney built it and has never used it, which settles the symlink question by dissolving it. See below |
 | `make-autonomous` | 6,217 | 2026-08-18 | **repaired 2026-08-19** — advertised a `SessionStart` hook it no longer installs and an automatic resume after `/clear` that no mechanism performs |
 | `make-careful` | 8,071 | 2026-08-18 | **repaired 2026-08-19** — its summary described removing that hook as current work, contradicting its own Step 3 |
 | `podcast-review-loop` | 3,817 | untracked | **decision needed** — commit it to one of the two repos, or accept that it is machine-local and unrecoverable |
