@@ -96,6 +96,8 @@ The verify-suite failures are one module: the commit-message check returns `exit
 
 **So the reason nothing automated ever ran these tests is probably not that no gate looked at them. It is that large parts of the suite cannot run anywhere but this laptop.** They were never automatable, so they were never automated. That is a stronger and less comfortable finding than the original, and it is the one to carry into Milestone C1: a test suite that encodes its author's machine is a coupled pair between the tests and one computer, with nothing holding the two together.
 
+**Both groups are now tracked, as of 2026-08-20.** [#115](https://github.com/wiggitywhitney/claude-config/issues/115) covers the ten `install-git-hooks` failures — the genuine bug that reproduces everywhere with an unknown cause. [#116](https://github.com/wiggitywhitney/claude-config/issues/116) covers the machine-dependence: the four `progress-md` failures, the 43 runner-only failures, and the absent CI they block. They were split because the first is a bounded debugging task and the second is an open-ended design problem, and combining them would bury the fixable half. **Whichever of these documents outlives this PRD, the issues are where the work lives now.**
+
 **Neither group of failures is a product defect. Both are tests asserting against paths a machine-level configuration has moved out from under them — and now, tests asserting against a machine that only exists in one place.**
 
 ### The native git hooks do fire in real use
