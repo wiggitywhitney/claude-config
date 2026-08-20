@@ -485,3 +485,55 @@ exit=1
 After repair: **156 of 156 passing**, up from a run that aborted after 2. Four tests were added or repaired — two asserting the derived provisioning, and the hardcoded `expected 11` hook-path count replaced by a figure derived from the template, since a literal there fails whenever a hook is added or removed and makes the failure read as "someone changed the hooks" rather than "a hook path is broken".
 
 **One test was written and did not run, which is worth recording because it nearly shipped.** This suite registers tests by explicit call inside `run_tests()`, so the two new functions did nothing when appended to the file — and appending them after the `if __name__ == "__main__"` block meant they were not even defined when `run_tests()` executed. Both were caught by watching the total rise by one instead of three. A test that exists, is correct, and is never called is indistinguishable from coverage.
+
+---
+
+## Document sizes, measured 2026-08-20
+
+Milestone C1 sets the threshold; Decision 37 assigns the measurement here. Bytes and lines, largest first.
+
+| Document | Bytes | Lines |
+|---|---:|---:|
+| `prds/109-claude-config-audit-redesign.md` | 222,330 | 953 |
+| `docs/research/claude-config-audit-decisions.md` | 85,870 | 342 |
+| `docs/research/claude-config-repo-audit.md` | 59,374 | 487 |
+| `docs/research/michael-autonomous-execution-principles.md` | 55,480 | 739 |
+| `docs/research/prd-workflow-principles.md` | 51,383 | 495 |
+| `docs/research/claude-code-context-loading-and-compaction.md` | 27,764 | 218 |
+| `docs/research/claude-code-permission-modes.md` | 25,024 | 229 |
+| `docs/research/claude-config-load-findings.md` | 24,688 | 238 |
+| `docs/research/claude-code-skill-installation-scope.md` | 14,604 | 149 |
+| `docs/research/claude-config-load-inventory.md` | 13,922 | 176 |
+| `docs/research/claude-code-autonomous-capabilities.md` | 12,758 | 221 |
+| `docs/research/michael-forrester-workflow.md` | 12,210 | 136 |
+| `docs/research/bats-core.md` | 8,523 | 134 |
+| `docs/research/index.md` | 2,240 | 15 |
+
+**The measurement's own finding: the separation rule did not hold, and the documents it was written to protect are the two largest.** Decision 37 was made because the decision log had reached 41 KB and the PRD 560 lines. The decision log is now **85,870 bytes — more than double** — and the PRD is **953 lines, 222 KB**, which is larger than every research document combined bar two. A rule stating where text belongs, adopted and agreed, was followed into a doubling. That is the third instance in this audit of documentation-tier remedy failing where a check would have held, alongside command-shape discipline and TDD ordering, and it is the direct argument for Milestone C1 attaching a check to this rule rather than restating it.
+
+**Attributing it honestly: a large share of the recent growth is this milestone's own.** The corrections of 2026-08-18 to 2026-08-20 added several hundred lines to the PRD and this document, each one a correction that carried its reasoning so a future reader would not repeat the error. That is the tension Milestone C1 has to price: the writing that makes an error non-repeatable is the same writing that makes the document too long to read. A threshold that only counts bytes will penalise exactly the entries most worth keeping. Consider measuring growth *rate*, or capping the PRD alone while letting research documents grow, rather than one number across all of them.
+
+---
+
+## Dead material in `scripts/`, `templates/`, `profiles/`, `config/`, and `hooks/archive/`
+
+Answered once, in prose, per Decision 56 — no subcommand. "Referenced by" below means a non-journal, non-PROGRESS mention in tracked content: journal entries and changelog rows record that a thing once existed and are not uses.
+
+**`profiles/` is an empty, untracked directory.** Zero files, zero tracked by git, created 2026-02-18 and never populated. **Remove**, and drop it from the PRD's list of directories to review — the instruction has been sending readers to look at nothing. It is not a deletion with any risk attached, since git has never held anything in it.
+
+**`hooks/archive/claude-code/` — 7 files, 38 KB — is superseded and referenced by nothing that runs.** Its own README says the logic moved to `hooks/git/checks/` in PRD #47, which is closed and in `prds/done/`. Every reference is historical. **Remove.** The argument for keeping an archive directory is recoverability, and git history already provides that with better fidelity than a copy that no longer matches anything — a copy which is, by construction, a second place the old logic lives.
+
+**`scripts/migrate-prd-109-milestone-ids.sh` is a one-time migration that has already run.** Written 2026-08-03 to renumber this PRD's milestone IDs, referenced only by this PRD and the decision log. **Remove when this PRD closes**, not before: the PRD still cites it as the record of how the renumbering was done. Flagged here so it does not become permanent by inattention, which is how most of this list arrived.
+
+**`scripts/populate-anki-image-bank.sh` and `scripts/rename-anki-bank-images.sh` have no reference anywhere except one journal entry from the day they were written (2026-04-05).** Neither anki skill mentions them; no script, test, or document invokes them. **Remove unless Whitney runs them by hand** — that is the one thing this sweep cannot see, and the reason this is a recommendation rather than a deletion.
+
+**Keep, with the reason each is live:**
+
+| Path | Why it stays |
+|---|---|
+| `scripts/detect-acceptance-gate.sh` | invoked by four PRD skills and covered by `tests/test_detect_acceptance_gate.py` |
+| `scripts/sync-repos.sh` | documented in `README.md` and `docs/new-machine-setup.md` |
+| `templates/acceptance-gate-ci.yml` | asserted against by `test_workflow_template.py` |
+| `templates/claude-md-general.md`, `claude-md-nodejs.md` | 387 B and 438 B, documented in `README.md`; too small to be worth a decision either way |
+| `config/settings.json` | the live settings file; its tracking is a known defect evaluated separately |
+| everything else in `scripts/` | invoked by hooks, gates, or this audit |
