@@ -595,3 +595,26 @@ Answered once, in prose, per Decision 56 — no subcommand. "Referenced by" belo
 - **Staleness spans three years.** `platform-vibez` last saw a commit on 2025-08-13, over a year ago. Nine repos have not been touched since March 2026 or earlier. Four are active this month.
 
 **No repository other than `claude-config` was modified.** The one prior exception is recorded in Decision 58, where eight repositories' gitignored local settings were cleaned of a registration pointing at a deleted hook.
+
+### Which repositories are live — answered by Whitney, 2026-08-22
+
+The verdict column the enumeration could not produce. **Nothing in these repositories was modified, and no cleanup is proposed for them.**
+
+**Dormant — will not be worked in again:** `platform-vibez`, `mcp-hello-world`, `commit_story`, `commit-story-v1`, `telemetry-agent-spec-v3`, `telemetry-agent-research`.
+
+**Still live, of the stale-looking ones offered:** `spider-rainbows`, `choose-your-ai-adventure`, `websites-securitylabs`. Old last-commit dates, not abandoned.
+
+**What this answer is for, and what it is not.** Removing agent configuration from a dormant repository buys nothing measurable: that configuration only loads when a session runs in that directory, so eight unused symlinks and a `settings.local.json` in a repo nobody opens cost no context and no tokens. **Do not schedule a cleanup pass over these.** What the answer buys is a smaller blast radius for the migration Phase C will design — every repository carrying the standard 8 skill symlinks is a place a skill-family consolidation must either update or knowingly leave dangling, and the difference between touching 26 and touching 20 is the difference between a migration that ships and one that stalls.
+
+**A correction worth recording, because it was caught by Whitney rather than by the audit.** This section originally claimed the `post-commit` hook that writes journal entries runs from `commit_story`, offered as a reason to treat that directory carefully. She asked whether it was actually `commit-story-v2`. It is:
+
+```text
+$ readlink node_modules/commit-story
+../../commit-story-v2
+```
+
+The hook resolves its package by following that npm-link symlink and running `src/index.js` from the target. So all three directories are correctly classified — `commit_story` and `commit-story-v1` (both last committed 2026-01-28) are dormant, and `commit-story-v2` (2026-07-21) is the live one. **The claim was asserted from directory names rather than checked, in a document whose stated rule is that a claim about the world carries the observation that shows it.** One `readlink` settled it.
+
+**One live consumer sits in a dormant repository.** `telemetry-agent-research` also npm-links `commit-story` to `../../commit-story-v2`. Harmless while nothing moves, and a dangling link the day `commit-story-v2` is renamed or relocated — recorded so that rename knows about it.
+
+**Three directories for one project is itself the pattern this audit is about.** `commit_story` and `commit-story-v1` were last committed on the same day and both superseded by a third. Nothing in either marks it as superseded; the only signal is a symlink in an unrelated repository's `node_modules`.
