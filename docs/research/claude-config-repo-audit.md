@@ -551,3 +551,47 @@ Answered once, in prose, per Decision 56 — no subcommand. "Referenced by" belo
 | `templates/claude-md-general.md`, `claude-md-nodejs.md` | 387 B and 438 B, documented in `README.md`; too small to be worth a decision either way |
 | `config/settings.json` | the live settings file; its tracking is a known defect evaluated separately |
 | everything else in `scripts/` | invoked by hooks, gates, or this audit |
+
+---
+
+## Cross-repo configuration, enumerated 2026-08-22
+
+**The enumeration ran; the per-repo judgment pass was dropped (Decision 63).** This table is the measurement. The verdict column that was planned for it is replaced by Whitney's direct answer on which repositories are still live, because "do you still work here" is the question that decides a repo's config, and no amount of file measurement reaches it. Produced by `./scripts/audit-enumerate.sh repos`, with last-commit dates added.
+
+| Repo | Last commit | Skills | Commands | CLAUDE.md | Git hooks | Skip dotfiles |
+|---|---|---:|---:|:-:|---:|---|
+| `advocacy-skills` | 2026-03-17 | 8 | 0 | y | 3 | .skip-branching,.skip-coderabbit |
+| `aie-website` | 2026-08-02 | 0 | 0 | y | 0 | - |
+| `choose-your-ai-adventure` | 2026-01-27 | 9 | 0 | y | 4 | - |
+| `claude-config` | 2026-08-20 | 23 | 1 | y | 4 | - |
+| `cluster-whisperer` | 2026-05-16 | 8 | 0 | y | 4 | - |
+| `commit-story-v1` | 2026-01-28 | 10 | 0 | y | 3 | - |
+| `commit-story-v2` | 2026-07-21 | 8 | 0 | y | 4 | - |
+| `commit_story` | 2026-01-28 | 10 | 0 | y | 4 | - |
+| `content-manager` | 2026-08-04 | 8 | 0 | y | 4 | - |
+| `k8s-vectordb-sync` | 2026-03-11 | 8 | 0 | y | 4 | - |
+| `kubecon-2026-gitops` | 2026-03-23 | 8 | 0 | y | 4 | - |
+| `KubeHound-Demo` | 2026-03-25 | 8 | 0 | - | 4 | - |
+| `learning-center` | 2026-05-21 | 0 | 2 | y | 3 | .skip-coderabbit |
+| `mcp-hello-world` | 2026-01-27 | 8 | 0 | y | 3 | - |
+| `platform-vibez` | 2025-08-13 | 0 | 1 | - | 3 | - |
+| `project-signal-boost` | 2026-05-28 | 8 | 0 | y | 0 | - |
+| `rounds-agenticburn` | 2026-06-29 | 0 | 0 | y | 0 | - |
+| `scaling-on-satisfaction` | 2026-03-16 | 8 | 0 | y | 4 | - |
+| `slide-helper` | 2026-06-22 | 1 | 0 | y | 0 | - |
+| `spider-rainbows` | 2026-01-20 | 8 | 0 | y | 4 | - |
+| `spinybacked-orbweaver` | 2026-08-18 | 10 | 0 | y | 4 | .skip-e2e |
+| `spinybacked-orbweaver-eval` | 2026-07-21 | 8 | 0 | y | 4 | - |
+| `telemetry-agent-research` | 2026-03-02 | 9 | 0 | y | 4 | - |
+| `telemetry-agent-spec-v3` | 2026-02-24 | 0 | 0 | - | 3 | - |
+| `Unleash_an_Agent_Watch_It_Burn` | 2026-06-29 | 0 | 0 | y | 0 | - |
+| `websites-securitylabs` | 2026-02-19 | 1 | 0 | - | 3 | - |
+
+**Patterns visible without judging any single repo:**
+
+- **Eighteen of 26 carry exactly 8 skills**, which is the standard set installed into a project. Deviations: `claude-config` (23, its own), `commit-story-v1` and `commit_story` (10), `spinybacked-orbweaver` (10), `choose-your-ai-adventure` and `telemetry-agent-research` (9), `slide-helper` and `websites-securitylabs` (1), and six repos with none.
+- **Git-hook installation is inconsistent and nothing explains it.** Fifteen repos have 4 hooks, seven have 3, and five have none. The 4-versus-3 split is `post-commit`, which belongs to commit-story rather than this repo's installer, so the meaningful reading is that five repos carrying Claude Code config have no git enforcement at all.
+- **Two repos have `.claude/commands/` and no skills** — `learning-center` (2 commands) and `platform-vibez` (1). These are the third-place definitions Milestone A4 predicted: a sweep reading only `.claude/skills/` reports both as clean while a command file is live in each.
+- **Staleness spans three years.** `platform-vibez` last saw a commit on 2025-08-13, over a year ago. Nine repos have not been touched since March 2026 or earlier. Four are active this month.
+
+**No repository other than `claude-config` was modified.** The one prior exception is recorded in Decision 58, where eight repositories' gitignored local settings were cleaned of a registration pointing at a deleted hook.

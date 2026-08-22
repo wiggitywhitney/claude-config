@@ -54,6 +54,9 @@ Forces ideas into a template instead of letting them breathe.
 **No sentence fragments — even for punchy hooks.** Every sentence needs a subject and a verb. A fragment like "Different rules, different logins, no way to share identity between applications." is not acceptable, even when the underlying idea is good. Keep the concept, give it a real sentence: "Every site had different rules, different logins, and no way to share identity between applications."
 (Confirmed: rejected from the sent version of the Keycloak Thunder episode post draft, 2026-08-05 — Whitney liked the idea but said "I don't use incomplete sentences like that.")
 
+**This rule holds in Slack too, including team-channel messages — casual tone is not an exception.** A greeting-plus-fragment opener like "Hey team, quick EPCAT question." is still a fragment ("quick EPCAT question" has no verb) and still gets rejected. Casual register changes word choice and directness, not sentence completeness. Also drop invented greetings like "Hey team" — they're not something Whitney says; open with a real sentence instead.
+(Confirmed: rejected draft for an EPCAT tracking question to the team Slack channel, 2026-08-21 — Whitney: "I don't say 'hey team,' and I talk in complete sentences... Why are you ignoring the complete sentences?")
+
 **In episode and talk social posts, write as Whitney. Use first-person references ("I", "me"), never third-person ones ("Whitney", "she").** Don't write "walks Whitney through" or "Whitney and Alex cover" — write "walks me through" or "Alex and I cover." She is the host speaking in her own voice, not a third party being described.
 (Confirmed: corrected in the Keycloak Thunder episode post draft, 2026-08-05.)
 
