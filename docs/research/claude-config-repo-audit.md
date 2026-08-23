@@ -626,3 +626,11 @@ The hook resolves its package by following that npm-link symlink and running `sr
 **This is a negative result and it matters as much as a positive one would have.** The question was asked because `cost-tracker` had just shown that an inventory can measure a skill thoroughly and still miss that nobody wants it, and the same could plausibly have been true of a family installed into twenty repositories by habit. It was not. **So the skill consolidation Phase C decides cannot shrink the surface by deletion — every one of these has to survive in some form**, whether the two families collapse into one lifecycle or stay separate.
 
 That reshapes what Milestone B4 is diffing for. It is not looking for skills to drop; it is looking for whether fourteen live entry points can be expressed as fewer, and what Viktor did about the same problem. **A consolidation that reduces the count by removing capability is off the table before the diff starts.**
+
+### The `issue-*` family is used too — answered by Whitney, 2026-08-23
+
+**Both lifecycle families are live. All fourteen entry points are in use.**
+
+**So the consolidation Phase C faces is the hard version, and nothing about it can be simplified by attrition.** The possibility that `issue-*` had quietly fallen out of use — which would have collapsed Milestone B4's three-way diff to the PRD family alone and removed a large part of Phase C — is closed. Two near-parallel implementations of one lifecycle both have real users, and the original complaint stands: nothing enforces that a change to one reaches the other.
+
+**What Milestone B4 and Milestone C1 inherit from this pair of answers.** The question is not which of fourteen skills to keep. It is whether fourteen live entry points can be expressed as fewer without losing any of them, and specifically whether one lifecycle with two doors — PRD-shaped work and standalone-issue-shaped work — is better than two families that must be kept in step by hand. Issue #98's one independent design claim is directly relevant and should be weighed on its merits: that a flat issue queue and a milestone-structured PRD queue are better served by two focused mechanisms than one generalized one. **That is a live argument against consolidation, made before this audit began, and it now has to be answered rather than assumed away.**
