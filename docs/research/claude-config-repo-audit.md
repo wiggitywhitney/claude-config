@@ -618,3 +618,11 @@ The hook resolves its package by following that npm-link symlink and running `sr
 **One live consumer sits in a dormant repository.** `telemetry-agent-research` also npm-links `commit-story` to `../../commit-story-v2`. Harmless while nothing moves, and a dangling link the day `commit-story-v2` is renamed or relocated — recorded so that rename knows about it.
 
 **Three directories for one project is itself the pattern this audit is about.** `commit_story` and `commit-story-v1` were last committed on the same day and both superseded by a third. Nothing in either marks it as superseded; the only signal is a symlink in an unrelated repository's `node_modules`.
+
+### Which skills are actually used — answered by Whitney, 2026-08-23
+
+**All eight `prd-*` skills are in active use:** `prd-create`, `prd-start`, `prd-next`, `prd-update-progress`, `prd-update-decisions`, `prd-done`, `prd-close`, `prds-get`. None is dead weight.
+
+**This is a negative result and it matters as much as a positive one would have.** The question was asked because `cost-tracker` had just shown that an inventory can measure a skill thoroughly and still miss that nobody wants it, and the same could plausibly have been true of a family installed into twenty repositories by habit. It was not. **So the skill consolidation Phase C decides cannot shrink the surface by deletion — every one of these has to survive in some form**, whether the two families collapse into one lifecycle or stay separate.
+
+That reshapes what Milestone B4 is diffing for. It is not looking for skills to drop; it is looking for whether fourteen live entry points can be expressed as fewer, and what Viktor did about the same problem. **A consolidation that reduces the count by removing capability is off the table before the diff starts.**
