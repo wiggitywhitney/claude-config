@@ -21,3 +21,5 @@ Bulleted list of specific things NOT to do, derived from decisions above.
 What has been built or decided, and what remains to be done.
 
 After generating the document, save it to `.claude/design-decisions.md` in the current project directory (create `.claude/` if it doesn't exist). Confirm the file was saved.
+
+**Read the file first if it already exists, and merge rather than overwrite.** A plain write destroys every decision recorded by an earlier session, and those sessions are gone — the file is the only record they left. Carry forward every existing decision, add the new ones, and keep an existing entry's wording when the new material only restates it. If an existing decision and a new one genuinely conflict, keep both and mark which is later, rather than silently dropping either. **If the existing content cannot be read, stop and report it — do not write.** Losing the file is worse than not updating it.

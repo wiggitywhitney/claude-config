@@ -120,6 +120,7 @@ Remove the permission entries that `/make-autonomous` added from `.claude/settin
   "Skill(prd-update-decisions)",
   "Skill(prd-create)",
   "Skill(prd-close)",
+  "Skill(prds-get)",
   "Skill(anki-yolo)",
   "WebFetch",
   "WebSearch"

@@ -127,7 +127,7 @@ So the installed symlinks in `.git/hooks/` are live. The tests fail on the insta
 
 ## The enumerator
 
-`scripts/audit-enumerate.sh` produces every list this document classifies, with 29 bats tests in `tests/audit-enumerate.bats`. Four subcommands, each emitting newline-delimited JSON on stdout and warnings on stderr:
+`scripts/audit-enumerate.sh` produces every list this document classifies, with 30 bats tests in `tests/audit-enumerate.bats` (counted 2026-08-24; run `grep -c '^@test' tests/audit-enumerate.bats` rather than quoting this). Four subcommands, each emitting newline-delimited JSON on stdout and warnings on stderr:
 
 ```bash
 ./scripts/audit-enumerate.sh hooks    # Claude Code hooks from every settings file, plus native git hooks
@@ -589,7 +589,7 @@ Answered once, in prose, per Decision 56 — no subcommand. "Referenced by" belo
 
 **Patterns visible without judging any single repo:**
 
-- **Eighteen of 26 carry exactly 8 skills**, which is the standard set installed into a project. Deviations: `claude-config` (23, its own), `commit-story-v1` and `commit_story` (10), `spinybacked-orbweaver` (10), `choose-your-ai-adventure` and `telemetry-agent-research` (9), `slide-helper` and `websites-securitylabs` (1), and six repos with none.
+- **Twelve of 27 carry exactly 8 skills**, which is the standard set installed into a project. Measured with `./scripts/audit-enumerate.sh repos` on 2026-08-24; the earlier text here read "eighteen of 26", which disagreed with the tool in both figures. Deviations: one repo with 23 (`claude-config`, its own), three with 10, two with 9, two with 1, and seven with none. **Do not quote these; the set grows as repos are added.**
 - **Git-hook installation is inconsistent and nothing explains it.** Fifteen repos have 4 hooks, seven have 3, and five have none. The 4-versus-3 split is `post-commit`, which belongs to commit-story rather than this repo's installer, so the meaningful reading is that five repos carrying Claude Code config have no git enforcement at all.
 - **Two repos have `.claude/commands/` and no skills** — `learning-center` (2 commands) and `platform-vibez` (1). These are the third-place definitions Milestone A4 predicted: a sweep reading only `.claude/skills/` reports both as clean while a command file is live in each.
 - **Staleness spans three years.** `platform-vibez` last saw a commit on 2025-08-13, over a year ago. Nine repos have not been touched since March 2026 or earlier. Four are active this month.

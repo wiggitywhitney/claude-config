@@ -19,7 +19,9 @@ Skills can be installed globally. `~/.claude/skills/<name>/SKILL.md` is a docume
 
 The finding that matters more for this repo is a precedence rule that runs opposite to intuition and opposite to how rules behave: **personal skills override project skills.** Verified by live test, this means the `SKILL.v1-yolo.md` symlinks installed in nine repos have never taken effect.
 
-**`/make-autonomous` is partially inert, not wholly.** It does three things, and they have different fates: the YOLO skill symlinks (inert), a `SessionStart` hook for the `/clear` auto-resume loop (works — it lives in `settings.local.json`), and permission entries (works, same file). So since 2026-03-04 those nine repos have been running an autonomous *loop* driving *interactive* skills. That combination is worse than either mode alone, and it is a live prediction this finding makes: the loop fires, then the interactive skill stops to ask a human who isn't there.
+**`/make-autonomous` is partially inert, not wholly.** It did three things, and they had different fates: the YOLO skill symlinks (inert), a `SessionStart` hook for the `/clear` auto-resume loop, and permission entries (works, lives in `settings.local.json`).
+
+**The middle one is superseded, and the prediction it carried never came true.** This section originally recorded the hook as working and predicted a live failure — an autonomous loop driving interactive skills, stopping to ask a human who was not there. The loop never resumed anything: `prd-loop-continue.sh` was removed on 2026-08-18 (Decision 58) and `/clear` does not re-invoke a skill. Checked 2026-08-24, the script is absent from `scripts/`. So `/make-autonomous` now does two things, and only the permission entries take effect. The inert-symlinks finding is unaffected and still holds.
 
 ---
 
