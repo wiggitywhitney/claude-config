@@ -1053,6 +1053,9 @@ A spec that summarizes findings instead of recording decisions has failed this m
 
 ## Open Questions
 
+- **The push gate checks that a review happened, not that its findings were resolved.** A verdict recorded with three unresolved findings satisfies it exactly as a clean one does. Resolving on agreement rather than severity is Step 4 of `/diff-review` and is enforced by nothing. Making the gate refuse a verdict with unresolved findings is the obvious tightening and was not built, because it needs a definition of "resolved" that a script can check, and the trial has not yet shown the reviewer is worth keeping. Resolve after the scoring run, not before.
+- **Does the gate get promoted from this repository to global, and on what evidence?** Decision 67 scoped it to claude-config because the reviewer is on trial. The condition for promoting it was not defined. Whitney's answer on whether the interruption is tolerable is one input; the catch count is the other, and a reviewer that catches nothing should be removed rather than spread.
+
 Carried from the decision log. These are answered during the milestones, not before.
 
 - ~~Is a July 2026 community-practices research spike worth running?~~ **Resolved 2026-08-03: yes, timeboxed to one hour inside Milestone B2 (Decision 40).** Not a separate spike.
