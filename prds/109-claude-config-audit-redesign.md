@@ -122,6 +122,7 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 **Phase B — Research. What is possible, from three independent sources. Numbered order is not execution order: run B2 → B3 → B4 → B1 (Decision 65).**
 
 - [x] Milestone B2: Viktor swarm workflow spike **(ran first — Decision 65)**
+- [ ] **Reviewer sub-agent trial (Decision 66) — build and run it before Milestone B3.** Not a research milestone; the one place this PRD implements inside Phase B. Spec below under "Reviewer sub-agent trial"
 - [ ] Milestone B3: Michael workflow spike
 - [ ] Milestone B4: Skill families diffed — three-way comparison
 - [ ] Milestone B1: Capability spike — **runs last and answers the questions the spikes raise, rather than surveying (Decision 65)**
@@ -476,6 +477,49 @@ Total in scope: **22 skill files** across the 14 lifecycle skills listed above. 
 - The generalized escalation contract, placed near the top of each file so compaction truncation cannot cut it.
 - The scripted idempotent migration, covering every consuming repo this milestone enumerated.
 - A recorded live test result for every autonomous behavior promoted to the default path (Decision 33).
+
+---
+
+### Reviewer sub-agent trial (Decision 66)
+
+**Model:** Opus 5 on the main thread. Judgment — the prompt's content is the whole experiment.
+
+**Not a research milestone.** This is the one place this PRD implements inside Phase B, by explicit exception. Runs **before Milestone B3**.
+
+**Step 0:** Read [the Viktor spike](../docs/research/viktor-swarm-spike.md) for the structural constraints being borrowed, and [the sub-agent capability findings](../docs/research/claude-code-subagent-capabilities.md) for what the platform does and does not support. **Do not re-research either.** The load-bearing facts: a sub-agent can take a different model tier but not a different vendor; `tools:` and `disallowedTools:` restrict what it may do; there is no `paths:` frontmatter, so a path restriction needs a `PreToolUse` hook; there is no stall detection, only `maxTurns`; a sub-agent returns one summary and cannot ask a question mid-run.
+
+**What to build — three artefacts:**
+
+1. **`.claude/agents/diff-reviewer.md`.** Read-only by construction: give it `tools: Read, Grep, Glob, Bash` and no `Write` or `Edit`, so "findings only" is enforced by the platform rather than requested in prose. Set `maxTurns` — there is no timeout and this is the only runaway protection. **Borrow Viktor's structural constraints, not his focus list** (see below).
+2. **A dispatch step** that runs it against the staged or outgoing diff and writes the verdict somewhere a hook can find, keyed to the diff it reviewed so a stale verdict cannot satisfy a later push.
+3. **A `PreToolUse` hook blocking `git push`** until a verdict exists for the outgoing diff. **This is the piece that makes the trial mechanical rather than aspirational** — a hook is a shell script and cannot spawn a sub-agent, so it can only refuse to proceed. Copy the shape of `check-coderabbit-required.sh`, which already denies `gh pr merge` on a missing review and emits `permissionDecision: deny`.
+
+**What the reviewer hunts for.** Viktor's prompt says "correctness, consistency, edge cases, missed requirements," which is generic because his project is not this one. **None of the three real misses below were edge cases.** Target these classes instead:
+
+- a claim asserted as fact whose stated basis was already disproved elsewhere in the repo
+- a count, total, or figure that disagrees with the tool that generates it
+- a reference to a file, script, or flag that no longer exists
+- an assertion of state — fixed, working, passing, current — with no observation beside it
+
+**The pass mark, and the reason this trial can fail cheaply.** Three real misses from 2026-08-18 to 2026-08-24, each caught by a verifier rather than by the author. Run the reviewer against each diff and count how many it catches:
+
+| # | Commit that fixed it | What was wrong |
+|---|---|---|
+| 1 | `f859b16` | `core.hooksPath` asserted as the cause of ten failing tests, when a clean CI run recorded in the same repo had already disproved it. Reasoning forward from a retired diagnosis, presented as fact |
+| 2 | `806bbc6` | Hook counts wrong in four places and disagreeing with each other, all derived by counting rows in a table rather than running the enumerator |
+| 3 | `f77fc46` | An uninstall path that strands symlinks whose repo source was deleted — a regression introduced two days earlier in `0a3faa6`, in the very commit that fixed the equivalent bug in the install path |
+
+**A reviewer tuned to this repo's measured failures that cannot catch failures already on record is not worth keeping.** Record the score honestly, including a zero.
+
+**Success criteria:**
+- The three artefacts exist, and the reviewer is read-only because its tool list omits `Write` and `Edit` — not because its prompt asks it to behave
+- The push gate blocks a push with no verdict, shown by a real blocked push rather than asserted
+- A stale verdict does not satisfy a later push, shown the same way
+- The reviewer has been run against all three diffs above and the catch count is recorded, whatever it is
+- Cost per run is recorded, or its absence is stated — no instrument exists since Decision 62 removed `/cost-tracker`
+- Whitney has used it for at least one real push and said whether the interruption is tolerable
+
+**Explicitly out of scope (Decision 66):** mixed-vendor review, which is not natively possible; a separate auditor role, because adding a second unproven role is how this repo accreted what Milestone A4 spent three weeks removing; and anything covering claims made in conversation before a commit exists, which no git hook can observe and which stays convention.
 
 ---
 
