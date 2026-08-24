@@ -23,6 +23,8 @@ If it exits non-zero, stop and report why. A key that cannot be computed means t
 
 If it returns `FINDINGS: INCOMPLETE`, or returns no such line at all, the review did not finish. Do not record a verdict: the gate cannot tell a partial review from a clean one, so recording it would let unreviewed content through. Dispatch again, splitting the diff by file if it was too large to finish in one run.
 
+**If you split it, every shard must come back with its own `FINDINGS: <n>`.** One incomplete shard means the review is incomplete, however clean the others look — do not record a verdict, rerun that shard. When all shards finish, merge them before Step 4: drop findings that two shards both report for the same file and line, and sum what remains into the single count you record. A per-shard count recorded as the whole is a claim about a diff nobody reviewed end to end. Say in the notes that the review was sharded, and how, so the verdict does not read as one pass.
+
 **Step 4 — resolve on agreement, not on severity.** Work through every finding and decide whether you agree with it. Blockers, suggestions, and nits are all subject to the same filter: agree, and fix it; disagree, and say why in the notes. Shipping past a finding you agree with needs a stated reason, not silence. Do not triage by severity — the severity label is the reviewer's guess, and the three defects this reviewer exists to catch would all have been labelled minor.
 
 **Step 5 — record the verdict.** If fixing findings changed the diff, the key changed with it: recompute it and dispatch a fresh review rather than recording the old verdict against new content. Then:

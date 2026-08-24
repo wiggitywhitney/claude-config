@@ -174,6 +174,6 @@ import as growth in the global set.
 A sweep of `rules/` cannot establish what loads from outside this repository, so the
 limitation stands as a method boundary. **The one known external import is gone:**
 `~/Documents/Journal/CURRENT-CONTEXT.md` was `@`-referenced from `global/CLAUDE.md`
-when this table was written and no longer appears there, checked 2026-08-24, so no
-external always-loaded import exists in the current measurement. Any budget set from
+when this table was written and was removed on 2026-08-05, re-confirmed absent on
+2026-08-24, so no external always-loaded import exists in the current measurement. Any budget set from
 these numbers must still be set against observed load rather than against this table.

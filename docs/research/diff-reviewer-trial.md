@@ -12,7 +12,7 @@ Built 2026-08-24 against branch `feature/prd-109-claude-config-audit-redesign` a
 | The dispatch step | `.claude/commands/diff-review.md`, `scripts/compute-diff-key.sh`, `scripts/record-diff-review.sh` | The judgment is the sub-agent's; naming the file, resolving the base, and writing valid JSON are deterministic and live in scripts |
 | The push gate | `.claude/skills/verify/scripts/check-diff-review-required.sh`, registered in `.claude/settings.json` | `PreToolUse` on `Bash`, emitting `permissionDecision: deny`. Shape copied from `check-coderabbit-required.sh` |
 
-Test coverage: 30 bats assertions across `tests/compute-diff-key.bats` (10), `tests/check-diff-review-required.bats` (12), and `tests/record-diff-review.bats` (8). All 30 pass, run 2026-08-24.
+Test coverage: 37 bats assertions across `tests/compute-diff-key.bats` (10), `tests/check-diff-review-required.bats` (19), and `tests/record-diff-review.bats` (8). All 37 pass, run 2026-08-24. Counted with `grep -c '^@test'` per suite rather than from memory — the earlier figure here was stale twice over.
 
 ## The gate, demonstrated rather than asserted
 

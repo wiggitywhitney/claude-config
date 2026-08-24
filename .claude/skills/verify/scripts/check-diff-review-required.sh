@@ -74,7 +74,20 @@ fi
 
 # Resolve the repository the push would come from: a cd in the command wins over
 # the session's cwd, because "cd <repo> && git push" pushes the repo, not the cwd.
-GIT_C_PATH=$(echo "$COMMAND" | grep -oE 'git[[:space:]]+(-[^[:space:]]+[[:space:]]+[^[:space:]]+[[:space:]]+)*-C[[:space:]]+[^ ;&]+' | head -1 | sed -E 's/.*-C[[:space:]]+//' || true)
+# The -C argument is extracted with a quote-aware parser rather than a word
+# pattern. `git -C "$REPO" push` is the natural form to write, and a pattern that
+# stops at whitespace captures the opening quote and half the path, so the
+# directory test fails, the gate falls back to the session cwd, and the push it
+# was meant to stop goes through. That bypass was live until 2026-08-24.
+GIT_C_PATH=$(HOOK_RAW="$COMMAND" python3 -c '
+import os, re, sys
+sq = chr(39)
+raw = os.environ["HOOK_RAW"]
+pattern = "git\\s+(?:-[^\\s]+(?:\\s+[^\\s]+)?\\s+)*-C\\s+(?:\"([^\"]*)\"|" + sq + "([^" + sq + "]*)" + sq + "|([^\\s;&]+))"
+m = re.search(pattern, raw)
+if m:
+    sys.stdout.write(next(g for g in m.groups() if g is not None))
+' 2>/dev/null) || GIT_C_PATH=""
 CD_PATH=$(echo "$COMMAND" | grep -oE '(^|&&[[:space:]]*|;[[:space:]]*)cd[[:space:]]+[^ ;&]+' | head -1 | sed 's/.*cd[[:space:]]*//' || true)
 if [[ -n "$GIT_C_PATH" ]] && [[ -d "$GIT_C_PATH" ]]; then
   PROJECT_DIR="$GIT_C_PATH"

@@ -181,3 +181,19 @@ print(json.dumps({'tool_input': {'command': sys.argv[1]}, 'cwd': sys.argv[2]}))
     [ "$status" -eq 0 ]
     [[ "$output" == *'"permissionDecision": "deny"'* ]]
 }
+
+@test "blocks git -C with a quoted repository path" {
+    add_commit alpha
+    run_hook "git -C \"$REPO\" push" "$TMPDIR"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *'"permissionDecision": "deny"'* ]]
+}
+
+@test "blocks git -C with a quoted path containing spaces" {
+    add_commit alpha
+    spaced="$TMPDIR/repo with spaces"
+    cp -R "$REPO" "$spaced"
+    run_hook "git -C \"$spaced\" push" "$TMPDIR"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *'"permissionDecision": "deny"'* ]]
+}
