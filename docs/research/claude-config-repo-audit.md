@@ -664,7 +664,7 @@ The drafted remedy was to stop tracking the live file, on the grounds that `sett
 
 **A machine provisioned from this template would come up with the pre-April architecture and without auto mode** — the change that resolved the approval-prompt complaint (Decision 48). Combined with `setup.sh` having installed 6 of 24 skills and exited 1 on every run until 2026-08-19, provisioning was broken in three independent ways at once.
 
-**So the recommendation changes.** Reconcile the template against the live settings *first*; only then is untracking the live file safe. Doing it in the drafted order would silently discard auto mode and four registered hooks. **Whoever does this should treat the reconciliation as the work and the untracking as the easy part.**
+**So the recommendation changes.** Reconcile the template against the live settings *first*; only then is untracking the live file safe. Doing it in the drafted order would silently discard auto mode and four registered hooks. **Whoever does this should treat the reconciliation as the work and the untracking as the easy part. Tracked in [#117](https://github.com/wiggitywhitney/claude-config/issues/117) as of 2026-08-24.**
 
 ### Seven library scripts exist twice, in both live paths, and have diverged
 
