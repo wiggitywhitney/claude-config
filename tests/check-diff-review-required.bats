@@ -146,3 +146,38 @@ print(json.dumps({'tool_input': {'command': sys.argv[1]}, 'cwd': sys.argv[2]}))
     [ "$status" -eq 0 ]
     [[ "$output" == *'"permissionDecision": "deny"'* ]]
 }
+
+@test "blocks git -C <repo> push, which carries a global option before the subcommand" {
+    add_commit alpha
+    run_hook "git -C $REPO push" "$TMPDIR"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *'"permissionDecision": "deny"'* ]]
+}
+
+@test "blocks git --no-pager push" {
+    add_commit alpha
+    run_hook "git --no-pager push"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *'"permissionDecision": "deny"'* ]]
+}
+
+@test "does not treat 'git pushd' or similar as a push" {
+    add_commit alpha
+    run_hook "git pushed-branch-report"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "passes through when git push appears inside a multi-line quoted string" {
+    add_commit alpha
+    run_hook "$(printf 'git commit -m "first line of the message\nexplains that git push is blocked\nthird line"')"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "still blocks a real push after a multi-line quoted message" {
+    add_commit alpha
+    run_hook "$(printf 'git commit -m "mentions git push\nacross lines" && git push')"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *'"permissionDecision": "deny"'* ]]
+}

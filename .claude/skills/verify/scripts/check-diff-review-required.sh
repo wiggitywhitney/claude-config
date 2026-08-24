@@ -51,15 +51,34 @@ while IFS= read -r heredoc_line; do
   fi
 done <<< "$COMMAND"
 
-COMMAND_NO_QUOTES=$(echo "$COMMAND_NO_HEREDOC" | sed -E "s/\"([^\"]*)\"/\"\"/g; s/'([^']*)'/\\'\\'/g; s/\\$\\(cat <<[^)]*\\)//g")
-if ! echo "$COMMAND_NO_QUOTES" | grep -qE '(^|[[:space:]]|&&[[:space:]]*|;[[:space:]]*)git[[:space:]]+push([[:space:]]|;|$)'; then
+# Quoted spans are stripped across the whole command, not line by line: a commit
+# message passed with -m "..." routinely spans several newlines, and a line-based
+# pass leaves its middle lines exposed to the matcher below. That is the same
+# defect as the heredoc one above, in a second disguise, and it also blocked a
+# real commit before it was fixed.
+COMMAND_NO_QUOTES=$(HOOK_STRIPPED="$COMMAND_NO_HEREDOC" python3 -c '
+import os, re, sys
+text = os.environ["HOOK_STRIPPED"]
+dq = chr(34)
+sq = chr(39)
+# Blank the contents of every quoted span, single or double, newlines included.
+text = re.sub(dq + "(?:[^" + dq + "\\\\]|\\\\.)*" + dq, dq + dq, text, flags=re.S)
+text = re.sub(sq + "(?:[^" + sq + "\\\\]|\\\\.)*" + sq, sq + sq, text, flags=re.S)
+sys.stdout.write(text)
+' 2>/dev/null) || COMMAND_NO_QUOTES="$COMMAND_NO_HEREDOC"
+# `git` accepts global options before the subcommand, so `git -C <path> push` and
+# `git --no-pager push` are pushes that a bare `git[[:space:]]+push` pattern misses.
+if ! echo "$COMMAND_NO_QUOTES" | grep -qE '(^|[[:space:]]|&&[[:space:]]*|;[[:space:]]*)git([[:space:]]+(-[^[:space:]]+|--[^[:space:]]+)([[:space:]]+[^[:space:]]+)?)*[[:space:]]+push([[:space:]]|;|$)'; then
   exit 0  # Not a push, silent passthrough
 fi
 
 # Resolve the repository the push would come from: a cd in the command wins over
 # the session's cwd, because "cd <repo> && git push" pushes the repo, not the cwd.
+GIT_C_PATH=$(echo "$COMMAND" | grep -oE 'git[[:space:]]+(-[^[:space:]]+[[:space:]]+[^[:space:]]+[[:space:]]+)*-C[[:space:]]+[^ ;&]+' | head -1 | sed -E 's/.*-C[[:space:]]+//' || true)
 CD_PATH=$(echo "$COMMAND" | grep -oE '(^|&&[[:space:]]*|;[[:space:]]*)cd[[:space:]]+[^ ;&]+' | head -1 | sed 's/.*cd[[:space:]]*//' || true)
-if [[ -n "$CD_PATH" ]] && [[ -d "$CD_PATH" ]]; then
+if [[ -n "$GIT_C_PATH" ]] && [[ -d "$GIT_C_PATH" ]]; then
+  PROJECT_DIR="$GIT_C_PATH"
+elif [[ -n "$CD_PATH" ]] && [[ -d "$CD_PATH" ]]; then
   PROJECT_DIR="$CD_PATH"
 else
   PROJECT_DIR=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('cwd','.'))" 2>/dev/null || echo ".")
