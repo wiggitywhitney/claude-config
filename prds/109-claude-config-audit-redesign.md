@@ -943,6 +943,12 @@ A spec that summarizes findings instead of recording decisions has failed this m
 
 ## Dependencies
 
+**Open work in another repository, recorded here because nothing else in `claude-config` points at it (2026-08-24).** [`wiggitywhitney/claude-personal` PR #1](https://github.com/wiggitywhitney/claude-personal/pull/1) — "Back up user-level skills, and recover one that existed in a single place" — is **open and unmerged**. It commits the `podcast-review-loop` skill, which existed only on this laptop, and teaches that repo's `sync-push.sh` and `sync-restore.sh` to handle user-level skills. 23 tests passing, round-trip restore verified. **Until it merges, the fix for "this file exists in exactly one place" is itself on one unmerged branch**, which is the shape Milestone D1 exists to clean up in PRD #84. It blocks nothing in this PRD; it needs merging.
+
+**Review checkpoint.** The last CodeRabbit CLI run on this branch was on 2026-08-24 against commit `b3c42a7`, producing 23 findings, all triaged — fixed in `f77fc46`, or skipped or deferred to [#117](https://github.com/wiggitywhitney/claude-config/issues/117) with reasons recorded in those commits. **Commits after `f77fc46` have not been reviewed**, deliberately: they are documentation and a trial spec, and the next natural boundary is after the reviewer trial is built, which will change more code anyway.
+
+
+
 - **Issue #110** (bidirectional drift between interactive and autonomous `prd-done`) does not block this PRD. It stops two live bugs while the audit runs, and its divergence table feeds Milestone B4 directly. Milestone B4 must read it before starting.
 - **Issue #108** (three rule-loading defects) blocks the implementation PRDs this spec spawns, not this PRD itself. This PRD is written first; #108 is executed after. When #108 is started, it must be started with the `/issue-start` skill.
 **Rewritten 2026-08-03 for the phase structure (Decision 34).**

@@ -227,3 +227,11 @@ Rationale, in order of weight:
 - [Claude Code settings](https://code.claude.com/docs/en/settings.md) — `autoMode`, `disableAutoMode`, `allowManagedPermissionRulesOnly`, settings precedence
 - [Claude Code CHANGELOG](https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md) — permission-related entries from 2.1.190 to 2.1.222
 - Local, read 2026-08-04: `~/.claude/settings.json`; `/Library/Application Support/ClaudeCode/managed-settings.json`; `~/.claude-a3-scratch/permission-events.jsonl`; `claude --version`; `claude auto-mode config`
+
+## Auto mode has a live dependency, observed 2026-08-24
+
+**When the classifier model is rate-limited, `Bash` stops working entirely** — the tool returns "auto mode cannot determine the safety of Bash right now" and refuses, rather than falling back to prompting. Read-only tools are unaffected: `Read`, `Write`, `Edit`, `Grep`, and `Glob` all continued working through the outage, and a file that could not be written with a shell heredoc was written with the `Write` tool seconds later.
+
+**Two things follow.** Auto mode trades approval prompts for a dependency on a second model being available, which is a cost the mechanism-only reasoning behind Decision 55 did not consider — that reasoning correctly predicted the prompt reduction and could not have predicted this. And the practical workaround is worth knowing before it is needed: during an outage, prefer the file tools over shell equivalents, and expect anything requiring `git` or a CLI to be blocked until it clears.
+
+Recorded as an observation from a single occurrence, not a measured rate. How often it happens is unknown.
