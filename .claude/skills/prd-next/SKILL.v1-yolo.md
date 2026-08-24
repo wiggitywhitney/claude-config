@@ -1,6 +1,6 @@
 ---
 name: prd-next
-description: INVOKE AUTOMATICALLY after /prd-start completes or after /clear on a PRD feature branch. Identifies and starts the next highest-priority PRD task without asking.
+description: INVOKE AUTOMATICALLY after /prd-start completes. Identifies and starts the next highest-priority PRD task without asking. Note that nothing invokes this after /clear — the user runs it again.
 category: project-management
 ---
 

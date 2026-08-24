@@ -19,8 +19,8 @@ Enable autonomous PRD mode for the current project. This installs YOLO skill var
 ## PRD Skills Installed
 
 These skills get symlinked (YOLO variants with active trigger descriptions):
-- `prd-next` — INVOKE AUTOMATICALLY after `/prd-start` or `/clear` on PRD branch
-- `prd-done` — Triggered by the `/clear` loop when all PRD items are done
+- `prd-next` — INVOKE AUTOMATICALLY after `/prd-start`. **Not after `/clear`** — nothing triggers it there
+- `prd-done` — INVOKE AUTOMATICALLY when every PRD item is checked. **No `/clear` loop triggers it**
 - `prd-update-progress` — INVOKE AUTOMATICALLY after completing a PRD task
 - `prd-start` — Start working on a PRD implementation
 - `prd-create` — Create documentation-first PRDs

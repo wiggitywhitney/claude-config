@@ -153,19 +153,21 @@ if [[ "$UNINSTALL_MODE" == true ]]; then
     fi
 
     # Remove symlinks only if they point to this repo
-    # Derived from the repo, matching --symlinks. A hardcoded list here would strand any
-    # link whose name it had not been updated with.
+    # Enumerate what is INSTALLED, not what the repo currently contains. Deriving this
+    # list from the repo strands exactly the links that most need removing: when a skill
+    # is deleted from the repo, its symlink here outlives it and resolves to nothing.
+    # That is the same defect as the hardcoded list this replaced, reached by a different
+    # route — the earlier version stranded links it had not been told about, this one
+    # would strand links whose source had disappeared. Each candidate is still checked
+    # below for pointing into this repo, so scanning broadly is safe.
     SYMLINKS_TO_CHECK=(
         "$CLAUDE_DIR/CLAUDE.md"
         "$CLAUDE_DIR/rules"
     )
-    for skill_src in "$CLAUDE_CONFIG_DIR/.claude/skills"/*; do
-        [[ -f "$skill_src/SKILL.md" ]] || continue
-        SYMLINKS_TO_CHECK+=("$CLAUDE_DIR/skills/$(basename "$skill_src")")
-    done
-    for cmd_src in "$CLAUDE_CONFIG_DIR/.claude/commands"/*.md; do
-        [[ -f "$cmd_src" ]] || continue
-        SYMLINKS_TO_CHECK+=("$CLAUDE_DIR/commands/$(basename "$cmd_src")")
+    for installed in "$CLAUDE_DIR/skills"/* "$CLAUDE_DIR/commands"/*; do
+        # -L rather than -e: a link whose target is gone still needs removing.
+        [[ -L "$installed" ]] || continue
+        SYMLINKS_TO_CHECK+=("$installed")
     done
 
     for link_path in "${SYMLINKS_TO_CHECK[@]}"; do

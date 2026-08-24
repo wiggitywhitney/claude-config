@@ -950,7 +950,7 @@ def test_symlinks_creates_every_skill_in_the_repo(t):
         claude_dir = os.path.join(tmp, ".claude")
         os.makedirs(os.path.join(claude_dir, "skills"))
 
-        exit_code, stdout, stderr = run_setup("--symlinks", "--claude-dir", claude_dir)
+        exit_code, _stdout, stderr = run_setup("--symlinks", "--claude-dir", claude_dir)
         t.assert_equal("exits 0", exit_code, 0)
         if exit_code != 0:
             t.assert_equal(f"stderr: {stderr}", False, True)
@@ -982,7 +982,7 @@ def test_symlinks_creates_command_symlinks(t):
         claude_dir = os.path.join(tmp, ".claude")
         os.makedirs(os.path.join(claude_dir, "skills"))
 
-        exit_code, stdout, stderr = run_setup("--symlinks", "--claude-dir", claude_dir)
+        exit_code, _stdout, stderr = run_setup("--symlinks", "--claude-dir", claude_dir)
         t.assert_equal("exits 0", exit_code, 0)
         if exit_code != 0:
             t.assert_equal(f"stderr: {stderr}", False, True)
@@ -1000,12 +1000,48 @@ def test_symlinks_creates_command_symlinks(t):
         )
 
 
+def test_uninstall_removes_a_symlink_whose_repo_source_is_gone(t):
+    """--uninstall must remove a repo-pointing symlink even after the source is deleted.
+
+    Deriving the removal list from current repo contents strands exactly the links that
+    most need cleaning: when a skill is deleted from the repo, its symlink in ~/.claude
+    outlives it and resolves to nothing. That is the same defect as the hardcoded list it
+    replaced, reached by a different route.
+    """
+    t.section("Uninstall: link whose repo source was deleted")
+    with TempDir() as tmp:
+        claude_dir = os.path.join(tmp, ".claude")
+        os.makedirs(os.path.join(claude_dir, "skills"))
+
+        # A symlink into this repo whose target no longer exists — a deleted skill.
+        stale = os.path.join(claude_dir, "skills", "deleted-skill")
+        os.symlink(os.path.join(REPO_DIR, ".claude", "skills", "deleted-skill"), stale)
+
+        # A symlink pointing somewhere else entirely must be left alone.
+        foreign_target = os.path.join(tmp, "elsewhere")
+        os.makedirs(foreign_target)
+        foreign = os.path.join(claude_dir, "skills", "foreign")
+        os.symlink(foreign_target, foreign)
+
+        exit_code, stdout, stderr = run_setup("--uninstall", "--claude-dir", claude_dir)
+        t.assert_equal("exits 0", exit_code, 0)
+
+        t.assert_equal(
+            "stale repo-pointing symlink removed",
+            os.path.lexists(stale), False,
+        )
+        t.assert_equal(
+            "foreign symlink left in place",
+            os.path.islink(foreign), True,
+        )
+
+
 def test_symlinks_standalone_scripts_in_repo(t):
     """Standalone scripts (safety hooks) should exist in repo scripts/ directory.
 
-    google-mcp-safety-hook.py was removed on 2026-08-18 — it guarded a YouTube MCP server
-    that cannot start. This assertion is what should have caught the four places that
-    deletion was recorded, but the suite crashed in an earlier test and never reached it.
+    Checks only gogcli-safety-hook.py. google-mcp-safety-hook.py was removed on
+    2026-08-18 and taken out of this list; the list is a fixed set of names, so it
+    catches a script that disappears, not a stale reference to one already removed.
     """
     t.section("Symlinks: standalone scripts in repo")
     scripts_dir = os.path.join(REPO_DIR, "scripts")
@@ -1402,6 +1438,7 @@ def run_tests():
     test_symlinks_standalone_scripts_in_repo(t)
     test_symlinks_creates_every_skill_in_the_repo(t)
     test_symlinks_creates_command_symlinks(t)
+    test_uninstall_removes_a_symlink_whose_repo_source_is_gone(t)
     test_symlinks_creates_claude_dir_if_missing(t)
 
     # Milestone 4: install

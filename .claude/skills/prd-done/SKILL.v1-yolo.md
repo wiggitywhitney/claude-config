@@ -1,6 +1,6 @@
 ---
 name: prd-done
-description: Complete PRD implementation workflow - create PR, handle CodeRabbit review, merge, and close issue. Triggered by the /clear loop when all PRD items are done.
+description: Complete PRD implementation workflow - create PR, handle CodeRabbit review, merge, and close issue. INVOKE AUTOMATICALLY when every PRD item is checked. No /clear loop triggers this; that mechanism never worked and was removed.
 category: project-management
 ---
 

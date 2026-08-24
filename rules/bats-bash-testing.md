@@ -16,9 +16,9 @@ Use **bats-core** (installed via `brew install bats-core`) for all bash script t
 
 **`run` executes in a subshell.** Shell variable changes inside `run` don't persist. Exported env vars work fine.
 
-**Flags on `run` need an explicit version declaration or the suite prints a warning on every run.** `run --separate-stderr`, `run --keep-empty-lines`, and the `run -N` exit-code form all require bats 1.5.0+, and bats emits `BW02: Using flags on run requires at least BATS_VERSION=1.5.0` unless the file declares it. The warning does not fail the suite, so it survives as permanent noise in output that is supposed to be pristine. Declare it near the top of the file, above the first test:
+**Flags on `run` need an explicit version declaration or the suite prints a warning on every run.** `run --separate-stderr`, `run --keep-empty-lines`, and the `run -N` exit-code form all require bats 1.5.0+, and bats emits `BW02: Using flags on run requires at least BATS_VERSION=1.5.0` unless the file declares it. **Declare 1.7.0, not 1.5.0** — `bats_require_minimum_version` was itself introduced in 1.7.0, so on 1.5.x or 1.6.x the declaration is an unbound command and the file fails before its first test. The warning does not fail the suite, so it survives as permanent noise in output that is supposed to be pristine. Declare it near the top of the file, above the first test:
 ```bash
-bats_require_minimum_version 1.5.0
+bats_require_minimum_version 1.7.0
 ```
 
 **A repo-level git hook test can fail for reasons that have nothing to do with the hook.** `core.hooksPath`, when set in global or system git config, overrides `.git/hooks` for **every** repository — including the temporary fixture repos a test creates. On a machine where it points somewhere root-owned, an installer under test writes at the managed path and fails with `Permission denied`, and every downstream assertion about `.git/hooks/<name>` then fails as a consequence. The symptom looks like a broken installer; the cause is machine configuration. Check it before debugging the script:
