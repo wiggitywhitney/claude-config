@@ -121,7 +121,7 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 
 **Phase B — Research. What is possible, from three independent sources. Numbered order is not execution order: run B2 → B3 → B4 → B1 (Decision 65).**
 
-- [ ] Milestone B2: Viktor swarm workflow spike **(runs first — Decision 65)**
+- [x] Milestone B2: Viktor swarm workflow spike **(ran first — Decision 65)**
 - [ ] Milestone B3: Michael workflow spike
 - [ ] Milestone B4: Skill families diffed — three-way comparison
 - [ ] Milestone B1: Capability spike — **runs last and answers the questions the spikes raise, rather than surveying (Decision 65)**
