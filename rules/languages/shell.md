@@ -59,6 +59,22 @@ paths: ["**/*.sh"]
   ```
 
   **Two byte-counting errors in one expression can cancel out and hide each other.** In `measure-context-load.sh` on 2026-08-18, `cut -d: -f2-` left the space after `description:` in the value *and* `${#desc}` counted characters — so for `description: café` the extra space compensated for `é`'s second byte and the total was accidentally correct. Neither error was visible from any test until they were separated. When a measurement is wrong, check whether it is wrong twice: strip the YAML separator with `"${v#"${v%%[![:space:]]*}"}"` before counting.
+- **A trailing slash in a glob defeats `[ -L ]`, because the shell resolves the link before the test sees it.** `for d in "$DIR"/*/` looks equivalent to `for d in "$DIR"/*` with a directory filter, and it is not: the trailing slash makes each symlinked directory expand to a resolved path, so `[ -L "$d" ]` reports false for every one of them and a symlink guard silently passes everything through.
+
+  ```bash
+  # Wrong: symlinked directories are not detected, so the guard never fires
+  for d in "$DIR"/*/; do
+      [ -L "$d" ] && continue
+  done
+
+  # Right: no trailing slash, test the entry, then filter for directories
+  for d in "$DIR"/*; do
+      [ -L "$d" ] && continue
+      [ -d "$d" ] || continue
+  done
+  ```
+
+  **Two mechanisms usually protect this and only one of them is the guard, which matters when you test it.** `find "$symlinked_dir" -type f` also yields nothing, because `find` does not descend into a symlinked directory without `-L`. So deleting the `[ -L ]` guard can leave the test green while adding a trailing slash turns it red — the glob is doing the work. Confirmed by mutation in `claude-personal/tests/sync-push.bats`, 2026-08-22. Name the real mechanism in the comment; crediting the guard sends the next reader to defend the wrong line.
 - Quote all variable expansions: `"$var"` not `$var`.
 - Use `[[ ]]` over `[ ]` for conditionals (bash-specific but safer).
 - Use `$(command)` over backticks for command substitution.
