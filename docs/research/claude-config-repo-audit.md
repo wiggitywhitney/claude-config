@@ -634,3 +634,60 @@ That reshapes what Milestone B4 is diffing for. It is not looking for skills to 
 **So the consolidation Phase C faces is the hard version, and nothing about it can be simplified by attrition.** The possibility that `issue-*` had quietly fallen out of use — which would have collapsed Milestone B4's three-way diff to the PRD family alone and removed a large part of Phase C — is closed. Two near-parallel implementations of one lifecycle both have real users, and the original complaint stands: nothing enforces that a change to one reaches the other.
 
 **What Milestone B4 and Milestone C1 inherit from this pair of answers.** The question is not which of fourteen skills to keep. It is whether fourteen live entry points can be expressed as fewer without losing any of them, and specifically whether one lifecycle with two doors — PRD-shaped work and standalone-issue-shaped work — is better than two families that must be kept in step by hand. Issue #98's one independent design claim is directly relevant and should be weighed on its merits: that a flat issue queue and a milestone-structured PRD queue are better served by two focused mechanisms than one generalized one. **That is a live argument against consolidation, made before this audit began, and it now has to be answered rather than assumed away.**
+
+---
+
+## The settings symlink, and what evaluating it uncovered
+
+This was the one A4 item Decision 63 kept. The evaluation reached a different answer than the PRD's draft, and following the thread found the largest duplicate set in the repository.
+
+### The symlink itself
+
+`~/.claude/settings.json` is a symlink to the tracked `config/settings.json`, so every settings write the tool makes becomes a git diff here. Observed three times during this milestone alone, each a `model` key rewritten by `/model` and reverted rather than committed. Committing one would flip the tracked default.
+
+Three symlinks point from `~/.claude/` into this repo — `CLAUDE.md`, `rules`, and `settings.json`. **Only the third is written by tooling.** `CLAUDE.md` and `rules` change when a person changes them; `settings.json` is rewritten by `/model`, by permission grants, and by mode changes. So the defect is specific to that one link, not to the symlink approach.
+
+### The PRD's candidate fix does not work as written
+
+The drafted remedy was to stop tracking the live file, on the grounds that `settings.template.json` plus `setup.sh`'s resolve-and-merge already provides the provisioning path. **Measured 2026-08-24, the template is not a viable substitute** — it has diverged from the live settings in eight ways:
+
+| What | Live `config/settings.json` | `settings.template.json` |
+|---|---|---|
+| `permissions.defaultMode` | `auto` | **absent** |
+| `permissions.allow` / `ask` / `deny` | 39 / 12 / 44 entries | 48 / 6 / 36 |
+| `PostToolUse` hooks | 4 registered | **none of them** |
+| `SessionStart` hooks | `check-running-clusters.sh` | **absent** |
+| `PreToolUse` hooks | current set | **5 hooks archived in PRD #47** |
+| `model` | `sonnet[1m]` | `opus` |
+| `statusLine` | differs | differs |
+| Keys absent entirely | — | `effortLevel`, `enabledPlugins`, `extraKnownMarketplaces`, `skipWorkflowUsageWarning` |
+
+**A machine provisioned from this template would come up with the pre-April architecture and without auto mode** — the change that resolved the approval-prompt complaint (Decision 48). Combined with `setup.sh` having installed 6 of 24 skills and exited 1 on every run until 2026-08-19, provisioning was broken in three independent ways at once.
+
+**So the recommendation changes.** Reconcile the template against the live settings *first*; only then is untracking the live file safe. Doing it in the drafted order would silently discard auto mode and four registered hooks. **Whoever does this should treat the reconciliation as the work and the untracking as the easy part.**
+
+### Seven library scripts exist twice, in both live paths, and have diverged
+
+Following the template's stale hook entries into `.claude/skills/verify/scripts/` found a directory **my dead-material sweep did not cover** — it swept `scripts/`, `templates/`, `profiles/`, `config/`, and `hooks/archive/`, which is the list the PRD names, and that list is incomplete.
+
+**Two distinct duplicate sets live there.**
+
+**Six scripts byte-identical to their `hooks/archive/claude-code/` copies:** `check-branch-protection.sh`, `check-commit-message.sh`, `check-progress-md.sh`, `check-test-tiers.sh`, `pre-commit-hook.sh`, `pre-push-hook.sh`. PRD #47 archived these when their logic moved to native git hooks — but archiving copied rather than moved, so both copies remain and are identical. The template still registers five of them.
+
+**Seven libraries with the same basename in two places, all diverged, and both copies live:**
+
+| Script | `verify/scripts/` | `hooks/git/lib/` | Differing lines |
+|---|---:|---:|---:|
+| `detect-test-tiers.sh` | 11,494 B (2026-02-26) | 12,062 B (2026-04-09) | 70 |
+| `lint-changed.sh` | 4,493 B (2026-02-21) | 5,231 B (2026-04-09) | 31 |
+| `detect-project.sh` | 9,042 B (2026-03-08) | 9,369 B (2026-04-09) | 23 |
+| `verify-phase.sh` | 2,532 B (2026-04-05) | 2,530 B (2026-04-09) | 6 |
+| `security-check.sh` | 16,622 B (2026-02-22) | 16,800 B (2026-04-08) | 2 |
+| `is-docs-only.sh` | 1,569 B (2026-02-21) | 1,753 B (2026-04-08) | 2 |
+| `coderabbit-review.sh` | 2,936 B (2026-08-05) | 3,112 B (2026-08-02) | 2 |
+
+**Both copies are reachable, by different tiers.** `pre-pr-hook.sh` — a registered `PreToolUse` hook — calls the `verify/scripts/` copies. `pre-commit-verify.sh` and `pre-push-verify.sh` — native git hook checks — call the `hooks/git/lib/` copies. **So the PR gate and the push gate run different implementations of the same seven checks**, and a repair to one does not reach the other. `coderabbit-review.sh` is the case the audit already found and recorded as a single instance where "only one had been repaired." It is not one instance. It is seven, and it is structural rather than accidental.
+
+**This is the coupled-pair problem in its strongest form, and it confirms what Decision 57 concluded about detection.** The enumerator's `pairs` subcommand returns rows derived from filename shape and found none of these, because same-basename-different-directory was one of the two candidate classes it never shipped. That class would have found all seven in one pass. Milestone C1's keep-or-delete test on that subcommand now has a concrete seven-instance benchmark to test against, which is a far better test than the three known pairs it was given.
+
+**Do not "fix" this by deleting one side.** Which copy is correct is not established, the two tiers may legitimately need different behavior, and the dates show the `hooks/git/lib/` set was updated in April while most of the `verify/scripts/` set was not — meaning the PR gate is probably running the older logic. That is a finding for Milestone C1 to design against, not a cleanup to perform here.
