@@ -1,6 +1,6 @@
 # Reviewer sub-agent trial — build record
 
-Produced by the reviewer sub-agent trial (Decision 66) of [PRD #109](../../prds/109-claude-config-audit-redesign.md). **The trial is incomplete.** The three artefacts are built and the push gate is demonstrated working; the reviewer has not yet been scored against the three benchmark diffs, so the number the trial exists to produce does not exist yet.
+Produced by the reviewer sub-agent trial (Decision 66) of [PRD #109](../../prds/109-claude-config-audit-redesign.md). **Scored 2026-08-25: the reviewer caught 2 of the 3 defects it was built for.** The artefacts are built, the push gate is demonstrated working, and the catch count exists. One criterion remains open — Whitney has not yet used the gate on a real push, so whether the interruption is tolerable is unanswered.
 
 Built 2026-08-24 against branch `feature/prd-109-claude-config-audit-redesign` at `d89d1e8`.
 
@@ -41,6 +41,38 @@ Four classes, taken from PRD Decision 66 rather than from Viktor's generic list:
 Two of Viktor's practices carried across. Every prohibition in the prompt states the failure it prevents, which is what lets his config survive being read by cold-starting agents. And the dispatch step filters findings on agreement rather than severity, because the three defects on record here would all have been labelled minor.
 
 **The prompt deliberately contains no worked examples**, against the general rule that 3–5 diverse examples improve a prompt. The four classes are derived from the same three commits the reviewer is about to be scored against, so examples drawn from them would be answer-key leakage and the benchmark would measure recall rather than review skill. Worth adding once a score exists.
+
+## The score: 2 of 3
+
+Scored 2026-08-25 against the commits that *introduced* each defect, each in a worktree checked out at that commit so the reviewer could not read the correction that was written later. **The pass criteria were fixed in writing before any result was seen**, to stop the score being graded generously after the fact.
+
+| # | Commit reviewed | Target defect | Result |
+|---|---|---|---|
+| 1 | `806bbc6` | A `core.hooksPath` diagnosis offered as a candidate fix, already disproved elsewhere in the same document | **Catch** |
+| 2 | `e1fb336` | Hook counts corrected in one place and left contradicting in others | **Catch** |
+| 3 | `0a3faa6` | An uninstall path that strands symlinks whose repo source was deleted | **Miss** |
+
+**Case 1 caught it cleanly and cited its evidence.** It quoted the diff's "candidate fix for the 10 failing `install-git-hooks`" claim, then named lines 79, 81 and 328 of the same document, where the clean CI runner had already disproved that diagnosis. It also found something not on the benchmark: PRD line 492 still read "Current counts: 17 hook entries" in present tense and undated, four lines from the correction, in the very commit whose job was fixing counts.
+
+**Case 2 caught it by running the tool.** It found `14 Claude Code hooks` surviving in two places after the diff corrected the figure to 17 entries across 15 scripts, one of them in `claude-config-audit-decisions.md` — a file the diff itself edits. Separately it reconstructed the pre-fix reference check and re-ran the shipped one, establishing that the write-up's "five false positives" is four, with the breakdown mislabelled. That is a figure produced by a tool in this repository which the write-up did not re-derive, caught by re-deriving it.
+
+**Case 3 is the miss, and it is worse than an oversight.** The reviewer read the uninstall loop, compared it against the install loop, and cleared it: "the install and uninstall loops enumerate the same predicate." The symmetry *is* the defect — uninstall builds its list from repository sources, so a skill deleted from the repo is never enumerated and its installed symlink is never removed. It inspected the exact lines and read the bug as correctness, which is the same conclusion the original author reached. Its prompt also named the installer and its test file, so it was pointed at the right file and still missed; that makes the miss stronger evidence, not weaker.
+
+**What it found instead of case 3's defect was still real, and still live.** It reported that `scripts/google-mcp-safety-hook.py` had been deleted while `README.md` and `rules/hooks-reference.md` still documented it. Checked against the current repository on 2026-08-25: both references are still there, and the rule file still tells any session that reads it that the hook exists and fires on YouTube MCP calls. Defect class 3, found a week after the fact, in a file that shapes agent behaviour.
+
+**The honest reading.** Two of three, on a benchmark built from this repository's own measured failures, is enough to keep going and not enough to trust. The two catches are both *claim-versus-evidence* defects, where the contradicting evidence is written down somewhere the reviewer can read or a tool can produce. The miss is a *logic* defect, where being right requires reasoning about what a loop will do rather than comparing two texts. That split is the finding worth carrying into Milestone C1: this reviewer is a strong checker of assertions and an unproven checker of code.
+
+## The scoring run, and what it cost to obtain
+
+**`maxTurns` truncates a legitimate review and does not announce it.** Two of the three first attempts stopped at exactly 30 tool uses — the configured cap — and returned only their opening sentence. Nothing in the result says "incomplete"; it looks like a reviewer that found nothing and barely tried. The agent prompt instructs the reviewer to end with `FINDINGS: INCOMPLETE` if it runs out of room, and **that safeguard is unreachable**: the cap fires before the reviewer gets a turn to report it. A prompt cannot protect against the mechanism that stops the prompt. The cap was raised to 80 after the first round.
+
+This is the sharpest operational finding of the trial. `maxTurns` is the only runaway protection the platform offers, and set low enough to be useful as protection it silently becomes a correctness problem — a truncated review that a caller cannot distinguish from a clean one is exactly what the push gate would then accept.
+
+**A stalled sub-agent is detected after all, contradicting what was banked.** [The capability findings](claude-code-subagent-capabilities.md) record stall detection as "No — no idle or stall detection exists. Only `maxTurns`." One scoring attempt was killed by a task-level stream watchdog after 600 seconds of no progress. The sub-agent has no self-detection, but the harness does, and the distinction was not drawn when that table was written. **Correct the capability table before Milestone B1 reads it.**
+
+**Cost is measurable after all, in tokens rather than dollars.** Decision 62 removed `/cost-tracker` and the trial expected to report cost as unmeasured. Each completed sub-agent returns its own token usage, which is a real per-run figure: the three first attempts consumed 84,629, 93,000, and 82,229 tokens. So a review of a 176-to-1000-line diff costs on the order of 80,000 to 95,000 tokens, and a run that truncates costs as much as one that succeeds — the 93,000-token run returned nothing. That is the number Milestone C1 needs before proposing any fan-out design, and it did not require restoring an instrument.
+
+**One scoring prompt was contaminated and the run was discarded.** A retry prompt for the counts case told the reviewer that numbers stated as current were the highest-value thing to verify and that the repository held a tool to produce them — which is the defect being scored. That run was killed rather than counted. The re-run for the uninstall case carries a milder hint naming the installer and its test file, which narrows the location without naming the defect; its result is recorded as weaker evidence than the unaided one.
 
 ## Read-only is weaker than the success criterion implies
 

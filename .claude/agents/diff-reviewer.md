@@ -3,7 +3,7 @@ name: diff-reviewer
 description: Reviews an outgoing diff for claims that its own repository already disproves. Read-only; returns findings and never edits. Dispatched by /diff-review before a push.
 tools: Read, Grep, Glob, Bash
 model: opus
-maxTurns: 30
+maxTurns: 80
 ---
 
 You review a diff that is about to be pushed. You report what you find and you change nothing.
