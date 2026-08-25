@@ -2,7 +2,9 @@
 
 Answered 2026-08-24 under Decision 65's safeguard: a mechanism that looks central and expensive to adopt gets its capability question checked the moment it appears, rather than waiting for Milestone B1. **The remaining five questions stay with Milestone B1.**
 
-Sources, all official documentation: [sub-agents](https://code.claude.com/docs/en/sub-agents.md), [permissions](https://code.claude.com/docs/en/permissions.md), [agent-teams](https://code.claude.com/docs/en/agent-teams.md).
+Sources for the documentation-derived claims: [sub-agents](https://code.claude.com/docs/en/sub-agents.md), [permissions](https://code.claude.com/docs/en/permissions.md), [agent-teams](https://code.claude.com/docs/en/agent-teams.md).
+
+**Not every claim here comes from documentation, and the corrections are the ones that do not.** Rows marked "corrected 2026-08-25" come from observed behaviour during the reviewer sub-agent trial, not from a docs page — which is why they contradict what the docs implied. Where a row cites an observation, treat the observation as the authority.
 
 ## The question, and the answer that matters
 
@@ -30,7 +32,7 @@ So the gap is not that no independent checker exists. **The gap is when it runs 
 | Forbid editing specific file paths | **Partial** | **No `paths:` frontmatter exists.** Achieved with a `PreToolUse` hook that inspects the tool input and blocks by path, or `isolation: worktree`, or `permissionMode` plus `additionalDirectories` |
 | Dispatch in parallel | **Yes** | Default **20** concurrent sub-agents per session, **3** levels of nesting; both configurable by env var since v2.1.217 |
 | Reduce what the sub-agent sees | **Partial** | Context is fresh and isolated — no parent conversation history, no parent memory. **CLAUDE.md is always loaded and cannot be suppressed** on a custom sub-agent |
-| Detect a stalled sub-agent | **No** | No idle or stall detection exists. Only `maxTurns:` as a hard cap, `TaskStop`, or a manual stop. A sub-agent that hits an API error does report the failure rather than hanging |
+| Detect a stalled sub-agent | **Partly — corrected 2026-08-25** | **The sub-agent has no self-detection; the harness does.** This row read "No — no idle or stall detection exists" until a scoring run in the reviewer trial was killed by a task-level stream watchdog after 600 seconds of no progress. So there is a stall backstop, it is not configurable from the agent definition, and it is not something the sub-agent reports about itself. `maxTurns:` remains the only cap the definition controls, alongside `TaskStop` and a manual stop. A sub-agent that hits an API error reports the failure rather than hanging |
 | Route a question back to the parent mid-run | **No, for sub-agents** | A sub-agent returns a final summary only. Bidirectional messaging and lead approval exist for **agent-team teammates**, which are experimental and gated behind `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` |
 
 ## Mapping Viktor's mechanisms onto what is available
@@ -41,14 +43,16 @@ So the gap is not that no independent checker exists. **The gap is when it runs 
 | **Coder may not edit the tester's tests** | **Yes, via a hook** | A `PreToolUse` hook blocking `Write`/`Edit` on test paths. **This repo already runs exactly this shape** — `check-aboutme.sh` is a `PreToolUse` hook that blocks writes on a path-and-content condition |
 | Review and audit in parallel, neither may modify code | **Yes** | Two sub-agents with a read-only `tools:` set, dispatched concurrently |
 | Findings resolved by agreement, not severity | **Yes** | Prompt-level; no platform support needed |
-| Idle-worker detection (his daemon, 120 minutes) | **No** | Substitute `maxTurns:`; there is no timeout |
+| Idle-worker detection (his daemon, 120 minutes) | **Partly — corrected 2026-08-25** | Not configurable, but not absent: a task-level stream watchdog killed a stalled sub-agent after 600 seconds. Viktor's 120 minutes is a deliberate threshold he chose; this is a fixed one you inherit. `maxTurns:` is the only bound the definition sets, and it bounds work rather than idleness |
 | Mixed-vendor checking | **No** | Requires external orchestration — or CodeRabbit, already installed and already doing it |
 
 **Three of Viktor's four self-verification mechanisms are natively available today.** The fourth, mixed-vendor review, is not — and is already covered by a tool in this workflow that runs later than it should.
 
 ## What this does not settle
 
-Cost. Twenty concurrent sub-agents at high reasoning effort is a real number, and nothing here estimates it. `/cost-tracker` was removed as unused on 2026-08-20 (Decision 62), so no instrument exists. **If Milestone C1 proposes a fan-out design, it should say what a run costs before Whitney adopts it**, which probably means restoring some measurement first.
+**Two rows above were measured further by the reviewer trial on 2026-08-25 — read [that build record](diff-reviewer-trial.md) before relying on this table.** The stall row is corrected in place. Separately, `maxTurns:` turns out to be more than a runaway cap: set low it silently truncates a real review and returns something indistinguishable from a clean result, and a prompt instructing the sub-agent to report an incomplete run cannot help, because the cap fires before the sub-agent gets a turn to report it.
+
+Cost, at scale. **Per-run cost is no longer unmeasured — corrected 2026-08-25.** Each completed sub-agent reports its own token usage, so no instrument needed restoring: the reviewer trial's runs came back between 74,030 and 105,533 tokens each for diffs of 176 to 1,010 lines, and a run truncated by `maxTurns` cost as much as a useful one. What remains unestimated is the multiple — twenty concurrent sub-agents at high reasoning effort — and the dollar figure, since the reported number is tokens. **If Milestone C1 proposes a fan-out design, multiply the measured per-run figure by the fan-out and say the result before Whitney adopts it.**
 
 ## A note on how this answer was obtained
 
