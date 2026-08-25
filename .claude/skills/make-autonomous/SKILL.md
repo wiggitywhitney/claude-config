@@ -20,7 +20,7 @@ Enable autonomous PRD mode for the current project. This installs YOLO skill var
 
 These skills get symlinked (YOLO variants with active trigger descriptions):
 - `prd-next` — INVOKE AUTOMATICALLY after `/prd-start`. **Not after `/clear`** — nothing triggers it there
-- `prd-done` — INVOKE AUTOMATICALLY when every PRD item is checked. **No `/clear` loop triggers it**
+- `prd-done` — **user-invoked**, once `/prd-next` reports every PRD item is checked. Nothing invokes it automatically and no `/clear` loop triggers it. This is the one hand-off YOLO mode deliberately leaves to a human, because the last step it would take unattended is merging, and this project requires a human to examine and approve the CodeRabbit review before a merge
 - `prd-update-progress` — INVOKE AUTOMATICALLY after completing a PRD task
 - `prd-start` — Start working on a PRD implementation
 - `prd-create` — Create documentation-first PRDs
