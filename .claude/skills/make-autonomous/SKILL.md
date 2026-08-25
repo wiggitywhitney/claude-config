@@ -16,6 +16,12 @@ Enable autonomous PRD mode for the current project. This installs YOLO skill var
 1. **Creates symlinks to YOLO skill variants** in `.claude/skills/` pointing to `SKILL.v1-yolo.md` files in the claude-config repo
 2. **Adjusts permissions** to reduce friction for autonomous git and skill operations
 
+**Step 1 does not currently take effect, and step 2 does.** Personal skills in `~/.claude/skills/` take precedence over project skills in `.claude/skills/`, so a project symlink pointing at a `SKILL.v1-yolo.md` is shadowed by the personal copy of the same skill and the YOLO variant never loads. Established by live test during PRD #109's Milestone A4 — see [the installation-scope findings](../../../docs/research/claude-code-skill-installation-scope.md). Nine repos carried these symlinks without them ever having applied.
+
+**So running this skill today loosens permissions and changes no behaviour.** That is the opposite of the safer failure: the guardrails come off while the autonomous hand-offs the looser permissions were meant to serve stay inactive. Say so when reporting what was installed, rather than reporting a mode that is not running.
+
+The descriptions below are accurate about what each YOLO variant instructs — `prd-start` really does auto-invoke `prd-next`, and `prd-next` really does invoke `/prd-update-progress` — but they describe files that are not being loaded. Whether these variants should exist at all is Milestone C1's skill-consolidation decision; do not delete them here.
+
 ## PRD Skills Installed
 
 These skills get symlinked (YOLO variants with active trigger descriptions):
