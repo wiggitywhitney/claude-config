@@ -553,7 +553,6 @@ claude-config/
       python.md                        # Placeholder
       go.md                            # Placeholder
   scripts/                             # Standalone hooks and utilities
-    google-mcp-safety-hook.py          # Google API MCP safety hook
     gogcli-safety-hook.py              # gogcli MCP safety hook
   templates/
     claude-md-general.md               # General CLAUDE.md template

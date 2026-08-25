@@ -49,7 +49,6 @@ Install with `bash scripts/install-git-hooks.sh [repo-path]`. The installer is i
 
 ## PreToolUse hooks (fire before tool execution)
 
-- **google-mcp-safety-hook.py** (PreToolUse: `mcp__.*(youtube).*`) — blocks destructive YouTube MCP operations (delete, upload)
 - **gogcli-safety-hook.py** (PreToolUse: Bash) — blocks destructive or people-affecting gog CLI commands: data deletion, outreach, calendar with attendees, sharing, non-allowlisted sheet writes, account safety changes
 - **check-coderabbit-required.sh** (PreToolUse: Bash) — blocks PR merge without CodeRabbit review; opt out with `.skip-coderabbit`
 - **pre-pr-hook.sh** (PreToolUse: Bash) — gates PR creation on security+tests verification (expanded security, tests; build/typecheck/lint already passed at commit); also runs advisory acceptance gate tests when `.claude/verify.json` has an `"acceptance_test"` command; results require human approval before PR creation continues
