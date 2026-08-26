@@ -1,6 +1,22 @@
 # Reviewer sub-agent trial — build record
 
-Produced by the reviewer sub-agent trial (Decision 66) of [PRD #109](../../prds/109-claude-config-audit-redesign.md). **Scored 2026-08-25: the reviewer caught 2 of the 3 defects it was built for.** The artefacts are built, the push gate is demonstrated working, and the catch count exists. One criterion remains open — Whitney has not yet used the gate on a real push, so whether the interruption is tolerable is unanswered.
+Produced by the reviewer sub-agent trial (Decision 66) of [PRD #109](../../prds/109-claude-config-audit-redesign.md). **Outcome, 2026-08-26: the push gate was removed. The reviewer was kept as a command you invoke deliberately.**
+
+The trial did what Decision 66 built it to do — it produced enough evidence to decide, and the decision went against the mechanism. Whitney called the apparatus unneeded complexity and she was right, on grounds this repository's own research had already recorded before any of it was built: [the capability findings](claude-code-subagent-capabilities.md) say plainly that CodeRabbit is a different-vendor checker already wired in, and that *"the gap is not that no independent checker exists. The gap is when it runs and who has to drive it."* A second checker was built anyway, and it is same-vendor — which discards the exact property that made Viktor's reviewer worth copying.
+
+**What decided it**, beyond the 2-of-3 score:
+
+- CodeRabbit handled a 15,207-line, 111-file diff without dropping a file. The sub-agent truncated at 1,010 lines.
+- CodeRabbit found both of the gate's own bypasses — `git -C push`, then the quoted-path variant — and caught that the read-only claim was overstated. The mechanism built to catch defects was a net producer of them.
+- The gate accepted any recorded verdict. Its integrity rested on the notes being honest, which makes it a speed bump rather than a guarantee.
+- Once pushing became a step in `/prd-update-progress`, the gate turned every progress update into a stop. Its first real use had already spent a conversation to release nineteen days of journal files sitting on one laptop — friction pointing the wrong way.
+- It refused the command that deleted it, because that command ended by testing whether the deletion had worked.
+
+**Removed:** the `PreToolUse` hook and its project settings registration, `compute-diff-key.sh`, `record-diff-review.sh`, and their three bats suites. **Kept:** `.claude/agents/diff-reviewer.md` and `/diff-review`, rewritten to dispatch and report with nothing gating on the result.
+
+**What survives and feeds Milestone C1** is everything the trial measured, all of it still true with the artefacts gone: the per-run cost figures, the `maxTurns` truncation behaviour, the stall-watchdog correction, and the finding that a same-vendor reviewer is strong on assertions and unproven on code.
+
+**Scored 2026-08-25: the reviewer caught 2 of the 3 defects it was built for.** The artefacts are built, the push gate is demonstrated working, and the catch count exists. One criterion remains open — Whitney has not yet used the gate on a real push, so whether the interruption is tolerable is unanswered.
 
 Built 2026-08-24 against branch `feature/prd-109-claude-config-audit-redesign` at `d89d1e8`.
 

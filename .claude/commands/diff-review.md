@@ -1,40 +1,31 @@
 ---
-description: Dispatch the diff-reviewer sub-agent against the outgoing diff and record a verdict the push gate accepts.
+description: Dispatch the diff-reviewer sub-agent against a diff and report what it finds. Read-only; nothing gates on the result.
 ---
 
-Review the outgoing diff before it is pushed, then record the verdict.
+Get a second read on a diff before it goes anywhere. Nothing enforces this — you run it when you want it.
 
 ## Process
 
-**Step 1 — identify the diff.** Get the verdict key and the base it was measured against from the same script, so the diff you review and the key you record cannot describe different things:
+**Step 1 — decide what is being reviewed, and say so.** Usually the outgoing work:
 
 ```
-scripts/compute-diff-key.sh
-scripts/compute-diff-key.sh --print-base
+git diff @{upstream}...HEAD
 ```
 
-Produce the diff text with `git diff <base>...HEAD`, using the base that second command printed. Do not work out the base yourself — the script owns that resolution, and a second copy of the rule in your head is free to disagree with it.
+If the branch has no upstream, use `origin/main...HEAD` instead. For a single commit, `git show <sha> --format=` is the exact form to hand over.
 
-If it exits non-zero, stop and report why. A key that cannot be computed means the push gate cannot be satisfied, and inventing a base would produce a verdict describing the wrong diff.
+**Step 2 — check the size before dispatching.** Count the diff lines. Beyond roughly a thousand, the reviewer runs out of turns and returns something that looks like a clean result but is a truncated one — measured on 2026-08-25, where two of three runs stopped at the cap and reported almost nothing. Split a large diff by file and dispatch each part separately.
 
-**Step 2 — dispatch the reviewer.** Spawn the `diff-reviewer` sub-agent with the full outgoing diff in its prompt. It cold-starts with none of this conversation, so the task string carries the context: the diff itself, the branch, and the base it is measured against. Do not summarize the diff for it — a summary is the author's reading of the change, which is the reading under review.
+**Step 3 — dispatch the reviewer.** Spawn the `diff-reviewer` sub-agent, giving it the diff text or the exact command that produces it. It cold-starts with none of this conversation, so the task string carries the context: the diff, the branch, and the base. Do not summarize the diff for it — a summary is the author's reading of the change, which is the reading under review.
 
-**Step 3 — read the findings yourself before recording anything.** The reviewer returns a list and a `FINDINGS: <n>` line.
+**Step 4 — check that it finished.** The reviewer ends with `FINDINGS: <n>`. If it returns `FINDINGS: INCOMPLETE`, or no such line, it ran out of room: re-dispatch the unreviewed part rather than reporting a count from a partial pass. If the diff was split, every part needs its own count, and overlapping findings on the same file and line are merged before reporting a total.
 
-If it returns `FINDINGS: INCOMPLETE`, or returns no such line at all, the review did not finish. Do not record a verdict: the gate cannot tell a partial review from a clean one, so recording it would let unreviewed content through. Dispatch again, splitting the diff by file if it was too large to finish in one run.
+**Step 5 — resolve on agreement, not severity.** Decide whether you agree with each finding. Blockers, suggestions, and nits get the same filter: agree and fix it, or disagree and say why. Do not triage by severity — the label is the reviewer's guess, and the defects this reviewer exists to catch would all have been labelled minor.
 
-**If you split it, every shard must come back with its own `FINDINGS: <n>`.** One incomplete shard means the review is incomplete, however clean the others look — do not record a verdict, rerun that shard. When all shards finish, merge them before Step 4: drop findings that two shards both report for the same file and line, and sum what remains into the single count you record. A per-shard count recorded as the whole is a claim about a diff nobody reviewed end to end. Say in the notes that the review was sharded, and how, so the verdict does not read as one pass.
+**Step 6 — report the findings and what you did about them.** That is the whole output. Nothing is recorded, and no push or commit depends on it.
 
-**Step 4 — resolve on agreement, not on severity.** Work through every finding and decide whether you agree with it. Blockers, suggestions, and nits are all subject to the same filter: agree, and fix it; disagree, and say why in the notes. Shipping past a finding you agree with needs a stated reason, not silence. Do not triage by severity — the severity label is the reviewer's guess, and the three defects this reviewer exists to catch would all have been labelled minor.
+## What this is and is not
 
-**Step 5 — record the verdict.** If fixing findings changed the diff, the key changed with it: recompute it and dispatch a fresh review rather than recording the old verdict against new content. Then:
+It is a same-vendor second read, tuned to four defect classes this repository has actually shipped. Scored 2026-08-25 against three real ones: it caught the two where a claim contradicted evidence written elsewhere, and missed the logic error in a shell loop — which it inspected and declared sound. **Trust it on assertions; do not treat silence on code as a clean bill of health.**
 
-```
-scripts/record-diff-review.sh --findings <n> --notes "<what you resolved and what you disagreed with>"
-```
-
-**Step 6 — report, and leave the push to the author.** This command does not push. Report the finding count, what was fixed, and what was disagreed with, and say the verdict is recorded. If a later push is still blocked, the diff moved after the review was recorded, which is the gate working rather than failing.
-
-## What this does not do
-
-The gate checks that a review happened, not that its findings were resolved — that filter is Step 4 and it is convention, enforced by nothing. Say so in the notes when you ship past a finding, so the record shows the decision was made rather than missed.
+CodeRabbit remains the stronger check: different vendor, no truncation at 15,000 lines, and it runs at push time already. This is for the moment before that, when you want a read without waiting.

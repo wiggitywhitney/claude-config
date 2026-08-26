@@ -6,6 +6,10 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+### Removed
+
+- (2026-08-26) Removed the push gate built the day before, along with the two scripts and three test suites that supported it. It refused a push until a review of that exact change had been recorded, and the idea was to make a review unavoidable rather than remembered. It went because a better checker was already installed and running: a different vendor's, which matters because a checker sharing the author's model shares the author's blind spots, and one that swallowed a fifteen-thousand-line change without dropping a file where the new one gave up at a thousand. The existing checker also found both of the ways the gate could be walked past, and caught the write-up overstating what the new reviewer was prevented from doing — so the thing built to catch mistakes produced more than it caught. It also only ever checked that a note had been written, not that anyone had reviewed anything. The reviewer itself is kept as something to run deliberately, and everything the exercise measured is kept too, since those measurements are what the design work actually needed.
+
 ### Changed
 
 - (2026-08-26) The skill that records progress on a piece of work now pushes to the remote as a normal step, instead of telling whoever runs it not to. The old instruction described a commit as preserving a checkpoint, which reads as reassurance and is not one: work that never leaves the laptop is one disk away from gone, and this repository quietly built up nineteen days and forty-four commits of it, including journal entries that cannot be reconstructed. The push happens after the automated review, not before, so findings are dealt with while the work is still local. It waits for findings to be triaged rather than for a clean report, because the review rules allow deliberately skipping a finding and waiting for zero would mean never pushing. It also says what to do when a push is refused — do what the refusal asks and try again, never step around the checks, since those checks are what keeps a secret or an unreviewed change off the remote.
