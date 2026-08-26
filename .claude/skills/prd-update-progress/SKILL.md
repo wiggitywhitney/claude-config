@@ -21,7 +21,8 @@ You are helping update an existing Product Requirements Document (PRD) based on 
 7. **Flag Divergences** - Alert when actual work differs from planned work
 8. **Commit Progress Updates** - Preserve progress checkpoint
 9. **CodeRabbit CLI Review** - Local review to catch issues at milestone boundaries
-10. **Continue to Next Task** - Prompt user to run /prd-next
+10. **Push the Branch** - Send the work to the remote once the review is clean
+11. **Continue to Next Task** - Prompt user to run /prd-next
 
 ## Step 1: Smart PRD Identification
 
@@ -311,7 +312,7 @@ Progress: X% complete - [next major milestone]"
 - **Progress indication**: Include completion status and next steps
 - **Evidence-based**: Only commit when there's actual implementation progress
 
-**Note**: Do NOT push commits unless explicitly requested by the user. Commits preserve local progress checkpoints without affecting remote branches.
+**Note**: Do not push here — push in Step 8.6, after the CodeRabbit review below has been run and its findings triaged.
 
 ## Step 8.5: CodeRabbit CLI Review
 
@@ -336,6 +337,32 @@ If `coderabbit` is not installed, skip this step with a note: "CodeRabbit CLI no
 
 - **If findings exist**: Present findings to the user for triage. Apply the CodeRabbit triage rubric (see CLAUDE.md) — fix or skip each finding with rationale. Commit fixes, then re-run the review to confirm clean.
 - **If no findings**: Proceed to next steps.
+
+## Step 8.6: Push the branch
+
+Push once every finding from the review above has been **triaged** — fixed, deferred to a tracked issue, or skipped with a stated reason. Triaged is the bar, not zero findings: the rubric permits skipping, so waiting for a clean report would mean never pushing at all.
+
+```bash
+git push
+```
+
+If the branch has no upstream yet, use `git push -u origin HEAD` to set one.
+
+**Expect this to take minutes, not seconds.** The pre-push hook runs security verification and an advisory CodeRabbit review. A two-minute timeout will kill the command mid-hook. Run it in the background, then confirm it finished by checking that nothing is left ahead:
+
+```bash
+git rev-list --left-right --count '@{upstream}...HEAD'
+```
+
+`0	0` means the push landed. Check this before retrying a command that appeared to time out — the push often completes after the wrapper gives up, and a blind retry reports a failure that did not happen.
+
+**If the push is refused, report what refused it and stop.** A pre-push check or a `PreToolUse` gate can deny the push — a missing `PROGRESS.md` change, a failed security check, or a required review verdict. Each refusal names what it wants. Do that thing and push again. Do not retry unchanged, and do not route around the check.
+
+**Never pass `--no-verify`.** It skips the security scan and the review, which are the only things standing between a secret or an unreviewed change and the remote. A push that needs `--no-verify` to succeed is a push that is not ready.
+
+**State the result in the summary:** the number of commits pushed and the branch they went to, or that the branch was already current.
+
+**Why this step exists.** A commit that never leaves the machine is not a checkpoint, it is a single point of failure. This repository reached 44 unpushed commits across 19 days — including 22 journal files, which `CLAUDE.md` singles out as unrecoverable — because the step that said "commits preserve local progress" implied the work was safe and nothing ever displayed the growing gap.
 
 ## Step 8.7: Decision Awareness Check
 
