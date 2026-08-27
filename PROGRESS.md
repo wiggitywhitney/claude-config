@@ -6,6 +6,12 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+### Fixed
+
+- (2026-08-26) The automated review that runs before every push has been discarding its own results. The push step captured everything the review printed and then showed it only if a line began with one of three specific words. When the review tool changed its output format, nothing matched any more, so the review kept running for minutes on every push and its findings went nowhere — and because a review that found problems now looked exactly like a review that found none, and exactly like the tool not being installed, there was no symptom. The filter is gone; the review prints straight through, and it remains advisory, so it still never blocks a push.
+
+  Found while checking why a push produced no review output at all. The same check also had a test that could not fail: it committed a plain text file, which counts as documentation, so the script exited before reaching the review and the test's assertion held whether or not the behaviour it named was working. That test now uses a source file and a stand-in reviewer, so it fails if the skip setting stops being honoured.
+
 ### Removed
 
 - (2026-08-26) Removed the push gate built the day before, along with the two scripts and three test suites that supported it. It refused a push until a review of that exact change had been recorded, and the idea was to make a review unavoidable rather than remembered. It went because a better checker was already installed and running: a different vendor's, which matters because a checker sharing the author's model shares the author's blind spots, and one that swallowed a fifteen-thousand-line change without dropping a file where the new one gave up at a thousand. The existing checker also found both of the ways the gate could be walked past, and caught the write-up overstating what the new reviewer was prevented from doing — so the thing built to catch mistakes produced more than it caught. It also only ever checked that a note had been written, not that anyone had reviewed anything. The reviewer itself is kept as something to run deliberately, and everything the exercise measured is kept too, since those measurements are what the design work actually needed.

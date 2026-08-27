@@ -475,3 +475,63 @@ teardown() {
     [ "$status" -eq 0 ]
     [[ "$output" == *'"typecheck": "yarn dlx tsc --noEmit"'* ]]
 }
+
+# ── pre-push-verify.sh: CodeRabbit output must not be swallowed ───────────────
+
+# Copy the hooks tree so the wrapper can be stubbed; pre-push-verify resolves
+# LIB_DIR from its own location, so the stub has to live beside a real copy.
+_stub_coderabbit() {
+    local stub_body="$1"
+    HOOKS_COPY="$TMPDIR/hooks"
+    mkdir -p "$HOOKS_COPY"
+    cp -R "$BATS_TEST_DIRNAME/../hooks/git/checks" "$HOOKS_COPY/checks"
+    cp -R "$BATS_TEST_DIRNAME/../hooks/git/lib" "$HOOKS_COPY/lib"
+    cat > "$HOOKS_COPY/lib/coderabbit-review.sh" <<STUB
+#!/usr/bin/env bash
+$stub_body
+STUB
+    chmod +x "$HOOKS_COPY/lib/coderabbit-review.sh"
+}
+
+_run_prepush() {
+    run bash -c "cd \"$GIT_REPO\" && printf 'refs/heads/feature/cr abc123 refs/heads/feature/cr abc123\n' | \"$HOOKS_COPY/checks/pre-push-verify.sh\""
+}
+
+# A remote with main is required: pre-push-verify only runs the review when it can
+# resolve origin/main or origin/master as a base.
+_commit_a_change() {
+    git init --bare "$TMPDIR/bare" --quiet
+    git -C "$GIT_REPO" remote add origin "$TMPDIR/bare"
+    git -C "$GIT_REPO" push -q origin main
+    git -C "$GIT_REPO" checkout -b feature/cr --quiet
+    # A code file, not .txt: pre-push-verify exits 0 before any check when the
+    # branch diff is docs-only, and .txt counts as docs.
+    mkdir -p "$GIT_REPO/src"
+    echo "const x = 1;" > "$GIT_REPO/src/app.js"
+    git -C "$GIT_REPO" add src/app.js
+    git -C "$GIT_REPO" commit -m "add source file" --quiet
+}
+
+@test "pre-push-verify: surfaces review output that does not match the old finding patterns" {
+    _stub_coderabbit 'echo "=== CodeRabbit CLI Review ==="; echo "REVIEW_MARKER_ONE finding in some file"'
+    _commit_a_change
+    _run_prepush
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"REVIEW_MARKER_ONE"* ]]
+}
+
+@test "pre-push-verify: surfaces a review that reports it was skipped" {
+    _stub_coderabbit 'echo "CodeRabbit CLI not installed — skipping local review"'
+    _commit_a_change
+    _run_prepush
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"skipping local review"* ]]
+}
+
+@test "pre-push-verify: stays advisory when the review exits non-zero" {
+    _stub_coderabbit 'echo "REVIEW_MARKER_FAIL"; exit 3'
+    _commit_a_change
+    _run_prepush
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"REVIEW_MARKER_FAIL"* ]]
+}

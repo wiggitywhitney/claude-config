@@ -131,13 +131,17 @@ if [[ ! -f "$PROJECT_DIR/.skip-coderabbit" ]]; then
     fi
 
     if [[ -n "$REVIEW_BASE" ]]; then
-        REVIEW_RAW=$("$LIB_DIR/coderabbit-review.sh" "$PROJECT_DIR" "$REVIEW_BASE" 2>&1 || true)
-        # Only print findings when they contain actual review issue blocks
-        if echo "$REVIEW_RAW" | grep -qE '^File:|^Type:[[:space:]]*potential_issue|^Comment:'; then
-            echo ""
-            echo "=== CodeRabbit Advisory Findings (address before creating a PR) ==="
-            echo "$REVIEW_RAW"
-        fi
+        # Let the review print straight through. Do not capture its output and
+        # filter it: the previous version captured everything and printed it only
+        # when a line matched ^File:, ^Type: potential_issue, or ^Comment:. Those
+        # patterns stopped matching when the CLI's output format changed, so the
+        # review ran for minutes on every push and its findings were discarded —
+        # indistinguishable from a clean review, and from the CLI being absent.
+        # A filter that hides the review when it stops recognising the format
+        # fails in the one direction nobody notices. Print it and let the reader
+        # judge; this stays advisory either way.
+        echo ""
+        "$LIB_DIR/coderabbit-review.sh" "$PROJECT_DIR" "$REVIEW_BASE" 2>&1 || true
     fi
 fi
 
