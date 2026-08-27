@@ -45,7 +45,7 @@ Install with `bash scripts/install-git-hooks.sh [repo-path]`. The installer is i
 - **progress-md-pr.sh** — blocks push when branch has no PROGRESS.md changes vs the base branch; prompts interactively with an AI-drafted entry (accept/edit/skip); non-interactive environments get an advisory warning and exit 0; only fires in repos that have PROGRESS.md
 - **pre-push-verify.sh** — gates push on security verification (docs-only early exit)
   - Escalates to expanded security + tests when an open PR exists
-  - Runs advisory CodeRabbit CLI review after blocking checks pass
+  - **Runs no code review.** CodeRabbit ran here until 2026-08-27 and was removed: it reviewed the whole branch against `origin/main` on every push, so its cost grew with branch age until it hit its 7-minute timeout and reported nothing, silently. `/prd-update-progress` already ran the same review at each milestone, which is one run per milestone instead of one per push and happens while the work is still local. PR-time review is unaffected, and `check-coderabbit-required.sh` still blocks a merge without one.
 
 ## PreToolUse hooks (fire before tool execution)
 

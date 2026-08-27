@@ -181,13 +181,13 @@ Following the thread found **six places** stating this one command, four of them
 | Location | State before 2026-08-05 |
 |---|---|
 | `~/.claude/rules/git-workflow.md` | Correct, and explicitly warns about both removals |
-| `hooks/git/lib/coderabbit-review.sh` | Correct — fixed 2026-08-02 |
+| `hooks/git/lib/coderabbit-review.sh` | ~~Correct — fixed 2026-08-02~~ **Deleted 2026-08-27** along with the pre-push review that was its only caller |
 | `.claude/skills/prd-update-progress/SKILL.md` | Stale |
 | `.claude/skills/prd-update-progress/SKILL.v1-yolo.md` | Stale |
 | `.claude/skills/issue-update-progress/SKILL.md` | Stale |
 | `.claude/skills/verify/scripts/coderabbit-review.sh` | Stale, plus the rejected `--no-color` and `--cwd` |
 
-**The last row is the finding.** `hooks/git/lib/coderabbit-review.sh` and `.claude/skills/verify/scripts/coderabbit-review.sh` are two copies of the same script. On 2026-08-02 the first was diagnosed and repaired — the `PROGRESS.md` entry for that day says the pre-push hook "had been silently doing nothing" because the CLI errored and the helper converted the failure into a clean exit. **The second copy was never touched.** Three days later it still carried all four bad flags, verified by running it:
+**The last row is the finding, and half of it is now resolved — `hooks/git/lib/coderabbit-review.sh` was deleted on 2026-08-27** when the pre-push review that called it was removed, so one copy remains rather than two. The account below describes the state as found on 2026-08-05 and is kept because the mechanism is the point. `hooks/git/lib/coderabbit-review.sh` and `.claude/skills/verify/scripts/coderabbit-review.sh` were two copies of the same script. On 2026-08-02 the first was diagnosed and repaired — the `PROGRESS.md` entry for that day says the pre-push hook "had been silently doing nothing" because the CLI errored and the helper converted the failure into a clean exit. **The second copy was never touched.** Three days later it still carried all four bad flags, verified by running it:
 
 ```text
 $ bash .claude/skills/verify/scripts/coderabbit-review.sh

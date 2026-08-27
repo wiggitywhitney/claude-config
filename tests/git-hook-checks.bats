@@ -409,17 +409,6 @@ teardown() {
     [[ "$output" == *"ERROR"* ]]
 }
 
-@test "pre-push-verify: skips CodeRabbit review when .skip-coderabbit present" {
-    git -C "$GIT_REPO" checkout -b feature/skip-cr --quiet
-    touch "$GIT_REPO/.skip-coderabbit"
-    echo "plain" > "$GIT_REPO/file.txt"
-    git -C "$GIT_REPO" add .skip-coderabbit file.txt
-    git -C "$GIT_REPO" commit -m "add file" --quiet
-    run bash -c "cd \"$GIT_REPO\" && printf 'refs/heads/feature/skip-cr abc123 refs/heads/feature/skip-cr abc123\n' | \"$CHECKS_DIR/pre-push-verify.sh\" origin https://example.com 2>&1"
-    [ "$status" -eq 0 ]
-    # No CodeRabbit output expected — would only appear if CR CLI is installed and finds issues
-    [[ "$output" != *"CodeRabbit Advisory"* ]]
-}
 
 @test "pre-push-verify: uses REMOTE_NAME arg to derive diff base when remote is not origin" {
     BARE_REPO="$TMPDIR/bare"
@@ -476,10 +465,12 @@ teardown() {
     [[ "$output" == *'"typecheck": "yarn dlx tsc --noEmit"'* ]]
 }
 
-# ── pre-push-verify.sh: CodeRabbit output must not be swallowed ───────────────
+# ── pre-push-verify.sh: no review runs from the hook ─────────────────────────
 
-# Copy the hooks tree so the wrapper can be stubbed; pre-push-verify resolves
-# LIB_DIR from its own location, so the stub has to live beside a real copy.
+# The hook no longer runs any code review. CodeRabbit moved to /prd-update-progress,
+# which already ran it, so the hook was paying 7 minutes per push for a review that
+# timed out and reported nothing. These tests plant a reviewer where the hook used
+# to look and assert it is never called.
 _stub_coderabbit() {
     local stub_body="$1"
     HOOKS_COPY="$TMPDIR/hooks"
@@ -497,8 +488,6 @@ _run_prepush() {
     run bash -c "cd \"$GIT_REPO\" && printf 'refs/heads/feature/cr abc123 refs/heads/feature/cr abc123\n' | \"$HOOKS_COPY/checks/pre-push-verify.sh\""
 }
 
-# A remote with main is required: pre-push-verify only runs the review when it can
-# resolve origin/main or origin/master as a base.
 _commit_a_change() {
     git init --bare "$TMPDIR/bare" --quiet
     git -C "$GIT_REPO" remote add origin "$TMPDIR/bare"
@@ -512,26 +501,18 @@ _commit_a_change() {
     git -C "$GIT_REPO" commit -m "add source file" --quiet
 }
 
-@test "pre-push-verify: surfaces review output that does not match the old finding patterns" {
-    _stub_coderabbit 'echo "=== CodeRabbit CLI Review ==="; echo "REVIEW_MARKER_ONE finding in some file"'
+@test "pre-push-verify: does not run any code review" {
+    _stub_coderabbit 'echo "REVIEW_MARKER_SHOULD_NOT_RUN"'
     _commit_a_change
     _run_prepush
     [ "$status" -eq 0 ]
-    [[ "$output" == *"REVIEW_MARKER_ONE"* ]]
+    [[ "$output" != *"REVIEW_MARKER_SHOULD_NOT_RUN"* ]]
 }
 
-@test "pre-push-verify: surfaces a review that reports it was skipped" {
-    _stub_coderabbit 'echo "CodeRabbit CLI not installed — skipping local review"'
+@test "pre-push-verify: still runs the security check after the review was removed" {
+    _stub_coderabbit 'echo "REVIEW_MARKER_SHOULD_NOT_RUN"'
     _commit_a_change
     _run_prepush
     [ "$status" -eq 0 ]
-    [[ "$output" == *"skipping local review"* ]]
-}
-
-@test "pre-push-verify: stays advisory when the review exits non-zero" {
-    _stub_coderabbit 'echo "REVIEW_MARKER_FAIL"; exit 3'
-    _commit_a_change
-    _run_prepush
-    [ "$status" -eq 0 ]
-    [[ "$output" == *"REVIEW_MARKER_FAIL"* ]]
+    [[ "$output" == *"Security Check"* ]]
 }

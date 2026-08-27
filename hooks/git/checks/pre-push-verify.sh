@@ -121,28 +121,12 @@ if [[ -n "$FAILED_PHASE" ]]; then
     exit 1
 fi
 
-# Advisory CodeRabbit CLI review (runs after blocking checks pass; never blocks push)
-if [[ ! -f "$PROJECT_DIR/.skip-coderabbit" ]]; then
-    REVIEW_BASE=""
-    if git rev-parse --verify "${REMOTE_NAME:-origin}/main" &>/dev/null; then
-        REVIEW_BASE="${REMOTE_NAME:-origin}/main"
-    elif git rev-parse --verify "${REMOTE_NAME:-origin}/master" &>/dev/null; then
-        REVIEW_BASE="${REMOTE_NAME:-origin}/master"
-    fi
-
-    if [[ -n "$REVIEW_BASE" ]]; then
-        # Let the review print straight through. Do not capture its output and
-        # filter it: the previous version captured everything and printed it only
-        # when a line matched ^File:, ^Type: potential_issue, or ^Comment:. Those
-        # patterns stopped matching when the CLI's output format changed, so the
-        # review ran for minutes on every push and its findings were discarded —
-        # indistinguishable from a clean review, and from the CLI being absent.
-        # A filter that hides the review when it stops recognising the format
-        # fails in the one direction nobody notices. Print it and let the reader
-        # judge; this stays advisory either way.
-        echo ""
-        "$LIB_DIR/coderabbit-review.sh" "$PROJECT_DIR" "$REVIEW_BASE" 2>&1 || true
-    fi
-fi
+# No code review runs here. CodeRabbit moved to /prd-update-progress, which
+# already ran it at every milestone — the hook was a second copy that reviewed
+# the entire branch against origin/main on every push, grew with branch age, and
+# hit its 7-minute timeout without ever reporting anything. Reviewing at the
+# milestone instead costs one run per milestone rather than one per push, and it
+# happens while the work is still local. The PR-time review is unaffected, and
+# `check-coderabbit-required.sh` still blocks a merge without one.
 
 exit 0

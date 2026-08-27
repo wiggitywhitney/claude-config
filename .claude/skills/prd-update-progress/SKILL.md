@@ -316,7 +316,9 @@ Progress: X% complete - [next major milestone]"
 
 ## Step 8.5: CodeRabbit CLI Review
 
-After committing, run a local CodeRabbit CLI review to catch issues before they accumulate across milestones. This replaces the push-time review with a milestone-time review — same coverage, better timing.
+After committing, run a local CodeRabbit CLI review to catch issues before they accumulate across milestones.
+
+**This is now the only review between writing code and opening a PR — do not skip it.** The pre-push hook ran a second copy until 2026-08-27; it was removed because it reviewed the entire branch on every push, and once that exceeded its 7-minute timeout it reported nothing at all while still costing the wait. Nothing downstream re-runs this check before a PR exists, so skipping the step here means the work reaches a PR unreviewed.
 
 ### Run the review
 

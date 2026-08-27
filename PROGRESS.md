@@ -6,6 +6,10 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+### Removed
+
+- (2026-08-27) Took the code review out of the pre-push step. It was a second copy of a review that already runs when a milestone's progress is recorded, and the copy in the push step reviewed the entire branch from scratch every single time — so its cost grew with the age of the branch until it passed a seven-minute cutoff, gave up, and reported nothing. Reviewing once per milestone instead of once per push costs less, happens while the work is still on the machine, and actually finishes. The security scan in the push step is untouched and still blocks a push that fails it, and the requirement for a review before merging a pull request is untouched as well. The script that only the push step used is deleted with it, which also settles half of a standing question about two copies of the same file.
+
 ### Fixed
 
 - (2026-08-26) The automated review that runs before every push has been discarding its own results. The push step captured everything the review printed and then showed it only if a line began with one of three specific words. When the review tool changed its output format, nothing matched any more, so the review kept running for minutes on every push and its findings went nowhere — and because a review that found problems now looked exactly like a review that found none, and exactly like the tool not being installed, there was no symptom. The filter is gone; the review prints straight through, and it remains advisory, so it still never blocks a push.
