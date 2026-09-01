@@ -6,6 +6,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-08-31) Refreshed the research on a fellow practitioner's coding-agent workflow, which had gone stale since April. Re-read his current setup fresh — how he runs an agent unattended without constant approval prompts, and what actually stops an agent from breaking a rule it already agreed to versus what's just a written reminder. One repo answers that second question concretely with a real blocking check and its own honest list of how that check gets defeated. Another repo, built for a different purpose (auto-instrumenting code with telemetry), turned out to hold the most interesting idea: it can undo an agent's proposed change automatically if a validation check fails, before that change ever reaches a person for review — a different approach than reviewing a finished piece of work after the fact.
+
 ### Removed
 
 - (2026-08-27) Took the code review out of the pre-push step. It was a second copy of a review that already runs when a milestone's progress is recorded, and the copy in the push step reviewed the entire branch from scratch every single time — so its cost grew with the age of the branch until it passed a seven-minute cutoff, gave up, and reported nothing. Reviewing once per milestone instead of once per push costs less, happens while the work is still on the machine, and actually finishes. The security scan in the push step is untouched and still blocks a push that fails it, and the requirement for a review before merging a pull request is untouched as well. The script that only the push step used is deleted with it, which also settles half of a standing question about two copies of the same file.

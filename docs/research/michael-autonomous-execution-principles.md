@@ -2,6 +2,13 @@
 
 **Purpose:** Extract the load-bearing design principles from Michael Forrester's `/plan-execute` and `/long-run` skills to inform Whitney's own autonomous PRD execution system.
 
+## Update Log
+
+| Date | Summary |
+|------|---------|
+| 2026-04-XX | Initial write-up from `plan-execute`/`long-run`/`tasks.yaml` sources listed below. |
+| 2026-08-31 | **Re-verified for PRD #109 Milestone B3, not rewritten.** Re-pulled `llm-coding-workflow` (`70257db` → `d8eeb0f`) and diffed every file this document cites. `plan-execute/SKILL.md` and `long-run/SKILL.md` changed only in frontmatter — a repo-wide rewrite of skill `description` fields to include quoted trigger phrases a person would actually say (2026-08-13, unrelated to this system's mechanics). `_execution-state.md`, the four-phase loop, the two-counter failure model, and `tasks.yaml`'s claim/release/dependency semantics are all still current and byte-for-byte the same logic described below. **One addition, not a correction:** Michael has since layered a broader, repo-wide `lifecycle-phases.md` 3×3 numbering (INCEPTION/CONSTRUCTION/OPERATIONS) on top of this system for general work — see the new subsection at the end of §2. `tasks.yaml` is currently empty (`tasks: []`) on his live repo, i.e. idle, not abandoned; `scripts/tasks.sh` was hardened against concurrent worktree mutations on 2026-04-28, which is a load-bearing detail once `worktree-launch.py` (documented in the sibling file, `michael-forrester-workflow.md`) is in the picture — multiple worktree agents can now genuinely race on this file. **No downstream impact on PRD #84**: its Decision 1 rejected both `_execution-state.md` and `tasks.yaml` for this repo, and that reasoning is unaffected — nothing here is new evidence against it. |
+
 **Sources read:**
 - `~/Documents/Repositories/forrester-workflow/claude-config/skills/plan-execute/SKILL.md`
 - `~/Documents/Repositories/forrester-workflow/claude-config/skills/long-run/SKILL.md`
@@ -138,6 +145,12 @@ Michael's design does not need this distinction because `staging` has no externa
 - **No explicit "ask user" branch inside the main loop.** The skill does not ask for mid-execution input. It either continues, stops cleanly, or stops with a flag. Resumption is the user's action (by starting a new session).
 - **TDD is baked into Phase 2.** Tests gate progress. Quote from `long-run`: *"Tests gate progress: never advance with failing tests."*
 - **Checkpoint decision is its own phase.** It is not an afterthought at the end of execution — it runs after every task, ensuring the loop can stop cleanly at any iteration boundary.
+
+### 2b. The newer `lifecycle-phases.md` overlay (added since the last read, 2026-08-31)
+
+Michael's repo now also carries `claude-config/rules/lifecycle-phases.md` — a 3×3 numbered spine (`1.1`–`3.3`) grouped into three phases: **INCEPTION** (1.1 Research, 1.2 Plan, 1.3 Approve — with a stated gate: "no Edit/Write/Bash mutation of project source until 1.3 passes"), **CONSTRUCTION** (2.1 Test, 2.2 Implement, 2.3 Verify — "nothing leaves your working tree until 2.3 is fully green"), and **OPERATIONS** (ship + observe). It is explicitly the general-purpose spine for "every non-trivial unit of work," not specific to plan-execute — the file states "Skills, hooks, and [[state-persistence]] all reference these numbers."
+
+This does not replace `/plan-execute`/`/long-run` — both still exist unchanged and are still wired to the same hooks. The relationship is closer to: `lifecycle-phases.md` is the phase-gate convention that governs *whether you're allowed to start mutating*, while `/plan-execute` and `/long-run` are the *mechanics of walking through a plan once you've started*. 1.3's "Approve" gate ("Michael has explicitly approved the plan... a contract is sealed: `Approved-by: Michael@<ts>` + sha256 of the plan body") is itself a Whitney-relevant idea not previously documented here: a cryptographic commitment to the approved plan text, so a later edit to the plan can be detected rather than assumed.
 
 ---
 
