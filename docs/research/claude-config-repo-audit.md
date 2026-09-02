@@ -592,7 +592,7 @@ Answered once, in prose, per Decision 56 — no subcommand. "Referenced by" belo
 - **Twelve of 27 carry exactly 8 skills**, which is the standard set installed into a project. Measured with `./scripts/audit-enumerate.sh repos` on 2026-08-24; the earlier text here read "eighteen of 26", which disagreed with the tool in both figures. Deviations: one repo with 23 (`claude-config`, its own), three with 10, two with 9, two with 1, and seven with none. **Do not quote these; the set grows as repos are added.**
 - **Git-hook installation is inconsistent and nothing explains it.** Fifteen repos have 4 hooks, seven have 3, and five have none. The 4-versus-3 split is `post-commit`, which belongs to commit-story rather than this repo's installer, so the meaningful reading is that five repos carrying Claude Code config have no git enforcement at all.
 - **Two repos have `.claude/commands/` and no skills** — `learning-center` (2 commands) and `platform-vibez` (1). These are the third-place definitions Milestone A4 predicted: a sweep reading only `.claude/skills/` reports both as clean while a command file is live in each.
-- **Staleness spans three years.** `platform-vibez` last saw a commit on 2025-08-13, over a year ago. Nine repos have not been touched since March 2026 or earlier. Four are active this month.
+- **Staleness spans over a year.** `platform-vibez` last saw a commit on 2025-08-13, over a year before this measurement (2026-08-22). Nine repos have not been touched since March 2026 or earlier. Four are active this month.
 
 **No repository other than `claude-config` was modified.** The one prior exception is recorded in Decision 58, where eight repositories' gitignored local settings were cleaned of a registration pointing at a deleted hook.
 

@@ -1,6 +1,6 @@
 ---
 name: diff-reviewer
-description: Reviews an outgoing diff for claims that its own repository already disproves. Read-only; returns findings and never edits. Dispatched by /diff-review before a push.
+description: Reviews an outgoing diff for claims that its own repository already disproves. Findings only, never edits — enforced by the absence of Write/Edit from its tool list, though it keeps Bash to verify claims and that tool can write (see the body for the boundary this depends on). Dispatched by /diff-review before a push.
 tools: Read, Grep, Glob, Bash
 model: opus
 maxTurns: 80

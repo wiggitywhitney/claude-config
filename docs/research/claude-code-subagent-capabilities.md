@@ -1,6 +1,6 @@
 # Sub-agent capabilities — the question Milestone B2 could not bank
 
-Answered 2026-08-24 under Decision 65's safeguard: a mechanism that looks central and expensive to adopt gets its capability question checked the moment it appears, rather than waiting for Milestone B1. **The remaining five questions stay with Milestone B1.**
+Answered 2026-08-24 under Decision 65's safeguard: a mechanism that looks central and expensive to adopt gets its capability question checked the moment it appears, rather than waiting for Milestone B1. **The remaining six questions stay with Milestone B1.**
 
 Sources for the documentation-derived claims: [sub-agents](https://code.claude.com/docs/en/sub-agents.md), [permissions](https://code.claude.com/docs/en/permissions.md), [agent-teams](https://code.claude.com/docs/en/agent-teams.md).
 

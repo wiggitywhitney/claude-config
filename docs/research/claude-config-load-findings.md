@@ -88,6 +88,37 @@ Worth stating plainly: `writing-voice.md` is also the file most likely to keep g
 
 ---
 
+## 5. `include` content **is** re-injected after compaction — measured 2026-08-03
+
+This was the last open question gating the classification policy, and the answer is yes. Every always-loaded rule in this system arrives via `include`, so the durability of the whole always-loaded set turned on it.
+
+**Result.** A manual `/compact` in a session with roughly 230k tokens of history produced 14 `InstructionsLoaded` records, all sharing one post-compaction `prompt_id`:
+
+| File | `memory_type` | `load_reason` |
+|---|---|---|
+| `~/.claude/CLAUDE.md` | User | `compact` |
+| `claude-config/.claude/CLAUDE.md` | Project | `compact` |
+| The 11 `@`-referenced rules, plus `~/Documents/Journal/CURRENT-CONTEXT.md` | User | `include` |
+
+**Read the labels carefully — this is where the question went wrong for other people.** Imports come back as `include`, each carrying `parent_file_path: ~/.claude/CLAUDE.md`. Only the two root files carry `compact`. The mechanism is re-resolution: the roots are re-injected and their imports are re-resolved through them. Whether that reads from disk or replays a cached expansion is not established — the payloads name the parent but not the source.
+
+Anyone filtering for `load_reason == "compact"` sees two files and concludes imports were dropped, which is the likeliest reading behind [issue #24460](https://github.com/anthropics/claude-code/issues/24460). **Likeliest, not proven.** One manual compaction at 2.1.220 cannot establish what an older version did, so changed behavior remains equally consistent with the evidence. The labeling explanation is preferred because it requires no one to have erred, which is a reason to favor a hypothesis and not a reason to call the matter closed.
+
+**The negative control fired in the same run, and it is the more useful half.** `rules/datadog-mcp-gotchas.md` was live in context before the compaction, loaded via `path_glob_match` when `config/settings.json` was read to arm the probe. It produced **no** post-compaction record. A path-scoped rule that was in context is genuinely gone until its glob matches again — the docs' claim, now observed rather than trusted. `rules/README.md`, path-scoped earlier in this same milestone, also stayed absent, independently confirming finding 1's fix.
+
+**Method, and three things that make it work.**
+
+1. **The probe must be interactive.** `/compact` is not dispatchable in headless `claude -p`, so the throwaway-settings approach that worked for the `session_start` case cannot reach this one. Transcript mining is also a dead end: instruction content never appears in the transcript's message history, so re-injection happens entirely outside the logged record.
+2. **Put the hook in `.claude/settings.local.json`.** It is gitignored, so no tracked file is mutated and the tracked-settings symlink defect does not apply. Back up the original first.
+3. **Verify the probe is live before compacting.** Hooks added to `settings.local.json` take effect mid-session with no restart — itself a finding worth keeping. Confirm by reading a file that triggers a path-scoped rule and checking that the log grew. A dead probe costs the session's whole context for no data, and the session cannot be un-compacted.
+
+**Consequence for the classification policy.** `@`-import is a durable mechanism, equivalent to an unscoped rule in both survival and cost. The trade-off stands as stated — durability is bought with always-loaded bytes — but it is now priced with a measurement instead of an assumption. Those bytes are paid in every session and re-paid after every compaction, so there is no hidden discount that would make the always-loaded set cheaper than the inventory says.
+
+**Scope.** One run, one version (2.1.220), manual trigger only. Auto-compaction is documented as identical and prior auto-compactions in the transcript carry matching metadata structure, but it was not directly observed. Re-verify after a major version bump.
+
+---
+
+
 ## 6. Two rules carry both mechanisms, and neither the checker nor this inventory can see it — the project `CLAUDE.md` is unscanned
 
 **Found 2026-08-04, from a CodeRabbit finding about untraversed import graphs. It makes the always-loaded figure in the inventory unreliable, so read it before quoting that number.**
@@ -209,30 +240,3 @@ At the time this was written it was a data point rather than an answer: it made 
 
 ---
 
-## 5. `include` content **is** re-injected after compaction — measured 2026-08-03
-
-This was the last open question gating the classification policy, and the answer is yes. Every always-loaded rule in this system arrives via `include`, so the durability of the whole always-loaded set turned on it.
-
-**Result.** A manual `/compact` in a session with roughly 230k tokens of history produced 14 `InstructionsLoaded` records, all sharing one post-compaction `prompt_id`:
-
-| File | `memory_type` | `load_reason` |
-|---|---|---|
-| `~/.claude/CLAUDE.md` | User | `compact` |
-| `claude-config/.claude/CLAUDE.md` | Project | `compact` |
-| The 11 `@`-referenced rules, plus `~/Documents/Journal/CURRENT-CONTEXT.md` | User | `include` |
-
-**Read the labels carefully — this is where the question went wrong for other people.** Imports come back as `include`, each carrying `parent_file_path: ~/.claude/CLAUDE.md`. Only the two root files carry `compact`. The mechanism is re-resolution: the roots are re-injected and their imports are re-resolved through them. Whether that reads from disk or replays a cached expansion is not established — the payloads name the parent but not the source.
-
-Anyone filtering for `load_reason == "compact"` sees two files and concludes imports were dropped, which is the likeliest reading behind [issue #24460](https://github.com/anthropics/claude-code/issues/24460). **Likeliest, not proven.** One manual compaction at 2.1.220 cannot establish what an older version did, so changed behavior remains equally consistent with the evidence. The labeling explanation is preferred because it requires no one to have erred, which is a reason to favor a hypothesis and not a reason to call the matter closed.
-
-**The negative control fired in the same run, and it is the more useful half.** `rules/datadog-mcp-gotchas.md` was live in context before the compaction, loaded via `path_glob_match` when `config/settings.json` was read to arm the probe. It produced **no** post-compaction record. A path-scoped rule that was in context is genuinely gone until its glob matches again — the docs' claim, now observed rather than trusted. `rules/README.md`, path-scoped earlier in this same milestone, also stayed absent, independently confirming finding 1's fix.
-
-**Method, and three things that make it work.**
-
-1. **The probe must be interactive.** `/compact` is not dispatchable in headless `claude -p`, so the throwaway-settings approach that worked for the `session_start` case cannot reach this one. Transcript mining is also a dead end: instruction content never appears in the transcript's message history, so re-injection happens entirely outside the logged record.
-2. **Put the hook in `.claude/settings.local.json`.** It is gitignored, so no tracked file is mutated and the tracked-settings symlink defect does not apply. Back up the original first.
-3. **Verify the probe is live before compacting.** Hooks added to `settings.local.json` take effect mid-session with no restart — itself a finding worth keeping. Confirm by reading a file that triggers a path-scoped rule and checking that the log grew. A dead probe costs the session's whole context for no data, and the session cannot be un-compacted.
-
-**Consequence for the classification policy.** `@`-import is a durable mechanism, equivalent to an unscoped rule in both survival and cost. The trade-off stands as stated — durability is bought with always-loaded bytes — but it is now priced with a measurement instead of an assumption. Those bytes are paid in every session and re-paid after every compaction, so there is no hidden discount that would make the always-loaded set cheaper than the inventory says.
-
-**Scope.** One run, one version (2.1.220), manual trigger only. Auto-compaction is documented as identical and prior auto-compactions in the transcript carry matching metadata structure, but it was not directly observed. Re-verify after a major version bump.

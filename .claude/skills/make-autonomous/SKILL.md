@@ -143,19 +143,17 @@ done
 Then display a summary:
 
 ```text
-Autonomous PRD mode enabled for [project-name].
+Permissions loosened for [project-name]. Autonomous hand-offs are NOT active.
 
 Changes made:
-  Skills       — YOLO variant symlinks created in .claude/skills/
   Permissions  — PRD skill and git permissions added (.claude/settings.local.json)
+  Skills       — YOLO variant symlinks created in .claude/skills/, but shadowed by
+                 the personal copies in ~/.claude/skills/ and never loaded (see above)
 
-⚠️  Restart Claude Code to pick up the new skill definitions.
-    The symlinks are in place, but the current session has the old skills loaded in memory.
+This session still runs the ordinary interactive skills. Nothing here makes
+/prd-next auto-continue after /clear — run it yourself each time.
 
-To revert: run /make-careful
-
-The autonomous loop:
-  /prd-start → /prd-next → implement → /prd-update-progress → /clear → user runs /prd-next again → repeat
+To revert the permission changes: run /make-careful
 ```
 
 ## Important Notes

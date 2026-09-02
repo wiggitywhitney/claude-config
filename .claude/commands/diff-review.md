@@ -8,13 +8,13 @@ Get a second read on a diff before it goes anywhere. Nothing enforces this — y
 
 **Step 1 — decide what is being reviewed, and say so.** Usually the outgoing work:
 
-```
+```bash
 git diff @{upstream}...HEAD
 ```
 
 If the branch has no upstream, use `origin/main...HEAD` instead. For a single commit, `git show <sha> --format=` is the exact form to hand over.
 
-**Step 2 — check the size before dispatching.** Count the diff lines. Beyond roughly a thousand, the reviewer runs out of turns and returns something that looks like a clean result but is a truncated one — measured on 2026-08-25, where two of three runs stopped at the cap and reported almost nothing. Split a large diff by file and dispatch each part separately.
+**Step 2 — check the size before dispatching.** Count the diff lines. Beyond roughly a thousand, the reviewer runs out of turns and returns something that looks like a clean result but is a truncated one — measured on 2026-08-25, where two of three runs stopped at the cap and reported almost nothing. Split a large diff into coherent groups — files that change together for one reason, such as a script and its test, or a config and the code that reads it — rather than one file per part. A mechanical per-file split can separate the two halves of a producer-consumer defect (the exact class of thing this reviewer hunts for) into different parts, where neither part alone shows the mismatch.
 
 **Step 3 — dispatch the reviewer.** Spawn the `diff-reviewer` sub-agent, giving it the diff text or the exact command that produces it. It cold-starts with none of this conversation, so the task string carries the context: the diff, the branch, and the base. Do not summarize the diff for it — a summary is the author's reading of the change, which is the reading under review.
 

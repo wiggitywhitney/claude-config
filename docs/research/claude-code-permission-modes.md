@@ -1,7 +1,7 @@
 # Research: Claude Code Permission Modes, Sandbox, and Auto Mode
 
 **Project:** claude-config
-**Last Updated:** 2026-08-04
+**Last Updated:** 2026-08-24
 **Claude Code version checked against:** 2.1.222 (`claude --version`, run 2026-08-04)
 **Produced by:** PRD #109, Milestone A3 half one (the relief pass)
 
@@ -10,6 +10,7 @@
 | Date | Summary |
 |------|---------|
 | 2026-08-04 | Initial research. Documentation pass on permission modes, the sandboxed Bash tool, and auto mode, verified against Whitney's live settings files and the Milestone A3 instrument log. |
+| 2026-08-24 | Added the auto-mode live-dependency observation (classifier rate-limiting blocks `Bash` entirely) at the end of the document. |
 
 ---
 
@@ -196,7 +197,7 @@ One caveat about stating boundaries in conversation rather than in rules (🟢 d
 Rationale, in order of weight:
 
 1. It is the platform's own answer to the exact question Milestone A3 exists to ask, and the docs name it as such.
-2. It targets the classes that dominate the measured baseline. Heredocs were the largest single class at 7 of 21 in the full window recorded above — the earlier partial window of 16 prompts put it at 6, and quoting that figure here contradicted this document's own evidence table. And every one of them is a command-shape failure that the classifier path bypasses entirely.
+2. It targets the classes that dominate the measured baseline. Heredocs were the largest single class at 7 of 21 in the full window recorded above — the earlier partial window of 16 prompts put it at 6, and quoting that figure here contradicted this document's own evidence table. And the command-shape classes are failures that the classifier path bypasses entirely — not a claim that all 21 recorded prompt events are addressed.
 3. Every prerequisite is verified present: model qualifies, org has not disabled it, no managed setting overrides it.
 4. It is genuinely reversible — `Shift+Tab` leaves it for the session, deleting one key reverts it permanently, and dropped allow rules are restored on exit.
 5. It is cheaper to try than the sandbox, which needs `excludedCommands` work for `gh` and `docker` on macOS before it would be usable.

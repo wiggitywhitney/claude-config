@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# ABOUTME: Tests for setup.sh's template resolution, symlink provisioning, and settings merge behavior.
+# ABOUTME: Validates JSON output, hook path existence, permission/hook merging, and skill/command symlink correctness.
 """Tests for setup.sh — template resolution, merge, and settings generation.
 
 Validates:
@@ -961,13 +963,17 @@ def test_symlinks_creates_every_skill_in_the_repo(t):
             name for name in os.listdir(skills_src)
             if os.path.isfile(os.path.join(skills_src, name, "SKILL.md"))
         )
-        missing = [
-            name for name in expected_names
-            if not os.path.islink(os.path.join(claude_dir, "skills", name))
-        ]
+        wrong = []
+        for name in expected_names:
+            link = os.path.join(claude_dir, "skills", name)
+            expected_target = os.path.realpath(os.path.join(skills_src, name))
+            if not os.path.islink(link):
+                wrong.append((name, "missing"))
+            elif os.path.realpath(link) != expected_target:
+                wrong.append((name, f"points to {os.path.realpath(link)}"))
         t.assert_equal(
-            f"all {len(expected_names)} repo skills symlinked (missing: {missing})",
-            missing, [],
+            f"all {len(expected_names)} repo skills symlinked to their own source (wrong: {wrong})",
+            wrong, [],
         )
 
 
@@ -990,13 +996,17 @@ def test_symlinks_creates_command_symlinks(t):
 
         commands_src = os.path.join(REPO_DIR, ".claude", "commands")
         expected = sorted(n for n in os.listdir(commands_src) if n.endswith(".md"))
-        missing = [
-            n for n in expected
-            if not os.path.islink(os.path.join(claude_dir, "commands", n))
-        ]
+        wrong = []
+        for n in expected:
+            link = os.path.join(claude_dir, "commands", n)
+            expected_target = os.path.realpath(os.path.join(commands_src, n))
+            if not os.path.islink(link):
+                wrong.append((n, "missing"))
+            elif os.path.realpath(link) != expected_target:
+                wrong.append((n, f"points to {os.path.realpath(link)}"))
         t.assert_equal(
-            f"all {len(expected)} repo commands symlinked (missing: {missing})",
-            missing, [],
+            f"all {len(expected)} repo commands symlinked to their own source (wrong: {wrong})",
+            wrong, [],
         )
 
 

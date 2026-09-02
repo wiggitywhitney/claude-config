@@ -118,12 +118,6 @@ Three worktrees are checked out and **left in place deliberately** for the scori
 
 **A new slash command is available immediately; a new sub-agent definition was not.** `/diff-review` was dispatchable as soon as the file was written. Dispatching `diff-reviewer` in the same session failed with `Agent type 'diff-reviewer' not found`, listing only the built-in agents. It became available later in the same session without a restart. So the two artefact types do not refresh on the same schedule, and a plan that assumes a new agent is immediately dispatchable can fail. This is one observation, not a measured interval.
 
-## Cost
+## Trial concluded
 
-**Not recorded, because no run has happened yet and no instrument exists.** `/cost-tracker` was removed on 2026-08-20 as unused (Decision 62). The scoring run is the first opportunity to record a figure, and doing so means finding a measurement method first.
-
-## What remains before this trial can be judged
-
-- The reviewer has not been run against any of the three benchmark diffs, so the catch count is unknown. A zero is a legitimate outcome and is to be recorded as one.
-- Cost per run is unmeasured.
-- Whitney has not yet used the gate on a real push, so whether the interruption is tolerable is unanswered.
+The trial is over. See "The score: 2 of 3" and "The scoring run, and what it cost to obtain" above for the recorded results, and Decision 71 in [PRD #109](../../prds/109-claude-config-audit-redesign.md) for the verdict: the push gate is removed and the reviewer is kept as a manual command.

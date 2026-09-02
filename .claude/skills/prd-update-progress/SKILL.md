@@ -21,7 +21,7 @@ You are helping update an existing Product Requirements Document (PRD) based on 
 7. **Flag Divergences** - Alert when actual work differs from planned work
 8. **Commit Progress Updates** - Preserve progress checkpoint
 9. **CodeRabbit CLI Review** - Local review to catch issues at milestone boundaries
-10. **Push the Branch** - Send the work to the remote once the review is clean
+10. **Push the Branch** - Send the work to the remote once findings are triaged
 11. **Continue to Next Task** - Prompt user to run /prd-next
 
 ## Step 1: Smart PRD Identification
@@ -350,7 +350,7 @@ git push
 
 If the branch has no upstream yet, use `git push -u origin HEAD` to set one.
 
-**Expect this to take minutes, not seconds.** The pre-push hook runs security verification and an advisory CodeRabbit review. A two-minute timeout will kill the command mid-hook. Run it in the background, then confirm it finished by checking that nothing is left ahead:
+**Expect this to take minutes, not seconds.** The pre-push hook runs security verification only — the advisory CodeRabbit review was removed from it on 2026-08-27; the review this skill just ran at Step 8.5 is what covers that ground now. A two-minute timeout will kill the command mid-hook. Run it in the background, then confirm it finished by checking that nothing is left ahead:
 
 ```bash
 git rev-list --left-right --count '@{upstream}...HEAD'
