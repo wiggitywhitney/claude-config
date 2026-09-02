@@ -41,7 +41,7 @@ Read from his committed configuration first, per the milestone's own instruction
 **Why approval is rarely needed is structural, not command-shaped:**
 - `defaultMode: bypassPermissions` removes prompting entirely for allowed tools — the opposite of narrowing what's allowed.
 - Destructive operations are excluded by a fixed deny list rather than by scoping the allow list down.
-- Hooks catch policy violations *after* the tool runs rather than gating *before* via a prompt — the explicit design split is "prompts answer may-this-run, hooks answer did-it-pass."
+- Hooks are a second, separate gate from the permission prompt — a `PreToolUse` hook still runs *before* the tool executes and can block it outright (exit 2), but it checks a different thing than the prompt does. The explicit design split, in his own words: "prompts answer may-this-run, hooks answer did-it-pass" — the hook is policy enforcement layered on top of an already-permitted tool call, not a second chance to ask.
 - Permission posture is **per-user, not global** (`netcup-machine.md`): "Michael's settings.json ships `defaultMode: bypassPermissions`... This stays a deliberate per-user choice" — a new collaborator on his shared VPS must configure their own; it does not propagate.
 - Mutating fleet operations (`scripts/fleet.sh sync|run`) require an explicit `--yes` flag rather than an interactive prompt, specifically so "an unattended fan-out cannot hang on a non-TTY."
 
