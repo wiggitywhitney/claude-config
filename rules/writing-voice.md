@@ -39,6 +39,12 @@ Example — what she actually sent for the kagent Enlightning promo:
 >
 > #Kagent #Kubernetes #AIAgents #CNCF #CloudNative
 
+**No "not just X anymore. [Short punchy Y.]" contrast-callback construction.**
+This dramatic escalation pattern ("errors don't just mislead a person anymore. They teach a machine.") reads as an AI tell — Whitney flagged it directly: "'don't just mislead a person anymore. They teach a machine.' is AI-ism." State the claim plainly in one direct sentence instead of building a contrast and then dropping a short dramatic fragment-like payoff sentence after it.
+- Do: "Now that data trains models and feeds AI agents, an untraced error can get baked into the model itself."
+- Don't: "Untraced errors don't just mislead a person anymore. They teach a machine."
+(Confirmed: cut from the OpenLineage/Julien Le Dem episode post draft, 2026-09-03.)
+
 **No em dashes in AI-drafted content.**
 Whitney considers them an AI tell in generated text. She uses them herself for punch ("due May 5th—soon!") but that's her choice to make, not mine.
 
