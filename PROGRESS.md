@@ -6,6 +6,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-09-04) Documented a blind spot in this repo's own safety checks: the hook that enforces file headers only watches the two file-editing tools, so a script created through the shell slips past it silently. The check was never wrong, it just never ran, and a green result looked identical either way.
+
 - (2026-09-04) Added a skill that builds Anki flashcards from a finished piece of work rather than from the current conversation. It reads the whole planning document, its decision log, and the full code diff, because a long project runs across many sessions and the conversation only ever holds a fraction of what was decided. It also checks which cards already exist before it starts, so it stops re-making cards for concepts that were captured months ago.
 
 - (2026-09-04) Added two scripts for auditing the project-management skills this repo shares with other repos. One measures how far the local copies have drifted from the upstream versions they were originally copied from. The other checks whether the copies installed in other repos actually take effect, and settled a question that had only ever been spot-checked: all 128 of them are dormant, because a personally installed copy always wins over a per-repo one. It also turned up seven repos using these skills that no existing list accounted for.

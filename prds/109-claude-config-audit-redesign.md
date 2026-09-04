@@ -822,6 +822,8 @@ Either way, #98 does not survive this milestone as an open issue pointing at del
 
 **Before reading those inputs, correct the three stale claims Decision 84 records.** `prd-workflow-principles.md` still describes YOLO mode as driven by an automatic `/clear` loop, `claude-code-skill-installation-scope.md` still says the `SessionStart` hook takes effect, and Decision 32's row in the log below repeats the same claim — all three contradict Decision 58, which retired that mechanism on 2026-08-18. Two of them are inputs to this milestone, so reading them uncorrected means designing against a primitive that does not exist.
 
+**A fourth input carries the same kind of staleness.** The same review pass flagged `claude-config-repo-audit.md` around lines 687–689, where the table and the claims around it still describe `coderabbit-review.sh` as existing in both locations. The `hooks/git/lib/` copy was deleted on 2026-08-27 with the pre-push review that called it. Three bullets below depend on that document's pair counts, and one of them has already been wrong once by counting a deleted file — so verify the count against the tree rather than against the table.
+
 **What:** Decide, with Whitney, what the redesigned system is. Produce recorded answers, not a document — Milestone C2 writes the document.
 
 **Why:** Design was previously spread across three milestones at three different points in the plan, so each decision was made with only part of the evidence. Consolidating it means every choice is made once, with everything available, and with Whitney in the room.
@@ -964,6 +966,8 @@ A spec that summarizes findings instead of recording decisions has failed this m
 **What:** Verify that the spec and this PRD together capture everything decided during the scoping and audit conversations, using the raw session transcript as ground truth.
 
 **Why:** The scoping conversation for this PRD was long and decision-dense, and the audit conversations will be longer. Compaction summarizes lossily, and decisions made in conversation have a real chance of never reaching a document. The session transcripts persist on disk regardless of compaction, so this check is possible — but only if someone deliberately runs it.
+
+**A seed list of ten candidate findings already exists, produced on 2026-09-04 by an external reviewer rather than by this milestone.** A CodeRabbit pass over the branch flagged ten places in this PRD where a decision row or milestone block contradicts itself or carries a status the log has since overtaken — Decision 35's "not decided" on a spike that ran, Decision 77's claim that a review was not acted on, the Decision 45 note making Milestone B2 depend on Milestone B1 findings that do not exist yet, the Milestone A3 and A4 execution blocks still written as pending, the scoring-run summary predating Decision 71, the pair-discovery benchmark's disputed count, and the contradictory dependency status for issue #108. **Verify each rather than accepting it** — they are an external tool's reading, not established findings, and Decision 84 is the one from that same pass that was confirmed and acted on. Treat the list as a head start on where to look, and specifically as evidence about *what kind* of drift this PRD accumulates: every one of them is a status that went stale because the log moved and the prose did not.
 
 **To implement:**
 - Apply Milestone A3's redaction policy. These are the same transcripts, with the same secrets in them. Raw extracts stay outside the repository; only findings reach a tracked file.

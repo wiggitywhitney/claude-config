@@ -53,6 +53,7 @@ Install with `bash scripts/install-git-hooks.sh [repo-path]`. The installer is i
 - **check-coderabbit-required.sh** (PreToolUse: Bash) — blocks PR merge without CodeRabbit review; opt out with `.skip-coderabbit`
 - **pre-pr-hook.sh** (PreToolUse: Bash) — gates PR creation on security+tests verification (expanded security, tests; build/typecheck/lint already passed at commit); also runs advisory acceptance gate tests when `.claude/verify.json` has an `"acceptance_test"` command; results require human approval before PR creation continues
 - **check-aboutme.sh** (PreToolUse: Write|Edit) — blocks code files missing ABOUTME headers; fix-and-retry adds headers organically; skips config, markdown, generated files
+  - **It is bound to Write and Edit, so a file created through Bash never reaches it.** Writing a script with `cat > script.sh <<'EOF'`, `printf`, or a `python3` heredoc creates it with no ABOUTME check and no warning — the enforcement simply does not run. This is not a defect in the hook; it is the boundary of what a `PreToolUse` matcher can see, and the same boundary applies to every Write/Edit-matched hook, including the code-block and write-prompt reminders. Two scripts were created this way on 2026-09-04 and happened to carry headers because they were written by hand. **When creating a code file through Bash, check the header yourself** — `grep -c '^# ABOUTME:'` — rather than assuming a green run means the hook approved it.
 
 ## PostToolUse hooks (fire after tool execution)
 
