@@ -86,6 +86,12 @@ If context doesn't help them answer the question, remove it.
 **No colon-list sentence structure** ("I am looking for X: a, b, c").
 Reads as generic AI output. Replace with direct statements.
 
+**No sentence fragments in a draft — even for punchy emphasis.** Every sentence in a draft needs a subject and a verb. This applies only to what gets drafted, never to Whitney's own writing or edits — she can write fragments if she wants to; a draft can't introduce one on its own.
+- Do: "Every site had different rules, different logins, and no way to share identity between applications."
+- Don't: "Different rules, different logins, no way to share identity between applications."
+(Confirmed: rejected from the sent version of the Keycloak Thunder episode post draft, 2026-08-05 — Whitney liked the idea but said "I don't use incomplete sentences like that.")
+(Confirmed: scope clarified 2026-09-09 — Whitney kept a fragment ("Speedy!") in her own edit of a short's post text and said "I'm allowed to write fragments. You are not.")
+
 **Never use "actually" as emphasis or hedge** ("what it actually looks like", "what actually changed").
 Filler word that weakens the sentence. Cut it entirely.
 
