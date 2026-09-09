@@ -1,6 +1,6 @@
 # Skill families diffed: a three-way comparison
 
-Written 2026-09-03. This document is the evidence product of Milestone B4 of PRD #109. It compares this repo's PRD-lifecycle and issue-lifecycle skills against the upstream repo they were forked from, deep-reads the upstream skills that have no counterpart here, and records the migration's starting conditions.
+Written 2026-09-03; amended 2026-09-04, with every amendment dated in place. This document is the evidence product of Milestone B4 of PRD #109. It compares this repo's PRD-lifecycle and issue-lifecycle skills against the upstream repo they were forked from, deep-reads the upstream skills that have no counterpart here, and records the migration's starting conditions.
 
 **It decides nothing.** Milestone C1 decides. Where this document says one variant is stronger than another, that is an assessment offered to C1, not a verdict. Where it labels an upstream skill adopt-now or adopt-with-swarm, that is a timeline label, not a recommendation to adopt.
 
@@ -402,7 +402,7 @@ After a compaction, invoked skill bodies are re-injected but capped at 5,000 tok
 Three findings:
 
 1. **`prd-done` exceeded the per-skill cap in both variants** — 5,761 and 5,582 against a cap of 5,000.
-2. **What it lost was not filler.** Truncating at 5,000 tokens cut mid-way through `#### 4.1. Check Review Status` and discarded `### 5. Issue Closure`, `### 6. Branch Cleanup`, and the entire `## Success Criteria` section — 45 lines in the interactive variant, 31 in YOLO. After a compaction, an agent finishing a PRD had a truncated CodeRabbit verification procedure, no issue-closure instructions, no branch-cleanup instructions, and no success criteria at all.
+2. **What it lost was not filler.** Truncating at 5,000 tokens is estimated to cut mid-way through `#### 4.1. Check Review Status` and discarded `### 5. Issue Closure`, `### 6. Branch Cleanup`, and the entire `## Success Criteria` section — 45 lines in the interactive variant, 31 in YOLO. After a compaction, an agent finishing a PRD had a truncated CodeRabbit verification procedure, no issue-closure instructions, no branch-cleanup instructions, and no success criteria at all.
 3. **`prd-update-progress` is at 90 percent of the cap**, so it is roughly one added section from the same failure. And both families together total 30,860 tokens against the 25,000 aggregate cap, which matters for any consolidation that would see both loaded in one session.
 
 This is direct evidence for placing the generalized escalation contract at the top of every consolidated file, and it strengthens that argument beyond what the milestone anticipated: instruction order in these files is already a correctness property.

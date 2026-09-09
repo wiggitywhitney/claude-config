@@ -39,7 +39,7 @@ Carry the overlap list into Step 4 as an exclusion list.
 ### Step 3: Read the whole source, not the recent part
 
 - **The PRD document end to end**: every milestone, the full decision log, the architecture choices, and the requirements. Not only the most recent milestone.
-- **The code**: `git diff main...HEAD` to identify the files created or modified, then read the substantive ones.
+- **The code**: diff the branch resolved in Step 1, not whatever happens to be checked out — `git diff main...<branch>`. If that branch is not the current checkout, say so before continuing; silently diffing `HEAD` produces cards about unrelated work and nothing in the output would reveal it.
 - **The research documents** the PRD references, where a decision's reasoning lives there rather than in the log row.
 
 The decision log is usually the richest source, because it records what was rejected and why — which is the part that is not recoverable from reading the finished code.

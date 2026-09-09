@@ -93,6 +93,22 @@ link_project() {
     echo "$output" | grep -q "DANGLING"
 }
 
+@test "a dangling symlink with no personal counterpart is not reported LIVE" {
+    # Nothing resolves, so nothing runs. Counting it as live would report a
+    # non-existent skill as taking effect, and fire the warning for it.
+    make_source prd-done SKILL.v1-yolo.md
+    link_project demo-repo prd-done SKILL.v1-yolo.md
+    rm -rf "$SOURCE/prd-done"
+    # No install_personal, so the shadow check alone would call this LIVE.
+
+    run bash "$SCRIPT"
+    [ "$status" -eq 0 ]
+    echo "$output" | grep -q "DANGLING"
+    ! echo "$output" | grep -q "LIVE"
+    echo "$output" | grep -q "live=0"
+    ! echo "$output" | grep -q "WARNING"
+}
+
 @test "skips claude-config itself, which is the source rather than a consumer" {
     make_source prd-done SKILL.v1-yolo.md
     install_personal prd-done

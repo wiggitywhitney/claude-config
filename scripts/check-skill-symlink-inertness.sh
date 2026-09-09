@@ -12,7 +12,7 @@ PERSONAL="${PERSONAL:-$HOME/.claude/skills}"
 SKILLS=(prd-create prd-start prd-next prd-update-progress prd-update-decisions prd-done prd-close prds-get
         issue-create issue-start issue-next issue-update-progress issue-update-decisions issue-done)
 
-inert=0; live=0; absent=0
+inert=0; live=0; broken=0; absent=0
 
 for repo_path in "$WORKSPACE"/*/; do
   repo="$(basename "$repo_path")"
@@ -30,7 +30,13 @@ for repo_path in "$WORKSPACE"/*/; do
     dangling=""
     { [ -L "$proj" ] && [ ! -e "$proj" ]; } && dangling=" DANGLING"
 
-    if [ -e "$PERSONAL/$s/SKILL.md" ]; then
+    # Order matters: a dangling link resolves to nothing, so it cannot be live
+    # whether or not a personal skill shadows it. Deciding on the shadow first
+    # would report a skill that does not exist as taking effect.
+    if [ -n "$dangling" ]; then
+      verdict="BROKEN (symlink resolves to nothing)"
+      broken=$((broken + 1))
+    elif [ -e "$PERSONAL/$s/SKILL.md" ]; then
       verdict="INERT (shadowed by personal $s)"
       inert=$((inert + 1))
     else
@@ -43,5 +49,6 @@ for repo_path in "$WORKSPACE"/*/; do
 done
 
 echo
-echo "inert=$inert live=$live repos-with-skills-but-no-lifecycle=$absent"
+echo "inert=$inert live=$live broken=$broken repos-with-skills-but-no-lifecycle=$absent"
 [ "$live" -eq 0 ] || echo "WARNING: at least one project skill is NOT shadowed and would take effect."
+[ "$broken" -eq 0 ] || echo "NOTE: $broken project symlink(s) resolve to nothing; they run neither the project nor a shadowed copy."
