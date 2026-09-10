@@ -114,6 +114,10 @@ Reads as generic AI output. Replace with direct statements.
 **Never use "actually" as emphasis or hedge** ("what it actually looks like", "what actually changed").
 Filler word that weakens the sentence. Cut it entirely.
 
+**Never use "landed" to describe how a talk or piece of content was received** (e.g., "since it landed well").
+Not a word Whitney uses. Say what actually happened instead — "was very well received," "went over well," etc.
+(Confirmed: rejected from an advocacy check-in bullet about a KubeCon CFP decision, 2026-09-10.)
+
 **Watch "worth" — it can read as an AI tell** ("That's context worth adding.").
 Flagged as worrisome in the agent-traces talk draft, 2026-08-19. Not an outright ban like "actually" — but when it shows up, try rephrasing as a direct statement instead of a value-judgment noun.
 - Do: "Your platform team should add that context."
