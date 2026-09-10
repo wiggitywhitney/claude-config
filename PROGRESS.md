@@ -6,6 +6,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-09-10) Recorded two shell traps that produce convincing wrong answers rather than errors. One is a git command that lists files which *differ* between two branches, easily misread as listing files unique to one — misreading it raised a false alarm about lost work and nearly overwrote good copies with older drafts. The other is a zsh feature that silently eats part of a path built as `$var:some/path`, returning empty output that looks like a genuine "not found."
+
 - (2026-09-04) Documented a blind spot in this repo's own safety checks: the hook that enforces file headers only watches the two file-editing tools, so a script created through the shell slips past it silently. The check was never wrong, it just never ran, and a green result looked identical either way.
 
 - (2026-09-04) Added a skill that builds Anki flashcards from a finished piece of work rather than from the current conversation. It reads the whole planning document, its decision log, and the full code diff, because a long project runs across many sessions and the conversation only ever holds a fraction of what was decided. It also checks which cards already exist before it starts, so it stops re-making cards for concepts that were captured months ago.
