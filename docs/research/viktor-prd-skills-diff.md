@@ -46,7 +46,11 @@ Measured by `scripts/skill-fork-diff.sh`, committed alongside this document so t
 | `prds-get` | 42 | 42 | 33 | 0 | 51 |
 | **Total** | | | | **20** | **419** |
 
-Both of Decision 76's headline figures reproduce exactly. Two facts recorded with no disposition attached:
+Both of Decision 76's headline figures reproduce exactly **as measured on 2026-09-03, which is the state this table records.**
+
+**Re-running the script today returns 395, not 419, and that is expected rather than a discrepancy.** Fixing `prd-done`'s compaction-cap defect on 2026-09-04 (Decisions 82 and 82a) removed duplication and the Anki step, which cut its divergence from the ancestor from 87 lines to 63 and its body from 400 to 362. Every other row is unchanged. **Do not "correct" this table to 395** — it is the measurement the who-moved finding rests on, taken before the repo was edited in response to it. Re-derive the current figure from the script when a current figure is what you need, and treat any single number in this document as dated rather than live.
+
+Two facts recorded with no disposition attached:
 
 - **Six of his eight are content-identical in body to the ancestor.** He moved lines in `prd-start` and `prd-update-decisions` only.
 - **`prd-close` is identical across all three.** Neither party has touched it since the fork.
