@@ -67,6 +67,18 @@ Three gotchas surfaced building this LaunchAgent, all specific to running `vals 
 
 Debug with `launchctl list com.whitney.otelcol-contrib` (shows `PID`, `LastExitStatus`) and the log at `/tmp/otelcol-contrib.log`. Reload after editing the plist: `launchctl unload ~/Library/LaunchAgents/com.whitney.otelcol-contrib.plist && launchctl load ~/Library/LaunchAgents/com.whitney.otelcol-contrib.plist`.
 
+## The shared eval-traces.json file is never truncated — filter before scoring
+
+`otelcol-contrib` writes `evaluation/is/eval-traces.json` in append mode, and the persistent LaunchAgent (running continuously since 2026-07-08) never restarts it between sessions or targets. The file accumulates every span from every IS scoring run and every target indefinitely. By commit-story-v2 run-27 (2026-09-09) it held 4,759 spans spanning 2026-08-03 through the run date, mixing `commit-story` and an unrelated target (`cluster-whisperer`).
+
+Scoring the raw file directly can silently score a mix of targets. Run-27 got a false 70/100 — a `cluster-whisperer.vectorstore.initialize` root span and SPA-003/SPA-004/SPA-005 failures that belonged to the other target, not the one under test.
+
+**Before running `score-is.js`, filter the file**: keep only spans where `resource.attributes` has `service.name` matching the target's actual OTel service name, and `startTimeUnixNano` falls within a few seconds of this run's own app invocation (use the app's own log timestamps to bound the window). Write the filtered subset to `evaluation/<target>/run-<N>/eval-traces-run<N>.json` and score that file, not the shared one. Keep the filtered subset as run evidence for reproducibility.
+
+**Sanitize before committing the filtered subset** — it carries local-machine identity in resource attributes: `process.owner`, `host.id`, `process.command_args`, `process.executable.path`, `process.command`. Redact these (e.g. replace with `"REDACTED"`) before committing; none of them affect the IS score, so redaction is safe. Re-run the scorer against the sanitized file to confirm the score is unaffected before trusting the redaction didn't corrupt anything.
+
+Run-25 and run-26 (scored 2026-07-01 and 2026-07-20, both before the 2026-08-03 contamination start) are unaffected by this — their 100/100 baselines stand.
+
 ## Full sequence for a scoring run
 
 Check if otelcol-contrib is already running (the LaunchAgent above should mean this is almost always true):
