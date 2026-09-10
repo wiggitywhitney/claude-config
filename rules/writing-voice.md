@@ -57,8 +57,11 @@ Overused pattern that reads as filler.
 **No generic three-part lists.**
 Forces ideas into a template instead of letting them breathe.
 
-**No sentence fragments — even for punchy hooks.** Every sentence needs a subject and a verb. A fragment like "Different rules, different logins, no way to share identity between applications." is not acceptable, even when the underlying idea is good. Keep the concept, give it a real sentence: "Every site had different rules, different logins, and no way to share identity between applications."
+**No sentence fragments in a draft — even for punchy emphasis.** Every sentence in a draft needs a subject and a verb. This applies only to what gets drafted, never to Whitney's own writing or edits — she can write fragments if she wants to; a draft can't introduce one on its own.
+- Do: "Every site had different rules, different logins, and no way to share identity between applications."
+- Don't: "Different rules, different logins, no way to share identity between applications."
 (Confirmed: rejected from the sent version of the Keycloak Thunder episode post draft, 2026-08-05 — Whitney liked the idea but said "I don't use incomplete sentences like that.")
+(Confirmed: scope clarified 2026-09-09 — Whitney kept a fragment ("Speedy!") in her own edit of a short's post text and said "I'm allowed to write fragments. You are not.")
 
 **This rule holds in Slack too, including team-channel messages — casual tone is not an exception.** A greeting-plus-fragment opener like "Hey team, quick EPCAT question." is still a fragment ("quick EPCAT question" has no verb) and still gets rejected. Casual register changes word choice and directness, not sentence completeness. Also drop invented greetings like "Hey team" — they're not something Whitney says; open with a real sentence instead.
 (Confirmed: rejected draft for an EPCAT tracking question to the team Slack channel, 2026-08-21 — Whitney: "I don't say 'hey team,' and I talk in complete sentences... Why are you ignoring the complete sentences?")
