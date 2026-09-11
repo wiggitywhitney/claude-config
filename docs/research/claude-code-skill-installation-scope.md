@@ -13,6 +13,16 @@
 
 ---
 
+## The personal install follows the checked-out branch (2026-09-10)
+
+The precedence finding above says the personal install wins over every project-level symlink. It does not say what the personal install *is*, and that turns out to matter as much.
+
+**24 of 26 entries in `~/.claude/skills/` are symlinks into `claude-config/.claude/skills/` — a path in the working tree, not a fixed revision.** So checking out a different branch of this repository silently changes what every skill does, in every repo, for every session.
+
+Demonstrated the day this was found: `prd-done` measured 4,974 tokens on the feature branch and 5,761 on `main`. The compaction-cap defect that had just been fixed was therefore live again for the window `main` was checked out — an over-cap skill that silently loses its closing steps after a compaction, with nothing in any session indicating which version was loaded.
+
+Two things follow. A skill fix parked on an unmerged branch is only conditionally in effect, which is an argument for merging such fixes promptly. And any migration design has to decide whether working-tree symlinks stay: a copy-on-install, or a symlink into a stable worktree, decouples installed behavior from branch state at the cost of an explicit sync step.
+
 ## Summary
 
 Skills can be installed globally. `~/.claude/skills/<name>/SKILL.md` is a documented, first-class location scoped to "All your projects," so Viktor's "skills are always per-project, never global" is a **preference, not a platform constraint**. His stated reason — portability to another laptop — is a real benefit of per-project installation, and it is the only argument the platform leaves standing.

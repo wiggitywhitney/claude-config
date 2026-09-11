@@ -6,6 +6,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-09-10) Discovered that almost every globally-installed skill is a symlink into this repo's checked-out working tree rather than a fixed version, so switching git branches silently changes how those skills behave everywhere. A fix sitting on an unmerged branch is only in effect while that branch happens to be checked out, which was demonstrated the same day when a just-repaired skill quietly reverted to its broken version.
+
 - (2026-09-10) Recorded two shell traps that produce convincing wrong answers rather than errors. One is a git command that lists files which *differ* between two branches, easily misread as listing files unique to one — misreading it raised a false alarm about lost work and nearly overwrote good copies with older drafts. The other is a zsh feature that silently eats part of a path built as `$var:some/path`, returning empty output that looks like a genuine "not found."
 
 - (2026-09-04) Documented a blind spot in this repo's own safety checks: the hook that enforces file headers only watches the two file-editing tools, so a script created through the shell slips past it silently. The check was never wrong, it just never ran, and a green result looked identical either way.
