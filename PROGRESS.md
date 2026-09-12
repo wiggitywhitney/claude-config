@@ -333,6 +333,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Fixed
 
+- (2026-09-11) Documented that the code-review service announces "review paused" and rate-limit states inside an HTML comment, which neither the web interface nor a tag-stripping search will show. A real pause therefore reads as a clean review. Also separated the two states: one means the service refused the work, the other means it deliberately throttled because too many commits arrived at once, which is self-inflicted and fixed by batching rather than retrying.
+
 - (2026-09-11) Corrected the documented test for whether an automated code review actually covered the latest commit. The old version accepted evidence from either of two places, but one of them silently follows the newest commit: the review service pins its verdict to the commit it read, while the individual line comments get re-pointed at whatever is newest whenever the surrounding code has not moved. So a review of older code could look like a review of current code. Only the verdict is trustworthy, and the rule now says so with the observation that proved it.
 
 - (2026-09-09) Corrected a stale claim that three days of journal entries survived only on one unmerged branch. They had already been copied to the main line, and the copies there are the fuller ones. The check that raised the alarm used a command that lists files which *differ* between two branches, not files unique to one, so acting on it would have replaced the good copies with older drafts.
