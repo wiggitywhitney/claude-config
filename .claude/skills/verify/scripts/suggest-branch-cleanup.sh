@@ -28,11 +28,26 @@ response = str(data.get('tool_response', ''))
 if 'merged pull request' not in response.lower():
     sys.exit(0)
 
-msg = (
-    'Post-merge cleanup: Delete the feature branch locally and from the remote. '
-    'Also confirm the linked GitHub issue was closed — either auto-closed via '
-    'a Closes #NNN line in the PR, or close it manually now.'
+# gh deletes the branch locally and on the remote when asked, so advising it
+# again would be telling the caller to redo what just happened. Accept both
+# spellings of the flag, and treat an explicit =false as not deleting.
+already_deleted = (
+    re.search(r'--delete-branch(?!=false)', command)
+    or re.search(r'(?:^|\s)-d(?=\s|$)', command)
 )
+
+if already_deleted:
+    msg = (
+        'Post-merge cleanup: gh already deleted the feature branch locally and '
+        'from the remote. Confirm the linked GitHub issue was closed — either '
+        'auto-closed via a Closes #NNN line in the PR, or close it manually now.'
+    )
+else:
+    msg = (
+        'Post-merge cleanup: Delete the feature branch locally and from the remote. '
+        'Also confirm the linked GitHub issue was closed — either auto-closed via '
+        'a Closes #NNN line in the PR, or close it manually now.'
+    )
 print(json.dumps({
     'hookSpecificOutput': {
         'hookEventName': 'PostToolUse',

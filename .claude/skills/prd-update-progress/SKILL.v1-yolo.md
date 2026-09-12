@@ -16,9 +16,10 @@ You are helping update an existing Product Requirements Document (PRD) based on 
 2. **Context-First Progress Analysis** - Use conversation context first, Git analysis as fallback
 3. **Map Changes to PRD Items** - Intelligently connect work to requirements
 4. **Apply Updates** - Update checkboxes with evidence, flag divergences
-5. **Commit Progress Updates** - Preserve progress checkpoint (no push)
+5. **Commit Progress Updates** - Preserve progress checkpoint
 6. **CodeRabbit CLI Review** - Local review to catch issues at milestone boundaries
-7. **Next Steps** - Present summary and signal what comes next (`/clear` → `/prd-next`, or `/prd-done` if complete)
+7. **Push the Branch** - Send the work to the remote once findings are triaged
+8. **Next Steps** - Present summary and signal what comes next (`/clear` → `/prd-next`, or `/prd-done` if complete)
 
 ## Step 1: Smart PRD Identification
 
@@ -304,11 +305,13 @@ Progress: X% complete - [next major milestone]"
 - **Progress indication**: Include completion status and next steps
 - **Evidence-based**: Only commit when there's actual implementation progress
 
-**Do NOT push after committing.** Pushing happens later — either manually or at `/prd-done` time. The CodeRabbit CLI review (next step) provides the same feedback loop without push latency.
+**Do not push here.** Push in Step 8.6, after the CodeRabbit review below has run and its findings have been triaged.
 
 ## Step 8.5: CodeRabbit CLI Review
 
-After committing, run a local CodeRabbit CLI review to catch issues before they accumulate across milestones. This replaces the push-time review with a milestone-time review — same coverage, better timing.
+After committing, run a local CodeRabbit CLI review to catch issues before they accumulate across milestones.
+
+**This is now the only review between writing code and opening a PR — do not skip it.** The pre-push hook ran a second copy until 2026-08-27; it was removed because it reviewed the entire branch on every push, and once that exceeded its 7-minute timeout it reported nothing at all while still costing the wait. Nothing downstream re-runs this check before a PR exists, so skipping the step here means the work reaches a PR unreviewed.
 
 ### Run the review
 
@@ -316,8 +319,12 @@ After committing, run a local CodeRabbit CLI review to catch issues before they 
 # Run CodeRabbit CLI review against the full feature branch diff
 # NOTE: Start with `coderabbit` so it matches Bash(coderabbit *) allowlist.
 # Do NOT use BASE_BRANCH=$(...) — subshell parens break Bash(...) permission patterns.
-coderabbit review --plain --type committed --base origin/main
+# Flags: --committed, NOT --type committed. There is no --plain (it is the default output
+# mode as of CLI v0.7.0, and passing it errors before the review starts).
+coderabbit review --committed --base origin/main 2>&1
 ```
+
+Run it in the background — reviews take 1-7+ minutes. **Follow the CodeRabbit CLI procedure in `~/.claude/rules/git-workflow.md`** for background execution, why a "completed" notification does not mean the review finished, rate-limit retries, and hang diagnosis. That rule is always loaded, so it is already in context; do not restate it here.
 
 If `coderabbit` is not installed, skip this step with a note: "CodeRabbit CLI not installed — skipping local review."
 
@@ -325,6 +332,32 @@ If `coderabbit` is not installed, skip this step with a note: "CodeRabbit CLI no
 
 - **If findings exist**: Apply the CodeRabbit triage rubric (see CLAUDE.md) — fix or skip each finding with rationale. Commit fixes, then re-run the review to confirm clean.
 - **If no findings**: Proceed to next steps.
+
+## Step 8.6: Push the branch
+
+Push once every finding from the review above has been **triaged** — fixed, deferred to a tracked issue, or skipped with a stated reason. Triaged is the bar, not zero findings: the rubric permits skipping, so waiting for a clean report would mean never pushing at all.
+
+```bash
+git push
+```
+
+If the branch has no upstream yet, use `git push -u origin HEAD` to set one.
+
+**Expect this to take minutes, not seconds.** The pre-push hook runs security verification only — the advisory CodeRabbit review was removed from it on 2026-08-27; the review this skill just ran at Step 8.5 is what covers that ground now. A two-minute timeout will kill the command mid-hook. Run it in the background, then confirm it finished by checking that nothing is left ahead:
+
+```bash
+git rev-list --left-right --count '@{upstream}...HEAD'
+```
+
+`0	0` means the push landed. Check this before retrying a command that appeared to time out — the push often completes after the wrapper gives up, and a blind retry reports a failure that did not happen.
+
+**If the push is refused, report what refused it and stop.** A pre-push check or a `PreToolUse` gate can deny the push — a missing `PROGRESS.md` change, a failed security check, or a required review verdict. Each refusal names what it wants. Do that thing and push again. Do not retry unchanged, and do not route around the check.
+
+**Never pass `--no-verify`.** It skips the security scan and the review, which are the only things standing between a secret or an unreviewed change and the remote. A push that needs `--no-verify` to succeed is a push that is not ready.
+
+**State the result in the summary:** the number of commits pushed and the branch they went to, or that the branch was already current.
+
+**Why this step exists.** A commit that never leaves the machine is not a checkpoint, it is a single point of failure. This repository reached 44 unpushed commits across 19 days — including 22 journal files, which `CLAUDE.md` singles out as unrecoverable — because the step that said "commits preserve local progress" implied the work was safe and nothing ever displayed the growing gap.
 
 ## Step 8.7: Decision Awareness Check
 

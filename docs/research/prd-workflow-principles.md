@@ -12,15 +12,12 @@ Sources read:
 - `.claude/skills/prd-close/SKILL.md` + `SKILL.v1-yolo.md`
 - `.claude/skills/make-autonomous/SKILL.md`
 - `.claude/skills/make-careful/SKILL.md`
-- `.claude/skills/post-compact/SKILL.md`
-- `.claude/skills/continue/SKILL.md`
 - `.claude/CLAUDE.md` (project)
 - `rules/prd-dependency-management.md`
 - `rules/hooks-reference.md`
 - `hooks/git/checks/progress-md.sh`
 - `.claude/skills/verify/scripts/cascade-decision-check.sh`
-- `scripts/auto-reanchor.sh`
-- `scripts/prd-loop-continue.sh`
+- ~~`scripts/prd-loop-continue.sh`~~ — deleted 2026-08-18 (Decision 58); listed here only so a reader of the original inventory knows it was removed rather than overlooked
 - `config/settings.json`
 
 ---
@@ -101,12 +98,12 @@ Every PRD skill ships in **two parallel files**: `SKILL.md` (careful, human-gate
 - **Frontmatter `description:`** — Careful uses passive language ("Analyze existing PRD to identify and recommend…"). YOLO uses an *active trigger* ("INVOKE AUTOMATICALLY after `/prd-start` completes or after `/clear` on a PRD feature branch. Identifies and starts the next highest-priority PRD task without asking.") — so the harness can auto-invoke rather than waiting for the user to type the slash command.
 - **Confirmation gates** — Careful has user-facing "Do you want to work on this task?" prompts. YOLO replaces them with an **Autonomous Decision Protocol**: a named list of "proceed without pausing" vs. "stop and surface" triggers. Pauses are reserved for genuine ambiguity (PRD deviation, architectural implications, multiple valid interpretations, wrong assumptions, scope creep), not for routine workflow transitions.
 - **Hand-off style** — Careful skills end with "run `/prd-update-progress`." YOLO skills instead `Skill`-invoke the next step (e.g., `/prd-next` calls `/prd-update-progress` directly after implementation, and after the commit lands, it instructs the user to `/clear` and re-invoke).
-- **Loop primitive** — YOLO `/prd-next` introduces a `/clear` → auto-resume loop that the careful variant doesn't have. After each milestone's work commits, `/clear` resets context and a SessionStart hook (`prd-loop-continue.sh`) re-injects orientation so the fresh instance re-invokes `/prd-next`.
+- **Loop primitive — historical, ended 2026-08-18.** YOLO `/prd-next` was described as introducing a `/clear` → auto-resume loop that the careful variant lacks. **That loop never worked and no longer exists**: `/clear` does not re-invoke `/prd-next`, the user does. Described below as it was believed to work, because the belief shaped the skills. The believed mechanism was: after each milestone's work commits, `/clear` resets context, and a `SessionStart` hook (`prd-loop-continue.sh`) would re-inject orientation text instructing the fresh instance to re-invoke `/prd-next`. That hook is deleted and installs nothing (Decision 58, 2026-08-18); today, `/clear` only resets context, and the user runs `/prd-next` again manually.
 
 ### The mode-toggle skills
 
-- **`/make-autonomous`** installs YOLO mode for a project: creates symlinks from `.claude/skills/prd-*/SKILL.md` → `$CLAUDE_CONFIG/.claude/skills/prd-*/SKILL.v1-yolo.md`, installs the `SessionStart[matcher=clear]` → `prd-loop-continue.sh` hook in `.claude/settings.local.json`, and adds a frictionless permission allowlist (git, gh, ls, Skill invocations, WebFetch/WebSearch).
-- **`/make-careful`** reverses it: swaps symlinks to point at the careful `SKILL.md`, removes the SessionStart hook, removes the permission entries.
+- **`/make-autonomous`** installs YOLO mode for a project: creates symlinks from `.claude/skills/prd-*/SKILL.md` → `$CLAUDE_CONFIG/.claude/skills/prd-*/SKILL.v1-yolo.md`, and adds a frictionless permission allowlist (git, gh, ls, Skill invocations, WebFetch/WebSearch). **It installed a `SessionStart[matcher=clear]` → `prd-loop-continue.sh` hook until 2026-08-18; that hook is deleted and no longer installed (Decision 58), so it does two things now, not three.**
+- **`/make-careful`** reverses it: swaps symlinks to point at the careful `SKILL.md`, removes the permission entries, and clears the legacy `SessionStart` registration from projects configured before that hook was retired.
 
 Both skills are idempotent and only touch `.claude/settings.local.json` (auto-gitignored, so mode is a per-clone local choice).
 
@@ -126,7 +123,7 @@ State lives in five places. The model is deliberately distributed — each surfa
 - **Milestone checkboxes** (`[ ]`, `[x]`, `[~]`, `[!]`) — the only authoritative record of "what is done." Machine-readable; hooks grep them.
 - **Decision Log table** — rationale + date + impact, durable. Rows are additive; the cascade hook watches for new ones.
 - **Implementation approach, requirements, success criteria, code examples, risks** — all live in the PRD and are updated in place as decisions land.
-- **Status field** (`In Progress`, `Complete`) — used by `auto-reanchor.sh` and `/continue` to find the active PRD via grep.
+- **Status field** (`Draft`, `Complete`) — set to `Draft` by `/prd-create` and rewritten to `Complete` by `/prd-close`. Nothing reads it to identify the active PRD. Three things once did, all by grepping for `In Progress`, a value nothing ever wrote: `auto-reanchor.sh`, `/post-compact`, and `/continue`, all removed 2026-08-05. The active PRD is identified from the branch name (`feature/prd-NNN-*`), which `/prd-next` and `/prd-start` already do.
 
 The PRD is the instruction set for future AI implementors. Milestone text is read as a prompt — which is why `/prd-create` runs `/write-prompt` over it before commit, and why `/prd-update-decisions` cascades updates into downstream milestone descriptions.
 
@@ -140,12 +137,12 @@ The PRD is the instruction set for future AI implementors. Milestone text is rea
 ### TaskCreate entries — current milestone's active work
 - Created by `/prd-next` on user confirmation, **only for the current milestone**, one-to-one with unchecked checkboxes.
 - Recycled when a milestone completes: old tasks marked `completed` or `deleted`, a fresh set created for the next milestone.
-- Surface: ephemeral — they drive in-session orientation and `/continue` checks them, but they are not durable state across sessions beyond what TaskGet surfaces.
+- Surface: ephemeral — they drive in-session orientation, but they are not durable state across sessions beyond what TaskGet surfaces. (`/continue` read them until it was removed 2026-08-05.)
 
 ### Git commits and branches — the durable execution record
 - One feature branch per PRD (`feature/prd-[issue-id]-[feature-name]`).
 - Commits reference the PRD (`feat(prd-X): …`).
-- Each commit is atomic: implementation + PRD checkbox flips + `PROGRESS.md` entry, together. This is the commit-level truth that hooks, `/continue`, and `auto-reanchor.sh` rely on.
+- Each commit is atomic: implementation + PRD checkbox flips + `PROGRESS.md` entry, together. This is the commit-level truth that the hooks rely on, and the reconstruction surface that made the purpose-built recovery skills removable on 2026-08-05.
 - Push is gated (hook-enforced CodeRabbit pre-push review), but commit is not.
 - Branch delete happens at `/prd-done` step 6.
 
@@ -158,7 +155,7 @@ The PRD is the instruction set for future AI implementors. Milestone text is rea
 ### Interaction patterns between surfaces
 - **Checkbox flip → PROGRESS.md entry → commit** is mandatory and atomic, enforced by `progress-md.sh` pre-commit hook.
 - **New decision → PRD Decision Log row → downstream milestone updates** is prompted by `cascade-decision-check.sh` (advisory) and `/prd-update-decisions` (enforcing).
-- **PRD status = "In Progress"** is the discovery key for re-anchoring skills.
+- **PRD status is not a discovery key for anything.** It reads `Draft` then `Complete`, and the three consumers that searched for `In Progress` — a value nothing ever wrote — were removed 2026-08-05. The active PRD is identified from the branch name (`feature/prd-NNN-*`).
 - **PRD file location** (`prds/` vs `prds/done/`) signals lifecycle state and is load-bearing for the cascade-decision hook (fires on active PRDs only).
 
 ---
@@ -228,8 +225,7 @@ Typical PRD from conception to merge:
 
 Ancillary / recovery skills:
 
-- **`/post-compact`** — fires automatically via the `PostCompact` hook (`auto-reanchor.sh`) and can also be invoked manually. Mid-session orientation only; does **not** assess tasks or start work.
-- **`/continue`** — manual at session start; reads the full layered state (PRD + PROGRESS.md + git + tasks + journal) and suggests a next step, but waits for user confirmation before acting.
+- **`/prd-next` and `/issue-next`** — manual at session start, split by work type. Each identifies the active work from the branch name, proposes a single next task, and waits for confirmation before acting. `/continue` covered both at once and read journal context as well, until it was removed 2026-08-05 for never being used; the journal-reading capability went with it.
 - **`/prd-close`** — orthogonal terminal path; used when a PRD will never be built in this repo.
 
 Every hand-off is an explicit instruction to the user to invoke the next skill in careful mode. YOLO mode replaces these with direct Skill-tool invocations plus the `/clear` loop primitive (see §1.5).
@@ -244,7 +240,7 @@ TaskCreate entries are not a bookkeeping nicety — they are a required, cyclic 
 4. `/prd-update-progress` commits, which flips checkboxes `[ ]` → `[x]`.
 5. On the next `/prd-next` invocation (usually after `/clear` in YOLO mode), the skill detects the milestone boundary and explicitly **marks prior-milestone tasks `completed` or `deleted`, then creates a fresh set for the new milestone**. The YOLO skill's Step 4 spells this out: *"When a new milestone starts, mark prior milestone tasks as `completed` or `deleted`, then create fresh tasks."*
 
-**Why this matters for autonomous design.** An autonomous executor that doesn't implement this cleanup will accumulate stale tasks from completed milestones. The task list becomes polluted, `/continue` starts surfacing "in progress" tasks that are actually finished (their checkbox is already `[x]` on disk), and any prioritizer looking at TaskList for "what's next" gets noise. The state machine is:
+**Why this matters for autonomous design.** An autonomous executor that doesn't implement this cleanup will accumulate stale tasks from completed milestones. The task list becomes polluted, session-resume surfaces "in progress" tasks that are actually finished (their checkbox is already `[x]` on disk), and any prioritizer looking at TaskList for "what's next" gets noise. The state machine is:
 
 ```text
         ┌────────────────────────────────────┐
@@ -316,11 +312,11 @@ State survives compaction if it lives outside the conversation. State that lives
 
 **Recovery mechanisms currently in place:**
 
-1. **`PostCompact` hook → `auto-reanchor.sh`** fires automatically after `/compact`. It greps `prds/` for "Status.*In Progress", reads the first `[ ]` milestone, reports branch + recent commits + dirty files, and instructs: "Re-read CLAUDE.md and the active PRD now to restore full context."
+1. **Compaction itself.** The harness carries a summary of the conversation into the next context window along with whatever was not summarized, and re-provides `CLAUDE.md` rather than leaving it in the conversation where it could be summarized away. This is why the three purpose-built recovery mechanisms below were removed on 2026-08-05 — see [the repo audit](claude-config-repo-audit.md).
 
-2. **`/post-compact` skill** is the manual counterpart — same goal, same sources, slightly richer (reads `_execution-state.md` from the plan-execute skill if present). Explicit constraint: "Do NOT start implementing work during this skill. Orientation only."
+2. **`/prd-next` and `/issue-next`** are the surviving session-start recovery paths, split by work type. Both identify the active work from the branch name rather than from a status field.
 
-3. **`/continue` skill** is the heavier session-start recovery — reads PROGRESS.md narrative, TaskList, and layered journal context (today's raw entries, yesterday's daily summary, most recent weekly and monthly summaries). Asks for user confirmation before resuming.
+3. **Removed 2026-08-05, recorded so their absence is not mistaken for an oversight.** A `PostCompact` hook (`auto-reanchor.sh`) could never have worked: it wrote to stderr on exit 0, which reaches only the debug log, and `PostCompact` supports no context injection at any rate. `/post-compact` re-read a `CLAUDE.md` that compaction no longer strips. `/continue` was never used, and was the only reader of layered journal context. That capability was retired the same day rather than rehomed: `CURRENT-CONTEXT.md`, the nightly-generated file that had been `@`-referenced into every session, turned out to have been empty since April because its scheduled job could not read `~/Documents` under macOS file protection. Four months of working without it was treated as sufficient evidence that it was not needed, so the reference, the schedule, and the capability were all dropped.
 
 4. **Atomic commits** are the key architectural resilience mechanism. Because every `/prd-update-progress` commits code + PRD + PROGRESS.md together, `git log` is a sufficient reconstruction surface: the state on disk after the last commit is consistent, and the PROGRESS.md narrative + PRD checkbox flips are self-describing.
 
@@ -333,7 +329,7 @@ The slogan "commits are truth" undersells the weakness. Commits happen *only at 
 - **What got lost** is not "what we decided" (the Decision Log captures that) and not "what we did" (git diff captures that). It is specifically *the path we took and the alternatives we rejected* — the rationale for why the code ended up the way it did when the milestone text did not prescribe a single path.
 - **When implementation reasonably diverges from the milestone description** (unforeseen complexity, an assumption that turns out to be wrong, a refactor the milestone didn't anticipate), the rationale for the divergence lives only in the conversation. If compaction fires before the commit, the next instance sees code that doesn't match the milestone and has no context for why.
 - **The Decision Log captures *crystallized* decisions**, not in-flight ones. By design: `/prd-update-decisions` is invoked at milestone boundaries alongside `/prd-update-progress`, not mid-implementation. This is intentional (it prevents decision-log churn on exploratory moves), but it means compaction mid-milestone wipes the exploration.
-- **`_execution-state.md`** (from the plan-execute skill) is the closest existing primitive but is not standardized across the PRD workflow — `auto-reanchor.sh` only mentions it as an optional bonus.
+- **`_execution-state.md`** (from the plan-execute skill) is the closest existing primitive but is not standardized across the PRD workflow — the removed `auto-reanchor.sh` mentioned it only as an optional bonus, and nothing references it now.
 
 ### Design implications for an autonomous system
 
@@ -368,7 +364,7 @@ The commit includes, in one SHA:
 - The pre-commit hook `progress-md.sh` enforces it: if staged PRD diffs show new `[x]` checkboxes but `PROGRESS.md` is not staged, the commit is blocked with an explicit error. Behavior is gated on `PROGRESS.md` existing at the repo root.
 - Git history becomes the canonical reconstruction surface. A single SHA tells you exactly what was implemented, which milestone item it satisfied, and what the narrative summary is.
 - Future AI implementors reading history can trust that checked boxes correspond to shipped code.
-- The `auto-reanchor.sh` hook can report "last completed milestone" reliably because the commit that flipped the checkbox also shipped the code.
+- "Last completed milestone" is reliably derivable from history alone, because the commit that flipped the checkbox also shipped the code. `auto-reanchor.sh` relied on this until it was removed 2026-08-05; the property belongs to the commit discipline, not to any tool.
 
 **Commits that are *not* from `/prd-update-progress`:**
 - `/prd-create` — `[skip ci]` commit to main with the new PRD file only (no code yet).
@@ -385,9 +381,9 @@ This is stated as a global rule, not a skill-local one — the commit ownership 
 
 **Commit message convention:** `feat(prd-X): implement [brief description]` with a body that lists achievements, flags "Updated PRD checkboxes for completed items," and gives a `Progress: X% complete` line. The `prd-X` prefix is the traceability anchor.
 
-### The atomic-commit invariant depends on a specific recovery mechanism
+### The atomic-commit invariant is what makes recovery possible at all
 
-`auto-reanchor.sh` operationalizes atomicity as a recovery primitive. The script literally greps the active PRD for `^- \[ \]` (the first unchecked checkbox) and reports it as the "next milestone" — implicit in this is the assumption that everything above it is already `[x]`, that every `[x]` corresponds to a commit on the current branch, and that *the most recent commit* represents the current ground state. Any autonomous system that breaks this assumption (e.g., commits code without flipping a checkbox, or flips a checkbox without landing the code in the same SHA) silently breaks re-anchoring. The `progress-md.sh` pre-commit hook is the structural enforcement that prevents the second failure mode; there is no hook preventing the first, so discipline relies on commit ownership being centralized in `/prd-update-progress`.
+`auto-reanchor.sh` operationalized atomicity as a recovery primitive until its removal on 2026-08-05, and its approach is worth recording because any replacement inherits the same assumption. It grepped the active PRD for `^- \[ \]` (the first unchecked checkbox) and reports it as the "next milestone" — implicit in this is the assumption that everything above it is already `[x]`, that every `[x]` corresponds to a commit on the current branch, and that *the most recent commit* represents the current ground state. Any autonomous system that breaks this assumption (e.g., commits code without flipping a checkbox, or flips a checkbox without landing the code in the same SHA) silently breaks re-anchoring. The `progress-md.sh` pre-commit hook is the structural enforcement that prevents the second failure mode; there is no hook preventing the first, so discipline relies on commit ownership being centralized in `/prd-update-progress`.
 
 ### Granularity tradeoff — a design constraint for the autonomous PRD
 
@@ -399,7 +395,7 @@ The atomic-commit rule encodes a tight coupling: **one commit = one (or more) mi
 
 - The right fix is a third path the current system does not implement: **an orthogonal scratch/checkpoint mechanism that is not tied to milestone checkboxes**. Options include per-subtask WIP commits on a disposable shadow branch, or a mid-milestone `.prd-scratch.md` that is durable but not committed. The autonomous PRD should choose one deliberately, knowing it will have to reconcile with the atomic-commit invariant on the feature branch.
 
-**This is the single most important design constraint the new PRD must address**: either preserve atomicity and solve mid-milestone durability some other way, or break atomicity explicitly and update the recovery mechanism (`auto-reanchor.sh`, `/continue`, `/post-compact`) to match. Doing nothing means the new system will either lose context at compaction (§5) or silently break recovery (§6).
+**This is the single most important design constraint the new PRD must address**: either preserve atomicity and solve mid-milestone durability some other way, or break atomicity explicitly and update whatever recovery mechanism replaces the ones removed on 2026-08-05 (`auto-reanchor.sh`, `/continue`, `/post-compact`) to match. Doing nothing means the new system will either lose context at compaction (§5) or silently break recovery (§6).
 
 ---
 
@@ -427,13 +423,8 @@ Fires on `Write|Edit` to active PRD files (`prds/*.md` but not `prds/done/*.md`)
 
 Advisory because the check cannot reliably detect whether a decision row was added — it defers the judgment to Claude on every PRD edit. Pairs with `/prd-update-decisions`' explicit propagation step; the hook is a backstop.
 
-### `auto-reanchor.sh` (Claude Code PostCompact — ADVISORY)
-Fires after compaction. Detects the active PRD via grep of "Status.*In Progress", extracts the first unchecked milestone, and emits:
-
-> `Active PRD: <name> | Next milestone: <text>`
-> `ACTION: Re-read CLAUDE.md and the active PRD now to restore full context.`
-
-This is the automated half of the compaction-resilience story; `/post-compact` is the manual half.
+### `auto-reanchor.sh` (removed 2026-08-05)
+Registered on `PostCompact`, it emitted an orientation block naming the active PRD and the next unchecked milestone. It never reached the model: it wrote to stderr and exited 0, and stderr from a hook exiting 0 goes to the debug log only. `PostCompact` also supports no context injection, so no output shape would have worked there. Its PRD detection was broken independently, grepping for a status value nothing wrote. Kept in this document as a removed entry because "the automated half of the compaction-resilience story" was load-bearing in the design and its absence is deliberate.
 
 ### Push/PR-level hooks that indirectly gate PRD work
 - **`pre-push-verify.sh`** gates push on security verification; escalates to "expanded security + tests" when an open PR exists; runs advisory CodeRabbit CLI after.
@@ -455,7 +446,6 @@ For an autonomous system, the distinction between blocking and advisory is cruci
 | `check-coderabbit-required.sh` | Claude PreToolUse Bash (`gh pr merge`) | **Blocking** (exit 2) | Hard gate — autonomous merge is not allowed without a CodeRabbit review on the PR. |
 | `pre-pr-hook.sh` | Claude PreToolUse Bash (`gh pr create`) | **Blocking on verification fail** | Security + tests must pass; acceptance gate tests are advisory but *require human approval to continue* — a true autonomy break. |
 | `pre-push-verify.sh` | git pre-push | **Blocking on verification fail** | Security verification is a hard gate; the embedded CodeRabbit CLI review is advisory. |
-| `auto-reanchor.sh` | Claude PostCompact | **Advisory** (exit 0 + additionalContext) | Soft reminder. Provides orientation; no execution gate. |
 | `cascade-decision-check.sh` | Claude PostToolUse Write/Edit | **Advisory** (exit 0 + additionalContext) | Soft reminder. In YOLO mode, compliance is non-deterministic — the hook cannot enforce cascading. |
 | `suggest-write-prompt.sh` | Claude PostToolUse Write/Edit, Bash | **Advisory** | Soft reminder after SKILL.md/CLAUDE.md edits or `gh issue create`. |
 | `post-write-codeblock-check.sh` | Claude PostToolUse Write/Edit | **Advisory** | Soft reminder about bare code blocks in markdown. |
@@ -467,7 +457,7 @@ Pattern: `exit 2` (Claude Code) or `exit 1` (git) = block. `exit 0` with `additi
 
 There are **two** CodeRabbit checkpoints in the PRD workflow, and conflating them is a design error:
 
-1. **Local pre-commit CodeRabbit CLI review inside `/prd-update-progress` Step 8.5** — runs `coderabbit review --plain --type committed --base origin/main` locally against the feature branch. This is *milestone-boundary triage*: findings can be fixed immediately, skipped with rationale, or deferred to a GitHub issue via the standard rubric (Fix / Defer / Skip). No one else has seen these findings yet. The cost of skipping is low; the cost of fixing is low. Autonomous mode can apply the rubric itself.
+1. **Local pre-commit CodeRabbit CLI review inside `/prd-update-progress` Step 8.5** — runs `coderabbit review --committed --base origin/main 2>&1` locally against the feature branch. *(Corrected 2026-08-18: this said `--plain --type committed`, and both flags were removed in CLI v0.7.0 — passing either errors before the review starts. `rules/git-workflow.md` is authoritative for the invocation.)* This is *milestone-boundary triage*: findings can be fixed immediately, skipped with rationale, or deferred to a GitHub issue via the standard rubric (Fix / Defer / Skip). No one else has seen these findings yet. The cost of skipping is low; the cost of fixing is low. Autonomous mode can apply the rubric itself.
 
 2. **Post-PR CodeRabbit GitHub review in `/prd-done` (and enforced by `check-coderabbit-required.sh`)** — blocks merge. Findings are public-facing on the PR. The same Fix/Defer/Skip rubric applies in wording, but the **stakes are asymmetric**: *"Every PR must go through CodeRabbit review before merge. This is a hard requirement, not optional."* (project CLAUDE.md). Autonomous mode should default to "fix" for all non-trivial findings and must respect the blocking-merge gate even when other gates are relaxed.
 
@@ -481,7 +471,7 @@ Things that stood out while extracting:
 
 **Tension — "YOLO mode" vs skill-internal gates (resolved structurally).** Project CLAUDE.md instructs Claude to proceed without trivial confirmations, but the *careful* skill texts contain explicit "Do you want to work on this task?" and "Proceed with closure? (yes/no)" prompts. The resolution is structural rather than conversational: the careful and YOLO variants are separate files (§1.5), and `/make-autonomous` / `/make-careful` toggle which is active. An autonomous executor should not re-solve this via conversational override; it should ensure YOLO variants are installed via `/make-autonomous`. The open design question shifts: **should autonomous-mode execution invoke careful SKILL.md variants at all, ever?** (E.g., fall back to careful for `/prd-create` authoring conversations.) The two files are currently isomorphic in process but differ on pause triggers — the YOLO Autonomous Decision Protocol is the spec for where pauses remain load-bearing.
 
-**Tension — `/prd-next` creates TaskCreate entries but doesn't use them itself.** The skill creates tasks at step 6b, then immediately hands off to the user for implementation at step 8. The tasks exist primarily for `/continue` and for the next `/prd-next` invocation to recognize the milestone boundary. An autonomous system may either ignore TaskCreate entirely or use them as the primary execution queue.
+**Tension — `/prd-next` creates TaskCreate entries but doesn't use them itself.** The skill creates tasks at step 6b, then immediately hands off to the user for implementation at step 8. The tasks existed primarily for `/continue`, now removed, and for the next `/prd-next` invocation to recognize the milestone boundary. An autonomous system may either ignore TaskCreate entirely or use them as the primary execution queue.
 
 **Tension — the conservative completion policy is at odds with autonomy.** `/prd-update-progress` says "DO NOT mark complete unless there is direct evidence" and relies on conservative interpretation backed by user confirmation. An autonomous system can't defer to a user; it must make those calls itself, or it must commit eagerly and expect the acceptance phase to catch gaps. `/prd-done`'s three-level-verification sub-agent (Exists → Substantive → Wired) may be the right primitive to lift into per-milestone verification.
 

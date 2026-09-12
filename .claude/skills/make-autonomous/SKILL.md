@@ -1,25 +1,32 @@
 ---
 name: make-autonomous
-description: Enable autonomous PRD mode for the current project. Installs YOLO skill symlinks, SessionStart hooks, and permissions.
+description: Enable autonomous PRD mode for the current project. Installs YOLO skill symlinks and permissions.
 category: project-management
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
 # Enable Autonomous PRD Mode
 
-Enable autonomous PRD mode for the current project. This installs YOLO skill variants (with active trigger descriptions) via symlinks, the `/clear` → auto-resume SessionStart hook, and frictionless permissions.
+Enable autonomous PRD mode for the current project. This installs YOLO skill variants (with active trigger descriptions) via symlinks, and frictionless permissions.
+
+**There is no automatic resume after `/clear`, and this skill does not install a hook.** It advertised a `SessionStart` hook until 2026-08-18; that hook was removed because it never worked — text injected as an out-of-band command is surfaced to the reader rather than acted on. Whatever made the loop appear to continue was the YOLO skill descriptions' trigger language, not a hook. **After `/clear`, the user runs `/prd-next` again.**
 
 ## What This Does
 
 1. **Creates symlinks to YOLO skill variants** in `.claude/skills/` pointing to `SKILL.v1-yolo.md` files in the claude-config repo
-2. **Installs SessionStart hook** enabling the `/clear` → auto-resume loop via `prd-loop-continue.sh`
-3. **Adjusts permissions** to reduce friction for autonomous git and skill operations
+2. **Adjusts permissions** to reduce friction for autonomous git and skill operations
+
+**Step 1 does not currently take effect, and step 2 does.** Personal skills in `~/.claude/skills/` take precedence over project skills in `.claude/skills/`, so a project symlink pointing at a `SKILL.v1-yolo.md` is shadowed by the personal copy of the same skill and the YOLO variant never loads. Established by live test during PRD #109's Milestone A4 — see [the installation-scope findings](../../../docs/research/claude-code-skill-installation-scope.md). Nine repos carried these symlinks without them ever having applied.
+
+**So running this skill today loosens permissions and changes no behaviour.** That is the opposite of the safer failure: the guardrails come off while the autonomous hand-offs the looser permissions were meant to serve stay inactive. Say so when reporting what was installed, rather than reporting a mode that is not running.
+
+The descriptions below are accurate about what each YOLO variant instructs — `prd-start` really does auto-invoke `prd-next`, and `prd-next` really does invoke `/prd-update-progress` — but they describe files that are not being loaded. Whether these variants should exist at all is Milestone C1's skill-consolidation decision; do not delete them here.
 
 ## PRD Skills Installed
 
 These skills get symlinked (YOLO variants with active trigger descriptions):
-- `prd-next` — INVOKE AUTOMATICALLY after `/prd-start` or `/clear` on PRD branch
-- `prd-done` — Triggered by the `/clear` loop when all PRD items are done
+- `prd-next` — INVOKE AUTOMATICALLY after `/prd-start`. **Not after `/clear`** — nothing triggers it there
+- `prd-done` — **user-invoked**, once `/prd-next` reports every PRD item is checked. Nothing invokes it automatically and no `/clear` loop triggers it. This is the one hand-off YOLO mode deliberately leaves to a human, because the last step it would take unattended is merging, and this project requires a human to examine and approve the CodeRabbit review before a merge
 - `prd-update-progress` — INVOKE AUTOMATICALLY after completing a PRD task
 - `prd-start` — Start working on a PRD implementation
 - `prd-create` — Create documentation-first PRDs
@@ -68,37 +75,7 @@ done
 
 **Important**: Use absolute paths for symlink targets so they work regardless of working directory.
 
-### Step 3: Install SessionStart Hook
-
-Read `.claude/settings.local.json` (create with `{}` if it doesn't exist). Add a SessionStart hook:
-
-**Target structure to merge into settings.local.json:**
-
-```json
-{
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "clear",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$CLAUDE_CONFIG_DIR/scripts/prd-loop-continue.sh"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-**Merge rules:**
-- If no `hooks` key exists, add it
-- If `hooks` exists but no `SessionStart`, add the `SessionStart` array
-- If `SessionStart` already exists, check for a `prd-loop-continue` entry before adding (avoid duplicates)
-- Never overwrite existing PreToolUse, PostToolUse, or other hook entries
-
-### Step 4: Adjust Permissions
+### Step 3: Adjust Permissions
 
 Add permission entries to `.claude/settings.local.json` under `permissions.allow`. These reduce confirmation prompts during autonomous PRD work:
 
@@ -147,7 +124,7 @@ Add permission entries to `.claude/settings.local.json` under `permissions.allow
 - If `permissions.allow` already exists, add only entries that don't already exist (deduplicate)
 - Never remove existing permission entries
 
-### Step 5: Verification
+### Step 4: Verification
 
 After all changes, verify the symlinks are correct:
 
@@ -166,25 +143,22 @@ done
 Then display a summary:
 
 ```text
-Autonomous PRD mode enabled for [project-name].
+Permissions loosened for [project-name]. Autonomous hand-offs are NOT active.
 
 Changes made:
-  Skills       — YOLO variant symlinks created in .claude/skills/
-  Hooks        — SessionStart hook installed (.claude/settings.local.json)
   Permissions  — PRD skill and git permissions added (.claude/settings.local.json)
+  Skills       — YOLO variant symlinks created in .claude/skills/, but shadowed by
+                 the personal copies in ~/.claude/skills/ and never loaded (see above)
 
-⚠️  Restart Claude Code to pick up the new skill definitions.
-    The symlinks are in place, but the current session has the old skills loaded in memory.
+This session still runs the ordinary interactive skills. Nothing here makes
+/prd-next auto-continue after /clear — run it yourself each time.
 
-To revert: run /make-careful
-
-The autonomous loop:
-  /prd-start → /prd-next → implement → /prd-update-progress → /clear → auto-resume → repeat
+To revert the permission changes: run /make-careful
 ```
 
 ## Important Notes
 
-- `.claude/settings.local.json` is auto-gitignored by Claude Code — hook and permission changes are local only
+- `.claude/settings.local.json` is auto-gitignored by Claude Code — permission changes are local only
 - Symlinks in `.claude/skills/` should be added to `.gitignore` if the project doesn't want them tracked
 - This skill only adds — it never removes existing content or settings
 - If the project already has PRD skill files (not symlinks) in `.claude/skills/`, warn the user before overwriting

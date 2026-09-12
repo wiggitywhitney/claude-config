@@ -134,18 +134,56 @@ fi
 # CodeRabbit posts to different channels depending on PR size and timing;
 # missing any one channel means missing findings.
 # --paginate fetches all pages; jq outputs one line per match; wc -l gives total count.
+# Prints the match count on success. Returns non-zero if the API call itself
+# failed, so the caller can tell "no review" from "could not look" — the previous
+# version could not: under pipefail a failed call left the pipeline non-zero after
+# wc had already printed 0, so the `|| echo 0` appended a second line and the
+# variable became "0\n0", which every numeric comparison then rejected outright.
 count_coderabbit_in_channel() {
-  local endpoint="$1"
-  gh api --paginate "repos/$REPO_INFO/$endpoint" \
-    --jq '.[] | select(.user.login == "coderabbitai[bot]") | 1' 2>/dev/null \
-    | wc -l | tr -d ' ' || echo "0"
+  local endpoint="$1" out
+  if ! out=$(gh api --paginate "repos/$REPO_INFO/$endpoint" \
+      --jq '.[] | select(.user.login == "coderabbitai[bot]") | 1' 2>/dev/null); then
+    return 1
+  fi
+  printf '%s' "$out" | grep -c '[^[:space:]]' || true
 }
 
-CODERABBIT_PULL_REVIEWS=$(count_coderabbit_in_channel "pulls/$PR_NUMBER/reviews")
-CODERABBIT_INLINE_COMMENTS=$(count_coderabbit_in_channel "pulls/$PR_NUMBER/comments")
-CODERABBIT_ISSUE_COMMENTS=$(count_coderabbit_in_channel "issues/$PR_NUMBER/comments")
+LOOKUP_FAILED=no
+CODERABBIT_TOTAL=0
+for endpoint in "pulls/$PR_NUMBER/reviews" "pulls/$PR_NUMBER/comments" "issues/$PR_NUMBER/comments"; do
+  if ! channel_count=$(count_coderabbit_in_channel "$endpoint"); then
+    LOOKUP_FAILED=yes
+    break
+  fi
+  CODERABBIT_TOTAL=$(( CODERABBIT_TOTAL + channel_count ))
+done
 
-if [ "$CODERABBIT_PULL_REVIEWS" -gt 0 ] || [ "$CODERABBIT_INLINE_COMMENTS" -gt 0 ] || [ "$CODERABBIT_ISSUE_COMMENTS" -gt 0 ]; then
+# Deny either way, but never report a failed lookup as a missing review: those
+# need different actions — wait for the review, versus fix auth or connectivity.
+if [[ "$LOOKUP_FAILED" == yes ]]; then
+  PR_MERGE_PR="$PR_NUMBER" python3 -c "
+import json, os
+
+pr = os.environ['PR_MERGE_PR']
+reason = (
+    f'PR merge blocked — CodeRabbit review status for PR #{pr} could not be verified. '
+    f'The GitHub API call failed, so this is not evidence that a review is missing. '
+    f'Check gh auth status and connectivity, then retry. '
+    f'To opt out of this check for this repo, create a .skip-coderabbit file at the project root.'
+)
+result = {
+    'hookSpecificOutput': {
+        'hookEventName': 'PreToolUse',
+        'permissionDecision': 'deny',
+        'permissionDecisionReason': reason
+    }
+}
+print(json.dumps(result))
+"
+  exit 0
+fi
+
+if [ "$CODERABBIT_TOTAL" -gt 0 ]; then
   # CodeRabbit has reviewed — allow merge
   exit 0
 fi

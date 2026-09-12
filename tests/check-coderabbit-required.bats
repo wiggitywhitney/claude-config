@@ -97,3 +97,44 @@ MERGE_CMD='gh pr merge 42 --merge --delete-branch --repo testowner/testrepo'
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
+
+# ── A failed lookup is not an absent review ───────────────────────────────────
+
+# A gh that errors on every api call, as it would when unauthenticated,
+# rate-limited, or offline.
+make_failing_gh() {
+    cat > "$TMPDIR/bin/gh" <<'GHEOF'
+#!/usr/bin/env bash
+if [[ "$*" == *"api"* ]]; then
+    echo "gh: HTTP 503" >&2
+    exit 1
+fi
+GHEOF
+    chmod +x "$TMPDIR/bin/gh"
+}
+
+@test "blocks merge when the review lookup fails, and says so" {
+    make_failing_gh
+    write_input "{\"tool_input\":{\"command\":\"$MERGE_CMD\"},\"cwd\":\"/tmp\"}"
+    run bash -c "PATH=\"$TMPDIR/bin:\$PATH\" \"$SCRIPT\" < \"$TMPDIR/input.json\""
+    [ "$status" -eq 0 ]
+    [[ "$output" == *'"permissionDecision": "deny"'* ]]
+    [[ "$output" == *"could not be verified"* ]]
+    [[ "$output" != *"No CodeRabbit review found"* ]]
+}
+
+@test "a failed review lookup produces no shell errors" {
+    make_failing_gh
+    write_input "{\"tool_input\":{\"command\":\"$MERGE_CMD\"},\"cwd\":\"/tmp\"}"
+    run bash -c "PATH=\"$TMPDIR/bin:\$PATH\" \"$SCRIPT\" < \"$TMPDIR/input.json\" 2>&1"
+    [[ "$output" != *"integer expected"* ]]
+    [[ "$output" != *"unary operator"* ]]
+}
+
+@test "still distinguishes a successful lookup that finds nothing" {
+    make_fake_gh 0 0 0
+    write_input "{\"tool_input\":{\"command\":\"$MERGE_CMD\"},\"cwd\":\"/tmp\"}"
+    run bash -c "PATH=\"$TMPDIR/bin:\$PATH\" \"$SCRIPT\" < \"$TMPDIR/input.json\""
+    [[ "$output" == *"No CodeRabbit review found"* ]]
+    [[ "$output" != *"could not be verified"* ]]
+}

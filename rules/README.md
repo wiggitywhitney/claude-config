@@ -1,3 +1,8 @@
+---
+paths: ["rules/**/*.md", "**/.claude/rules/**/*.md"]
+description: Index of every rule file, how each one loads, and what it covers
+---
+
 # Rules Index
 
 Every file in this directory reaches a Claude Code session through exactly one mechanism. This index records which one, and what each rule covers. It lives here rather than in `global/CLAUDE.md` because an index in `CLAUDE.md` costs tokens in every session, whether or not anyone needs it.
@@ -62,6 +67,7 @@ Never both — a file carrying both loads twice. Never neither — a file with n
 | `yt-dlp-gotchas.md` | yt-dlp, youtube files, workflow YAML | Format selectors, ffmpeg-absent merge exits 0, PO tokens, Chrome cookies unreadable |
 | `presentation-slides.md` | `.qmd`, `slides/`, `_quarto.y*ml`, `custom.scss` | Progressive reveal patterns, readability at conference scale, speaker notes voice |
 | `quarto-revealjs-capabilities.md` | `.qmd`, `_quarto.y*ml`, `slides/`, `custom.scss` | What the slide stack can do — layout, animation, backgrounds, Mermaid, presenter tools |
+| `decktape-gotchas.md` | `.qmd`, `_quarto.y*ml`, `decktape*` | Converting reveal.js decks to PDF — why `?print-pdf` stalls capture, serving over HTTP not `file://`, matching `--size` to the deck viewport |
 | `mmdc-gotchas.md` | `.mmd`, `.qmd`, `slides/` | Puppeteer peer dependency, Apple Silicon Chrome path, `npx -p` flag, invisible long labels |
 
 ### Tooling and platform

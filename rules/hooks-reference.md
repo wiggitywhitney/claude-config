@@ -5,6 +5,26 @@ description: Reference for all PreToolUse and PostToolUse hooks and what they en
 
 # Hooks Reference
 
+## How a hook reaches Claude, and how to get it wrong
+
+Two hooks in this repo were written on false assumptions about this and did nothing for months. Confirmed against the official hooks documentation, 2026-08-05.
+
+- **Stderr from a hook that exits 0 goes to the debug log only. Claude never sees it, and neither does the transcript.** A hook that prints its message to stderr and exits 0 is a no-op with no symptom. To surface something to Claude from a `PostToolUse` hook, exit 2 instead.
+- **Stdout on exit 0 is parsed for JSON output fields and otherwise written to the debug log**, except for `SessionStart`, `UserPromptSubmit`, and `UserPromptExpansion`, where plain stdout is added as context directly. Relying on that exception works but is a side door; prefer the documented envelope.
+- **The documented way to add context is nested, not top-level.** A bare `{"additionalContext": "..."}` is not a recognised field:
+
+  ```json
+  {"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "..."}}
+  ```
+
+- **`PostCompact` supports no context injection at all** — it is a side-effects-only event, alongside `SessionEnd`, `Notification`, and `CwdChanged`. There is no way to add context after a compaction, so re-anchoring must be invoked deliberately. `PreCompact`, by contrast, can block.
+- **Write injected text as factual statements, not as imperative system instructions.** Out-of-band command phrasing can trigger prompt-injection defenses, which surfaces the text to the user instead of treating it as context.
+
+- **A hook that matches on command text must strip heredoc bodies, not just quoted strings.** A push gate built and then removed on 2026-08-24/26 denied a plain `git commit`, because the commit message, fed through `git commit -F - <<'EOF'`, described what the gate blocks and so contained the words it matches on. Quote-stripping does not see inside a heredoc body. Strip heredoc bodies first, then quoted strings, then match — and strip the quoted spans across the whole command rather than line by line, because a `-m` message routinely opens a quote on one line and closes it several lines later, leaving its middle exposed to a line-based pass. That second form denied a commit too, after the heredoc form had been fixed. This is worth checking in any hook copied from another: the copy inherits the defences its source had and none it lacked.
+- **A `PreToolUse` deny refuses the entire Bash command, not the offending part of it.** A compound command that sets up state and then does the guarded thing runs none of it, including the setup. Scripts and tests that arrange conditions before a guarded command have to split across two invocations. The sharpest illustration: the push gate above refused the very command that deleted it, because that command ended by testing whether the deletion had worked.
+
+**Before trusting any new hook, exercise it** — pipe a realistic payload to it and read what comes back. Every hook defect found in the 2026-08-05 audit was invisible from reading the script and obvious from running it. When building a test payload, construct the JSON with `python3 -c 'import json...'` rather than `printf`, which expands `\n` into real newlines and produces invalid JSON that hooks silently skip.
+
 ## Native git hooks (installed via `scripts/install-git-hooks.sh`)
 
 These run inside the git process itself, providing stronger enforcement than Claude Code hooks because they intercept git operations directly. However, users can bypass them with `--no-verify` (e.g., `git commit --no-verify`, `git push --no-verify`), so they provide strong local enforcement but are not absolute.
@@ -17,22 +37,23 @@ Install with `bash scripts/install-git-hooks.sh [repo-path]`. The installer is i
 - **pre-commit-verify.sh** — gates commit on build/typecheck/lint verification; docs-only early exit
 
 **commit-msg dispatcher** (`hooks/git/commit-msg`) runs:
-- **commit-message.sh** — blocks commits with AI/Claude/Anthropic/Co-Authored-By references
+- **commit-message.sh** — blocks commits with AI/Claude/Anthropic/Co-Authored-By references. **It matches the bare word anywhere in the message, including when the tool is the legitimate subject of the change.** In repos about Claude Code configuration this fires on ordinary descriptive prose ("how people run Claude unattended") with no attribution involved. Rephrase around the name — "long agent sessions", "the CLI", "the shipped binary" — rather than fighting the hook; the rule it enforces is about attribution, and the rewrite costs nothing.
+  - **It matches the substring, not the intent, so the product name trips it too.** A commit message describing work on the tool itself — "adds a Claude Code capability spike", "documents Claude Code hook events" — is rejected with `Commit message contains AI/Claude reference: "Claude Code"`, even though it is naming a product rather than attributing authorship. This bites hardest in this repo, where the subject matter *is* the tool. Rephrase to "the platform", "the CLI", or the specific feature ("hook events", "skill precedence"). Confirmed 2026-08-03.
 
 **pre-push dispatcher** (`hooks/git/pre-push`) runs:
 - **test-tiers.sh** — warns (does not block) when unit/integration/e2e test tiers are missing; opt out with `.skip-integration`, `.skip-e2e`
 - **progress-md-pr.sh** — blocks push when branch has no PROGRESS.md changes vs the base branch; prompts interactively with an AI-drafted entry (accept/edit/skip); non-interactive environments get an advisory warning and exit 0; only fires in repos that have PROGRESS.md
 - **pre-push-verify.sh** — gates push on security verification (docs-only early exit)
   - Escalates to expanded security + tests when an open PR exists
-  - Runs advisory CodeRabbit CLI review after blocking checks pass
+  - **Runs no code review.** CodeRabbit ran here until 2026-08-27 and was removed: it reviewed the whole branch against `origin/main` on every push, so its cost grew with branch age until it hit its 7-minute timeout and reported nothing, silently. `/prd-update-progress` already ran the same review at each milestone, which is one run per milestone instead of one per push and happens while the work is still local. PR-time review is unaffected, and `check-coderabbit-required.sh` still blocks a merge without one.
 
 ## PreToolUse hooks (fire before tool execution)
 
-- **google-mcp-safety-hook.py** (PreToolUse: `mcp__.*(youtube).*`) — blocks destructive YouTube MCP operations (delete, upload)
 - **gogcli-safety-hook.py** (PreToolUse: Bash) — blocks destructive or people-affecting gog CLI commands: data deletion, outreach, calendar with attendees, sharing, non-allowlisted sheet writes, account safety changes
 - **check-coderabbit-required.sh** (PreToolUse: Bash) — blocks PR merge without CodeRabbit review; opt out with `.skip-coderabbit`
 - **pre-pr-hook.sh** (PreToolUse: Bash) — gates PR creation on security+tests verification (expanded security, tests; build/typecheck/lint already passed at commit); also runs advisory acceptance gate tests when `.claude/verify.json` has an `"acceptance_test"` command; results require human approval before PR creation continues
 - **check-aboutme.sh** (PreToolUse: Write|Edit) — blocks code files missing ABOUTME headers; fix-and-retry adds headers organically; skips config, markdown, generated files
+  - **It is bound to Write and Edit, so a file created through Bash never reaches it.** Writing a script with `cat > script.sh <<'EOF'`, `printf`, or a `python3` heredoc creates it with no ABOUTME check and no warning — the enforcement simply does not run. This is not a defect in the hook; it is the boundary of what a `PreToolUse` matcher can see, and the same boundary applies to every Write/Edit-matched hook, including the code-block and write-prompt reminders. Two scripts were created this way on 2026-09-04 and happened to carry headers because they were written by hand. **When creating a code file through Bash, check the header yourself** — `grep -c '^# ABOUTME:'` — rather than assuming a green run means the hook approved it.
 
 ## PostToolUse hooks (fire after tool execution)
 

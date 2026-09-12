@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# ABOUTME: PostToolUse hook — blocks with feedback when a written markdown file has bare code fences.
+# ABOUTME: Fires on Write|Edit; delegates the markdown decision to check-markdown-codeblocks.py.
+#
 # post-write-codeblock-check.sh — PostToolUse hook for Write|Edit on markdown files
 #
 # Installed as a Claude Code PostToolUse hook on Write|Edit.
@@ -26,8 +29,9 @@ fi
 # Resolve script directory (same directory as this script)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Run the markdown code block checker
-CHECK_OUTPUT=$("$SCRIPT_DIR/check-markdown-codeblocks.sh" "$FILE_PATH" 2>&1)
+# Run the markdown code block checker. The checker decides what counts as
+# markdown and exits 0 for anything else, so that list lives in one place.
+CHECK_OUTPUT=$(python3 "$SCRIPT_DIR/check-markdown-codeblocks.py" "$FILE_PATH" 2>&1)
 CHECK_EXIT=$?
 
 if [ $CHECK_EXIT -eq 1 ]; then

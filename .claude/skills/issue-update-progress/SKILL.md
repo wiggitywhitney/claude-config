@@ -129,8 +129,12 @@ Output:
 After committing, run a local CodeRabbit CLI review to catch issues before they accumulate.
 
 ```bash
-coderabbit review --plain --type committed --base origin/main
+# Flags: --committed, NOT --type committed. There is no --plain (it is the default output
+# mode as of CLI v0.7.0, and passing it errors before the review starts).
+coderabbit review --committed --base origin/main 2>&1
 ```
+
+Run it in the background — reviews take 1-7+ minutes. **Follow the CodeRabbit CLI procedure in `~/.claude/rules/git-workflow.md`** for background execution, why a "completed" notification does not mean the review finished, rate-limit retries, and hang diagnosis. That rule is always loaded, so it is already in context; do not restate it here.
 
 If `coderabbit` is not installed, skip this step with a note: "CodeRabbit CLI not installed — skipping local review."
 

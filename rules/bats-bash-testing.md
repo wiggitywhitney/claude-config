@@ -16,6 +16,25 @@ Use **bats-core** (installed via `brew install bats-core`) for all bash script t
 
 **`run` executes in a subshell.** Shell variable changes inside `run` don't persist. Exported env vars work fine.
 
+**Flags on `run` need an explicit version declaration or the suite prints a warning on every run.** `run --separate-stderr`, `run --keep-empty-lines`, and the `run -N` exit-code form all require bats 1.5.0+, and bats emits `BW02: Using flags on run requires at least BATS_VERSION=1.5.0` unless the file declares it. **Declare 1.7.0, not 1.5.0** — `bats_require_minimum_version` was itself introduced in 1.7.0, so on 1.5.x or 1.6.x the declaration is an unbound command and the file fails before its first test. The warning does not fail the suite, so it survives as permanent noise in output that is supposed to be pristine. Declare it near the top of the file, above the first test:
+```bash
+bats_require_minimum_version 1.7.0
+```
+
+**A repo-level git hook test can fail for reasons that have nothing to do with the hook.** `core.hooksPath`, when set in global or system git config, overrides `.git/hooks` for **every** repository — including the temporary fixture repos a test creates. On a machine where it points somewhere root-owned, an installer under test writes at the managed path and fails with `Permission denied`, and every downstream assertion about `.git/hooks/<name>` then fails as a consequence. The symptom looks like a broken installer; the cause is machine configuration. Check it before debugging the script:
+```bash
+git config --get core.hooksPath
+```
+A test suite that asserts against `.git/hooks` cannot pass on such a machine as written.
+
+**Do not "fix" it by setting `core.hooksPath=` to an empty value.** An empty setting resolves to `./`, not to the fixture's default `$GIT_DIR/hooks`, so the tests move from failing to failing differently. Either point the fixture at its own absolute hooks directory, or assert against the path git will actually use:
+
+```bash
+git -C "$GIT_REPO" config core.hooksPath "$GIT_REPO/.git/hooks"
+# or, to assert wherever git resolves it:
+hooks_dir="$(git -C "$GIT_REPO" rev-parse --git-path hooks)"
+```
+
 **`run my_function` works when `my_function` is defined in the .bats file.** `run` uses command substitution `$()` internally — a subshell of the current process, not a new `bash -c` invocation. Functions defined in the test file (or sourced via `load`) are visible without `export -f`.
 
 **`export -f` is only needed inside `run bash -c "..."`** — because `bash -c` spawns a new process that can't see parent-shell functions. Pattern:
@@ -44,6 +63,27 @@ run bats_pipe echo "test" \| grep "test"   # note: \| not |
 **`BATS_TEST_TIMEOUT` with `run` was broken until v1.13.0.** Processes started via `run` were not killed when the timeout fired — they'd be orphaned and hang the suite. Fixed in v1.13.0.
 
 **GNU date shadows macOS date.** On this machine, `/opt/homebrew/opt/coreutils/libexec/gnubin/date` is first in PATH. The macOS system date is at `/bin/date` (not `/usr/bin/date`). Scripts and tests using macOS `date -v-1d` syntax must call `/bin/date` explicitly.
+
+**The same shadowing bites `stat`, and its flags mean opposite things.** BSD `stat -f %Lp` prints a file's permission bits; GNU `stat -f` asks for *filesystem* information and fails with `cannot read file system information for '%Lp'`. Because coreutils is first in PATH here, a test written against the macOS syntax fails on this machine while looking correct. Use a fallback that works under either:
+
+```bash
+stat_mode() {
+    stat -c %a "$1" 2>/dev/null || stat -f %Lp "$1"
+}
+```
+
+**`[ cond ] && skip "..."` fails the test whenever the condition is false.** Bats runs test bodies under error-checking semantics, so the `&&` returning non-zero is treated as a failure rather than as "did not skip." Write it as a statement instead:
+
+```bash
+if [ "$(id -u)" -eq 0 ]; then skip "chmod 000 does not block root"; fi
+```
+
+**A passing test is not evidence the test can fail.** A suite retrofitted onto working code can assert things that hold for reasons unrelated to the behavior named in the test. Verify by reintroducing the defect the test claims to catch and confirming it goes red. Two examples found this way in `tests/measure-context-load.bats` on 2026-08-04:
+
+- A test proving a backticked `` `@path` `` is a mention rather than an import put the closing backtick immediately after the path — which the matcher rejects anyway, since a backtick is not whitespace. It passed whether or not the stripping code ran.
+- A test proving `paths:` below the frontmatter block does not count wrote it mid-sentence in prose, where no `^paths:` pattern matches it regardless.
+
+**When mutating, remove the behavior — do not relocate it.** Pointing a guard at a different nonexistent path makes it fire unconditionally, so the test still passes and the mutation reports a false failure against a sound test. Delete the block instead.
 
 **BSD grep rejects patterns starting with `-` as unknown options.** macOS ships BSD grep (`/usr/bin/grep`). If the grep pattern could start with a dash (e.g., a task line like `- [ ] ...`), always add `--` after the flags to end option parsing: `grep -qF -- "- [ ] pattern" file`.
 

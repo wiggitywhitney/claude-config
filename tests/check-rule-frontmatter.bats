@@ -18,6 +18,11 @@ EOF
     chmod +x "$SCRIPT"
 }
 
+# GNU coreutils shadows BSD stat on this machine, and the two disagree on -f.
+stat_mode() {
+    stat -c %a "$1" 2>/dev/null || stat -f %Lp "$1"
+}
+
 teardown() {
     rm -rf "$TMPDIR"
 }
@@ -53,12 +58,111 @@ bare_rule() {
     [[ "$output" == *"loads in every session"* ]]
 }
 
+# The reference scan must stop at the end of the .md, the same way is_at_referenced in
+# measure-context-load.sh does — it requires whitespace, end-of-line, or a closing paren after
+# the extension. Without that boundary the two scripts disagree about what counts as an
+# @-reference, and a paths:-scoped rule gets reported as carrying both mechanisms because some
+# unrelated longer path happens to start with its name.
+@test "does not treat @rules/NAME.md.bak as a reference to NAME.md" {
+    scoped_rule "example.md" '"**/*.ts"'
+    printf 'Backup lives at @rules/example.md.bak\n' >> "$FAKE_REPO/global/CLAUDE.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"exactly one loading mechanism"* ]]
+}
+
 @test "fails when a rule is both @-referenced and paths:-scoped" {
     scoped_rule "always-loaded.md" '"**/*.ts"'
     run "$SCRIPT" "$FAKE_REPO"
     [ "$status" -eq 1 ]
     [[ "$output" == *"always-loaded.md"* ]]
     [[ "$output" == *"pick one"* ]]
+}
+
+# A second CLAUDE.md carries @-imports too. Until 2026-08-04 this script read only
+# global/CLAUDE.md, so two rules that were both paths:-scoped and @-referenced from
+# .claude/CLAUDE.md passed as correctly configured.
+project_reference() {
+    mkdir -p "$FAKE_REPO/.claude"
+    printf 'Full reference: @~/.claude/rules/%s\n' "$1" >> "$FAKE_REPO/.claude/CLAUDE.md"
+}
+
+@test "honors an @-reference from the project .claude/CLAUDE.md" {
+    bare_rule "project-referenced.md"
+    project_reference "project-referenced.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+}
+
+@test "fails when a rule is paths:-scoped and @-referenced from the project CLAUDE.md" {
+    scoped_rule "hooks-reference.md" '"**/*.sh"'
+    project_reference "hooks-reference.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"hooks-reference.md"* ]]
+    [[ "$output" == *"pick one"* ]]
+}
+
+@test "names which CLAUDE.md carries the reference so the fix is unambiguous" {
+    scoped_rule "hooks-reference.md" '"**/*.sh"'
+    project_reference "hooks-reference.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [[ "$output" == *".claude/CLAUDE.md"* ]]
+}
+
+@test "aborts when a CLAUDE.md exists but cannot be scanned" {
+    scoped_rule "scoped.md" '"**/*.ts"'
+    if [ "$(id -u)" -eq 0 ]; then skip "chmod 000 does not block root"; fi
+    orig_mode="$(stat_mode "$FAKE_REPO/global/CLAUDE.md")"
+    chmod 000 "$FAKE_REPO/global/CLAUDE.md"
+    run bash "$SCRIPT" "$FAKE_REPO"
+    chmod "$orig_mode" "$FAKE_REPO/global/CLAUDE.md"
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"failed to scan"* ]]
+    [[ "$output" != *"All rules have exactly one loading mechanism"* ]]
+}
+
+@test "aborts when the project CLAUDE.md exists but cannot be scanned" {
+    scoped_rule "scoped.md" '"**/*.ts"'
+    mkdir -p "$FAKE_REPO/.claude"
+    printf '# Project\n' > "$FAKE_REPO/.claude/CLAUDE.md"
+    if [ "$(id -u)" -eq 0 ]; then skip "chmod 000 does not block root"; fi
+    orig_mode="$(stat_mode "$FAKE_REPO/.claude/CLAUDE.md")"
+    chmod 000 "$FAKE_REPO/.claude/CLAUDE.md"
+    run bash "$SCRIPT" "$FAKE_REPO"
+    chmod "$orig_mode" "$FAKE_REPO/.claude/CLAUDE.md"
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"failed to scan"* ]]
+}
+
+@test "a missing project CLAUDE.md is not an error" {
+    scoped_rule "fine.md" '"**/*.ts"'
+    [ ! -f "$FAKE_REPO/.claude/CLAUDE.md" ]
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+}
+
+@test "an @-path inside a code span is a mention, not an import" {
+    # global/CLAUDE.md names reference-pointer rules inside backticks precisely because
+    # a code span is not an import. measure-context-load.sh has always stripped code
+    # before scanning; this checker did not, so a correctly paths:-scoped rule that
+    # happened to be mentioned in an example was rejected as both-mechanisms.
+    scoped_rule "pino-gotchas.md" '"**/*pino*"'
+    printf 'Write it as `@~/.claude/rules/pino-gotchas.md syntax` in prose.\n' \
+        >> "$FAKE_REPO/global/CLAUDE.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+}
+
+@test "an @-path inside a fenced code block is a mention, not an import" {
+    scoped_rule "pino-gotchas.md" '"**/*pino*"'
+    {
+        printf '```markdown\n'
+        printf '@~/.claude/rules/pino-gotchas.md\n'
+        printf '```\n'
+    } >> "$FAKE_REPO/global/CLAUDE.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
 }
 
 @test "fails when a rule uses the ** / * wildcard as its scope" {
@@ -86,8 +190,20 @@ bare_rule() {
     [[ "$output" == *"languages/shell.md"* ]]
 }
 
-@test "exempts rules/README.md, which is an index rather than a rule" {
+@test "does not exempt rules/README.md: an unscoped index loads every session" {
+    # Exempt until 2026-08-03 on the false premise that it never loads. Measured with
+    # an InstructionsLoaded hook, it loaded at session_start every session. The
+    # exemption is why that went unnoticed, so the index is now held to the same
+    # one-mechanism requirement as every other rule.
     printf -- '# Rules Index\n' > "$FAKE_REPO/rules/README.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"README.md"* ]]
+}
+
+@test "accepts rules/README.md once it carries paths: frontmatter" {
+    printf -- '---\npaths: ["rules/**/*.md"]\n---\n\n# Rules Index\n' \
+        > "$FAKE_REPO/rules/README.md"
     run "$SCRIPT" "$FAKE_REPO"
     [ "$status" -eq 0 ]
 }
@@ -165,4 +281,37 @@ bare_rule() {
 @test "the real repo passes its own check" {
     run "$SCRIPT" "$BATS_TEST_DIRNAME/.."
     [ "$status" -eq 0 ]
+}
+
+# Claude Code accepts three spellings for the same import, and measure-context-load.sh
+# has always matched all three. This scanner recognized only @~/.claude/rules/... until
+# 2026-08-04, so a rule imported as @rules/x.md was counted as an import by the inventory
+# and as having no mechanism at all here. Two tools disagreeing about one file is the
+# coupled-pair failure these scripts exist to detect, so the disagreement mattered more
+# than either verdict on its own. Both tests below were observed failing before the fix.
+@test "an @rules/ import is recognized as a loading mechanism" {
+    bare_rule "short-form.md"
+    printf '\n@rules/short-form.md\n' >> "$FAKE_REPO/global/CLAUDE.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+    [[ "$output" != *"short-form.md"* ]]
+}
+
+@test "an @./rules/ import is recognized as a loading mechanism" {
+    bare_rule "dot-form.md"
+    printf '\n@./rules/dot-form.md\n' >> "$FAKE_REPO/global/CLAUDE.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    [ "$status" -eq 0 ]
+    [[ "$output" != *"dot-form.md"* ]]
+}
+
+@test "a short-form import plus paths: frontmatter is still caught as both-mechanisms" {
+    scoped_rule "short-both.md" '"**/*.ts"'
+    printf '\n@rules/short-both.md\n' >> "$FAKE_REPO/global/CLAUDE.md"
+    run "$SCRIPT" "$FAKE_REPO"
+    # Recognizing the short form must not come at the cost of the defect it exists to
+    # find: before the fix this passed silently, which is the worse of the two failures.
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"short-both.md"* ]]
+    [[ "$output" == *"both @-referenced"* ]]
 }

@@ -100,20 +100,12 @@
       "Bash(gh pr merge*)",
       "Bash(npm publish*)",
       "Bash(rm *)"
-    ]
+    ],
+    "defaultMode": "auto"
   },
   "model": "opus[1m]",
   "hooks": {
     "PreToolUse": [
-      {
-        "matcher": "mcp__.*(youtube).*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/scripts/google-mcp-safety-hook.py"
-          }
-        ]
-      },
       {
         "matcher": "Write|Edit",
         "hooks": [
@@ -145,10 +137,6 @@
       {
         "matcher": "Write|Edit",
         "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/scripts/vale-on-edit.sh"
-          },
           {
             "type": "command",
             "command": "/Users/whitney.lee/Documents/Repositories/claude-config/.claude/skills/verify/scripts/post-write-codeblock-check.sh"
@@ -191,20 +179,6 @@
           {
             "type": "command",
             "command": "/Users/whitney.lee/Documents/Repositories/claude-config/scripts/check-running-clusters.sh"
-          },
-          {
-            "type": "command",
-            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/scripts/check-contributing-freshness.sh"
-          }
-        ]
-      }
-    ],
-    "PostCompact": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/whitney.lee/Documents/Repositories/claude-config/scripts/auto-reanchor.sh"
           }
         ]
       }

@@ -51,7 +51,7 @@ Complete the PRD implementation workflow including branch management, pull reque
 **For Code Implementation Completions:**
 - [ ] **Create feature branch**: `git checkout -b feature/prd-[issue-id]-[feature-name]`
 - [ ] **Commit all changes**: Ensure all implementation work is committed
-- [ ] **Clean commit history**: Squash or organize commits for clear history
+- [ ] **Clean commit history**: Organize commits for clear history — never squash.
 - [ ] **Push to remote**: `git push -u origin feature/prd-[issue-id]-[feature-name]`
 
 ### 2.5. Pre-PR Verification
@@ -288,7 +288,7 @@ Please review and respond:
   - No labels: `gh pr create --title "[title]" --body "[body]"`
 - [ ] **Verify PR created**: Confirm PR was created successfully, template populated correctly, and label applied (if applicable)
 - [ ] **Request reviews**: Assign appropriate team members for code review if specified
-- [ ] **Run `/code-review`**: Immediately after PR creation, invoke `/code-review` using the Skill tool. Review all findings at or above the 80-confidence threshold and fix them before merging. The CodeRabbit timer and Anki capture (steps 4.0–4.1) proceed in parallel — only the merge is gated on `/code-review` findings being addressed. `/code-review` and CodeRabbit find different issue classes — `/code-review` catches CLAUDE.md compliance, bugs, and historical context issues; CodeRabbit catches security and correctness issues. If CodeRabbit is rate-limited and never posts, `/code-review` provides full coverage; do not block indefinitely waiting for CodeRabbit.
+- [ ] **Run `/code-review`**: Immediately after PR creation, invoke `/code-review` using the Skill tool. Review all findings at or above the 80-confidence threshold and fix them before merging. The CodeRabbit timer (step 4.1) proceeds in parallel — only the merge is gated on `/code-review` findings being addressed. When it applies, how it differs from CodeRabbit, and what to do when CodeRabbit never posts are in `~/.claude/rules/git-workflow.md`, which is always loaded.
 
 #### 3.8. Fallback for Projects Without Templates
 If no PR template is found, create a sensible default structure:
@@ -312,61 +312,23 @@ Closes #[issue-id]
 
 ### 4. Review and Merge Process
 
-#### 4.0. Knowledge Capture During Review Wait
-
-After creating the PR and starting the CodeRabbit review timer, use the wait time productively by capturing what was built as Anki cards.
-
-**Scope: Cover the ENTIRE PRD, not just recent work.** Cards should be sourced from all milestones, the full decision log, and the complete git diff — not limited to the current conversation or the most recent milestone.
-
-- [ ] **Scan for existing cards**: Read files in the Anki finished directory (defined as `ANKI_FINISHED_DIR` in the `/anki` skill) to check for cards already covering this PRD's topics. Do not create duplicates of concepts already captured.
-- [ ] **Read the PRD document**: Review ALL milestones, the full decision log, architecture choices, and requirements — not just the most recent milestone
-- [ ] **Read key source files**: Scan the main files created or modified during implementation (use git diff against main to identify them)
-- [ ] **Invoke the `/anki` skill**: Create flashcards sourced from the PRD and the code — not from conversation context. Focus on:
-  - Architectural decisions and why they were made
-  - New concepts, patterns, or technologies introduced
-  - How components fit together at a high-level
-  - Surprising or non-obvious design choices from the decision log
-  - Do NOT create cards for implementation minutiae, boilerplate, or things the user already knows
-
 #### 4.1. Check Review Status
 - [ ] **Check ongoing processes**: Use `gh pr checks [pr-number]` to check for any ongoing CI/CD, security analysis, or automated reviews (CodeRabbit, CodeQL, etc.)
 - [ ] **Check PR details**: Use `gh pr view [pr-number]` to check for human review comments and PR metadata
 - [ ] **Review all automated feedback**: Check PR comments section for automated code review feedback (bots, linters, analyzers)
   - **Use multiple methods to capture all feedback**:
-    - **Always fetch all three CodeRabbit channels** — CodeRabbit posts to all three and missing any one means missing findings:
-      ```bash
-      gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '.[] | {user: .user.login, state, body}'
-      gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '.[] | {user: .user.login, path, line, body}'
-      gh api --paginate repos/OWNER/REPO/issues/PR_NUMBER/comments --jq '.[] | {user: .user.login, body}'
-      ```
-      - `/pulls/{n}/reviews` — full review bodies including "outside diff range" findings (most content lives here)
-      - `/pulls/{n}/comments` — inline comments attached to specific diff lines
-      - `/issues/{n}/comments` — conversation-level notices (rate-limit notices, "reviews paused")
-    - **Confirm the review ran by positive evidence, not by absence of findings.** Three states look identical if you only check whether findings came back: CodeRabbit reviewed and found nothing, CodeRabbit was rate-limited and never ran, and CodeRabbit reviewed an older commit. A rate-limit notice proves the second case, but its absence proves nothing. The test that works is a review or inline comment whose `commit_id` equals the current PR head:
-
-      ```bash
-      HEAD_SHA=$(gh api repos/OWNER/REPO/pulls/PR_NUMBER --jq '.head.sha')
-      gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/reviews --jq '.[] | select(.user.login == "coderabbitai[bot]") | .commit_id'
-      gh api --paginate repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '.[] | select(.user.login == "coderabbitai[bot]") | .commit_id'
-      ```
-
-      Take the head SHA from the API, not from `git rev-parse HEAD` — the local head diverges from the PR head whenever commits are unpushed, and CodeRabbit reviews what was pushed. Check both channels, because a round can produce a review body with no inline comments or inline comments with no review body; a match in either one counts. No match in either means the review is still pending for this head — keep waiting, or re-trigger. Do not treat it as clean.
+    - **Fetch all three CodeRabbit channels, and confirm the review ran by positive evidence rather than by absence of findings.** Both procedures — the three `gh api --paginate` calls and the `commit_id`-matches-PR-head test that distinguishes "reviewed and clean" from "rate-limited and never ran" from "reviewed an older commit" — are specified in `~/.claude/rules/git-workflow.md`. That rule is always loaded, so it is already in context; follow it there and do not restate it here.
     - **MCP servers** (supplemental when available): Code review MCPs for additional coverage
     - Look for comments from automated tools (usernames ending in 'ai', 'bot', or known review tools)
 - [ ] **Present ALL code review findings**: ALWAYS present every review comment to the user, regardless of severity
   - **Show ALL comments**: Present every suggestion, nitpick, and recommendation - do not filter or omit any
-  - **Categorize findings**: Critical, Important, Optional/Nitpick based on impact
   - **Provide specific examples**: Quote actual suggestions and their locations
-  - **Explain assessment**: Why each category was assigned
+  - **Categorize findings by impact, and say why each category was assigned**:
+    - **Critical**: Security issues, breaking changes, test failures — MUST address before merge
+    - **Important**: Code quality, maintainability, performance — SHOULD address for production readiness
+    - **Optional/Nitpick**: Style preferences, minor optimizations — MAY address based on project standards
   - **User decision**: Let user decide which improvements to implement before merge (critical items must be addressed, others are user's choice)
-  - **Triage rubric for non-critical findings**:
-    - **Skip** if the suggestion is genuinely not helpful or misunderstands the code
-    - **Skip** if the complexity or maintenance cost of the fix outweighs its benefit
-    - **Fix** if the only reason to skip is that it takes time to write — effort alone is not a reason to skip
-- [ ] **Assess feedback priority**: Categorize review feedback
-  - **Critical**: Security issues, breaking changes, test failures - MUST address before merge
-  - **Important**: Code quality, maintainability, performance - SHOULD address for production readiness
-  - **Optional**: Style preferences, minor optimizations - MAY address based on project standards
+  - **Triage rubric for non-critical findings**: apply the Fix/Defer/Skip rubric in `~/.claude/rules/git-workflow.md`, which is always loaded
 - [ ] **Wait for ALL reviews to complete**: Do NOT merge if any reviews are pending or in progress, including:
   - **Automated code reviews** (CodeRabbit, CodeQL, etc.) - Must wait until complete even if CI passes
   - **Security analysis** - Must complete and pass
@@ -377,7 +339,7 @@ After creating the PR and starting the CodeRabbit review timer, use the wait tim
   - Create additional commits on the feature branch to address feedback
   - Update tests if needed to cover suggested improvements
   - Document any feedback that was intentionally not addressed and why
-- [ ] **Re-review after pushing fixes**: Start another 7-minute timer. Re-run all three `gh api` calls from above. Repeat the triage loop until no new **Fix** findings remain (Defer and Skip findings do not block merge). If CodeRabbit is rate-limited, post `@coderabbitai review` as a PR comment to trigger a re-review.
+- [ ] **Re-review after pushing fixes**: Start another 7-minute timer. Re-run all three CodeRabbit channel fetches specified in `~/.claude/rules/git-workflow.md`. Repeat the triage loop until no new **Fix** findings remain (Defer and Skip findings do not block merge). If CodeRabbit is rate-limited, post `@coderabbitai review` as a PR comment to trigger a re-review.
 - [ ] **Verify all checks pass**: Ensure all CI/CD, tests, security analysis, and automated processes are complete and passing
 - [ ] **Final review**: Confirm the PR addresses the original PRD requirements and maintains code quality
 - [ ] **Merge to main**: Complete the pull request merge only after all feedback addressed and processes complete
