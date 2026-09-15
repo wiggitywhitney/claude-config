@@ -95,12 +95,12 @@ Git enforcement (branch protection, commit message, build verification, push sec
 bash scripts/install-git-hooks.sh [repo-path]
 ```
 
-Idempotent — safe to re-run. Never touches `post-commit` (reserved for commit-story). Full reference: @~/.claude/rules/hooks-reference.md
+Idempotent — safe to re-run. Never touches `post-commit` (reserved for commit-story). Full reference (reference pointer, not auto-loaded — read only when a hook fires unexpectedly or you need to know what a specific hook checks): `~/.claude/rules/hooks-reference.md`
 
 ## Testing
 
 - All bash hook and script files MUST have bats test coverage. Place tests in `tests/<script-name>.bats`.
-- Bats gotchas and patterns: @~/.claude/rules/bats-bash-testing.md
+- Bats gotchas and patterns (reference pointer, not auto-loaded — read only when writing or debugging a bash test suite): `~/.claude/rules/bats-bash-testing.md`
 
 ## Secrets Management (vals)
 
@@ -108,7 +108,11 @@ This project uses [vals](https://github.com/helmfile/vals) for secrets managemen
 
 **Exporting secrets to shell (for MCP servers):**
 ```bash
-eval $(vals eval -f .vals.yaml --output shell)
+eval "$(vals env -export -f .vals.yaml)"
 ```
+
+**Do not "align" this back to `vals eval --output shell`.** `vals eval` has no `--output` flag — its only output flag is `-o`, taking `yaml` or `json` — so that form fails immediately with `flag provided but not defined: -output`, the export never runs, and every variable is silently absent. Rendering environment variables is a separate subcommand, `vals env`. Verified against vals 0.43.6 on 2026-08-25: the broken form reproduces that error, and `vals env -export -f .vals.yaml` exits 0 emitting one `export NAME=value` line per secret.
+
+Whether `--output shell` existed in some older vals release is **unchecked** — do not repeat this note as proof that it never did. What is established: the installed version rejects it, and it lived in this repo from the 2026-02-11 bootstrap until 2026-08-25 without being run. It reached this file on 2026-03-15, in a commit that *replaced a working `vals env` command* to match two copies elsewhere in the repo that were already wrong — reasoning from internal consistency rather than from vals. Consistency with an unverified copy is how the last correct copy was lost.
 
 Secrets are configured in `.vals.yaml` (gitignored).

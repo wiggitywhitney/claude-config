@@ -25,6 +25,38 @@ write_input() {
     [[ "$output" == *"branch"* ]]
 }
 
+@test "omits branch deletion when --delete-branch already handled it" {
+    write_input '{"tool_name":"Bash","tool_input":{"command":"gh pr merge 42 --squash --delete-branch"},"cwd":"/tmp","tool_response":"Merged pull request #42 (title)"}'
+    run bash -c "\"$SCRIPT\" < \"$TMPDIR/input.json\""
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"additionalContext"* ]]
+    [[ "$output" != *"Delete the feature branch"* ]]
+    [[ "$output" == *"issue"* ]]
+}
+
+@test "omits branch deletion for the -d short form" {
+    write_input '{"tool_name":"Bash","tool_input":{"command":"gh pr merge 42 --squash -d"},"cwd":"/tmp","tool_response":"Merged pull request #42 (title)"}'
+    run bash -c "\"$SCRIPT\" < \"$TMPDIR/input.json\""
+    [ "$status" -eq 0 ]
+    [[ "$output" != *"Delete the feature branch"* ]]
+    [[ "$output" == *"issue"* ]]
+}
+
+@test "still asks for branch deletion when --delete-branch=false" {
+    write_input '{"tool_name":"Bash","tool_input":{"command":"gh pr merge 42 --delete-branch=false"},"cwd":"/tmp","tool_response":"Merged pull request #42 (title)"}'
+    run bash -c "\"$SCRIPT\" < \"$TMPDIR/input.json\""
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"Delete the feature branch"* ]]
+}
+
+@test "still asks for branch deletion when the flag is absent" {
+    write_input '{"tool_name":"Bash","tool_input":{"command":"gh pr merge 42 --squash"},"cwd":"/tmp","tool_response":"Merged pull request #42 (title)"}'
+    run bash -c "\"$SCRIPT\" < \"$TMPDIR/input.json\""
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"Delete the feature branch"* ]]
+    [[ "$output" == *"issue"* ]]
+}
+
 @test "silent for failed gh pr merge" {
     write_input '{"tool_name":"Bash","tool_input":{"command":"gh pr merge 42"},"cwd":"/tmp","tool_response":"error: pull request is not mergeable"}'
     run bash -c "\"$SCRIPT\" < \"$TMPDIR/input.json\""

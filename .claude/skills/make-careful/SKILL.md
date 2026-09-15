@@ -7,12 +7,14 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 
 # Disable Autonomous PRD Mode
 
-Swap a project from autonomous (YOLO) PRD mode to careful mode. This replaces YOLO skill symlinks with careful variants, removes the `/clear` → auto-resume SessionStart hook, and removes autonomous permissions.
+Swap a project from autonomous (YOLO) PRD mode to careful mode. This replaces YOLO skill symlinks with careful variants, removes autonomous permissions, and cleans up a legacy `SessionStart` hook registration if the project still carries one.
+
+**The hook is legacy, not current.** `/make-autonomous` stopped installing it on 2026-08-18 and the script it pointed at is gone, so Step 3 below is cleanup for projects registered before that date — not the removal of something this repo still sets up. See Step 3 for why it never worked.
 
 ## What This Does
 
 1. **Swaps symlinks to careful skill variants** in `.claude/skills/` pointing to `SKILL.md` files in the claude-config repo
-2. **Removes SessionStart hook** that enables the `/clear` → auto-resume loop
+2. **Removes a legacy SessionStart hook registration**, if present — it was meant to auto-resume after `/clear` and never did
 3. **Removes autonomous permissions** added by `/make-autonomous`
 
 ## PRD Skills After Swap
@@ -66,9 +68,13 @@ done
 
 **Important**: Use absolute paths for symlink targets so they work regardless of working directory.
 
-### Step 3: Remove SessionStart Hook
+### Step 3: Remove the legacy SessionStart Hook
 
-Read `.claude/settings.local.json`. Remove the `prd-loop-continue.sh` SessionStart hook entry:
+**The hook itself was retired on 2026-08-18** — `scripts/prd-loop-continue.sh` no longer exists, and `/make-autonomous` no longer installs it. It injected an imperative directive to auto-invoke `/prd-next` after `/clear`, and it never worked: the official hooks documentation warns that out-of-band imperative text trips prompt-injection defenses and gets surfaced to the user rather than acted on.
+
+This step remains because repositories where `/make-autonomous` ran before that date may still carry the registration, which would now point at a missing script. The eight known instances were cleaned up on 2026-08-18; keep this step for any that were missed. If the entry is absent, do nothing and say so.
+
+Read `.claude/settings.local.json`. Remove any `prd-loop-continue.sh` SessionStart hook entry:
 
 **What to remove:**
 - Find the `hooks.SessionStart` array
@@ -78,6 +84,8 @@ Read `.claude/settings.local.json`. Remove the `prd-loop-continue.sh` SessionSta
 - Never touch other hook types (PreToolUse, PostToolUse, etc.)
 
 ### Step 4: Remove Autonomous Permissions
+
+**Include `Skill(prds-get)`.** `/make-autonomous` adds it and earlier versions of this list omitted it, so a project switched back to careful mode kept one autonomous skill permission. Verify the allowlist before and after the switch rather than assuming the list is complete.
 
 Remove the permission entries that `/make-autonomous` added from `.claude/settings.local.json` under `permissions.allow`.
 
@@ -112,6 +120,7 @@ Remove the permission entries that `/make-autonomous` added from `.claude/settin
   "Skill(prd-update-decisions)",
   "Skill(prd-create)",
   "Skill(prd-close)",
+  "Skill(prds-get)",
   "Skill(anki-yolo)",
   "WebFetch",
   "WebSearch"

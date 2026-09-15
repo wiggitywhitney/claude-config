@@ -46,13 +46,23 @@ The adaptation is load-bearing, not cosmetic. Michael's system assumes a shared 
 
 ### M1: Extend `/make-autonomous` allowlist for headless `claude -p`
 
-**Step 0:** Read before starting: Decision 4 in the Decision Log below (exact allowlist entries and rationale); [Claude Code autonomous capabilities](../docs/research/claude-code-autonomous-capabilities.md) §1 (why `claude -p` is the right primitive and why permission prompts will stall it in headless mode).
+> **This milestone's premise is now known to be weak. Do not implement it as written — read this first (PRD #109, Decisions 48–51, 2026-08-04).**
+>
+> The plan here is "add twelve allowlist entries so a headless child stops hitting prompts." PRD #109 measured what that approach achieves in practice: **227 allowlist entries did not prevent the observed prompt classes**, because an entry approves a literal command string and generalizes to nothing. A `python3` heredoc prompted *despite* `Bash(python3:*)` being allowlisted, and the prompt offered no rule to grant, because for that class there is no expressible rule.
+>
+> Two platform mechanisms address it and neither is an allowlist: **auto mode**, which routes unmatched calls to a classifier instead of a prompt, and **`dontAsk` mode**, which the documentation describes as intended for exactly this case — "Use this mode for CI pipelines or restricted environments where you pre-define exactly what Claude may do; the session never waits for input." Note that `dontAsk` auto-*denies* what it cannot match, so it converts a stall into a failure, which for an unattended run may be the better outcome but is a real design choice.
+>
+> One hard constraint for any `-p` architecture: in non-interactive mode **repeated classifier blocks abort the session**, since there is no user to prompt. Auto mode is not a guarantee of an uninterrupted headless run, and `autoMode.environment` would need configuring before relying on it.
+>
+> Evidence: [claude-code-permission-modes.md](../docs/research/claude-code-permission-modes.md). **This feeds PRD #109's Milestone D1**, which assigns a keep / rebuild / learnings-only verdict to every part of this PRD — the twelve-entry plan is a candidate for the learnings-only verdict rather than the code-lives one.
+
+**Step 0:** Read before starting: the box above; Decision 4 in the Decision Log below (exact allowlist entries and rationale); [Claude Code autonomous capabilities](../docs/research/claude-code-autonomous-capabilities.md) §1 (why `claude -p` is the right primitive and why permission prompts will stall it in headless mode).
 
 **What:** Add twelve permission entries to `/make-autonomous`'s allowlist instruction block so that an autonomous `claude -p` child session can run tests, manage tasks, spawn agents, and schedule wake-ups without hitting permission prompts.
 
 **Why:** Audit confirmed `/make-autonomous` already covers ~85% of what autonomous-mode needs (git, gh, PRD skills, Read/Edit/Write). The remaining twelve entries are trivial JSON additions; without them, `claude -p` stalls on the first `npm test`, `bats`, `TaskCreate`, `Agent`, or `ScheduleWakeup` call — defeating autonomy. This milestone is a prerequisite to M3 because the orchestrator's pre-flight check verifies `/make-autonomous` has been applied.
 
-**To implement:**
+**To implement — STOP. Read the warning box at the top of this milestone before running any of it. These steps encode a remedy that PRD #109 measured and found ineffective on 2026-08-04; adding allowlist entries does not stop the observed prompt classes.**
 - Edit `.claude/skills/make-autonomous/SKILL.md` to add these entries to the `permissions.allow` instruction block: `Bash(npm test*)`, `Bash(npm run build*)`, `Bash(npm run *)`, `Bash(npx vitest*)`, `Bash(pytest*)`, `Bash(bats*)`, `TaskCreate`, `TaskUpdate`, `TaskGet`, `TaskList`, `Agent`, `ScheduleWakeup`
 - Read `.claude/skills/make-careful/SKILL.md` to confirm whether symmetric removals are needed; skip if careful mode resets the full allowlist rather than subtracting specific entries
 - Run `/write-prompt` on the updated `/make-autonomous` SKILL.md; apply all high-severity findings before committing

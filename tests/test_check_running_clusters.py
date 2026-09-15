@@ -51,13 +51,22 @@ def make_stub(directory, name, stdout="", exit_code=0):
     return path
 
 
-def make_gcloud_stub(directory, output_lines):
-    """Create a gcloud stub that responds to 'container clusters list' with given output."""
+def make_gcloud_stub(directory, output_lines, project="test-project"):
+    """Create a gcloud stub that responds to 'container clusters list' with given output.
+
+    Also answers `config get-value project`, which the hook resolves before
+    listing so that an unconfigured project is reported rather than swallowed.
+    """
     path = os.path.join(directory, "gcloud")
     # The stub checks if 'container' and 'clusters' and 'list' are in args
     lines_output = "\\n".join(output_lines) if output_lines else ""
     with open(path, "w") as f:
         f.write("#!/usr/bin/env bash\n")
+        f.write('if [[ "$*" == *"config"*"get-value"*"project"* ]]; then\n')
+        if project:
+            f.write(f'  echo "{project}"\n')
+        f.write("  exit 0\n")
+        f.write("fi\n")
         f.write('if [[ "$*" == *"container"*"clusters"*"list"* ]]; then\n')
         if lines_output:
             f.write(f'  printf "%b\\n" "{lines_output}"\n')
@@ -65,6 +74,38 @@ def make_gcloud_stub(directory, output_lines):
         f.write("fi\n")
         f.write("exit 0\n")
     os.chmod(path, os.stat(path).st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+    return path
+
+
+def make_recording_gcloud_stub(directory, args_file, project="", clusters=None,
+                               list_exit=0):
+    """gcloud stub that records its argv and answers both calls the hook makes.
+
+    Responds to `config get-value project` with the given project (empty when
+    unset) and to `container clusters list` with the given rows.
+    """
+    clusters = clusters or []
+    lines_output = "\\n".join(clusters)
+    path = os.path.join(directory, "gcloud")
+    with open(path, "w") as f:
+        f.write("#!/usr/bin/env bash\n")
+        f.write(f'echo "$*" >> "{args_file}"\n')
+        f.write('if [[ "$*" == *"config"*"get-value"*"project"* ]]; then\n')
+        if project:
+            f.write(f'  echo "{project}"\n')
+        f.write("  exit 0\n")
+        f.write("fi\n")
+        f.write('if [[ "$*" == *"container"*"clusters"*"list"* ]]; then\n')
+        if lines_output:
+            f.write(f'  printf "%b\\n" "{lines_output}"\n')
+        if list_exit != 0:
+            f.write('  echo "ERROR: something went wrong" >&2\n')
+        f.write(f"  exit {list_exit}\n")
+        f.write("fi\n")
+        f.write("exit 0\n")
+    os.chmod(path, os.stat(path).st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+    # Ensure the file exists even if the stub is never called.
+    open(args_file, "a").close()
     return path
 
 
@@ -255,7 +296,124 @@ def run_tests():
 
         exit_code, stdout, stderr = run_hook(make_session_input(), bin_dir=bin_dir)
         t.assert_equal("kind error → exit 0 (graceful)", exit_code, 0)
-        t.assert_equal("kind error → no stdout", stdout.strip(), "")
+        # Previously asserted silence. Silence here is the defect: a failed listing
+        # is not an empty listing, and reporting nothing hides that Kind was never
+        # actually inspected.
+        t.assert_contains("kind error → reports the failure rather than staying silent",
+                          stdout, "Kind check failed")
+
+    # ─── Section 9: documented output envelope ───
+    t.section("Output uses the documented hookSpecificOutput envelope")
+
+    with TempDir() as bin_dir:
+        args_file = os.path.join(bin_dir, "args.txt")
+        make_stub(bin_dir, "kind", stdout="test-cluster", exit_code=0)
+        make_recording_gcloud_stub(bin_dir, args_file, project="demo-proj", clusters=[])
+
+        exit_code, stdout, stderr = run_hook(make_session_input(), bin_dir=bin_dir)
+        try:
+            parsed = json.loads(stdout)
+        except json.JSONDecodeError:
+            parsed = {}
+            t._fail("envelope → valid JSON", f"Output is not valid JSON: {stdout}")
+
+        hso = parsed.get("hookSpecificOutput", {})
+        t.assert_equal("nests output under hookSpecificOutput",
+                       isinstance(hso, dict) and hso != {}, True)
+        t.assert_equal("names the hook event", hso.get("hookEventName"), "SessionStart")
+        t.assert_contains("carries the message in additionalContext",
+                          hso.get("additionalContext", ""), "test-cluster")
+        t.assert_equal("no bare top-level additionalContext",
+                       "additionalContext" in parsed, False)
+
+    # ─── Section 9b: Kind failures are reported, not swallowed ───
+    t.section("Kind check failure is visible, not silent")
+
+    with TempDir() as bin_dir:
+        args_file = os.path.join(bin_dir, "args.txt")
+        make_stub(bin_dir, "kind", stdout="", exit_code=1)
+        make_recording_gcloud_stub(bin_dir, args_file, project="demo-proj", clusters=[])
+
+        exit_code, stdout, stderr = run_hook(make_session_input(), bin_dir=bin_dir)
+        t.assert_equal("failing kind → exit 0", exit_code, 0)
+        t.assert_contains("failing kind → reports the check could not run",
+                          stdout, "Kind check failed")
+
+    # A container runtime that is not running means no Kind cluster can exist,
+    # so that specific failure is not worth a warning at every session start.
+    with TempDir() as bin_dir:
+        args_file = os.path.join(bin_dir, "args.txt")
+        path = os.path.join(bin_dir, "kind")
+        with open(path, "w") as f:
+            f.write("#!/usr/bin/env bash\n")
+            f.write('echo "ERROR: failed to list clusters: failed to connect to the docker API at unix:///x/docker.sock" >&2\n')
+            f.write("exit 1\n")
+        os.chmod(path, os.stat(path).st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+        make_recording_gcloud_stub(bin_dir, args_file, project="demo-proj", clusters=[])
+
+        exit_code, stdout, stderr = run_hook(make_session_input(), bin_dir=bin_dir)
+        t.assert_equal("unreachable container runtime → exit 0", exit_code, 0)
+        t.assert_equal("unreachable container runtime → stays silent", stdout.strip(), "")
+
+    # ─── Section 9c: teardown commands name the project explicitly ───
+    t.section("Generic GKE teardown names the project")
+
+    with TempDir() as bin_dir:
+        args_file = os.path.join(bin_dir, "args.txt")
+        make_stub(bin_dir, "kind", stdout="", exit_code=0)
+        make_recording_gcloud_stub(bin_dir, args_file, project="demo-proj",
+                                   clusters=["unconventional-name\tus-central1-a"])
+
+        exit_code, stdout, stderr = run_hook(make_session_input(), bin_dir=bin_dir)
+        t.assert_contains("generic teardown passes --project",
+                          stdout, "--project demo-proj")
+
+    # ─── Section 10: the GKE check must never fail silently ───
+    t.section("GKE check failure is visible, not silent")
+
+    # A configured project, an explicit --project argument, and no name filter.
+    with TempDir() as bin_dir:
+        args_file = os.path.join(bin_dir, "args.txt")
+        make_stub(bin_dir, "kind", stdout="", exit_code=0)
+        make_recording_gcloud_stub(bin_dir, args_file, project="demo-proj",
+                                   clusters=["oddly-named-cluster\tus-central1-a"])
+
+        exit_code, stdout, stderr = run_hook(make_session_input(), bin_dir=bin_dir)
+        with open(args_file) as f:
+            recorded = f.read()
+
+        t.assert_equal("configured project → exit 0", exit_code, 0)
+        t.assert_contains("passes the project explicitly", recorded, "--project demo-proj")
+        t.assert_not_contains("passes no hardcoded cluster-name filter", recorded, "--filter=name~")
+        t.assert_contains("reports a cluster whose name matches no known prefix",
+                          stdout, "oddly-named-cluster")
+
+    # No project configured — the check cannot run, and must say so.
+    with TempDir() as bin_dir:
+        args_file = os.path.join(bin_dir, "args.txt")
+        make_stub(bin_dir, "kind", stdout="", exit_code=0)
+        make_recording_gcloud_stub(bin_dir, args_file, project="", clusters=[])
+
+        exit_code, stdout, stderr = run_hook(make_session_input(), bin_dir=bin_dir)
+        with open(args_file) as f:
+            recorded = f.read()
+        t.assert_equal("unset project → exit 0", exit_code, 0)
+        t.assert_not_contains("unset project → never attempts the listing",
+                              recorded, "container clusters list")
+        t.assert_contains("unset project → warns that the check did not run",
+                          stdout, "no gcloud project")
+        t.assert_contains("unset project → names the fix", stdout, "gcloud config set project")
+
+    # gcloud is configured but the list call fails — also must not be silent.
+    with TempDir() as bin_dir:
+        args_file = os.path.join(bin_dir, "args.txt")
+        make_stub(bin_dir, "kind", stdout="", exit_code=0)
+        make_recording_gcloud_stub(bin_dir, args_file, project="demo-proj",
+                                   clusters=[], list_exit=1)
+
+        exit_code, stdout, stderr = run_hook(make_session_input(), bin_dir=bin_dir)
+        t.assert_equal("failing list call → exit 0", exit_code, 0)
+        t.assert_contains("failing list call → warns the check failed", stdout, "GKE check failed")
 
     return t.summary()
 

@@ -409,17 +409,6 @@ teardown() {
     [[ "$output" == *"ERROR"* ]]
 }
 
-@test "pre-push-verify: skips CodeRabbit review when .skip-coderabbit present" {
-    git -C "$GIT_REPO" checkout -b feature/skip-cr --quiet
-    touch "$GIT_REPO/.skip-coderabbit"
-    echo "plain" > "$GIT_REPO/file.txt"
-    git -C "$GIT_REPO" add .skip-coderabbit file.txt
-    git -C "$GIT_REPO" commit -m "add file" --quiet
-    run bash -c "cd \"$GIT_REPO\" && printf 'refs/heads/feature/skip-cr abc123 refs/heads/feature/skip-cr abc123\n' | \"$CHECKS_DIR/pre-push-verify.sh\" origin https://example.com 2>&1"
-    [ "$status" -eq 0 ]
-    # No CodeRabbit output expected — would only appear if CR CLI is installed and finds issues
-    [[ "$output" != *"CodeRabbit Advisory"* ]]
-}
 
 @test "pre-push-verify: uses REMOTE_NAME arg to derive diff base when remote is not origin" {
     BARE_REPO="$TMPDIR/bare"
@@ -474,4 +463,56 @@ teardown() {
     run "$LIB_DIR/detect-project.sh" "$PROJ"
     [ "$status" -eq 0 ]
     [[ "$output" == *'"typecheck": "yarn dlx tsc --noEmit"'* ]]
+}
+
+# ── pre-push-verify.sh: no review runs from the hook ─────────────────────────
+
+# The hook no longer runs any code review. CodeRabbit moved to /prd-update-progress,
+# which already ran it, so the hook was paying 7 minutes per push for a review that
+# timed out and reported nothing. These tests plant a reviewer where the hook used
+# to look and assert it is never called.
+_stub_coderabbit() {
+    local stub_body="$1"
+    HOOKS_COPY="$TMPDIR/hooks"
+    mkdir -p "$HOOKS_COPY"
+    cp -R "$BATS_TEST_DIRNAME/../hooks/git/checks" "$HOOKS_COPY/checks"
+    cp -R "$BATS_TEST_DIRNAME/../hooks/git/lib" "$HOOKS_COPY/lib"
+    cat > "$HOOKS_COPY/lib/coderabbit-review.sh" <<STUB
+#!/usr/bin/env bash
+$stub_body
+STUB
+    chmod +x "$HOOKS_COPY/lib/coderabbit-review.sh"
+}
+
+_run_prepush() {
+    run bash -c "cd \"$GIT_REPO\" && printf 'refs/heads/feature/cr abc123 refs/heads/feature/cr abc123\n' | \"$HOOKS_COPY/checks/pre-push-verify.sh\""
+}
+
+_commit_a_change() {
+    git init --bare "$TMPDIR/bare" --quiet
+    git -C "$GIT_REPO" remote add origin "$TMPDIR/bare"
+    git -C "$GIT_REPO" push -q origin main
+    git -C "$GIT_REPO" checkout -b feature/cr --quiet
+    # A code file, not .txt: pre-push-verify exits 0 before any check when the
+    # branch diff is docs-only, and .txt counts as docs.
+    mkdir -p "$GIT_REPO/src"
+    echo "const x = 1;" > "$GIT_REPO/src/app.js"
+    git -C "$GIT_REPO" add src/app.js
+    git -C "$GIT_REPO" commit -m "add source file" --quiet
+}
+
+@test "pre-push-verify: does not run any code review" {
+    _stub_coderabbit 'echo "REVIEW_MARKER_SHOULD_NOT_RUN"'
+    _commit_a_change
+    _run_prepush
+    [ "$status" -eq 0 ]
+    [[ "$output" != *"REVIEW_MARKER_SHOULD_NOT_RUN"* ]]
+}
+
+@test "pre-push-verify: still runs the security check after the review was removed" {
+    _stub_coderabbit 'echo "REVIEW_MARKER_SHOULD_NOT_RUN"'
+    _commit_a_change
+    _run_prepush
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"Security Check"* ]]
 }
