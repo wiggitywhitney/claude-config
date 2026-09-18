@@ -6,6 +6,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-09-18) Required every question put to the user to carry the pros and cons of each option alongside a stated recommendation. A bare list of choices pushed the weighing of tradeoffs onto the reader, who then had to ask for the analysis as a second step — so the analysis is now part of asking, not a follow-up. Trivial confirmations, where the tradeoff is self-evident, are exempt so the rule does not turn into boilerplate.
+
 - (2026-09-10) Discovered that almost every globally-installed skill is a symlink into this repo's checked-out working tree rather than a fixed version, so switching git branches silently changes how those skills behave everywhere. A fix sitting on an unmerged branch is only in effect while that branch happens to be checked out, which was demonstrated the same day when a just-repaired skill quietly reverted to its broken version.
 
 - (2026-09-10) Recorded two shell traps that produce convincing wrong answers rather than errors. One is a git command that lists files which *differ* between two branches, easily misread as listing files unique to one — misreading it raised a false alarm about lost work and nearly overwrote good copies with older drafts. The other is a zsh feature that silently eats part of a path built as `$var:some/path`, returning empty output that looks like a genuine "not found."

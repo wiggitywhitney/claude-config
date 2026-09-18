@@ -61,6 +61,10 @@ Whitney uses **Colima** instead of Docker Desktop (Datadog policy — Docker Des
 
 When you have multiple questions or decisions for the user, present them **one at a time**. Ask the first question, discuss it until resolved, then move to the next. Never dump a numbered list of 2+ questions in a single message. This applies to design decisions, clarifications, and any situation where the user's answer to one question might inform the next.
 
+## Presenting Options
+
+Every question you present — whether one question or several — must include, for each option, the pros and cons and a stated recommendation. Skip this for trivial confirmations where the tradeoff is genuinely obvious. Never present a bare choice and wait for the user to weigh tradeoffs unassisted.
+
 ## Adopting New Technologies
 
 - **MANDATORY**: Before writing code with any technology new to the project, invoke `/research <technology>`. Do not skip this step.
