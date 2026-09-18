@@ -64,13 +64,15 @@ Dispatched to a documentation-checking sub-agent rather than answered from memor
 
 **Produced 2026-09-18. Claude Code 2.1.276.** This section closes the reviewer thread this document opened. It was prompted by finding `claude ultrareview` while enumerating the CLI surface, and it ends somewhere other than where it started: the decisive evidence turned out to be Viktor's own configuration rather than anything measured here.
 
-## The answer: Viktor rejected the same-vendor reviewer explicitly
+## The answer: Viktor's live config keeps the same-vendor reviewer switched off
 
 **Verified against the Milestone B2 record** (`vfarcic/dot-agent-deck` at `c701932`, read 2026-08-24). 🟢
 
-Viktor's six roles run `reviewer` on the `pi` harness and `auditor` on `opencode`, both on `gpt-5.6-sol` at xhigh effort, checking work produced by Claude. **Each role carries a commented-out all-Claude alternative**, so the same-vendor configuration was written, considered, and deliberately left disabled.
+Viktor's six roles run `reviewer` on the `pi` harness and `auditor` on `opencode`, both on `gpt-5.6-sol` at xhigh effort, checking work produced by Claude. **Each role carries a commented-out all-Claude alternative**, which Milestone B2 read as the mixing being "deliberate and reversible."
 
-**Interpretation, and it settles the question this section was opened to investigate.** `claude ultrareview` is Anthropic-hosted Claude reviewing Claude-authored code. That is precisely the configuration Viktor tried and switched off. Whitney's stated position (2026-09-18) is that she trusts his judgment and would follow his lead rather than run her own evaluation, and on this question his lead is unusually legible — not an absence of evidence about the same-vendor path, but a rejected alternative sitting in his live config. **So `ultrareview` was not run, and no evaluation of it is planned.** That is a decision, not a gap.
+**Be precise about what that evidence is, because an earlier draft of this section was not.** It is *configuration* evidence: the same-vendor arrangement is written into his config and left disabled while the mixed-vendor one runs. It is **not** run evidence. Nothing in the record establishes that he executed the all-Claude variant and rejected it from experience, and this document previously said he "tried" it and "switched it off," which the source does not support. A standing disabled alternative shows a deliberate preference; it does not show a measured verdict.
+
+**Interpretation.** `claude ultrareview` is Anthropic-hosted Claude reviewing Claude-authored code — the arrangement his config keeps disabled. Whitney's stated position (2026-09-18) is that she trusts his judgment and would follow his lead rather than run her own evaluation, and she weighs a standing preference in a practitioner's live config above a test this PRD could run. **So `ultrareview` was not run, and no evaluation of it is planned.** That is a decision, not a gap — and it rests on his deliberate configuration plus her stated preference, not on anyone having benchmarked the two arrangements against each other.
 
 This is consistent with what this document already concluded from the other direction: the mixed-vendor property is the whole point, Claude Code cannot supply it (no vendor switch exists for sub-agents), and CodeRabbit already supplies it. Nothing in the reviewer thread has contradicted that.
 
@@ -144,7 +146,7 @@ The fork's `Defer` disposition creates a GitHub issue via `gh issue create`, run
 |---|---|---|
 | Bundled `/code-review` skill | **used worse here** | Shadowed by an April fork; the fork is the stalest of three installed implementations |
 | Effort levels (`low`…`max`) | **not used at all** | Unreachable through `/code-review` while the fork shadows it |
-| `claude ultrareview` / `ultra` tier | **not used at all — and not planned** | Same-vendor review; Viktor's rejected all-Claude alternative is the evidence against it |
+| `claude ultrareview` / `ultra` tier | **not used at all — and not planned** | Same-vendor review; the all-Claude alternative sits disabled in Viktor's live config, which is configuration evidence of a standing preference rather than a measured verdict |
 | Verify pass (CONFIRMED/PLAUSIBLE/REFUTED) | **used worse here** | The fork scores 0–100 confidence with Haiku agents instead |
 | `ReportFindings` structured output | **not used at all** | The fork posts a hand-formatted markdown table |
 | `Defer` → GitHub issue | **already used here, and unique to the fork** | No bundled equivalent exists |

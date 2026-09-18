@@ -361,12 +361,16 @@ Recorded as a starting point to argue with, not a recommendation to apply unrevi
     "failIfUnavailable": true,
     "allowUnsandboxedCommands": false,
     "autoAllowBashIfSandboxed": true,
-    "excludedCommands": ["gh *", "docker *", "colima *"]
+    "excludedCommands": ["gh *"]
   }
 }
 ```
 
-`autoAllowBashIfSandboxed` stays `true` — it is the friction relief, and it already defaults that way. The `excludedCommands` entries are the tools this pass and the documentation identify as incompatible. Note that every entry in that list is a hole in the boundary by the platform's own diagnostic, so the list should stay as short as the evidence requires.
+`autoAllowBashIfSandboxed` stays `true` — it is the friction relief, and it already defaults that way.
+
+**`excludedCommands` contains exactly one entry, and the restraint is deliberate.** Every entry in that list is a hole in the boundary by the platform's own diagnostic, so an entry needs evidence rather than a plausible reason. `gh *` has it: `gh` was observed failing inside the sandbox and working again once exempted. Nothing else here has been tested.
+
+**Do not add `docker *` or `colima *` to the block above without testing them first.** An earlier draft of this section listed both, which would have punched two unevidenced holes into any configuration copied from it. The documentation does recommend `excludedCommands` for `docker`, but that guidance is written for Docker Desktop, and under Colima `docker` reaches its daemon over a Unix socket — so **`allowUnixSockets` is the narrower instrument to evaluate first**, and an exemption may not be needed at all. `colima *` was never mentioned by the documentation or by any observation; it was inference. Both belong to the open question below, not to the configuration.
 
 ## Three claims that could not be settled here
 
