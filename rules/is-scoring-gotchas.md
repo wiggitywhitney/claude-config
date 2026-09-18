@@ -75,7 +75,9 @@ Scoring the raw file directly can silently score a mix of targets. Run-27 got a 
 
 **Before running `score-is.js`, filter the file**: keep only spans where `resource.attributes` has `service.name` matching the target's actual OTel service name, and `startTimeUnixNano` falls within a few seconds of this run's own app invocation (use the app's own log timestamps to bound the window). Write the filtered subset to `evaluation/<target>/run-<N>/eval-traces-run<N>.json` and score that file, not the shared one. Keep the filtered subset as run evidence for reproducibility.
 
-**Sanitize before committing the filtered subset** — it carries local-machine identity in resource attributes: `process.owner`, `host.id`, `process.command_args`, `process.executable.path`, `process.command`, and any target-specific span attribute holding an absolute local path (e.g. commit-story-v2 span attribute `commit_story.context.repo_path`). Redact these (e.g. replace with `"REDACTED"`) before committing; none of them affect the IS score, so redaction is safe. Re-run the scorer against the sanitized file to confirm the score is unaffected before trusting the redaction didn't corrupt anything.
+**Sanitize before committing the filtered subset** — it carries local-machine identity in resource attributes: `process.owner`, `host.name`, `host.id`, `process.command_args`, `process.executable.path`, `process.command`, and any target-specific span attribute holding an absolute local path (e.g. commit-story-v2 span attribute `commit_story.context.repo_path`). Redact these (e.g. replace with `"REDACTED"`) before committing; none of them affect the IS score, so redaction is safe. Re-run the scorer against the sanitized file to confirm the score is unaffected before trusting the redaction didn't corrupt anything.
+
+`host.name` is easy to miss because it sits next to `host.id`, which was already on this list — but they're separate fields and `host.id` being redacted doesn't redact `host.name`. Confirmed on commit-story-v2 run-28 (2026-09-18, caught by a CodeRabbit CLI review): `eval-traces-run28.json` shipped the real hostname on all 31 lines while `host.id` was correctly redacted.
 
 Run-25 and run-26 (scored 2026-07-01 and 2026-07-20, both before the 2026-08-03 contamination start) are unaffected by this — their 100/100 baselines stand.
 
@@ -120,6 +122,18 @@ Clean up:
 if [ -n "${COLLECTOR_PID:-}" ]; then kill "$COLLECTOR_PID"; fi
 git -C ~/Documents/Repositories/<target> checkout main
 ```
+
+## Restoring the target repo after a partial-path branch checkout
+
+If you checked out just `src/`/`examples/` from the instrument branch (`git checkout <branch> -- src/ examples/`) rather than the whole branch, **`git checkout main -- src/ examples/` alone does not fully restore the working tree.** `git checkout <path>` only updates paths that exist in the source commit — it never deletes a path. Instrument branches add `.instrumentation.md` companion files (one per instrumented source file) that don't exist on main, so they're left behind as staged-added or untracked files.
+
+Full restore sequence:
+```bash
+git reset HEAD -- src/ examples/ && git checkout -- src/ examples/ && find src/ examples/ -name '*.instrumentation.md' -delete
+```
+**Do not use `git clean -fd src/ examples/` for the deletion step** — it removes *any* untracked file under those paths, not just the known `.instrumentation.md` leftovers, so it can delete unrelated work-in-progress files if any exist there at the time. `find -name '*.instrumentation.md' -delete` is scoped to the exact artifact type instrument branches add.
+
+Verify with `git status --short` — nothing should remain under `src/`/`examples/` afterward (pre-existing untracked files elsewhere in the repo, e.g. journal entries, are unrelated and fine). Confirmed on commit-story-v2 run-28, 2026-09-17: a plain `git checkout main -- src/ examples/` left ~30 `.instrumentation.md` files staged as adds; a CodeRabbit review then flagged the initial `git clean -fd` fix as unsafe, leading to the targeted `find -delete` above.
 
 If you used Docker instead of the binary collector, run: `docker stop eval-collector && docker rm eval-collector`
 

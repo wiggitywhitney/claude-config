@@ -1,0 +1,45 @@
+---
+paths: ["**/*tree-sitter*", "**/languages/python/**", "**/languages/go/**"]
+---
+
+# web-tree-sitter Gotchas
+
+Verified against npm registry metadata and official docs, 2026-09-17.
+
+## Getting a language's `.wasm` file — the npm package's install script runs a native build regardless
+
+`web-tree-sitter` itself has no `engines` restriction. Per-language grammar packages like `tree-sitter-python` publish a `package.json` with `"main": "bindings/node"` and `"scripts": {"install": "node-gyp-build"}` — installing them via `npm install` runs that install script as a side effect, regardless of whether the package also happens to ship a `.wasm` file. Verified directly for `tree-sitter-python@0.25.0` by downloading and extracting its published npm tarball: it **does** contain `package/tree-sitter-python.wasm`, byte-identical (same SHA-256) to the file published on its GitHub Releases page — do not assume a grammar npm package never ships a `.wasm`; check the actual tarball contents, not just `package.json`. The tarball also ships `package/prebuilds/<platform>/tree-sitter-python.node` for six common platforms (darwin/linux/win32 × arm64/x64); `node-gyp-build` uses a matching prebuild without compiling, and only falls back to a native source build (needing native build tools) when no prebuild matches the current platform.
+
+**Fix:** Get the grammar's `.wasm` from the grammar repo's **GitHub Releases** page (e.g. `tree-sitter/tree-sitter-python`'s release assets include `tree-sitter-python.wasm` directly) — no `npm install` side effects, no CLI build step, no dependency on a matching prebuild existing. Alternative: install `tree-sitter-cli` and run `tree-sitter build --wasm node_modules/<grammar-package>` to build it yourself. Either way, prefer not running the grammar package's install script at all — on the platforms it ships prebuilds for, `npm install tree-sitter-<lang>` will typically succeed without needing native build tools, but that isn't guaranteed for every platform/Node ABI combination, and downloading the `.wasm` directly sidesteps the question entirely.
+
+## API basics
+
+- Call `await Parser.init()` before creating any `Parser` instance.
+- Load a grammar with `await Language.load('/path/to/tree-sitter-<lang>.wasm')`, then `parser.setLanguage(language)`.
+- `Language.loadSync()` exists for environments that import `.wasm` as a precompiled `WebAssembly.Module` (Cloudflare Workers, Vercel Edge) — not relevant for a plain Node CLI.
+
+## ABI version compatibility between the binding and the grammar `.wasm`
+
+`web-tree-sitter` and a grammar's `.wasm` (e.g. `tree-sitter-python`) are independently versioned npm packages — do not assume matching version numbers mean anything. What must match is the parser ABI: a grammar built with an incompatible `tree-sitter-cli` version will fail to load. The official `lib/binding_web/README.md` documents the supported ABI range directly: `web-tree-sitter` 0.24.x supports ABI 13–14, and >= 0.25.0 supports ABI 13–15 (🟢 high confidence — primary source, not inferred). Check `Language.abiVersion` on the loaded grammar instance after `Parser.init()` to confirm compatibility at runtime, and re-verify whenever either dependency is upgraded — the same README separately warns that some older prebuilt `.wasm` files using a legacy dynamic-linking format may need rebuilding with a current CLI.
+
+Separately, `Language.LANGUAGE_VERSION`/`Language.MIN_COMPATIBLE_VERSION` are **not** usable as static properties on `web-tree-sitter` 0.27.0 — they are module-level bindings that stay `undefined` until `await Parser.init()` resolves, so checking them too early silently passes (`abi < undefined` is `false`). Use `Language.abiVersion` on the loaded instance instead. (🟡 medium confidence for this specific pre-init-undefined claim — sourced from a third-party GitHub PR discussion, not tree-sitter's own docs; worth confirming against `binding_web`'s TypeScript types before relying on it in code.)
+
+## Manual memory management
+
+Parser/Tree/Query objects are WASM-backed and need explicit `.delete()` calls. A `FinalizationRegistry` exists as a backstop, but don't rely on it — call `.delete()` explicitly when done with a parse. This is different from ts-morph, which has no equivalent manual-cleanup API.
+
+**Reading a `Node`'s fields after its `Tree` is deleted silently returns stale/zeroed data — it does not throw.** A `Node` object (e.g. one saved out of a tree-walk into a variable for later use) is a thin view into the WASM-backed tree buffer, not a snapshot. If `tree.delete()` runs before that `Node`'s properties (`.startPosition`, `.endPosition`, `.text`, etc.) are read, the read succeeds but returns garbage (observed: a node that should span 5 lines reporting `startPosition.row === endPosition.row`, i.e. collapsing to a 1-line span) — there is no error to catch. This is easy to introduce when a function collects a `Node` reference during a tree walk and defers reading its fields until after an early `tree.delete()` call placed for the "no match found" branch. Fix: extract every field you need off a `Node` into a plain value (string/number) *before* calling `.delete()` on its tree, never after. Verified by reproduction against `tree-sitter-python` 0.25.0 / `web-tree-sitter` 0.27.0, 2026-09-18 (spinybacked-orbweaver PRD #373).
+
+## Performance
+
+WASM parsing in Node.js is "considerably slower" than native bindings per the official docs (no benchmark numbers given). Fine for one-shot structural analysis per file; do not use in a hot loop.
+
+## tree-sitter-python grammar shapes — verified by inspecting real parser output, not assumed
+
+Don't guess a grammar's node shapes from training data or by analogy with another language's tree-sitter grammar — write a throwaway script that loads the real `.wasm` and dumps `tree.rootNode.toString()` / walks `node.child(i)` and `node.type`/`node.isNamed` for representative source, then design against that. `toString()` only shows **named** nodes — anonymous tokens like `async`, `def`, `:`, `,` are silently omitted, which can hide the exact detail you're trying to verify (e.g. whether `async` shows up as a child at all). Iterate `node.childCount` / `node.child(i)` directly to see everything, named or not. Verified against `tree-sitter-python` 0.25.0 / `web-tree-sitter` 0.27.0, 2026-09-17:
+
+- **`async def`**: `function_definition` has an anonymous `async` child before `def` when present — there is no separate "async function" node type. Detect it by scanning children for `type === 'async'`, not by node type.
+- **Decorators**: `@foo\ndef bar(): ...` produces a `decorated_definition` node wrapping the `function_definition` (or `class_definition`) via a `definition` field, with one or more `decorator` children. The inner `function_definition`'s own `.startPosition` does **not** include the decorator lines — if a decorator should count as part of a function's boundary (e.g. for extraction or line-range reporting), use the outer `decorated_definition` node's position instead.
+- **Imports**: `import_statement` and `import_from_statement` are distinct node types with different shapes. `import a, b as c` is one `import_statement` with a repeated `name` field — `stmt.childrenForFieldName('name')` returns each (plain `dotted_name` or `aliased_import`) independently; there's no shared "from" module the way `from x import a, b` has one `module_name` field and repeated `name` children. A wildcard `from x import *` has a `wildcard_import` child instead of any `name`-field child — `childrenForFieldName('name')` returns an empty array for it, so check for the `wildcard_import` child type explicitly rather than assuming an empty `name` list only means "no names."
+- **Import statements are not restricted to module scope.** Unlike JS/TS (where `import` is a syntax-level top-of-module construct), Python allows `import`/`from ... import` inside functions, `try`/`except`, `if` blocks, and class bodies (e.g. a lazy or defensive import). A structural-analysis pass that only scans `tree.rootNode.namedChildren` will silently miss these — recurse through the whole tree when the goal is "does this file import X anywhere," not just "does this file's top level import X."
+- **Relative imports**: `from . import x` and `from ..pkg import y` produce a `relative_import` node (not `dotted_name`) as the `module_name` field; its own `.text` is exactly the dots-plus-optional-module-path source text (`.`, `..pkg`), which is what you want as `moduleSpecifier` — no manual reconstruction needed.
