@@ -6,6 +6,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-09-18) Wrote down where a new rule file has to be committed, after losing four of them for a few minutes. Rule files only take effect on branches that contain them, but while they are still untracked they are present everywhere — so a newly written rule looks active right up until it gets committed to a single branch, which is what actually removes it from the others. The sequence that keeps one working everywhere is now recorded, along with the reminder that the automated check verifies a rule's frontmatter but not whether it was added to the index, so a file can pass the check and still be invisible.
+
 - (2026-09-18) Recorded gotchas for the two Python formatters now in use. Both read code on standard input and print the formatted result, but they disagree on failure in a way that matters: one exits with an error yet still prints the *original* source, so treating "output is non-empty" as success silently passes unformatted code through, while the other prints nothing at all. Also captured that the quick syntax-check one-liner reports the wrong line number if you read the first line of its traceback, because that line is always an artifact of the wrapper rather than the real failure.
 
 - (2026-09-18) Added three writing-voice rules captured from a message as actually sent: leading an update with "I have some [topic] news!" rather than a flat "good news" opener, qualifying an unfamiliar third party as "someone named [Name]" instead of assuming the reader knows who they are, and saying "telemetry" rather than "payload" when the audience is not implementing the thing.
