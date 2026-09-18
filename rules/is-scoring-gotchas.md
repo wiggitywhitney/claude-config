@@ -81,6 +81,8 @@ Scoring the raw file directly can silently score a mix of targets. Run-27 got a 
 
 Run-25 and run-26 (scored 2026-07-01 and 2026-07-20, both before the 2026-08-03 contamination start) are unaffected by this — their 100/100 baselines stand.
 
+**`eval-traces.json` and the filtered `eval-traces-run<N>.json` are JSON Lines (one JSON object per line), not single valid JSON documents, despite the `.json` extension.** `score-is.js` reads them with `content.trim().split('\n')` and `JSON.parse()` per line. Do not "fix" a committed `eval-traces-run<N>.json` into a single top-level array or rename its extension — that breaks the scorer. A code review tool unfamiliar with this convention will likely flag it as invalid JSON; this is expected and not a defect. Confirmed as a recurring false-positive finding across multiple CodeRabbit review rounds on commit-story-v2 run-28's `eval-traces-run28.json`, 2026-09-18.
+
 ## Full sequence for a scoring run
 
 Check if otelcol-contrib is already running (the LaunchAgent above should mean this is almost always true):
@@ -127,13 +129,15 @@ git -C ~/Documents/Repositories/<target> checkout main
 
 If you checked out just `src/`/`examples/` from the instrument branch (`git checkout <branch> -- src/ examples/`) rather than the whole branch, **`git checkout main -- src/ examples/` alone does not fully restore the working tree.** `git checkout <path>` only updates paths that exist in the source commit — it never deletes a path. Instrument branches add `.instrumentation.md` companion files (one per instrumented source file) that don't exist on main, so they're left behind as staged-added or untracked files.
 
-Full restore sequence:
+Full restore sequence — capture the exact paths the instrument branch added *before* the reset, then delete only those:
 ```bash
-git reset HEAD -- src/ examples/ && git checkout -- src/ examples/ && find src/ examples/ -name '*.instrumentation.md' -delete
+git status --short  # must be clean before proceeding
+ADDED_PATHS=$(git diff --name-only --diff-filter=A main <instrument-branch> -- src/ examples/)
+git reset HEAD -- src/ examples/ && git checkout -- src/ examples/ && [ -n "$ADDED_PATHS" ] && echo "$ADDED_PATHS" | xargs rm -f
 ```
-**Do not use `git clean -fd src/ examples/` for the deletion step** — it removes *any* untracked file under those paths, not just the known `.instrumentation.md` leftovers, so it can delete unrelated work-in-progress files if any exist there at the time. `find -name '*.instrumentation.md' -delete` is scoped to the exact artifact type instrument branches add.
+**Do not use `git clean -fd src/ examples/`** — it removes *any* untracked file under those paths, not just the known `.instrumentation.md` leftovers, so it can delete unrelated work-in-progress files if any exist there at the time. **Do not use a pattern-based `find -name '*.instrumentation.md' -delete` either** — it deletes by filename pattern rather than by the exact set of paths the branch actually added, so it can also catch a same-named file that predates the checkout. Capturing `$ADDED_PATHS` via `git diff --diff-filter=A` before the reset and deleting only those is the precise fix.
 
-Verify with `git status --short` — nothing should remain under `src/`/`examples/` afterward (pre-existing untracked files elsewhere in the repo, e.g. journal entries, are unrelated and fine). Confirmed on commit-story-v2 run-28, 2026-09-17: a plain `git checkout main -- src/ examples/` left ~30 `.instrumentation.md` files staged as adds; a CodeRabbit review then flagged the initial `git clean -fd` fix as unsafe, leading to the targeted `find -delete` above.
+Verify with `git status --short` — nothing should remain under `src/`/`examples/` afterward (pre-existing untracked files elsewhere in the repo, e.g. journal entries, are unrelated and fine). Confirmed on commit-story-v2 run-28, 2026-09-17: a plain `git checkout main -- src/ examples/` left ~30 `.instrumentation.md` files staged as adds; a CodeRabbit review then flagged the initial `git clean -fd` fix as unsafe, leading to a `find -delete` fix; a later review (2026-09-18) flagged that as still broader than necessary, leading to the exact-path capture above.
 
 If you used Docker instead of the binary collector, run: `docker stop eval-collector && docker rm eval-collector`
 

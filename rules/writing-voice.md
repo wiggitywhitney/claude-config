@@ -207,6 +207,24 @@ Always specify "US Central" (or whichever applies) when putting time on someone'
 **Slack DMs to daily working colleagues: open warmly, no sign-off.**
 For close colleagues like Ajuna, the opener can be more effusive than email — "Good morning! Happy Monday!" is right; don't default to just "Hi [Name]!" (that rule applies to email). Energy matches the moment. No closing signature on Slack DMs — the message just ends; no "Warmly, Whitney."
 
+**When sharing an update with news value, open with "I have some [topic] news!" rather than a flat "Good news on [topic]."**
+The exclamation-point framing signals genuine excitement and reads as more personal than a generic lead-in.
+- Do: "I have some Spinybacked Orbweaver news! I met with Dani de la Cruz yesterday..."
+- Don't: "Good news on Spinybacked Orbweaver. I met with Dani de la Cruz yesterday..."
+(Confirmed: sent version of the Ajuna Slack update on the Dani meeting, 2026-09-18.)
+
+**When naming someone the recipient likely doesn't know, qualify them as "someone named [Name]" rather than stating the name plainly.**
+Don't assume the reader has the same context you do about who a third party is. Reserve a bare name (or an @-mention) for people the recipient already knows.
+- Do: "he's going to pitch to @Janhavi and someone named Gordon next week"
+- Don't: "he's going to pitch to Janhavi and Gordon next week"
+(Confirmed: sent version of the Ajuna Slack update on the Dani meeting, 2026-09-18.)
+
+**Say "telemetry," not "payload," when describing what a tool generates to a non-implementation audience.**
+"Payload" is implementation jargon; "telemetry" is the accessible word for the same thing and reads more naturally even to a technical colleague who isn't in the weeds of this specific project.
+- Do: "a user experience on top of the telemetry that Spinybacked Orbweaver generates"
+- Don't: "a user experience on top of the payload Spinybacked Orbweaver generates"
+(Confirmed: sent version of the Ajuna Slack update on the Dani meeting, 2026-09-18.)
+
 **In follow-up messages within an existing Slack thread, skip the opener entirely.**
 Just start with a transition — "Also fyi", "One more thing", etc. No "Hi [Name]!" when continuing an existing conversation.
 
