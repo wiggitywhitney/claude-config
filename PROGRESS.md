@@ -6,6 +6,8 @@ Development progress log for claude-config. Tracks implementation milestones acr
 
 ### Added
 
+- (2026-09-18) Added three gotcha rules for tools adopted while setting up multi-agent orchestration in another project: devbox has no Homebrew install path (a curl script only), the orchestration dashboard's install and hook setup are two separate commands rather than one, and the coding assistant's operating-system-level sandbox is off by default, silently falls back to unprotected if it can't start, and only contains shell commands — file edits and network calls made directly through other tools aren't covered by it at all.
+
 - (2026-09-10) Discovered that almost every globally-installed skill is a symlink into this repo's checked-out working tree rather than a fixed version, so switching git branches silently changes how those skills behave everywhere. A fix sitting on an unmerged branch is only in effect while that branch happens to be checked out, which was demonstrated the same day when a just-repaired skill quietly reverted to its broken version.
 
 - (2026-09-10) Recorded two shell traps that produce convincing wrong answers rather than errors. One is a git command that lists files which *differ* between two branches, easily misread as listing files unique to one — misreading it raised a false alarm about lost work and nearly overwrote good copies with older drafts. The other is a zsh feature that silently eats part of a path built as `$var:some/path`, returning empty output that looks like a genuine "not found."

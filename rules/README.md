@@ -84,6 +84,9 @@ Never both — a file carrying both loads twice. Never neither — a file with n
 | `hooks-reference.md` | `.claude/`, `hooks/`, `.sh` | What every native git hook and Claude Code hook checks |
 | `branch-protection.md` | branch-protection files, `CLAUDE.md` | The docs-only exemption and its exact conditions |
 | `prd-dependency-management.md` | `prds/**/*.md`, `PROGRESS.md` | Recovering from cross-PRD dependencies |
+| `devbox-gotchas.md` | `devbox.json`, `devbox.lock` | No Homebrew install path exists (curl script only), Nix auto-installs, `shell.scripts` schema, `init_hook` sourcing bug |
+| `dot-agent-deck-gotchas.md` | `.dot-agent-deck.toml`, dot-agent-deck files | Two-command install, bare `dot-agent-deck` launch, devbox is not a dependency, `agent` key required for status tracking, timeout key placement |
+| `claude-code-sandbox-gotchas.md` | `.claude/settings*.json`, `.dot-agent-deck.toml`, `devbox.json` | `/sandbox` vs. skip-permissions are orthogonal, fails open by default, permission allowlists are best-effort not hardened, devbox provides zero sandboxing |
 
 ### Language rules
 
