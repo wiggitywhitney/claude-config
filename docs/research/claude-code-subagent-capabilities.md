@@ -107,7 +107,7 @@ Found while answering the above. Recorded because it is a live defect independen
 **Three consequences, and the second is the one that matters.**
 
 1. `/code-review` has been running the personal copy, not the bundled skill.
-2. **`/code-review ultra` never reached the cloud tier.** The personal copy has no effort-level parsing, so `ultra` arrives as a plain string argument and is ignored. The capability was unreachable rather than unused.
+2. **`/code-review ultra` never reached the cloud tier.** The personal copy has no effort-level parsing, so `ultra` arrives as a plain string argument and is ignored. Stated precisely: the capability was unreachable *through that name*, not unreachable outright — see the next point, which is what keeps this a fixable naming collision rather than a lost feature.
 3. **`/review` reaches the bundled skill today**, because aliases are not shadowed. No configuration change is needed to try it.
 
 The bundled skill's body is compiled into the binary, so there is **no on-disk April version to diff against**. The drift is visible in effect but not in detail.
