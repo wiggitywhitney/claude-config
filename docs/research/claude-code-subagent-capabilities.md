@@ -57,3 +57,107 @@ Cost, at scale. **Per-run cost is no longer unmeasured — corrected 2026-08-25.
 ## A note on how this answer was obtained
 
 Dispatched to a documentation-checking sub-agent rather than answered from memory, and every claim above carries a source URL. That is itself a small instance of the pattern under evaluation: the parent delegated a verification question, the sub-agent returned sourced findings, and the parent did not have to read the documentation. The limitation is equally visible — the sub-agent returned one summary at the end, with no way to ask a follow-up mid-run, which is exactly the constraint the routing row above records.
+
+---
+
+# Milestone B1: the reviewer question, answered against 2.1.276
+
+**Produced 2026-09-18. Claude Code 2.1.276.** This section closes the reviewer thread this document opened. It was prompted by finding `claude ultrareview` while enumerating the CLI surface, and it ends somewhere other than where it started: the decisive evidence turned out to be Viktor's own configuration rather than anything measured here.
+
+## The answer: Viktor rejected the same-vendor reviewer explicitly
+
+**Verified against the Milestone B2 record** (`vfarcic/dot-agent-deck` at `c701932`, read 2026-08-24). 🟢
+
+Viktor's six roles run `reviewer` on the `pi` harness and `auditor` on `opencode`, both on `gpt-5.6-sol` at xhigh effort, checking work produced by Claude. **Each role carries a commented-out all-Claude alternative**, so the same-vendor configuration was written, considered, and deliberately left disabled.
+
+**Interpretation, and it settles the question this section was opened to investigate.** `claude ultrareview` is Anthropic-hosted Claude reviewing Claude-authored code. That is precisely the configuration Viktor tried and switched off. Whitney's stated position (2026-09-18) is that she trusts his judgment and would follow his lead rather than run her own evaluation, and on this question his lead is unusually legible — not an absence of evidence about the same-vendor path, but a rejected alternative sitting in his live config. **So `ultrareview` was not run, and no evaluation of it is planned.** That is a decision, not a gap.
+
+This is consistent with what this document already concluded from the other direction: the mixed-vendor property is the whole point, Claude Code cannot supply it (no vendor switch exists for sub-agents), and CodeRabbit already supplies it. Nothing in the reviewer thread has contradicted that.
+
+**Two of Viktor's practices cost nothing and need no new infrastructure** — recorded here as Milestone C1 inputs, since both are already listed as natively available in the mapping table above:
+
+- **Review and audit as two separate read-only roles, dispatched in parallel.** Two sub-agent definitions with a read-only `tools:` set.
+- **The resolution filter is agreement, not severity.** His wording: "Resolve every reviewer and auditor finding you agree with — blockers, suggestions, and nits alike. The filter is agree-or-disagree, not severity." Shipping past a finding requires a documented reason. Purely prompt-level.
+
+**What following his lead does *not* mean.** His mixed-vendor review depends on `dot-agent-deck` — a brew-installed Rust daemon and TUI plus three non-Claude CLI harnesses and a 220-line TOML. Adopting that is a project, not a setting, and it is explicitly out of scope here. Whitney already has the mixed-vendor checker; the open question remains the one this document framed earlier — *when* it runs and *who* triages it.
+
+## What the bundled reviewer actually is, and the shadowing defect
+
+Found while answering the above. Recorded because it is a live defect independent of any reviewer decision.
+
+### `/code-review` is a bundled skill with effort levels and a cloud tier
+
+**Verified-here** (strings from the shipped binary at `~/.local/share/claude/versions/2.1.276`). 🟢
+
+- Effort levels, from the `ReportFindings` tool schema: `low`, `medium`, `high`, `xhigh`, `max`. The level typed last is remembered and reused; an unrecognized level is ignored with a warning. The product's own nudge reads "For a fast, cheap code review, try `/code-review low`: It runs the built-in skill at its lightest effort level."
+- **A verify pass.** Candidate findings are handed to a sub-agent that "returns exactly one of **CONFIRMED / PLAUSIBLE / REFUTED**. Keep **CONFIRMED and PLAUSIBLE**. Drop REFUTED."
+- **Prioritization under a cap:** "Correctness bugs always outrank cleanup, altitude, and conventions findings when the output cap forces a cut."
+- **A specific footgun taxonomy**, including moved or extracted code that dropped a guard, dataclass defaults evaluated once, `hash()` non-determinism, lock-scope shrink, predicate methods with side effects, and setup/teardown asymmetry in tests.
+- **Structured output** through a first-class `ReportFindings` tool, rendered by the host UI, with `category`, `short_summary`, `failure_scenario`, `verdict`, and a post-fix `outcome`.
+- **`ultra` is its cloud tier.** `claude ultrareview [target]` runs "a cloud-hosted multi-agent code review of the current branch (or a PR number / base branch)", takes `--json` for the raw `bugs.json` payload, defaults to **not** posting, and has a **45-minute default timeout**.
+
+### A personal skill of the same name shadows it, and this is documented behavior rather than a bug
+
+**Documentation-quoted.** 🟢 From [Skills — resolve skills that share a name](https://code.claude.com/docs/en/skills.md#resolve-skills-that-share-a-name):
+
+**Source says:** "Your skill replaces the bundled command, **but not its aliases**. A project `code-review` skill replaces `/code-review`, and the bundled alias `/review` never runs your skill."
+
+**Verified-here** 🟢: `~/.claude/skills/code-review/` is a symlink into `claude-config/.claude/skills/code-review/SKILL.md`, carrying `description: Code review a pull request` and `disable-model-invocation: false`.
+
+**Three consequences, and the second is the one that matters.**
+
+1. `/code-review` has been running the personal copy, not the bundled skill.
+2. **`/code-review ultra` never reached the cloud tier.** The personal copy has no effort-level parsing, so `ultra` arrives as a plain string argument and is ignored. The capability was unreachable rather than unused.
+3. **`/review` reaches the bundled skill today**, because aliases are not shadowed. No configuration change is needed to try it.
+
+The bundled skill's body is compiled into the binary, so there is **no on-disk April version to diff against**. The drift is visible in effect but not in detail.
+
+### Three implementations of the same reviewer are installed
+
+**Verified-here.** 🟢 `~/.claude/settings.json` lists `code-review@claude-plugins-official: true` in `enabledPlugins`, and `PROGRESS.md` records the origin on 2026-04-14: the official plugin was evaluated, then "plugin content copied to `.claude/skills/code-review/SKILL.md` and symlinked globally."
+
+| Implementation | State | Distinctive capability |
+|---|---|---|
+| Personal skill (April copy of the plugin, symlinked from this repo) | **resolves `/code-review`** | `Defer` → creates a GitHub issue; 0–100 confidence scoring; two-tier table |
+| `code-review@claude-plugins-official` | enabled, not reached by `/code-review` | whatever upstream ships now |
+| Bundled skill | reachable via `/review` | verify pass, effort levels, cloud `ultra`, `ReportFindings` |
+
+**This is the same failure shape Milestone B4 recorded for the `prd-*` skills** — fork from upstream, then drift — except the upstream here is Anthropic's own, and the fork wins by documented precedence rather than by accident.
+
+### The fork's `Defer` disposition is genuinely not in the bundled skill
+
+**Verified-here.** 🟢 This is why the fork should not simply be deleted.
+
+The fork's `Defer` disposition creates a GitHub issue via `gh issue create`, runs `/write-prompt` on the issue body first, and records the issue number so it can be linked in the PR comment. The bundled skill's post-fix outcomes are only `fixed`, `no_change_needed`, and `skipped` — where `skipped` is documented as "real but not applied" and is tracked nowhere. Grepping the binary for any issue-creation mechanism (`gh issue create`, "create an issue for", "tracked in #") returns nothing.
+
+**Interpretation:** the bundled skill produces exactly the outcome this repo's own CLAUDE.md warns against — "Future instances have no memory of deferred intent — silent deferrals disappear." The fork exists to close that gap and the bundled skill does not close it. Any consolidation that drops the fork has to replace `Defer`, not just absorb it.
+
+## Collapse candidate for Milestone C1, with its own caveat
+
+**Consolidate the three reviewers to one, and keep `Defer` as a thin layer rather than as a forked skill.** Maintaining a full copy of an upstream reviewer to obtain one disposition is the expensive way to hold that ground, and it costs the verify pass, the effort levels, and the cloud tier as a side effect.
+
+**Deliberately not done in Milestone B1, and the reason is phase discipline.** Renaming or deleting the fork changes what `/code-review` means in `rules/git-workflow.md`, `rules/hooks-reference.md`, and the `issue-done`, `prd-done`, and `issue-create` skills, each of which instructs running it at a specific workflow point. B1 is a research milestone; the reviewer trial is flagged in the PRD as "the one place this PRD implements inside Phase B," which is to say the exception. Consolidation is Milestone C1's stated job. **`/code-review` keeps working unchanged in the meantime**, and `/review` is available for anyone who wants the bundled behavior today.
+
+## Capability labels
+
+| Capability | Label | Note |
+|---|---|---|
+| Bundled `/code-review` skill | **used worse here** | Shadowed by an April fork; the fork is the stalest of three installed implementations |
+| Effort levels (`low`…`max`) | **not used at all** | Unreachable through `/code-review` while the fork shadows it |
+| `claude ultrareview` / `ultra` tier | **not used at all — and not planned** | Same-vendor review; Viktor's rejected all-Claude alternative is the evidence against it |
+| Verify pass (CONFIRMED/PLAUSIBLE/REFUTED) | **used worse here** | The fork scores 0–100 confidence with Haiku agents instead |
+| `ReportFindings` structured output | **not used at all** | The fork posts a hand-formatted markdown table |
+| `Defer` → GitHub issue | **already used here, and unique to the fork** | No bundled equivalent exists |
+| Mixed-vendor review | **already used here** | CodeRabbit, unchanged from this document's earlier finding |
+
+## What this section does not establish
+
+- **No cost figure for `ultrareview`.** It was never run, so its price is unknown. B2's cost gap is unchanged: nobody knows what a six-agent xhigh run costs, and `/cost-tracker` was removed on 2026-08-20 as unused.
+- **No quality comparison between the fork and the bundled skill.** The bundled skill's mechanism is richer on paper — a verify pass with a drop verdict beats a confidence score — but neither was run against a benchmark diff here. If C1 wants that comparison, PR #119 is the natural subject: it carries eleven already-triaged CodeRabbit inline findings plus review-body findings, so a run against it would have a known answer from a different vendor.
+- **Whether the enabled `code-review` plugin differs from the bundled skill.** Both exist; only their names were compared.
+
+## Sources for this section
+
+- [Skills — resolve skills that share a name](https://code.claude.com/docs/en/skills.md#resolve-skills-that-share-a-name) — the shadowing rule and the alias exemption, quoted above
+- Milestone B2's record of Viktor's six roles and their harnesses, including the commented-out all-Claude alternatives: [viktor-swarm-spike.md](viktor-swarm-spike.md)
+- Local, 2026-09-18: `claude --version` (2.1.276); `claude ultrareview --help`; `strings` over `~/.local/share/claude/versions/2.1.276`; `~/.claude/settings.json` (`enabledPlugins`); `.claude/skills/code-review/SKILL.md`; `PROGRESS.md` entries for 2026-04-13 through 2026-04-15

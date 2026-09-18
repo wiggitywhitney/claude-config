@@ -1,9 +1,9 @@
 # Research: Claude Code Permission Modes, Sandbox, and Auto Mode
 
 **Project:** claude-config
-**Last Updated:** 2026-08-24
-**Claude Code version checked against:** 2.1.222 (`claude --version`, run 2026-08-04)
-**Produced by:** PRD #109, Milestone A3 half one (the relief pass)
+**Last Updated:** 2026-09-18
+**Claude Code version checked against:** 2.1.276 (`claude --version`, run 2026-09-18). Earlier sections were checked against 2.1.222 (run 2026-08-04) and are marked where the newer pass changed them.
+**Produced by:** PRD #109, Milestone A3 half one (the relief pass); extended by Milestone B1 (the sandbox evaluation)
 
 ## Update Log
 
@@ -11,6 +11,7 @@
 |------|---------|
 | 2026-08-04 | Initial research. Documentation pass on permission modes, the sandboxed Bash tool, and auto mode, verified against Whitney's live settings files and the Milestone A3 instrument log. |
 | 2026-08-24 | Added the auto-mode live-dependency observation (classifier rate-limiting blocks `Bash` entirely) at the end of the document. |
+| 2026-09-18 | Milestone B1 re-ran the pass against 2.1.276 and evaluated the sandboxed Bash tool empirically rather than from documentation. Two of this document's own claims are corrected: the sandbox's per-domain prompt class is largely obsolete, and the `gh` breakage is confirmed but presents as a credential error rather than a TLS one. See "Milestone B1: the sandboxed Bash tool, evaluated" at the end. |
 
 ---
 
@@ -120,6 +121,8 @@ So it is suggestive, not decisive, evidence that the remedy has to change the *m
 
 ### The sandbox is a real alternative on macOS with nothing to install, but it introduces a new prompt class
 
+> **Superseded in part, 2026-09-18 (Milestone B1).** The heading's "new prompt class" claim no longer holds at 2.1.276: a sandboxed command reaching an un-allowlisted domain does not prompt Whitney, it fails with a violation notice addressed to the model. The `gh`/`gcloud`/`terraform` breakage *is* real and is now confirmed by direct test, but it surfaces as a credential error rather than a TLS one. Read this section as the 2.1.222 documentation pass and see "Milestone B1: the sandboxed Bash tool, evaluated" for what was measured.
+
 **Documentation-only.** 🟢
 
 **Source says:** "On macOS, there is nothing to install: sandboxing uses the built-in Seatbelt framework." And on auto-allow mode: "when a command can be sandboxed, Claude Code runs it inside the sandbox and approves it automatically, without asking your permission." ([Configure the sandboxed Bash tool](https://code.claude.com/docs/en/sandboxing.md))
@@ -212,6 +215,8 @@ Rationale, in order of weight:
 
 **Not recommended provisionally:** `bypassPermissions` (the docs restrict it to isolated containers and VMs, and it would disable the protected-path guards on `.claude/` and `.git` that have caught real mistakes); `dontAsk` (auto-denies rather than auto-approves — wrong shape for interactive work); the sandbox (a bigger change with macOS tool breakage to work through first, and it deserves its own evaluation in Milestone B1 rather than a rushed provisional adoption).
 
+> **The sandbox deferral above was the right call, and Milestone B1 has now done the evaluation it asked for (2026-09-18).** The deferral reasoning held up: the tool breakage is real. What the documentation pass could not have told us is that the breakage is cheap to fix and the domain-prompt objection has since evaporated. See the final section.
+
 ## Caveats
 
 - **Auto mode works through the Datadog AI Gateway. Verified 2026-08-04.** 🟢 This was the last open prerequisite: Whitney's traffic routes through `ANTHROPIC_BASE_URL=https://ai-gateway.us1.ddbuild.io` with a `provider: anthropic` header, and the docs enumerate supported providers without describing a custom base URL fronting the Anthropic API. Whitney cycled to auto mode with `Shift+Tab` and the status bar reported `⏵⏵ auto mode on`, so the gateway is treated as the Anthropic API for this requirement. Recorded because it was inference until she checked it, and because a future gateway change could revoke it silently.
@@ -236,3 +241,183 @@ Rationale, in order of weight:
 **Two things follow.** Auto mode trades approval prompts for a dependency on a second model being available, which is a cost the mechanism-only reasoning behind Decision 55 did not consider — that reasoning correctly predicted the prompt reduction and could not have predicted this. And the practical workaround is worth knowing before it is needed: during an outage, prefer the file tools over shell equivalents, and expect anything requiring `git` or a CLI to be blocked until it clears.
 
 Recorded as an observation from a single occurrence, not a measured rate. How often it happens is unknown.
+
+---
+
+# Milestone B1: the sandboxed Bash tool, evaluated
+
+**Produced 2026-09-18. Claude Code 2.1.276, macOS (arm64).** Milestone A3 declined to evaluate the sandbox and handed it here (Decision 55). This section answers it by running the sandbox rather than reading about it: every claim below labelled **Verified-here** was produced by enabling the sandbox in a scratch settings file and observing what happened.
+
+## Method, so the evidence is reproducible
+
+The sandbox was enabled *without touching Whitney's live configuration*, using `--settings` — which the CLI documents as "Path to a settings JSON file or a JSON string to load additional settings from," so it layers on top rather than replacing. The probe settings were:
+
+```json
+{
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "network": { "allowedDomains": ["github.com", "*.github.com"] }
+  }
+}
+```
+
+Probes ran as `claude -p --settings <file>` from a scratch directory under `/tmp`, with the prompt supplied on **stdin**. Prompt-on-stdin is not a stylistic choice: `--allowedTools` is variadic, so a prompt placed after it is swallowed as tool names and the run dies with "Input must be provided either through stdin or as a prompt argument." That cost one wasted probe.
+
+**An unsandboxed baseline was captured first, and it is what makes the results attributable.** Before enabling anything: `gh auth status` reported `✓ Logged in to github.com account wiggitywhitney (keyring)` with a valid token, `curl https://api.github.com` returned 200, and `curl https://example.com` returned 200. Without that baseline a sandboxed failure cannot be distinguished from a pre-existing one — and in this evaluation that distinction turned out to be the whole finding.
+
+## Verdict
+
+**The sandbox works on this machine, its one real cost is cheap to fix, and the objection recorded against it in August has largely expired.** It is a viable adoption candidate for Milestone C1 — a stronger one than the August pass concluded. It is not a replacement for auto mode; the two are independent and combine.
+
+## What was verified here
+
+### Filesystem confinement is real, and confirmed by disk state rather than by reported output
+
+**Verified-here.** 🟢 A sandboxed `touch /Users/whitney.lee/sbx_outside_probe.txt` failed with `touch: cannot touch '/Users/whitney.lee/sbx_outside_probe.txt': Operation not permitted`, while the same operation inside the working directory succeeded.
+
+**The check that matters is that the file does not exist.** Listing the path afterward from an unsandboxed shell returns `No such file or directory`, and the inside-the-working-directory file is present. A denial message is a claim; an absent file is evidence. This distinction is worth keeping because the sandbox's own reporting was over-stated until recently — changelog 2.1.268 records "Fixed Bash sandbox instructions over-stating confinement: no unenforced path lists when filesystem isolation is off."
+
+### Network egress filtering is real, and a blocked domain does not prompt Whitney
+
+**Verified-here.** 🟢 This is the correction to this document's earlier objection. A sandboxed `curl https://example.com` — a host deliberately left out of `allowedDomains` — failed with:
+
+```text
+curl: (56) CONNECT tunnel failed, response 403
+
+<sandbox_violations>
+deny network-outbound example.com:443 (not in this command's allowed_domains — re-run the command with this host listed if it needs it)
+</sandbox_violations>
+```
+
+`https://api.github.com` returned 200 in the same run, so the filter discriminates rather than blanket-denying.
+
+**Interpretation:** the August pass recorded that the sandbox "trades one prompt class for another — every new network domain prompts until allowlisted," and treated that as a reason to defer. **No prompt reached Whitney.** The violation is addressed to the *model*, which is told to re-run naming the host. The mechanism is per-command allowed domains, added in **2.1.271** — after the August pass, which is why that pass could not have found it. The documentation now describes both paths: "Claude Code pre-allows no domains by default. The first time a command needs a new domain, Claude Code prompts for approval; in auto mode, Claude instead names the hosts a command needs on the command itself... for the classifier to review with it."
+
+The cost model also improved: "Sandboxed network access adds no per-connection classifier requests. The classifier judges the hosts a command names together with the command in one review, and Claude Code checks each connection against the approved list without calling the classifier again."
+
+So the deferral was correct for 2.1.222 and is stale for 2.1.276. **Whitney runs in auto mode**, which is exactly the configuration the carve-out applies to.
+
+### `gh` does break — as Go TLS verification, presenting as a bogus credential error
+
+**Verified-here.** 🟢 The most useful finding in this pass, because the symptom points away from the cause.
+
+Three commands, same sandboxed session:
+
+| Command | Result |
+|---|---|
+| `gh api repos/cli/cli --jq .name` | `tls: failed to verify certificate: x509: OSStatus -26276` |
+| `gh auth status` | `X Failed to log in to github.com account wiggitywhitney (keyring)` / `The token in keyring is invalid.` |
+| `curl -sS https://api.github.com/zen` | exit 0 — `Responsive is better than fast.` |
+
+**`curl` succeeding is what isolates the cause.** Network egress, the filtering proxy, and the credential store are all exonerated: `curl` verifies against its own CA bundle, while Go's `crypto/x509` verifies through the macOS trust store. Only the Go path fails. This confirms the documented claim — "tools such as `gh`, `gcloud`, and `terraform` may fail TLS verification under Seatbelt" — with a concrete error code rather than a "may."
+
+**The mechanism, from the generated Seatbelt profile in the shipped binary.** The profile allows `(allow mach-lookup (global-name "com.apple.securityd.xpc"))` by default but gates trustd behind a flag, with this comment in the generated policy:
+
+```scheme
+; trustd.agent - needed for Go TLS certificate verification (weaker network isolation)
+(allow mach-lookup (global-name "com.apple.trustd.agent"))
+```
+
+Go's certificate verification needs `com.apple.trustd.agent`; the default profile denies that Mach lookup; TLS therefore fails inside the sandbox and nowhere else.
+
+**The trap.** `gh auth status` says *the token in keyring is invalid*. The token is fine — the unsandboxed baseline shows it logged in and working, before and after. `gh` cannot validate the token because the validating API call cannot complete a TLS handshake, and it reports that as a credential problem. Anyone hitting this would plausibly run `gh auth login`, or `gh auth logout`, to repair something that was never broken. **A sub-agent reading only the sandboxed output concluded exactly that** — "failed for an unrelated reason — invalid/expired keyring tokens... not a sandbox restriction" — and was wrong. The baseline is the only reason that did not enter this document as a finding.
+
+### The documented remedy works, and it is one line
+
+**Verified-here.** 🟢 Re-running the same command with `"excludedCommands": ["gh *"]` added returned `cli`. `gh` is restored completely, by running outside the sandbox.
+
+**The other documented remedy does not apply to this machine, and should not be used here.** The docs offer a branch: "If you are using `httpProxyPort` with a MITM proxy and custom CA, set `enableWeakerNetworkIsolation` to `true` instead." Whitney is not. **Verified-here** 🟢: no `HTTPS_PROXY`, `HTTP_PROXY`, `SSL_CERT_*`, `NODE_EXTRA_CA_CERTS` or `CURL_CA_BUNDLE` in the environment, and `git config --global --list --name-only` shows no `http.proxy`, `http.sslcainfo`, or `insteadof` entries. The flag's own description warns that "Enabling this opens a potential data exfiltration vector through the trustd service. Only enable if you need Go TLS verification." So the correct remedy here is `excludedCommands`, and reaching for `enableWeakerNetworkIsolation` would take on an exfiltration vector to solve a problem the narrower flag already solves.
+
+**An untested third option, recorded as a hypothesis rather than a finding.** The binary also exposes `allowMachLookup` — "macOS only: Additional XPC/Mach service names to allow looking up," with trailing-wildcard support, documented as being for "1Password CLI, Playwright, or the iOS Simulator." Since the failure is precisely a denied Mach lookup of `com.apple.trustd.agent`, listing that one service in `allowMachLookup` may restore Go TLS without the blanket weakening. **This was not tested.** It is the narrower instrument if it works, and Milestone C1 should test it before settling the configuration.
+
+### Directories named `hooks/` and `config/` are writable — which this repo needed
+
+**Verified-here.** 🟢 Sandboxed writes to `hooks/probe.txt`, `hooks/nested.sh`, and `config/probe.txt` all succeeded, confirmed by listing the files afterward.
+
+This is checked because changelog **2.1.275** records "Fixed sandboxed Bash commands being unable to write to project directories named `hooks/` or `config/`." `claude-config` has both at its root. The bug would have made the sandbox actively broken in this repo, and it was fixed one version before the version installed here. Worth stating plainly: had this evaluation run two weeks earlier, the answer would have been different for reasons that had nothing to do with the sandbox's design.
+
+## An adoption trap: turning the sandbox on does not, by itself, create a boundary
+
+**Verified-here** (from the shipped binary's own settings schema). 🟢 Two defaults undercut the guarantee, and both are settings Whitney would have to change deliberately:
+
+- **`allowUnsandboxedCommands` defaults to `true`.** Its description: "Allow commands to run outside the sandbox via the `dangerouslyDisableSandbox` parameter. When false, the `dangerouslyDisableSandbox` parameter is completely ignored and all commands must run sandboxed. Default: true." So by default the model retains a parameter that leaves the sandbox at its own discretion. The `/sandbox` UI names these two states "Unsandboxed fallback allowed" and "Strict sandbox mode."
+- **`failIfUnavailable` defaults to `false`.** Its description: "...if `sandbox.enabled` is true but the sandbox cannot start (missing dependencies or unsupported platform). When false (default), a warning is shown and commands run unsandboxed."
+
+**Interpretation, and it matters for how the sandbox gets sold.** The sandbox's advantage over auto mode is that its boundary is enforced by the operating system rather than by a model's judgment. That advantage is *conditional on three settings*, two of which default the other way. A configuration of `{"sandbox": {"enabled": true}}` alone is weaker than it reads.
+
+Claude Code's own internal test configuration sets the hardened shape — `enabled: true`, `failIfUnavailable: true`, `autoAllowBashIfSandboxed: false`, `allowUnsandboxedCommands: false` — which is a useful reference point for what the product considers a real boundary, though the third of those reintroduces prompting and is the opposite of what Whitney wants.
+
+The binary also carries a diagnostic that enumerates, in priority order, every setting that weakens enforcement: `sandbox.enabledPlatforms excludes <platform>`, `sandbox.enabled is false`, `sandbox.failIfUnavailable is false (a missing backend would run the shell unconfined)`, `sandbox.allowUnsandboxedCommands is true`, `sandbox.excludedCommands exempts commands`, `sandbox.autoAllowBashIfSandboxed would run commands the operator never granted`, `sandbox.enableWeakerNestedSandbox exposes the host /proc`, `sandbox.enableWeakerNetworkIsolation loosens the egress lock`, `sandbox.allowAppleEvents removes macOS automation isolation`. That list is the platform's own account of the tradeoffs and is a better checklist than anything this audit would invent.
+
+## Configuration shape, if Milestone C1 adopts it
+
+Recorded as a starting point to argue with, not a recommendation to apply unreviewed. It keeps auto mode, keeps `gh` working, and closes the escape hatch:
+
+```json
+{
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "allowUnsandboxedCommands": false,
+    "autoAllowBashIfSandboxed": true,
+    "excludedCommands": ["gh *", "docker *", "colima *"]
+  }
+}
+```
+
+`autoAllowBashIfSandboxed` stays `true` — it is the friction relief, and it already defaults that way. The `excludedCommands` entries are the tools this pass and the documentation identify as incompatible. Note that every entry in that list is a hole in the boundary by the platform's own diagnostic, so the list should stay as short as the evidence requires.
+
+## Three claims that could not be settled here
+
+Stated as open rather than resolved, because guessing them would defeat the point:
+
+1. **`docker` is untestable on this machine right now.** `colima status` reports `colima is not running` and `~/.colima/default/docker.sock` does not exist, so any `docker` failure under the sandbox would be indistinguishable from the daemon being down. The docs' remedy is `excludedCommands: ["docker *"]`. **There is a wrinkle the documentation does not address:** Whitney uses Colima, so `docker` reaches its daemon over a **Unix socket** (`unix:///Users/whitney.lee/.colima/default/docker.sock`, confirmed from `docker context inspect`), and the sandbox blocks Unix sockets by default with `allowUnixSockets`/`allowAllUnixSockets` as the opt-in. The documented `docker` incompatibility is written for Docker Desktop; under Colima the socket path may be the operative constraint, and it may be addressable with `allowUnixSockets` rather than an exemption. Untested — Colima would need to be started first.
+2. **Whether `allowMachLookup` can replace `enableWeakerNetworkIsolation`** for the trustd denial, as described above.
+3. **Whether anything sandbox-relevant changed between 2.1.222 and 2.1.264.** The changelog fetch covering that interval truncated; entries were only recoverable from 2.1.265 onward. This is absence of evidence, not evidence of absence, and the interval spans most of the gap this re-check exists to cover.
+
+## Capability labels
+
+Applying the three-way labelling the other Phase B spikes use, so the spikes stay comparable:
+
+| Capability | Label | Note |
+|---|---|---|
+| Sandboxed Bash tool (macOS Seatbelt) | **not used at all** | Verified absent: no `sandbox` key in `~/.claude/settings.json` or in managed settings |
+| Per-command `allowed_domains` in auto mode | **not used at all** | Requires the sandbox; unreachable until it is enabled |
+| `excludedCommands` | **not used at all** | The remedy that makes adoption viable here |
+| `allowUnsandboxedCommands` / `failIfUnavailable` | **not used at all** | Both at weakening defaults, which is the trap above |
+| Auto mode (`permissions.defaultMode: "auto"`) | **already used here** | Re-verified live this pass; see the re-check below |
+| Credential masking (`sandbox.credentials`) | **not applicable** for now | A substantial subsystem, but it exists to protect secrets *from* sandboxed commands; no current need identified |
+| `enableWeakerNetworkIsolation` | **not applicable** | Requires a MITM proxy and custom CA, verified absent here |
+
+## Collapse candidates for Milestone C1
+
+Per the milestone's instruction to hand forward a list rather than have C1 re-derive one:
+
+- **`Bash(rm *)` and `Bash(git merge*)` as ask rules.** Decision 50 recorded that no permission mode can reach these because explicit ask rules survive every mode. The sandbox does not change that — but the sandbox *does* enforce, at the OS level, the thing the `rm` ask rule exists to approximate. Whether the ask rule can be narrowed once writes are confined to the working directory is a real question for C1, and it would remove the single largest remaining prompt class that auto mode cannot touch.
+- **Protected-path guards on `.claude/` and `.git`.** The sandbox applies mandatory write protections to `.git/hooks`, `.git/config`, shell rc files, `.mcp.json`, `.vscode`/`.idea`, `.claude/commands`, and `.claude/agents` independently of any rule. Any hand-rolled rule covering the same paths is a candidate for removal, not merely for simplification.
+- **`ultrareview`.** A shipped subcommand — "Run a cloud-hosted multi-agent code review of the current branch (or a PR)." Found while enumerating the CLI surface, and **since resolved: it will not be adopted, and it was never run.** It is Claude reviewing Claude, which is the configuration Viktor wrote, considered, and left commented out in favour of a mixed-vendor reviewer. The same pass found a live defect worth more than the subcommand was: a personal `code-review` skill shadows the bundled one by documented precedence, so `/code-review ultra` has been silently discarding the effort argument. See [the reviewer section](claude-code-subagent-capabilities.md) for both findings and the consolidation candidate they produce.
+
+## Re-check of Milestone A3's auto-mode prerequisites, 2026-09-18
+
+The milestone requires re-verifying these rather than inheriting them, since a gateway or managed-settings change could revoke availability silently. All **Verified-here** 🟢 against 2.1.276:
+
+- **Auto mode is live.** `~/.claude/settings.json` sets `permissions.defaultMode: "auto"`. Still the adopted state, unchanged since 2026-08-04.
+- **Managed settings still do not block it.** `/Library/Application Support/ClaudeCode/managed-settings.json` contains only `apiKeyHelper`, `effortLevel`, `env`, and `model`. No `permissions.disableAutoMode`, no `allowManagedPermissionRulesOnly`, and no `sandbox` key — so sandbox adoption is also not blocked by policy today. The binary does carry a policy-lock surface ("Sandbox settings are locked by policy. Sandbox provisioning is managed by your administrator," with `policyLocked` and `enabledSource` fields), so an administrator *could* lock it later; this is the thing to re-check if the sandbox ever stops behaving as configured.
+- **`autoMode.environment` is still unconfigured.** No `autoMode` key exists in user or managed settings. This is the third item Milestone A3 handed forward and it remains open — it matters for unattended runs, where the docs state repeated classifier blocks abort a `-p` session outright.
+
+### Two live auto-mode blocks, observed during this pass
+
+**Verified-here.** 🟢 Recorded because they are friction data of exactly the kind Milestone A3 was measuring, and because they happened to a legitimate task.
+
+Two probes in this evaluation were refused by the classifier, not by a permission rule: once with `Reason: [Credential Materialization]` for a command that would have printed a keychain secret to stdout, and once with `Reason: [Credential Exploration]` for a command that merely listed keychain metadata without printing any secret.
+
+**Interpretation, both directions.** The first block was correct and caught a genuinely sloppy probe — the command would have materialized a live token into a log file. The second was more conservative than necessary: the command printed no secret value. Both are cheap to work around by dropping the probe, and neither produced a prompt Whitney had to answer. This is a concrete instance of the documented tradeoff — "Auto mode reduces permission prompts but does not guarantee safety" — running in the other direction: the classifier also blocks work that is safe. One occurrence of each, not a rate.
+
+## Sources for this section
+
+- [Configure the sandboxed Bash tool](https://code.claude.com/docs/en/sandboxing.md) — the settings surface, Seatbelt, the Go-CLI and `docker` incompatibilities and their remedies, domain behavior, credential masking
+- [Choose a permission mode](https://code.claude.com/docs/en/permission-modes.md) — how the sandbox and auto mode combine, per-command allowed domains, what still prompts inside the sandbox
+- [Claude Code CHANGELOG](https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md) — 2.1.268 (over-stated confinement), 2.1.271 (per-command `allowed_domains`), 2.1.275 (`hooks/` and `config/` writes)
+- **Not fetched, and the right next stop:** `/docs/en/settings-reference.md` is where the per-key documentation actually lives; `/docs/en/settings.md` names `sandbox.enabled` once and documents none of the keys. Also unread and relevant: `/docs/en/sandbox-environments.md`, `/docs/en/network-config.md`, `/docs/en/managed-settings.md`. The documentation index at `code.claude.com/docs/llms.txt` enumerates 172 English pages.
+- Local, 2026-09-18: `claude --version` (2.1.276); `claude --help`; `~/.claude/settings.json`; `/Library/Application Support/ClaudeCode/managed-settings.json`; `strings` over `~/.local/share/claude/versions/2.1.276`; `colima status`; `docker context inspect`; `git config --global --list --name-only`; four `claude -p --settings` probe sessions under `/tmp/sbx-test`
