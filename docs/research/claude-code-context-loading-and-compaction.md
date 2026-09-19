@@ -29,7 +29,7 @@ The finding that drives the classification policy (Milestone C1): **`paths:`-sco
 
 So the classification policy is not choosing between good and bad mechanisms. It is pricing a real trade-off: **durability across compaction costs always-loaded bytes, and there is no mechanism that gives both.**
 
-**Scope limit on the `@`-import half, stated here because this summary is what downstream work reads.** The durability result was measured for imports from `~/.claude/CLAUDE.md`. Imports from a *project* `.claude/CLAUDE.md` were not established by that run — the project root returned with `load_reason: compact` but produced no `include` record for either of its imports, which is consistent with three different explanations and settles none of them. Treat project-level import durability as unmeasured until a second probe runs; see the open question in the Resolved Questions section below. Milestone C1's byte budget depends on the answer, so an unqualified "`@`-imports are durable" read from this summary would put unmeasured bytes in a measured column.
+**Scope limit on the `@`-import half, stated here because this summary is what downstream work reads.** The durability result was measured for imports from `~/.claude/CLAUDE.md`: those survive `/compact`. Imports from a *project* `.claude/CLAUDE.md` were measured separately (2026-09-19) and do **not** survive — the project root returns with `load_reason: compact` but its own `@`-imports produce no `include` record. See the Resolved Questions section below for both measurements. An unqualified "`@`-imports are durable" read from this summary would wrongly extend the user-level result to the project-level case.
 
 ---
 
@@ -121,12 +121,12 @@ The five load reasons, from Claude Code's own matcher vocabulary, mapped to what
 | Load reason | Produced by | Enters | Survives compaction |
 |---|---|---|---|
 | `session_start` | Managed-policy `CLAUDE.md`, `~/.claude/CLAUDE.md`, project `CLAUDE.md`, `CLAUDE.local.md`, and unscoped `rules/*.md` | Startup, outside message history | Yes, re-injected 🟢 — whether from disk or from cache was not measured; see Resolved Questions |
-| `include` | `@path` imports expanded from **any** CLAUDE.md, user-level or project-level | Startup, alongside the referencing file | Yes for user-level imports 🟢 — measured, see Resolved Questions. **Project-level imports untested** — see the caveat below |
+| `include` | `@path` imports expanded from **any** CLAUDE.md, user-level or project-level | Startup, alongside the referencing file | Yes for user-level imports 🟢 — measured. **No for project-level imports** 🔴 — also measured, see Resolved Questions |
 | `path_glob_match` | `rules/*.md` carrying `paths:` frontmatter | Message history, when a matching file is read | **No** 🟢 |
 | `nested_traversal` | `CLAUDE.md` in a subdirectory below cwd | Message history, when a file in that subdirectory is read | **No** 🟢 |
 | `compact` | Re-injection after a compaction event | Startup position | n/a — this *is* the re-injection |
 
-**Caveat on the `include` row, added 2026-08-04.** The measurement covered imports from `~/.claude/CLAUDE.md` only. In the same capture, the project `CLAUDE.md` returned with `load_reason: compact` but produced **no** `include` records for its own two `@`-imports, while all twelve of the user-level imports did return. Whether project-level imports are re-resolved, load only at `session_start`, or fail to resolve at all is unsettled — see finding 6 in [claude-config-load-findings.md](claude-config-load-findings.md). Do not assume the user-level result generalizes to project-level imports.
+**Caveat on the `include` row, added 2026-08-04, resolved 2026-09-19.** The 2026-08-03 measurement covered imports from `~/.claude/CLAUDE.md` only; the project `CLAUDE.md` returned with `load_reason: compact` but produced no `include` records for its own imports, leaving open whether project-level imports re-resolve, load only at `session_start`, or fail to resolve at all. A follow-up probe on 2026-09-19 settled it: project-level `@`-imports do not re-resolve after compaction. See finding 6 in [claude-config-load-findings.md](claude-config-load-findings.md) and the Resolved Questions section below.
 
 Load order, broadest to most specific: managed policy, then user (`~/.claude/`), then project, then local. Rules follow the same shape — "User-level rules are loaded before project rules, giving project rules higher priority." ([memory docs](https://code.claude.com/docs/en/memory))
 
@@ -167,6 +167,16 @@ Captured evidence, one line per file, trimmed to the fields that matter (all sha
 
 **Consequence for the classification policy:** tier 4 buys what it claims. `@`-import is a durable mechanism, indistinguishable from an unscoped rule in both cost and survival. The trade-off in this document's summary stands unchanged — durability still costs always-loaded bytes — but the eleven rules Whitney deliberately made always-loaded are in fact always loaded.
 
+### Whether project-level `@`-imports are re-injected after compaction — NO, measured
+
+**Answer: they are not.** Measured 2026-09-19 on this same claude-config session: a temporary `@.claude/probe-import.md` import was added to this repo's project `.claude/CLAUDE.md`, the same passive `InstructionsLoaded` hook was registered via `.claude/settings.local.json` (added mid-session, no restart — confirms the method note below), and `/compact` was run manually.
+
+The post-compaction payload carried 14 records under one `prompt_id`: two `compact` records (the user-level `~/.claude/CLAUDE.md` and this project's `.claude/CLAUDE.md`) and twelve `include` records — every one with `parent_file_path` pointing at the user-level file. **Zero `include` records named the project `.claude/CLAUDE.md`**, even though it carried a live `@`-import at the moment of compaction and the hook demonstrably fired for it (its own `compact` record is in the log).
+
+This settles finding 6 in [claude-config-load-findings.md](claude-config-load-findings.md): of the three candidate explanations recorded there, the correct one is that project-level `@`-imports are not re-resolved after compaction at all — only user-level ones are. The asymmetry is by import *origin* (which CLAUDE.md declared the `@path`), not by import target or content.
+
+**Consequence for Milestone C1's byte budget:** the 10,937 bytes previously flagged as depending on this answer must be tracked as first-load-only content if a project `CLAUDE.md` ever carries a real `@`-import — not as always-resident, always-loaded bytes the way the eleven user-level rules are. (This repo's project `.claude/CLAUDE.md` currently has zero `@`-imports; the historical ones that motivated finding 6 were already removed as a remedy before this probe ran.)
+
 ### Prior state of this question (retained for provenance)
 
 Before the measurement, the evidence pointed three ways and mattered more than any other open point here, because **all eleven of Whitney's always-loaded rule files reach context through `@`-reference**, not as unscoped rules.
@@ -191,7 +201,7 @@ Three things follow directly from the findings and are worth carrying into the c
 
 2. **Adopt Anthropic's trim line rather than inventing one:** cut what Claude can derive from the codebase, keep pitfalls, rationale, and conventions that differ from tool defaults. It is more decidable than "is this important," and `/doctor` applies the same heuristic, so the policy and the tooling agree.
 
-3. **Measure before deciding.** Two facts the policy depended on were unverified. The first — whether `@`-imports survive compaction — is now measured **for imports from `~/.claude/CLAUDE.md` only: those do** (see Resolved Questions). **Project-level imports from `.claude/CLAUDE.md` were not tested by that run and remain unmeasured.** State the limit wherever this result is used: Milestone C1's byte budget rests on it, and 10,937 bytes of rule content hangs on the untested half, so the budget must record that portion as an assumption rather than an observation. The second, whether any `SKILL.md` exceeds the 5,000-token truncation cap, remains an *estimate* from `scripts/measure-context-load.sh` rather than a confirmed reading; the byte-to-token ratio is calibrated against one `/context` sample, so files near the cap could fall either side of it.
+3. **Measure before deciding.** Two facts the policy depended on were unverified. The first — whether `@`-imports survive compaction — is now fully measured: imports from `~/.claude/CLAUDE.md` do survive, and imports from a project `.claude/CLAUDE.md` do not (see Resolved Questions). Milestone C1's byte budget should record project-level `@`-import content as first-load-only, not always-loaded — the 10,937 bytes previously flagged as unmeasured now have a measured answer. The second, whether any `SKILL.md` exceeds the 5,000-token truncation cap, remains an *estimate* from `scripts/measure-context-load.sh` rather than a confirmed reading; the byte-to-token ratio is calibrated against one `/context` sample, so files near the cap could fall either side of it.
 
 **No free win here, contrary to an earlier version of this document.** `disable-model-invocation: true` does remove a skill's description from every session's startup listing, but it also removes the model's ability to invoke that skill — leaving it reachable only by a human typing `/name`. Recommending it for "the side-effect lifecycle skills" was backwards: those are precisely the skills an autonomous run has to reach on its own, and Decision 15 prioritizes autonomy. Milestone C1 decides it per skill, weighing bytes against reachability. See finding 5.
 
