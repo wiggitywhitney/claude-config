@@ -1,8 +1,8 @@
 # Research: Claude Code Permission Modes, Sandbox, and Auto Mode
 
 **Project:** claude-config
-**Last Updated:** 2026-09-18
-**Claude Code version checked against:** 2.1.276 (`claude --version`, run 2026-09-18). Earlier sections were checked against 2.1.222 (run 2026-08-04) and are marked where the newer pass changed them.
+**Last Updated:** 2026-09-19
+**Claude Code version checked against:** 2.1.278 (`claude --version`, run 2026-09-19), for the escape-hatch probes added that day. The rest of the document was checked against 2.1.276 (run 2026-09-18) and 2.1.222 (run 2026-08-04), marked where a newer pass changed them.
 **Produced by:** PRD #109, Milestone A3 half one (the relief pass); extended by Milestone B1 (the sandbox evaluation)
 
 ## Update Log
@@ -12,6 +12,7 @@
 | 2026-08-04 | Initial research. Documentation pass on permission modes, the sandboxed Bash tool, and auto mode, verified against Whitney's live settings files and the Milestone A3 instrument log. |
 | 2026-08-24 | Added the auto-mode live-dependency observation (classifier rate-limiting blocks `Bash` entirely) at the end of the document. |
 | 2026-09-18 | Milestone B1 re-ran the pass against 2.1.276 and evaluated the sandboxed Bash tool empirically rather than from documentation. Two of this document's own claims are corrected: the sandbox's per-domain prompt class is largely obsolete, and the `gh` breakage is confirmed but presents as a credential error rather than a TLS one. See "Milestone B1: the sandboxed Bash tool, evaluated" at the end. |
+| 2026-09-19 | Resolved the sandbox escape-hatch disagreement against 2.1.278 (Decision 95): the `dangerouslyDisableSandbox` fallback is model-mediated, not an automatic harness-level retry. See "The escape hatch is model-mediated, not a silent harness-level retry." |
 
 ---
 
