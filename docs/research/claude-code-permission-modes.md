@@ -121,7 +121,7 @@ So it is suggestive, not decisive, evidence that the remedy has to change the *m
 
 ### The sandbox is a real alternative on macOS with nothing to install, but it introduces a new prompt class
 
-> **Superseded in part, 2026-09-18 (Milestone B1).** The heading's "new prompt class" claim no longer holds at 2.1.276: a sandboxed command reaching an un-allowlisted domain does not prompt Whitney, it fails with a violation notice addressed to the model. The `gh`/`gcloud`/`terraform` breakage *is* real and is now confirmed by direct test, but it surfaces as a credential error rather than a TLS one. Read this section as the 2.1.222 documentation pass and see "Milestone B1: the sandboxed Bash tool, evaluated" for what was measured.
+> **Superseded in part, 2026-09-18 (Milestone B1).** The heading's "new prompt class" claim no longer holds at 2.1.276: a sandboxed command reaching an un-allowlisted domain does not prompt Whitney, it fails with a violation notice addressed to the model. The Go-CLI breakage is real for **`gh`, which is the only one of the three that was actually run** — confirmed by direct test, and surfacing as a credential error rather than a TLS one. `gcloud` and `terraform` remain documented possibilities that share the mechanism but were never tested here. Read this section as the 2.1.222 documentation pass and see "Milestone B1: the sandboxed Bash tool, evaluated" for what was measured.
 
 **Documentation-only.** 🟢
 

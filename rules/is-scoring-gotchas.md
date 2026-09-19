@@ -132,10 +132,13 @@ If you checked out just `src/`/`examples/` from the instrument branch (`git chec
 Full restore sequence — capture the exact paths the instrument branch added *before* the reset, then delete only those:
 ```bash
 git status --short  # must be clean before proceeding
-ADDED_PATHS=$(git diff --name-only --diff-filter=A main <instrument-branch> -- src/ examples/)
-git reset HEAD -- src/ examples/ && git checkout -- src/ examples/ && [ -n "$ADDED_PATHS" ] && echo "$ADDED_PATHS" | xargs rm -f
+git diff -z --name-only --diff-filter=A main <instrument-branch> -- src/ examples/ > /tmp/added-paths.z
+git reset HEAD -- src/ examples/ && git checkout -- src/ examples/
+[ -s /tmp/added-paths.z ] && xargs -0 rm -f -- < /tmp/added-paths.z
+rm -f /tmp/added-paths.z
 ```
-**Do not use `git clean -fd src/ examples/`** — it removes *any* untracked file under those paths, not just the known `.instrumentation.md` leftovers, so it can delete unrelated work-in-progress files if any exist there at the time. **Do not use a pattern-based `find -name '*.instrumentation.md' -delete` either** — it deletes by filename pattern rather than by the exact set of paths the branch actually added, so it can also catch a same-named file that predates the checkout. Capturing `$ADDED_PATHS` via `git diff --diff-filter=A` before the reset and deleting only those is the precise fix.
+**The list must be NUL-delimited, not newline-delimited, and the newline form fails silently.** A capture into a shell variable piped through `xargs rm -f` splits on whitespace, so a path containing a space reaches `rm` as two paths that do not exist — and `-f` suppresses the resulting error, so the cleanup reports success while the file it was meant to delete is still there. Verified 2026-09-18: `echo "a b.txt" | xargs rm -f` exits 0 and leaves `a b.txt` in place, while `git diff -z` plus `xargs -0 rm -f --` removes both `a b.txt` and `-dashy.txt` and leaves everything else untouched. The `--` is what stops a path beginning with a dash from being read as a flag.
+**Do not use `git clean -fd src/ examples/`** — it removes *any* untracked file under those paths, not just the known `.instrumentation.md` leftovers, so it can delete unrelated work-in-progress files if any exist there at the time. **Do not use a pattern-based `find -name '*.instrumentation.md' -delete` either** — it deletes by filename pattern rather than by the exact set of paths the branch actually added, so it can also catch a same-named file that predates the checkout. Capturing the added paths via `git diff -z --diff-filter=A` before the reset and deleting only those is the precise fix.
 
 Verify with `git status --short` — nothing should remain under `src/`/`examples/` afterward (pre-existing untracked files elsewhere in the repo, e.g. journal entries, are unrelated and fine). Confirmed on commit-story-v2 run-28, 2026-09-17: a plain `git checkout main -- src/ examples/` left ~30 `.instrumentation.md` files staged as adds; a CodeRabbit review then flagged the initial `git clean -fd` fix as unsafe, leading to a `find -delete` fix; a later review (2026-09-18) flagged that as still broader than necessary, leading to the exact-path capture above.
 
