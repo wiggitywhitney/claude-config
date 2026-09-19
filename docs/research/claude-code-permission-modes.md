@@ -350,6 +350,22 @@ Claude Code's own internal test configuration sets the hardened shape — `enabl
 
 The binary also carries a diagnostic that enumerates, in priority order, every setting that weakens enforcement: `sandbox.enabledPlatforms excludes <platform>`, `sandbox.enabled is false`, `sandbox.failIfUnavailable is false (a missing backend would run the shell unconfined)`, `sandbox.allowUnsandboxedCommands is true`, `sandbox.excludedCommands exempts commands`, `sandbox.autoAllowBashIfSandboxed would run commands the operator never granted`, `sandbox.enableWeakerNestedSandbox exposes the host /proc`, `sandbox.enableWeakerNetworkIsolation loosens the egress lock`, `sandbox.allowAppleEvents removes macOS automation isolation`. That list is the platform's own account of the tradeoffs and is a better checklist than anything this audit would invent.
 
+### The escape hatch is model-mediated, not a silent harness-level retry (resolved 2026-09-19)
+
+**Verified-here.** 🟢 `rules/claude-code-sandbox-gotchas.md` described the `allowUnsandboxedCommands` fallback as a blocked command retrying unsandboxed "by default," which could be read as the harness performing the retry on its own. It does not. A blocked command stays blocked unless the model itself decides to re-issue the tool call with `dangerouslyDisableSandbox: true` — the same parameter this session's own Bash tool schema exposes to the model as an explicit, settable field, not an internal fallback.
+
+Three `claude -p --settings` probes isolated this, each writing to `/tmp` (outside the sandbox's allowed paths, so a guaranteed block):
+
+| Probe | Settings | Instruction | Result |
+|---|---|---|---|
+| 1 | `allowUnsandboxedCommands: false` | run the command once | Blocked: `operation not permitted`. No retry possible — the parameter is ignored, matching the settings-schema description. |
+| 2 | `allowUnsandboxedCommands: true` (default) | run once, explicitly told **not** to retry or set `dangerouslyDisableSandbox` | Blocked: same `operation not permitted`, file never created. **No automatic fallback occurred** — the command stayed blocked because the model didn't choose to retry. |
+| 3 | `allowUnsandboxedCommands: true` (default), `--dangerously-skip-permissions` | run the command, and "do whatever you think is appropriate" if blocked | Blocked once, then the model re-ran the same command with the sandbox disabled and it succeeded — file created, confirmed on disk. |
+
+**Verdict: both source documents were describing the same mechanism from different angles, and neither was wrong, but the gotchas file's "by default" phrasing invited the automatic-retry reading.** `allowUnsandboxedCommands` governs whether the `dangerouslyDisableSandbox` parameter is *available* to the model at all (probe 1 vs. probes 2–3); it does not make the harness retry on the model's behalf (probe 2 vs. probe 3). The practical consequence for a hardened configuration is unchanged from the existing recommendation below: `allowUnsandboxedCommands: false` is the only setting that actually closes the hatch, because it removes the model's option rather than trusting the model not to exercise it.
+
+`rules/claude-code-sandbox-gotchas.md` has been reworded to match this finding.
+
 ## Configuration shape, if Milestone C1 adopts it
 
 Recorded as a starting point to argue with, not a recommendation to apply unreviewed. It keeps auto mode, keeps `gh` working, and closes the escape hatch:
@@ -425,3 +441,4 @@ Two probes in this evaluation were refused by the classifier, not by a permissio
 - [Claude Code CHANGELOG](https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md) — 2.1.268 (over-stated confinement), 2.1.271 (per-command `allowed_domains`), 2.1.275 (`hooks/` and `config/` writes)
 - **Not fetched, and the right next stop:** `/docs/en/settings-reference.md` is where the per-key documentation actually lives; `/docs/en/settings.md` names `sandbox.enabled` once and documents none of the keys. Also unread and relevant: `/docs/en/sandbox-environments.md`, `/docs/en/network-config.md`, `/docs/en/managed-settings.md`. The documentation index at `code.claude.com/docs/llms.txt` enumerates 172 English pages.
 - Local, 2026-09-18: `claude --version` (2.1.276); `claude --help`; `~/.claude/settings.json`; `/Library/Application Support/ClaudeCode/managed-settings.json`; `strings` over `~/.local/share/claude/versions/2.1.276`; `colima status`; `docker context inspect`; `git config --global --list --name-only`; four `claude -p --settings` probe sessions under `/tmp/sbx-test`
+- Local, 2026-09-19: `claude --version` (2.1.278); three `claude -p --settings` probes against `/tmp` writes, isolating the `allowUnsandboxedCommands` escape hatch as model-mediated rather than automatic
