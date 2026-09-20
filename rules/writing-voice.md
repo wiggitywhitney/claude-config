@@ -219,8 +219,8 @@ Don't assume the reader has the same context you do about who a third party is. 
 - Don't: "he's going to pitch to Janhavi and Gordon next week"
 (Confirmed: sent version of the Ajuna Slack update on the Dani meeting, 2026-09-18.)
 
-**Say "telemetry," not "payload," when describing what a tool generates to a non-implementation audience.**
-"Payload" is implementation jargon; "telemetry" is the accessible word for the same thing and reads more naturally even to a technical colleague who isn't in the weeds of this specific project.
+**Say "telemetry," not "payload," when describing generated telemetry to a non-implementation audience.** Scoped to that one case — "payload" is still the right word for an API request/response body or other non-telemetry data, and this rule doesn't replace it there.
+"Payload" is implementation jargon for telemetry specifically; "telemetry" is the accessible word for the same thing and reads more naturally even to a technical colleague who isn't in the weeds of this specific project.
 - Do: "a user experience on top of the telemetry that Spinybacked Orbweaver generates"
 - Don't: "a user experience on top of the payload Spinybacked Orbweaver generates"
 (Confirmed: sent version of the Ajuna Slack update on the Dani meeting, 2026-09-18.)
