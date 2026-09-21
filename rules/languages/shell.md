@@ -22,11 +22,17 @@ paths: ["**/*.sh"]
   # Wrong: aborts the whole script under set -euo pipefail if grep finds 0 matches
   total=$(grep -oE '[0-9]+ things?' "$LOG" | grep -oE '[0-9]+' | awk '{s+=$1} END{print s+0}')
 
-  # Right: each grep stage is individually protected
+  # Also wrong: unconditional `|| true` swallows grep exit 2 (unreadable file, invalid
+  # pattern) the same way it swallows exit 1 (no match), so a real failure prints "0"
+  # and looks like a clean empty result instead of erroring
   total=$( { grep -oE '[0-9]+ things?' "$LOG" || true; } | { grep -oE '[0-9]+' || true; } | awk '{s+=$1} END{print s+0}')
+
+  # Right: only exit 1 (no match) is tolerated; any other exit code still propagates
+  grep_ok() { grep "$@"; local rc=$?; [ "$rc" -le 1 ]; }
+  total=$(grep_ok -oE '[0-9]+ things?' "$LOG" | grep_ok -oE '[0-9]+' | awk '{s+=$1} END{print s+0}')
   ```
 
-  Confirmed 2026-09-21 in a log-monitoring script for a spiny-orb-eval taze run: the attribute-count extraction crashed the script on an early/empty log because the first grep stage matched nothing, and CodeRabbit CLI flagged it as a real bug before it caused a false stall report mid-run.
+  Confirmed 2026-09-21 in a log-monitoring script for a spiny-orb-eval taze run: the attribute-count extraction crashed the script on an early/empty log because the first grep stage matched nothing, and CodeRabbit CLI flagged it as a real bug before it caused a false stall report mid-run. A follow-up CodeRabbit review the same day caught that the `|| true` fix itself over-corrects — it masks grep's real failure modes, not just the expected empty-result one.
 - **Never name an `awk -v` variable `log`, `index`, `length`, `split`, `sub`, `gsub`, `int`, `sin`, `cos`, or `exp`.** These are awk built-in functions, and assigning one produces no error — the reference silently evaluates to something else. Passing a file path in as `-v log="$FILE"` and printing it with `%s` yields `-inf`, because `log` resolves to the logarithm function rather than the string. Verified 2026-08-04.
 
   ```bash

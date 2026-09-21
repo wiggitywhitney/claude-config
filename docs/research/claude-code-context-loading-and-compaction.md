@@ -29,7 +29,7 @@ The finding that drives the classification policy (Milestone C1): **`paths:`-sco
 
 So the classification policy is not choosing between good and bad mechanisms. It is pricing a real trade-off: **durability across compaction costs always-loaded bytes, and there is no mechanism that gives both.**
 
-**Scope limit on the `@`-import half, stated here because this summary is what downstream work reads.** The durability result was measured for imports from `~/.claude/CLAUDE.md`: those survive `/compact`. Imports from a *project* `.claude/CLAUDE.md` are a different mechanism entirely, closed 2026-09-21: they never resolve into context in the first place, at `session_start` or otherwise, so there is nothing for `/compact` to preserve or drop. See the Resolved Questions section below for the fresh-session measurement. An unqualified "`@`-imports are durable" read from this summary would wrongly extend the user-level result to the project-level case regardless.
+**Scope limit on the `@`-import half, stated here because this summary is what downstream work reads.** The durability result was measured for imports from `~/.claude/CLAUDE.md`: those survive `/compact`. Imports from a *project* `.claude/CLAUDE.md` are a different mechanism entirely: a single fresh-session probe against `@.claude/probe-import.md`, at 2.1.278, on 2026-09-21, found they never resolve into context in the first place, at `session_start` or otherwise, so there is nothing for `/compact` to preserve or drop. That is one probe on one import path at one version, not a platform-wide guarantee — re-verify before relying on it after a major version bump or for an import structured differently than a single flat file. See the Resolved Questions section below for the measurement. An unqualified "`@`-imports are durable" read from this summary would wrongly extend the user-level result to the project-level case regardless.
 
 ---
 
@@ -121,7 +121,7 @@ The five load reasons, from Claude Code's own matcher vocabulary, mapped to what
 | Load reason | Produced by | Enters | Survives compaction |
 |---|---|---|---|
 | `session_start` | Managed-policy `CLAUDE.md`, `~/.claude/CLAUDE.md`, project `CLAUDE.md`, `CLAUDE.local.md`, and unscoped `rules/*.md` | Startup, outside message history | Yes, re-injected 🟢 — whether from disk or from cache was not measured; see Resolved Questions |
-| `include` | `@path` imports expanded from **any** CLAUDE.md, user-level or project-level | Startup, alongside the referencing file | Yes for user-level imports 🟢 — measured. **Project-level imports never resolve into context at all** 🟢 — measured, closed 2026-09-21, see Resolved Questions |
+| `include` | `@path` imports expanded from `~/.claude/CLAUDE.md` — **not** from a project-level `.claude/CLAUDE.md`, which never produces this load reason at all | Startup, alongside the referencing file | Yes for user-level imports 🟢 — measured. **Project-level imports never resolve into context at all** 🟢 — measured, closed 2026-09-21, see Resolved Questions |
 | `path_glob_match` | `rules/*.md` carrying `paths:` frontmatter | Message history, when a matching file is read | **No** 🟢 |
 | `nested_traversal` | `CLAUDE.md` in a subdirectory below cwd | Message history, when a file in that subdirectory is read | **No** 🟢 |
 | `compact` | Re-injection after a compaction event | Startup position | n/a — this *is* the re-injection |
@@ -167,7 +167,7 @@ Captured evidence, one line per file, trimmed to the fields that matter (all sha
 
 **Consequence for the classification policy:** tier 4 buys what it claims. `@`-import is a durable mechanism, indistinguishable from an unscoped rule in both cost and survival. The trade-off in this document's summary stands unchanged — durability still costs always-loaded bytes — but the eleven rules Whitney deliberately made always-loaded are in fact always loaded.
 
-### Whether project-level `@`-imports are re-injected after compaction — closed: they never resolve in the first place
+### Whether project-level `@`-imports are re-injected after compaction — closed for the measured case: they never resolve in the first place
 
 **Answer: a project-level `@`-import present from a fresh session's `session_start` produced no `include` record at startup, and no other evidence of having loaded — compaction is moot because there was nothing to survive it.** Measured 2026-09-21 in a brand-new claude-config session, closing the gap the 2026-09-19 probe left open (Decision 94).
 
