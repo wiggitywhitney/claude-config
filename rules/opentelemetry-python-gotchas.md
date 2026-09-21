@@ -17,3 +17,11 @@ This is different from JavaScript's `tracer.startActiveSpan()`, which has no equ
 - An `except` block that **swallows** the exception (returns a fallback value, logs and continues, does not re-raise) is NOT covered automatically — the SDK's automatic handling only fires for exceptions that actually leave the `with` block. Manual `span.record_exception(e)` + `span.set_status(Status(StatusCode.ERROR, str(e)))` calls ARE needed here, or the error goes completely unrecorded on the span.
 
 Verify directly if this ever needs re-checking: `python3 -c "import opentelemetry.trace, os; print(os.path.dirname(opentelemetry.trace.__file__))"`, then read `use_span()`'s source in that file.
+
+## `use_span()`'s `end_on_exit` defaults to `False` — the opposite of what its sibling defaults suggest
+
+`use_span(span, end_on_exit=False, record_exception=True, set_status_on_exception=True)` — verified directly against the real signature in `opentelemetry/trace/__init__.py`. Unlike `record_exception`/`set_status_on_exception` (both default `True`, see above), `end_on_exit` defaults to **`False`**: `with use_span(span):` does **not** close `span` when the `with` block exits — the span must still be ended manually (`span.end()`) unless the caller explicitly passes `end_on_exit=True`.
+
+It's easy to assume all three parameters share the same "safe by default" `True` pattern, since two of them do — this was a real, shipped mistake (spinybacked-orbweaver PRD #373, CDQ-001 checker, caught by a CodeRabbit review round after the wrong assumption passed code review, typecheck, and a full test suite once). Never assume a Python OTel SDK parameter's default without checking its real signature — analogy from a sibling parameter in the same call is not verification.
+
+`start_as_current_span()` itself internally calls `use_span()` with `end_on_exit=True` explicitly — that's why `with tracer.start_as_current_span(...):` *does* close the span automatically, while a bare `with use_span(span):` does not. The two context managers are not interchangeable defaults.

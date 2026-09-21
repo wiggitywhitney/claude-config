@@ -177,6 +177,11 @@ The passive version sounds like you're apologizing for asking. Just ask.
 - Do: "I'm following up on my note from last week. Are you interested in being a guest on Datadog Illuminated? I'd love to have you!"
 - Don't: "I wanted to follow up on my note from last week. Are you interested in being a guest on Datadog Illuminated?"
 
+**When removing a decision to reduce someone's friction, state it as a decision, not a hedged offer.** "I'm happy to just go with X if it's easier" still asks them to accept an offer. "Let's go with X" already made the call.
+- Do: "Let's go with the On-Call Rate Limiter story since I already have documentation on it."
+- Don't: "I'm happy to just go with the On-Call Rate Limiter story since I already have documentation on it. That way there's nothing left to decide."
+(Confirmed: sent version of the Graham Patterson follow-up, 2026-09-21.)
+
 **"I would love" is acceptable when expressing genuine enthusiasm for someone's specific angle** — e.g., "I would love your perspective about X." It's warmer than "I am interested in" and fits panel invite contexts. The no-hedging rule applies to asks and questions ("Are you interested?" not "Would you be interested?"), not to statements of enthusiasm.
 
 **In cold outreach, name the topic — don't name the specific technique.** When referencing a blog post or project as the reason for the invite, one sentence naming what they built is enough. Cut a follow-up sentence that names the specific internal method/workflow (e.g., "the narrow-prompt, failing-tests-as-judge workflow") — that level of detail reads as presumptuous or overly technical for a first contact, even when accurate. Save that depth for the planning conversation after they say yes.
@@ -213,6 +218,17 @@ Signal: you have already exchanged at least one email with this person, or they 
 
 **Include timezone when scheduling across potential time zones.**
 Always specify "US Central" (or whichever applies) when putting time on someone's calendar by email.
+
+**When correcting a colleague's assumption via a factual timeline, skip the meta-framing sentence and launch straight into the story.** Don't open with "that doesn't work the way you think" or similar throat-clearing — let the chronology itself make the point.
+- Do: "This whole chain traces back to your referral of David Bonnet back in January! I emailed David on January 16..."
+- Don't: "Graham's already deep in process, so bumping him up doesn't work quite the way you're picturing. This whole chain traces back to..."
+(Confirmed: cut from the sent version of the Ajuna Slack reply about Graham Patterson, 2026-09-21.)
+
+**Casual Slack asides to close colleagues can include wry self-aware humor and observational color commentary, not just bare facts.** A line like "Anyway this is wild but I've been trying to book an On-Call something something since January" or ending with "They seem like a busy team" adds personality without undermining the substance. Reserve this register for close colleagues (same scope as the "Slack DMs to daily working colleagues" rule below) — don't extend it to first-contact or external outreach.
+(Confirmed: sent version of the Ajuna Slack reply, 2026-09-21 — both lines present in the sent version, absent from the draft.)
+
+**State a planned next action as a simple direct sentence** ("I'll send a second follow-up now.") — not hedged, not phrased as a question.
+(Confirmed: added in the sent version of the Ajuna Slack reply, 2026-09-21.)
 
 **Slack DMs to daily working colleagues: open warmly, no sign-off.**
 For close colleagues like Ajuna, the opener can be more effusive than email — "Good morning! Happy Monday!" is right; don't default to just "Hi [Name]!" (that rule applies to email). Energy matches the moment. No closing signature on Slack DMs — the message just ends; no "Warmly, Whitney."
