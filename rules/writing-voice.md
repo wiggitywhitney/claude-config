@@ -10,6 +10,11 @@ Core rules are in `~/.claude/CLAUDE.md` under "Writing Style." This file extends
 
 ## Rules (with reasons)
 
+**Before drafting a reply, identify what the other person is actually waiting on — then answer only that.** Don't pad an email with context that isn't relevant to the recipient (travel plans, conference names, cities, reasons behind a delay) just because it's true or was mentioned in conversation. Ask: do they have a question? Is there an open ask? What's the one thing blocking them from acting? Write only that.
+- Do (contractor waiting on a date to schedule a walkthrough): "We're not available until after October 7. Can we schedule for sometime after that?"
+- Don't: naming where the traveling family member is, what conference they're at, or why — irrelevant to a contractor who just needs a date, and personal-location detail is TMI to a vendor.
+(Confirmed: rejected drafts to two contractors (Paul Merryfield, Justin Kolic) that named Michael's conference and city; Whitney: "Saying where he is is TMI... think about what the actual point of these emails is." 2026-09-20.)
+
 **Don't invent a first-person physical-action opener** ("I sat down at the lightboard with X").
 Whitney rejected this outright: "I didn't sit down. Use my voice. This, I wouldn't talk like that at all." Don't dramatize or narrate an action as a scene-setting hook — state the fact plainly, guest-first. Accepted replacement: "Lin Sun, co-creator of kagent, joined me at the lightboard to walk through how it works." (Confirmed: kagent gist post draft, 2026-08-03.)
 
@@ -122,6 +127,11 @@ Not a word Whitney uses. Say what actually happened instead — "was very well r
 Flagged as worrisome in the agent-traces talk draft, 2026-08-19. Not an outright ban like "actually" — but when it shows up, try rephrasing as a direct statement instead of a value-judgment noun.
 - Do: "Your platform team should add that context."
 - Don't: "That's context worth adding."
+
+**Never use "nobody" or "no one" — both are AI tells.** Rephrase with a concrete subject instead of a vague absence.
+- Do: "alerts developers no longer trust"
+- Don't: "alerts nobody trusts"
+(Confirmed: rejected from a Datadog Illuminated gist post draft — "alerts nobody trusts anymore" — 2026-09-21.)
 
 **Use `(^-^)/` when greeting a new contact — internal Datadog or external warm intro.**
 One hand, a wave hello. No backslash before the opening parenthesis. Skip it for cold external email or formal context.

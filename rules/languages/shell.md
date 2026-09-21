@@ -6,6 +6,27 @@ paths: ["**/*.sh"]
 
 - Start scripts with `#!/usr/bin/env bash` for portability.
 - Use `set -uo pipefail` at the top of scripts. Add `set -e` only when early exit on any error is desired.
+- **`macOS`'s default `/usr/bin/awk` is the one-true-awk (BWK), not gawk — `match(str, regex, arr)`'s 3-argument array-capture form is a gawk-only extension and errors immediately with "syntax error ... illegal statement" on macOS.** A script written and tested against gawk (e.g. on Linux CI, or copied from documentation examples) fails outright the first time it runs locally on a Mac, rather than producing a wrong-but-plausible result. Use the POSIX-portable two-step form instead: `match(str, regex)` sets `RSTART`/`RLENGTH` as side effects, then extract with `substr(str, RSTART, RLENGTH)`.
+
+  ```bash
+  # Wrong: gawk-only, fails on macOS's default awk
+  awk '{ if (match($0, /, ([0-9]+) attempts?$/, m)) print m[1] }'
+
+  # Right: POSIX awk, works on both
+  awk '{ if (match($0, /, [0-9]+ attempts?$/)) { seg = substr($0, RSTART, RLENGTH); gsub(/[^0-9]/, "", seg); print seg } }'
+  ```
+
+- **Under `set -o pipefail`, a `var=$(stage1 | stage2 | stage3)` assignment aborts the script if ANY stage fails, even when the last stage succeeds — and this is a distinct trap from the `grep -q`-at-end-of-pipe case documented below.** `pipefail` makes the pipeline's reported exit status the rightmost *failing* stage's status, not simply the last stage's status. So `grep -oE 'pattern' "$LOG" | grep -oE '[0-9]+' | awk '{s+=$1} END{print s+0}'` reports failure — and, combined with `set -e`, kills the whole script — the moment the log contains zero matches for `pattern`, even though `awk` itself ran fine and printed `0`. This is easy to miss because the pipeline "looks like" it should just yield an empty/zero result on no matches, and it does exactly that when run standalone outside `set -e` — the abort only manifests inside a script with both flags on. Guard every stage that can plausibly match nothing, not just the last one:
+
+  ```bash
+  # Wrong: aborts the whole script under set -euo pipefail if grep finds 0 matches
+  total=$(grep -oE '[0-9]+ things?' "$LOG" | grep -oE '[0-9]+' | awk '{s+=$1} END{print s+0}')
+
+  # Right: each grep stage is individually protected
+  total=$( { grep -oE '[0-9]+ things?' "$LOG" || true; } | { grep -oE '[0-9]+' || true; } | awk '{s+=$1} END{print s+0}')
+  ```
+
+  Confirmed 2026-09-21 in a log-monitoring script for a spiny-orb-eval taze run: the attribute-count extraction crashed the script on an early/empty log because the first grep stage matched nothing, and CodeRabbit CLI flagged it as a real bug before it caused a false stall report mid-run.
 - **Never name an `awk -v` variable `log`, `index`, `length`, `split`, `sub`, `gsub`, `int`, `sin`, `cos`, or `exp`.** These are awk built-in functions, and assigning one produces no error — the reference silently evaluates to something else. Passing a file path in as `-v log="$FILE"` and printing it with `%s` yields `-inf`, because `log` resolves to the logarithm function rather than the string. Verified 2026-08-04.
 
   ```bash
