@@ -180,7 +180,27 @@ Stuck detection is the hardest open problem. Design decisions for this implement
 
 ---
 
-## 5. Design implications for PRD #84
+## 5. Pre-landing gate capability (Milestone B1, Decision 72), closed 2026-09-25
+
+**The question:** does Claude Code natively support a deterministic pre-landing gate on agent-authored changes — comparable to Michael Forrester's `telemetry-agent` Coordinator pattern, which checks and can revert a change *before* it is proposed as final, not after a diff exists (the way CodeRabbit or the retired diff-reviewer sub-agent trial do)? The Coordinator pattern has five distinct properties (see [michael-forrester-workflow.md](michael-forrester-workflow.md), "This one differs sharply from a rule the agent is asked to follow"): snapshot-before-edit with hard revert on failure; a bounded fix-retry validation loop that reverts (not warns) on exhaustion; a pre-insertion static check run before content lands; hard token/file/span budgets enforced by the Coordinator itself, not the LLM; and Coordinator-exclusive write access to a shared file.
+
+**Checked against Claude Code v2.1.280** (`claude --version`). **Documentation-only** 🟢 for properties 1–4 (fetched `checkpointing.md`, `agent-sdk/file-checkpointing.md`, `hooks.md`, `cli-reference.md` directly; every version-gated note cited — v2.1.211, v2.1.216, v2.1.236, v2.1.248 — is below the installed version, so a live probe wasn't needed to settle whether the feature exists). **Verified-here** 🟢 for property 5's Bash-write edge case, by direct probe rather than trusting the documented Bash pattern-matching claim.
+
+| Property | Native? | Detail |
+|---|---|---|
+| 1. Snapshot-before-edit + hard revert | **Native, but SDK-only** | The Agent SDK exposes `enable_file_checkpointing` + `rewindFiles()`/`rewind_files()`, with an officially documented "checkpoint before risky operations" pattern that is exactly this: capture the checkpoint UUID before a turn, call `rewindFiles()` when a validation failure fires. **Does not exist for plain `claude -p`** — no checkpoint/rewind subcommand or flag in `cli-reference.md`. Scoped only to Write/Edit/NotebookEdit; Bash-made changes and background-subagent edits aren't tracked either way, matching the interactive `/rewind` limitation. |
+| 2. Bounded fix-retry loop, revert on exhaustion | **No native retry-budget concept** | `PostToolUse` can run any validation command and the hook script can issue its own revert on failure, but "bounded" (give up after N attempts) has no built-in tracking. The hook script has to hand-track attempt count itself — the same thing Michael's Coordinator does in his own script. This is a permanent gap, not a version gap: nothing about the SDK changes it either. |
+| 3. Pre-insertion static check before content lands | **Native via `PreToolUse`** | `PreToolUse` fires before the tool executes, and `tool_input` carries the proposed content, so a hook can statically analyze it before allowing the write and return `permissionDecision: "deny"` to block it outright — a genuine pre-insertion check, available to `claude -p` and the SDK alike. |
+| 4. Hard token/file/span budgets enforced outside the LLM | **No native budget primitive** | A `PreToolUse` hook can inspect `tool_input` size and deny past a threshold, but there's no built-in "budget" concept — same hand-rolled-in-the-hook-script story as #2. |
+| 5. Coordinator-exclusive write access to a shared file | **Native via `PreToolUse` deny, confirmed for both Edit/Write and Bash** | A hook matching the relevant tool, unconditionally denying a specific path, gives the LLM no path to touch that file. **Verified live**: a `PreToolUse` hook denying any `Bash` command referencing a protected file blocked a `claude -p --dangerously-skip-permissions` session's attempt to overwrite it via `echo > file` — confirmed by disk state, not by the reported message (the file was unchanged after the blocked run). A control run with the same command and no hook installed succeeded, confirming the hook — not some other restriction — was what stopped it. |
+
+**Overall verdict: partially buildable natively, split cleanly along one line — SDK-embedded vs. plain-CLI architecture, not along "exists vs. doesn't."** Properties 3 and 5 are close-to-native via `PreToolUse` hooks regardless of whether the orchestrator is plain `claude -p` or the embedded SDK. Property 1's native form (checkpoint/`rewindFiles()`) requires the SDK specifically — under plain `claude -p`, snapshot/revert is ordinary git wrapping the CLI call, no different from what Michael's own script already does. Properties 2 and 4 (bounded retry, hard budgets) are permanent hand-rolled territory in either architecture; the platform has no equivalent primitive for either, SDK or not.
+
+**This is a materially more favorable answer than Decision 72's original framing implied** ("record a plain gap if it does not exist") — 3 of 5 properties are buildable today via hooks in this repo's current `claude -p` architecture, with no SDK migration needed. Only property 1 is a genuine architecture fork: **Design implications point 2 below chose plain `claude -p` over the SDK specifically to preserve the full skill/hook/settings toolchain** — that choice is unaffected by this finding (properties 3 and 5 don't need the SDK), but if snapshot-and-hard-revert (property 1) is judged valuable enough on its own, adopting it would mean embedding the SDK, which is a bigger change than adding a hook. Milestone C1's call, not this milestone's.
+
+---
+
+## 6. Design implications for PRD #84
 
 Pulling it all together, the platform constraints shape the design as follows:
 
@@ -206,6 +226,9 @@ Pulling it all together, the platform constraints shape the design as follows:
 - [Claude Code Hooks Reference](https://code.claude.com/docs/en/hooks.md)
 - [Slash Commands in the SDK](https://code.claude.com/docs/en/agent-sdk/slash-commands)
 - [Checkpointing Documentation](https://code.claude.com/docs/en/checkpointing.md)
+- [Agent SDK File Checkpointing](https://code.claude.com/docs/en/agent-sdk/file-checkpointing.md) — `enable_file_checkpointing`, `rewindFiles()`/`rewind_files()`, the "checkpoint before risky operations" pattern
+- [CLI Reference](https://code.claude.com/docs/en/cli-reference.md) — confirms no checkpoint/rewind subcommand or flag for plain `claude -p`
+- Local, 2026-09-25: `claude --version` (2.1.280); live probe with `--settings` and `--dangerously-skip-permissions` confirming a `PreToolUse` hook denies a Bash-based write to a protected path exactly as reliably as `Edit`/`Write`, verified by disk state and a no-hook control run
 
 ### Ralph loops (community)
 - [Geoffrey Huntley — "everything is a ralph loop"](https://ghuntley.com/loop/)
