@@ -25,3 +25,11 @@ Verify directly if this ever needs re-checking: `python3 -c "import opentelemetr
 It's easy to assume all three parameters share the same "safe by default" `True` pattern, since two of them do — this was a real, shipped mistake (spinybacked-orbweaver PRD #373, CDQ-001 checker, caught by a CodeRabbit review round after the wrong assumption passed code review, typecheck, and a full test suite once). Never assume a Python OTel SDK parameter's default without checking its real signature — analogy from a sibling parameter in the same call is not verification.
 
 `start_as_current_span()` itself internally calls `use_span()` with `end_on_exit=True` explicitly — that's why `with tracer.start_as_current_span(...):` *does* close the span automatically, while a bare `with use_span(span):` does not. The two context managers are not interchangeable defaults.
+
+## `sys.exit()` does NOT bypass a `with` block's span cleanup — `os._exit()` does
+
+`sys.exit()` raises `SystemExit`, an ordinary Python exception. A `with tracer.start_as_current_span(...):` block's `__exit__` runs for *any* exception propagating out of the block, `SystemExit` included — the span closes normally, the same as any other exception. This holds even though a user's own `except Exception:` handler would *not* catch `SystemExit` by convention (`Exception` doesn't include `BaseException` subclasses like `SystemExit`) — that convention is about explicit except-clause matching, not about whether the `with` statement's own automatic exit machinery runs, which is unconditional.
+
+`os._exit()` is different: it terminates the process immediately at the C level without unwinding the Python call stack at all, so no `__exit__` anywhere ever runs and any open span genuinely leaks.
+
+A rule or check modeling "does this function's early exit leak its span" (spinybacked-orbweaver PRD #373, RST-006 checker) must flag `os._exit()` only, not `sys.exit()` — treating them as equivalent produces a false positive on every legitimate `sys.exit()` call inside a spanned function. Caught by a CodeRabbit review round after the wrong assumption (both are "process-exit calls, so both leak") shipped and passed a full test suite once.
