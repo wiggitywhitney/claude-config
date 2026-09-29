@@ -73,7 +73,7 @@ Debug with `launchctl list com.whitney.otelcol-contrib` (shows `PID`, `LastExitS
 
 Scoring the raw file directly can silently score a mix of targets. Run-27 got a false 70/100 — a `cluster-whisperer.vectorstore.initialize` root span and SPA-003/SPA-004/SPA-005 failures that belonged to the other target, not the one under test.
 
-**Before running `score-is.js`, filter the file**: keep only spans where `resource.attributes` has `service.name` matching the target's actual OTel service name, and `startTimeUnixNano` falls within a few seconds of this run's own app invocation (use the app's own log timestamps to bound the window). Write the filtered subset to `evaluation/<target>/run-<N>/eval-traces-run<N>.json` and score that file, not the shared one. Keep the filtered subset as run evidence for reproducibility.
+**Before running `score-is.js`, filter the file**: record the run's start and end as nanosecond timestamps (`python3 -c 'import time; print(time.time_ns())'`), once immediately before and once immediately after the app invocation, and wait 10 seconds afterward for the collector to flush. Keep only spans where `resource.attributes` has `service.name` matching the target's actual OTel service name, and `startTimeUnixNano` falls between the recorded start and the recorded end. Span start times are event times, so ingestion delay does not move them and the window needs no extension; a wider window pulls in spans from adjacent runs. A window of a few seconds around the invocation is the opposite mistake, since it drops most spans from a run that lasts minutes. Write the filtered subset to `evaluation/<language>/<target>/run-<N>/eval-traces-run<N>.json` and score that file, not the shared one. Keep the filtered subset as run evidence for reproducibility.
 
 **Sanitize before committing the filtered subset** — it carries local-machine identity in resource attributes: `process.owner`, `host.name`, `host.id`, `process.command_args`, `process.executable.path`, `process.command`, and any target-specific span attribute holding an absolute local path (e.g. commit-story-v2 span attribute `commit_story.context.repo_path`). Redact these (e.g. replace with `"REDACTED"`) before committing; none of them affect the IS score, so redaction is safe. Re-run the scorer against the sanitized file to confirm the score is unaffected before trusting the redaction didn't corrupt anything.
 
@@ -114,7 +114,7 @@ OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4318/v1/traces node --import
 
 Score and save:
 ```bash
-node evaluation/is/score-is.js evaluation/is/eval-traces.json --target <target> > evaluation/<target>/run-<N>/is-score.md
+node evaluation/is/score-is.js evaluation/<language>/<target>/run-<N>/eval-traces-run<N>.json --target <target> > evaluation/<language>/<target>/run-<N>/is-score.md
 ```
 
 Clean up:
