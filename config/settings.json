@@ -214,32 +214,9 @@
       "Bash(git branch -D:*) in wiggitywhitney/journal — force-delete guarded by journal-commit-preservation rule in global CLAUDE.md"
     ],
     "environment": [
-      "### Org-wide",
-      "**Organization**: None configured",
-      "**Primary use of Claude Code**: software development",
-      "**Cloud provider(s)**: None configured",
-      "**Repository visibility**: Private — wiggitywhitney/journal",
-      "**Secrets management**: `.env` is gitignored in this repo; Vals (`vals exec -f .vals.yaml --`) used for secret injection per global CLAUDE.md — never extract, store, or inline secret values",
-      "**CI/CD deploy targets**: None configured",
-      "**Network posture**: None configured",
-      "**Source control**: The trusted repo (wiggitywhitney/journal) and its remote (github.com/wiggitywhitney/journal) only — no additional orgs configured",
-      "**Trusted internal domains**: None configured",
-      "**Trusted cloud buckets**: None configured",
-      "**Key internal services**: None configured",
-      "**Internal package registry**: None configured",
-      "**Sensitive data locations & audiences**: `.env` files (e.g. `anki/aws-ai-practitioner/workflow/.env.example`); any file or store holding personal data, confidential business data, credentials, regulated data, or similarly sensitive material — preserve exact handles when known and share only with audiences cleared at the [named+specifics] bar",
-      "**Data retention / declassification**: None configured",
-      "**Protected deployment namespaces / environments**: None configured — fall back to the Sensitive remote targets heuristic",
-      "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries `prod` or `production` as a whole word or name segment",
-      "**Host containment**: None configured — assume Claude Code runs on an ordinary developer machine or CI runner with open internet",
-      "**Sensitive remote targets**: any namespace, host, or container whose name carries `prod` or `production` as a whole word or name segment (hyphen/underscore/dot-delimited)",
-      "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary (gist.github.com is contacted only via the board-gist skill, which deliberately publishes public gists as its purpose — not a general sharing channel)",
-      "**Default / protected branches**: main (default) for wiggitywhitney/journal. Protected branches: none listed via gh; rulesets not queryable here — do not assume unprotected",
-      "### User-specific",
-      "**Primary use of Claude Code**: personal journal/admin management, content-creation workflow automation (Datadog Illuminated, Thunder, SDI podcast), and Gmail/calendar triage via `gog` CLI, scoped to this repo (wiggitywhitney/journal)",
-      "**Trusted repo**: wiggitywhitney/journal (private) — this repo's own work is fine to commit/push here; content ported from outside this session's repo is not",
+      "$defaults",
       "**Org-specific CLIs**: `gog` (gogcli — Gmail/Calendar/Drive, authenticated for both a work account and a personal account), `colima` (Docker runtime, Datadog policy), `vals` (secrets injection), `yt-dlp`",
-      "Routine under `journal/`, `shows/`, `ambassador-checkins/`, and `.claude/scripts/` prefixes in this repo is expected working-directory activity for admin-task, content-idea, and advocacy-checkin skills"
+      "**Secrets management**: Vals (`vals exec -f .vals.yaml --`) injects secrets from Google Secret Manager — never extract, store, or inline secret values"
     ]
   }
 }
