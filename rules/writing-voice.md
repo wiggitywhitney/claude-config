@@ -123,6 +123,11 @@ Flagged as worrisome in the agent-traces talk draft, 2026-08-19. Not an outright
 - Do: "Your platform team should add that context."
 - Don't: "That's context worth adding."
 
+**Never use "quietly" — a word Claude overuses.** Whitney's own words: "you try to use it all the time... 'Quietly' fails." Describe what specifically happened instead of narrating the manner in which it happened.
+- Do: "the AI stopped rolling dice and started faking the math"
+- Don't: "the AI quietly stopped rolling dice and started faking the math"
+(Confirmed: rejected from the SDI Michael Rishi Forrester episode post drafts, 2026-09-21 — "quietly" appeared in the LinkedIn, Mastodon, Bluesky, and Micro.blog drafts.)
+
 **Use `(^-^)/` when greeting a new contact — internal Datadog or external warm intro.**
 One hand, a wave hello. No backslash before the opening parenthesis. Skip it for cold external email or formal context.
 
@@ -166,6 +171,11 @@ The passive version sounds like you're apologizing for asking. Just ask.
 **Follow-up nudges to prospective guests end with enthusiasm.** After the ask, add "I'd love to have you!" Short follow-ups need warmth to land well.
 - Do: "I'm following up on my note from last week. Are you interested in being a guest on Datadog Illuminated? I'd love to have you!"
 - Don't: "I wanted to follow up on my note from last week. Are you interested in being a guest on Datadog Illuminated?"
+
+**When inviting someone recommended as a replacement for another prospect, don't frame it as a replacement.** Cut "instead" and similar comparison language — it reminds the recipient they're a second choice. State the recommendation plainly.
+- Do: "She recommended you as the guest."
+- Don't: "She recommended you as the right person to tell the story instead."
+(Confirmed: sent version of the Gabriela Garcia Romero invite, 2026-09-21.)
 
 **"I would love" is acceptable when expressing genuine enthusiasm for someone's specific angle** — e.g., "I would love your perspective about X." It's warmer than "I am interested in" and fits panel invite contexts. The no-hedging rule applies to asks and questions ("Are you interested?" not "Would you be interested?"), not to statements of enthusiasm.
 
