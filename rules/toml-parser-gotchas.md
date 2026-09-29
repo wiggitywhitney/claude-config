@@ -16,7 +16,7 @@ It is the parser older articles recommend most, and it fails on valid real-world
 
 ## Use `smol-toml`, and pass `unsafeKeyBehaviour: 'throw'` for untrusted files
 
-`smol-toml` is ESM with bundled types and zero runtime dependencies. Since 1.9.0 the `unsafeKeyBehaviour` option controls a document containing a key named `__proto__`: `keep` (the default) returns it as an own property, `drop` silently removes it, `throw` raises. A parsed document never pollutes `Object.prototype` in any parser tested, but never spread or `Object.assign` a parsed object into another one, because that is where an own `__proto__` key turns into pollution. Read fields directly.
+`smol-toml` is ESM with bundled types and zero runtime dependencies. Since 1.9.0 the `unsafeKeyBehaviour` option controls a document containing a key named `__proto__`: `keep` (the default) returns it as an own property, `drop` silently removes it, `throw` raises. A parsed document never pollutes `Object.prototype` in any parser tested, but never use `Object.assign` or another setter-based merge on a parsed object, because an own `__proto__` key can change the target's prototype. Object spread preserves it as an own data property. Read fields directly.
 
 ## Integers beyond 53 bits throw by default
 
@@ -29,5 +29,5 @@ It is the parser older articles recommend most, and it fails on valid real-world
 ## Other candidates, so the search does not repeat
 
 - `@ltd/j-toml` is LGPL-3.0 and needs a license review before use in an Apache-2.0 project. It last changed in 2023.
-- `toml` 5.0.0 (2026-07-14) is current and claims TOML 1.1.0, so ignore advice about the old package, which supported only TOML 0.4. It is CommonJS. `import { parse } from 'toml'` works from ESM. It returns dates as strings.
+- `toml` 5.0.0 (2026-07-14) is current and claims TOML 1.1.0, so ignore advice about the old package, which supported only TOML 0.4. It is CommonJS. `import { parse } from 'toml'` works from ESM. It returns offset date-times as `Date` objects, and local date-times, local dates, and local times as strings.
 - `smol-toml` returns dates as `TomlDate`, a `Date` subclass.
