@@ -80,12 +80,17 @@ def run_tests():
         STUB_GH_PATH = os.path.join(stub_dir, "gh")
         write_file(stub_dir, "gh", STUB_GH)
         make_executable(STUB_GH_PATH)
+        # Every stand-in control is set here, so inherited values cannot change a result
+        # and each test's own override restores this baseline.
         with _env(PATH=stub_dir + os.pathsep + os.environ.get("PATH", ""),
-                  STUB_REVIEWED_PRS="777"):
+                  STUB_REVIEWED_PRS="777",
+                  STUB_API_FAIL="",
+                  STUB_CURRENT_PR=""):
             return _run_tests()
 
 
 def _run_tests():
+    """Run the hook assertions; the caller has put the stand-in gh on PATH."""
     t = TestResults("check-coderabbit-required.sh tests")
     t.header()
 
