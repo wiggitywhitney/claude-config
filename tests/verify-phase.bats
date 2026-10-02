@@ -29,12 +29,14 @@ setup() {
     # directory and commit in it, the way the verify test harness does.
     cat > "$TMPDIR/build-fixture.sh" <<'EOF'
 #!/usr/bin/env bash
+set -e
 fixture="$(mktemp -d)"
-cd "$fixture" || exit 1
+cd "$fixture"
 git init --quiet -b main
 git config user.email "test@test.com"
 git config user.name "Test"
 git commit --allow-empty -m "fixture" --quiet
+touch "$(dirname "$0")/fixture-built"
 EOF
     chmod +x "$TMPDIR/build-fixture.sh"
 
@@ -44,7 +46,6 @@ EOF
 #!/usr/bin/env bash
 cat > /dev/null
 "$VERIFY_PHASE" test "$TMPDIR/build-fixture.sh" "\$PWD" > /dev/null 2>&1
-exit 0
 EOF
     chmod +x "$CLONE/.git/hooks/pre-push"
 }
@@ -60,6 +61,8 @@ teardown() {
 
     run git -C "$WORKTREE" push origin feat
     [ "$status" -eq 0 ]
+    # The hook ran the fixture builder to completion, so the assertions below exercise it
+    [ -f "$TMPDIR/fixture-built" ]
 
     [ "$(git -C "$CLONE" config --get core.bare)" = "false" ]
     [ "$(git -C "$WORKTREE" log -1 --format=%an)" = "Real" ]
