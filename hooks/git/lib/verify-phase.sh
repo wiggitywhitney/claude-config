@@ -46,6 +46,14 @@ trap 'rm -f "$TMPOUT"' EXIT
 
 # Run the command in the project directory
 cd "$PROJECT_DIR" || exit 2
+
+# Git exports GIT_DIR (and can export the others) to hooks run from a linked worktree.
+# A command that builds its own git repositories would then act on this repository
+# instead of its own fixtures, so the command must locate its repository from its
+# working directory alone.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_PREFIX \
+      GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES
+
 eval "$COMMAND" 2>&1 | tee "$TMPOUT"
 EXIT_CODE=${PIPESTATUS[0]}
 
