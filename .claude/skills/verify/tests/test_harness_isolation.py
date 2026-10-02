@@ -60,6 +60,10 @@ def run_tests():
 
         env = os.environ.copy()
         env["GIT_DIR"] = sentinel_git_dir
+        sentinel_refs = _git_output(
+            sentinel, "for-each-ref", "--format=%(refname)=%(objectname)",
+        )
+        sentinel_index = _git_output(sentinel, "ls-files", "--stage")
         child = subprocess.run(
             [sys.executable, "-c", CHILD_SCRIPT.format(tests_dir=TESTS_DIR)],
             env=env, capture_output=True, text=True,
@@ -67,6 +71,18 @@ def run_tests():
         fixture = child.stdout.strip()
 
         t.assert_exit_code("child builds its fixture without error", child.returncode, 0)
+        t.assert_equal(
+            "the sentinel's local refs remain unchanged",
+            _git_output(
+                sentinel, "for-each-ref", "--format=%(refname)=%(objectname)",
+            ),
+            sentinel_refs,
+        )
+        t.assert_equal(
+            "the sentinel's index remains unchanged",
+            _git_output(sentinel, "ls-files", "--stage"),
+            sentinel_index,
+        )
         t.assert_equal(
             "fixture is its own repository",
             os.path.isdir(os.path.join(fixture, ".git")) if fixture else False,

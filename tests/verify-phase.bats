@@ -4,6 +4,8 @@
 
 VERIFY_PHASE="$BATS_TEST_DIRNAME/../hooks/git/lib/verify-phase.sh"
 
+# Builds a scratch clone with a linked worktree, and a pre-push hook that runs a
+# fixture builder through verify-phase.sh the way the real pre-push check does.
 setup() {
     TMPDIR="$(mktemp -d)"
     REMOTE="$TMPDIR/remote.git"
@@ -47,11 +49,15 @@ EOF
     chmod +x "$CLONE/.git/hooks/pre-push"
 }
 
+# Removes the scratch repositories.
 teardown() {
     rm -rf "$TMPDIR"
 }
 
 @test "a push from a linked worktree leaves the shared config and the worktree branch untouched" {
+    index_before="$(git -C "$WORKTREE" ls-files --stage)"
+    refs_before="$(git -C "$CLONE" for-each-ref --format='%(refname) %(objectname)' refs/heads)"
+
     run git -C "$WORKTREE" push origin feat
     [ "$status" -eq 0 ]
 
@@ -59,6 +65,8 @@ teardown() {
     [ "$(git -C "$WORKTREE" log -1 --format=%an)" = "Real" ]
     [ "$(git -C "$WORKTREE" log -1 --format=%s)" = "worktree commit" ]
     [ -z "$(git -C "$CLONE" branch --list 'feature/test-branch')" ]
+    [ "$(git -C "$WORKTREE" ls-files --stage)" = "$index_before" ]
+    [ "$(git -C "$CLONE" for-each-ref --format='%(refname) %(objectname)' refs/heads)" = "$refs_before" ]
 }
 
 @test "the command runs with git's repository-location variables removed" {
