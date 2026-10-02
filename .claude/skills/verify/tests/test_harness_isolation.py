@@ -34,6 +34,7 @@ print(fixture)
 
 
 def _git_output(repo, *args):
+    """Run git in repo and return its stripped stdout."""
     result = subprocess.run(
         [GIT, *args], cwd=repo, capture_output=True, text=True,
     )
@@ -41,6 +42,7 @@ def _git_output(repo, *args):
 
 
 def run_tests():
+    """Build a fixture while GIT_DIR names a linked worktree and assert nothing else changes."""
     t = TestResults("test_harness isolation tests")
     t.header()
 
