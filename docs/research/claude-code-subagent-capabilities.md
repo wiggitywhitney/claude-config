@@ -144,8 +144,8 @@ The fork's `Defer` disposition creates a GitHub issue via `gh issue create`, run
 
 | Capability | Label | Note |
 |---|---|---|
-| Bundled reviewer skill (`/review`) | **used worse here** | Shadowed by an April fork; the fork is the stalest of three installed implementations |
-| Effort levels (`low`…`max`) | **not used at all** | Unreachable through `/code-review` while the fork shadows it |
+| Bundled reviewer skill, reached via `/review` | **not used in practice** | `/review` itself is never shadowed — it always reaches the bundled skill. What's shadowed is `/code-review`, the name workflows actually invoke, which an April fork resolves to instead; the fork is the stalest of three installed implementations |
+| Effort levels (`low`…`max`) | **not used at all** | Unreachable through `/code-review` while the fork shadows it; still reachable via `/review`, which nothing here currently calls |
 | `claude ultrareview` / `ultra` tier | **not used at all — and not planned** | Same-vendor review; the all-Claude alternative sits disabled in Viktor's live config, which is configuration evidence of a standing preference rather than a measured verdict |
 | Verify pass (CONFIRMED/PLAUSIBLE/REFUTED) | **used worse here** | The fork scores 0–100 confidence with Haiku agents instead |
 | `ReportFindings` structured output | **not used at all** | The fork posts a hand-formatted markdown table |
