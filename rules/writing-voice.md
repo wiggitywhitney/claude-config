@@ -261,6 +261,15 @@ Don't assume the reader has the same context you do about who a third party is. 
 - Don't: "a user experience on top of the payload Spinybacked Orbweaver generates"
 (Confirmed: sent version of the Ajuna Slack update on the Dani meeting, 2026-09-18.)
 
+**Describe other people's views and reactions as what they said or what you saw, not as settled fact.** "He said that he sees X as a fit" rather than "he sees X as a fit"; "He seemed to like that idea" rather than "He picked up on that idea right away." A draft shouldn't claim more certainty about someone else's mind than Whitney has.
+(Confirmed: sent version of the Jeremy Garcia update, 2026-10-02.)
+
+**When reporting an idea you raised, include the question that prompted it.** "When he asked me how we might identify which code is business-critical, I pointed out that..." shows the reader why the idea came up, instead of an idea arriving out of nowhere. Offer the idea itself with a light "perhaps" when it is a suggestion, not a plan.
+(Confirmed: sent version of the Jeremy Garcia update, 2026-10-02.)
+
+**Name specific teams and people instead of generic descriptions, and add the personal connection when there is one.** "the Bits Detection team (my Bits Detection Illuminated guest @Eric Karschner used to work on APM with him!)" rather than "the engineering team I pointed him to." Use @-mentions in Slack for people the reader knows. If a draft can't name the team, flag it for Whitney rather than writing around it.
+(Confirmed: sent version of the Jeremy Garcia update, 2026-10-02.)
+
 **In follow-up messages within an existing Slack thread, skip the opener entirely.**
 Just start with a transition — "Also fyi", "One more thing", etc. No "Hi [Name]!" when continuing an existing conversation.
 
