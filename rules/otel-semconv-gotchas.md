@@ -77,15 +77,20 @@ Training data and many tutorials show the flat format: `{"role":"user","content"
 
 The entire value is stored as a JSON-serialized string in the span attribute. The flat format silently stores without error but does not conform to the spec and may not render correctly in Datadog LLM Observability. Applies to any language — this is the wire format, not an SDK API.
 
-## `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` value is `EVENT_ONLY` — NOT `true`
+## `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` takes different values in different packages
 
-Under `gen_ai_latest_experimental` semconv (the opt-in required for Datadog LLM Observability), setting `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=true` is an **invalid configuration**. It silently collects nothing — no error, no warning, just missing content on spans. The correct value is `EVENT_ONLY`:
+The GenAI spec mentions this variable only as an example opt-in and defines no values for it. Each instrumentation package parses it its own way. Before setting it, search the installed package for the variable name to see how it is read: for example, `grep -rn CAPTURE_MESSAGE_CONTENT node_modules/@opentelemetry/instrumentation-openai/build` in Node, or the same search under the package's `site-packages` directory in Python. Do not copy a value from one language's docs or tutorial to another. Packages outside the two below may use a different variable entirely, so confirm the name as well as the values.
 
-```bash
-OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=EVENT_ONLY
-```
+- **Python `opentelemetry-util-genai`** (the shared helper behind `opentelemetry-instrumentation-openai-v2` and other OTel Python GenAI packages), with `OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental` set: the accepted values are `NO_CONTENT` (the default), `SPAN_ONLY`, `EVENT_ONLY` and `SPAN_AND_EVENT`. `true` is invalid here. The library logs a warning ("is not a valid option ... Defaulting to `NO_CONTENT`") and captures nothing. Without the opt-in, `opentelemetry-instrumentation-openai-v2` accepts the legacy value `true`, which turns on the old per-message events.
+- **JS `@opentelemetry/instrumentation-openai`** (checked at 0.20.0): the variable is a boolean, so `true` turns capture on. The package does not read `OTEL_SEMCONV_STABILITY_OPT_IN`, and it does not recognize `EVENT_ONLY`.
 
-`EVENT_ONLY` emits prompt and completion content as span events rather than span attributes (avoids attribute size limits). Training data and tutorials commonly show `true` — this is correct for older semconv modes but wrong for `gen_ai_latest_experimental`. Verified against research/28-datadog-llm-obs-otlp-2026.md (Watch It Burn workshop, 2026-06-24).
+Where the content lands differs too:
+- Python `SPAN_ONLY` puts content on span attributes.
+- Python `EVENT_ONLY` sends it to the `gen_ai.client.inference.operation.details` event, which is a log record, not a span event.
+- The JS OpenAI package emits content only as log records.
+- The JS package's Responses API path sets `gen_ai.system_instructions` on the span even when capture is off, so turning capture off does not fully stop content capture there.
+
+Verified 2026-10-06 against source: `open-telemetry/opentelemetry-python-contrib` `util/opentelemetry-util-genai` at commit `2d9c5d05ee8c`, and `open-telemetry/opentelemetry-js-contrib` `packages/instrumentation-openai` at commit `2729b781e491`. The Python behavior was first observed in research/28-datadog-llm-obs-otlp-2026.md (Watch It Burn workshop, 2026-06-24).
 
 ---
 
