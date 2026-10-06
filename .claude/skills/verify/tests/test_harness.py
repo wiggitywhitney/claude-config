@@ -1,3 +1,5 @@
+# ABOUTME: Shared test framework for the verify suite — fixtures, runners, and assertions
+# ABOUTME: Stdlib only; also removes inherited git repository-location variables at import
 """Shared test framework for verify suite — stdlib only, no external dependencies.
 
 Provides:
@@ -16,6 +18,22 @@ import subprocess
 import sys
 import tempfile
 import shutil
+
+# ── Fixture isolation ───────────────────────────────────────────────
+
+# Git exports GIT_DIR to hooks run from a linked worktree. A fixture repository built
+# while it is set would be the enclosing repository, so every git command in a test
+# must locate its repository from its working directory alone.
+for _repository_location_variable in (
+    "GIT_DIR",
+    "GIT_WORK_TREE",
+    "GIT_INDEX_FILE",
+    "GIT_COMMON_DIR",
+    "GIT_PREFIX",
+    "GIT_OBJECT_DIRECTORY",
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+):
+    os.environ.pop(_repository_location_variable, None)
 
 # ── Colors ──────────────────────────────────────────────────────────
 
