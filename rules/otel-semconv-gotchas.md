@@ -86,7 +86,7 @@ The GenAI spec mentions this variable only as an example opt-in and defines no v
 
 Where the content lands differs too:
 - Python `SPAN_ONLY` puts content on span attributes.
-- Python `EVENT_ONLY` sends it to the `gen_ai.client.inference.operation.details` event, which is a log record, not a span event.
+- Python `EVENT_ONLY` sends it to the `gen_ai.client.inference.operation.details` event, which is a log record, not a span event. A second variable, `OTEL_INSTRUMENTATION_GENAI_EMIT_EVENT`, defaults to `true` under `EVENT_ONLY`. Setting it to `false` drops that log record, and the content does not move to span attributes instead, so `EVENT_ONLY` plus `EMIT_EVENT=false` records no content anywhere. One exception: a configured completion hook still receives the input and output messages and system instructions in every mode.
 - The JS OpenAI package emits content only as log records.
 - The JS package's Responses API path sets `gen_ai.system_instructions` on the span even when capture is off, so turning capture off does not fully stop content capture there.
 
