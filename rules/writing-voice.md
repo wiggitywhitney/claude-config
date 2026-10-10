@@ -270,8 +270,23 @@ Don't assume the reader has the same context you do about who a third party is. 
 **Name specific teams and people instead of generic descriptions, and add the personal connection when there is one.** "the Bits Detection team (my Bits Detection Illuminated guest @Eric Karschner used to work on APM with him!)" rather than "the engineering team I pointed him to." Use @-mentions in Slack for people the reader knows. If a draft can't name the team, flag it for Whitney rather than writing around it.
 (Confirmed: sent version of the Jeremy Garcia update, 2026-10-02.)
 
+**When an estimate depends on someone else doing part of the work, say so in the same sentence.** A number that silently assumes another person handles a stage reads as the full cost. Name the assumption and the precedent for it.
+- Do: "So that's more like 2.25 to 3.25 hours of work per episode, assuming someone else handles the editing and posting, like Coté does for SDI."
+- Don't: end on the bare number when the plan for who handles editing and posting isn't settled.
+(Confirmed: sent version of the Slack reply to Jeremy about Illuminated and On Air hours, 2026-10-07.)
+
+**Say "video editor," not bare "editor," when the reader may not know the role.** "Editor" alone could mean a written-content editor or an editing tool; "video editor" is unambiguous to a manager outside the production details.
+(Confirmed: Whitney changed "the editor's work" to "the video editor's work" in the sent version of the same reply, 2026-10-07.)
+
+**Don't point back to an earlier message with "As I mentioned in [X]'s message."** It reads as rude, as if the reader should have remembered. When a fact the reader already has is needed for the new point, restate it briefly as part of the new sentence, or leave it out.
+- Do: "Brian and @Janhavi want to try a POC in Q4, but they haven't decided what it looks like or who would work on it."
+- Don't: "As I mentioned in Friday's message, Brian and @Janhavi want to try a POC in Q4."
+(Confirmed: Whitney cut it from the reply to Jacob Petrie about Spinybacked Orbweaver investment, 2026-10-07: "It sounds kind of rude somehow.")
+
 **In follow-up messages within an existing Slack thread, skip the opener entirely.**
 Just start with a transition — "Also fyi", "One more thing", etc. No "Hi [Name]!" when continuing an existing conversation.
+When replying to someone else's message in a thread, a short agreement with what they said is a good opener ("I agree, very exciting!"). It still isn't a greeting.
+(Confirmed: Whitney opened her reply to Jacob Petrie with "I agree, very exciting!", 2026-10-07.)
 
 **When asking for guidance with two clear options, state both explicitly.**
 Don't ask an open-ended "what should I do?" — give the two options you're choosing between so the recipient can just pick one. "Do I ask them to submit the right forms? Or do I just ask for a link and put it in EPCAT myself?" is better than "What's the process here?"
@@ -300,6 +315,11 @@ Use simpler, more conversational phrasing in Slack. The formal construction read
 
 **Social posts about episodes: one direct insight sentence, not a "We cover" list.**
 Strip any "We cover..." or bullet-list-of-topics structure. After the episode context sentence, state the core takeaway as a single direct fact — no hedging, no qualifiers. "AI amplifies what's already there, good or bad." is right; five bullets explaining what the episode covers is not.
+
+**Keep an episode post on one story thread.** When the hook is a strong story (a demo, an incident, a surprising moment), the context sentence should stay on that story. Don't add a second paragraph that pivots to a different topic from the same episode just because the description covers it.
+- Do: "...about why that demo was so successful, despite, or maybe because of, the failures."
+- Don't: follow the drone-demo hook with an unrelated paragraph about whether working on open source makes you less strategic to your employer.
+(Confirmed: Whitney's edit of the SDI Lin Sun LinkedIn post, 2026-10-07. She also cut the drafted "I was in the room, and I remember nothing else from that day!" line.)
 
 **Every episode post gets a CTA between the insight sentence and the URL — phrasing depends on format.**
 For audio/podcast episodes: "Give it a listen!" followed by a blank line, then the URL on its own line.
