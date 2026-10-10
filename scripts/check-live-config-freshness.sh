@@ -37,7 +37,7 @@ fi
 # rules/ or global/'s freshness, and a blanket git-status check would warn on
 # that noise constantly. Let git's own fetch/merge be the authority on whether
 # anything actually blocks the update, and surface its real error if so.
-FETCH_OUTPUT=$(git -C "$LIVE_WORKTREE" fetch origin main 2>&1)
+FETCH_OUTPUT=$(GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="ssh -o ConnectTimeout=10 -o BatchMode=yes" git -C "$LIVE_WORKTREE" -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=15 fetch origin main 2>&1)
 FETCH_EXIT=$?
 
 if (( FETCH_EXIT != 0 )); then
