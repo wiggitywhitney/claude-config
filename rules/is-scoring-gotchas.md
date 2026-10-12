@@ -139,7 +139,7 @@ If you checked out just `src/`/`examples/` from the instrument branch (`git chec
 
 Full restore sequence — capture the exact paths the instrument branch added *before* the reset, then delete only those:
 ```bash
-git status --short  # must be clean before proceeding
+git status --short -- . ':!src' ':!examples'  # must be empty: no unrelated changes outside the checked-out paths
 git diff -z --name-only --diff-filter=A main <instrument-branch> -- src/ examples/ > /tmp/added-paths.z
 git reset HEAD -- src/ examples/ && git checkout -- src/ examples/
 [ -s /tmp/added-paths.z ] && xargs -0 rm -f -- < /tmp/added-paths.z
