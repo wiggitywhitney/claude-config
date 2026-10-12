@@ -128,7 +128,7 @@ Started 2026-08-02. Source: the claude-config scoping session of 2026-08-02, rec
   | `TaskCreated`, `TaskCompleted`, `TeammateIdle` | **not used at all** | Task-list and agent-team gates. Same Decision 7 question |
   | `InstructionsLoaded` | **not used at all** | It was the Milestone A2 instrument, now retired. Use it again if C1's byte budget needs measuring |
   | `PermissionRequest` | **not used at all** | Can allow or deny a call and change its input. It was the Milestone A3 instrument, retired by Decision 55 |
-  | `PreModelSwitch`, `PostModelSwitch` | **not applicable** | Absent from the 2.1.221 matcher list, so these are additions since then. Nothing here gates model switches |
+  | `PreModelSwitch`, `PostModelSwitch` | **not applicable** | Absent from the 2.1.221 matcher-capable list but matcher-capable at 2.1.296, so they were probably added since then. That can't be confirmed, because the 2.1.221 binary is gone and its full event list was never recorded. Nothing here gates model switches |
   | `ConfigChange` | **not applicable** | Can block mid-session config changes, except `policy_settings` |
   | `CwdChanged`, `FileChanged`, `DirectoryAdded` | **not applicable** | Environment-tracking events. No current use |
   | `UserPromptExpansion` | **not applicable** | Can block a slash-command expansion. Nothing here needs that |

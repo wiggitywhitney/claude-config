@@ -196,7 +196,7 @@ This matters because Whitney's managed settings pin Sonnet 5 on restart. Unless 
 
 **Step 0:** Read the "Findings that shaped the plan" section of [the decision log](../docs/research/claude-config-audit-decisions.md). Two findings gate this milestone: GitHub issue #21858 has been ruled out by live test, and the 96,637-byte context leak has been measured and is tracked in issue #108. Do not re-litigate either.
 
-Also read [Research: Claude Code context loading and compaction](../docs/research/claude-code-context-loading-and-compaction.md), produced by this milestone's research pass. It establishes the five load reasons, confirms that `paths:`-scoped rules do **not** survive compaction, and records the measured answer to the question the classification policy depends on: **`@`-imported rules are re-injected for imports from `~/.claude/CLAUDE.md`.** Project-level imports from `.claude/CLAUDE.md` are a different case, now fully closed: **Milestone B1's fresh-session probe (2026-09-21, Decision 94/97) established that a project-level `@`-import never resolves into context at all, at `session_start` or after `/compact`.** Milestone C1's byte budget should exclude project-level `@`-import content entirely, not count it toward any budget. See the Resolved Questions section of that research doc for both measurements. Do not re-open the user-level result, the `paths:` result, or the project-level result — all three are settled.
+Also read [Research: Claude Code context loading and compaction](../docs/research/claude-code-context-loading-and-compaction.md), produced by this milestone's research pass. It establishes the five load reasons, confirms that `paths:`-scoped rules do **not** survive compaction, and records the measured answer to the question the classification policy depends on: **`@`-imported rules are re-injected for imports from `~/.claude/CLAUDE.md`.** Project-level imports from `.claude/CLAUDE.md` are a different case and are open again. **Decision 102 (2026-10-10) found that the 2026-09-21 "never resolves" probe used a wrong import path. A correctly pathed project import loads at session start, and whether it survives `/compact` is unmeasured.** Milestone C1's byte budget counts correctly pathed project-import content at session start. See the Resolved Questions section of that research doc for the measurements. Do not re-open the user-level result or the `paths:` result, both of which are settled.
 
 **What:** Establish what Claude Code actually does today with rules, skills, context, and compaction — then produce a measured inventory of what loads in this setup and why.
 
@@ -321,7 +321,7 @@ Note that the write-it-down remedy has already been tried and failed inside this
 
 **This milestone runs LAST in Phase B, and it is no longer a survey (Decision 65).** Both changes were made on 2026-08-24 and the section below still reads as a first-position survey in places; **the checklist and this box are authoritative.**
 
-#### Progress as of 2026-09-21 — read this before starting
+#### Progress as of 2026-10-10 — read this before starting
 
 **Milestone B1 as a whole is still in progress — this box tracks which of its question groups are closed, not the milestone.** See "Still open" below for what remains before the milestone's own success criteria are met.
 
