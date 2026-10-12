@@ -121,7 +121,7 @@ The five load reasons, from Claude Code's own matcher vocabulary, mapped to what
 | Load reason | Produced by | Enters | Survives compaction |
 |---|---|---|---|
 | `session_start` | Managed-policy `CLAUDE.md`, `~/.claude/CLAUDE.md`, project `CLAUDE.md`, `CLAUDE.local.md`, and unscoped `rules/*.md` | Startup, outside message history | Yes, re-injected 🟢 — whether from disk or from cache was not measured; see Resolved Questions |
-| `include` | `@path` imports expanded from `~/.claude/CLAUDE.md` — **not** from a project-level `.claude/CLAUDE.md`, which never produces this load reason at all | Startup, alongside the referencing file | Yes for user-level imports 🟢 — measured. Project-level imports **load at session start when correctly pathed** 🟢 — measured 2026-10-10 at 2.1.296 (Decision 102). Survival after `/compact` 🔴 unmeasured. The 2026-09-21 "never resolve" result came from a wrong import path, see Resolved Questions |
+| `include` | `@path` imports expanded from `~/.claude/CLAUDE.md`, and from a project-level `.claude/CLAUDE.md` when the path is correct relative to that file (measured 2026-10-10 at 2.1.296: `load_reason: include`, `parent_file_path` set to the project `.claude/CLAUDE.md`) | Startup, alongside the referencing file | Yes for user-level imports 🟢 — measured. Project-level imports **load at session start when correctly pathed** 🟢 — measured 2026-10-10 at 2.1.296 (Decision 102). Survival after `/compact` 🔴 unmeasured. The 2026-09-21 "never resolve" result came from a wrong import path, see Resolved Questions |
 | `path_glob_match` | `rules/*.md` carrying `paths:` frontmatter | Message history, when a matching file is read | **No** 🟢 |
 | `nested_traversal` | `CLAUDE.md` in a subdirectory below cwd | Message history, when a file in that subdirectory is read | **No** 🟢 |
 | `compact` | Re-injection after a compaction event | Startup position | n/a — this *is* the re-injection |
@@ -178,6 +178,8 @@ Captured evidence, one line per file, trimmed to the fields that matter (all sha
 | `@probe-import.md` (relative to the importing file) | token returned |
 | `@.claude/probe-import.md` (the 2026-09-21 form) | `NONE` |
 | No import line (control) | `NONE` |
+
+A follow-up run of the `@probe-import.md` case, with an `InstructionsLoaded` hook layered in through `--settings`, logged the import with `load_reason: include` and `parent_file_path` set to the project `.claude/CLAUDE.md`. That is the same mechanism user-level imports use.
 
 A first pass without `--disallowedTools` returned the token for the wrong path too. The model had read the file with a tool, so only the tool-disabled run counts. **Disable file tools in any probe that asks the model what it has loaded.**
 
