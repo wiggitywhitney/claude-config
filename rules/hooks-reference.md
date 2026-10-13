@@ -31,6 +31,8 @@ These run inside the git process itself, providing stronger enforcement than Cla
 
 Install with `bash scripts/install-git-hooks.sh [repo-path]`. The installer is idempotent, backs up existing hooks, and never touches `post-commit` (reserved for commit-story). Source of truth: `hooks/git/`.
 
+**commit-story's `post-commit` hook has three behaviors that look like failures but aren't.** Observed 2026-10-12 and 2026-10-13 in claude-config. First, a commit that changes only journal files prints `Skipping: only journal entries changed` and `exit status 2`, but the commit has already landed, so check `git log -1` before retrying. Second, the hook writes or updates a journal entry a few seconds after each commit, so the tree is dirty again right after a clean commit, and a final `git status` needs a short pause first. Third, on a new branch cut from `origin/main`, the hook regenerates daily, weekly, and monthly summaries that already exist, with different content, on a long-lived feature branch. They show up as untracked files, and checking out the feature branch then fails because they would be overwritten. Do not delete them, since journal files are protected. Commit them only if this branch owns them, or move them to a backup directory outside the repo so the checkout can proceed, and tell Whitney where they went.
+
 **pre-commit dispatcher** (`hooks/git/pre-commit`) runs:
 - **branch-protection.sh** — blocks commits to main/master; opt out with `.skip-branching`; docs-only exemption per @rules/branch-protection.md
 - **progress-md.sh** — blocks commits when PRD checkboxes are marked done but PROGRESS.md is not staged
