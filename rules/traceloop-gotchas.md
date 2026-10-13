@@ -20,7 +20,7 @@ Every `@traceloop/instrumentation-*` 0.27.0 package pins `@opentelemetry/instrum
 
 For comparison, `@opentelemetry/instrumentation-openai` 0.21.0 pins the current `@opentelemetry/instrumentation` and has no `manuallyInstrument` at all. Under ESM it needs the loader hook: 0 spans without it, 1 with it.
 
-## `manuallyInstrument()` needs a package-specific argument, and a bare call throws
+## `manuallyInstrument()` needs a package-specific argument, and a bare call throws in 12 of 13 packages
 
 Calling `manuallyInstrument()` with no argument throws for 12 of the 13 packages. There is no generic call shape, so check this table before writing one. The table is for 0.27.0. These packages are pre-1.0, and earlier minor versions have changed the argument, so re-check the installed `.d.ts` after any upgrade:
 
