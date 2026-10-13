@@ -56,6 +56,7 @@ Never both — a file carrying both loads twice. Never neither — a file with n
 | `weaver-gotchas.md` | weaver files, `registry_manifest.y*ml`, `live-check*.ts` | v0.22.1 auto-escaping defaults, definition schema format, `HOME` propagation to subprocesses |
 | `is-scoring-gotchas.md` | `evaluation/`, collector YAML, `.vals.yaml` | Binary preferred over Docker, required Docker flags, port 4318 conflict, LaunchAgent setup |
 | `pino-gotchas.md` | pino, logger, instrumentation files, `package.json` | v10 is current, IITM ESM loader hook on Node v22+, MCP servers must log to stderr |
+| `traceloop-gotchas.md` | traceloop, openllmetry, instrumentation, sdk-init files, `package.json` | ESM module hook never fires on a current SDK (version skew), per-package `manuallyInstrument` arguments, chromadb no-op, `TRACELOOP_TRACE_CONTENT` ignored by standalone packages |
 
 ### Publishing and media
 
