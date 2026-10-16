@@ -108,7 +108,7 @@ Anyone filtering for `load_reason == "compact"` sees two files and concludes imp
 
 **Method, and three things that make it work.**
 
-1. **The probe must be interactive.** `/compact` is not dispatchable in headless `claude -p`, so the throwaway-settings approach that worked for the `session_start` case cannot reach this one. Transcript mining is also a dead end: instruction content never appears in the transcript's message history, so re-injection happens entirely outside the logged record.
+1. **The probe must be interactive.** `/compact` is not dispatchable in headless `claude -p`, so the throwaway-settings approach that worked for the `session_start` case cannot reach this one. Transcript mining is also a dead end: instruction content never appears in the transcript's message history, so re-injection happens entirely outside the logged record. **Corrected 2026-10-15 at 2.1.301:** `/compact` is now dispatchable headlessly through `claude -p --input-format stream-json`, with the whole probe in one process; see [claude-code-context-loading-and-compaction.md](claude-code-context-loading-and-compaction.md), under the project-level Resolved Questions entry.
 2. **Put the hook in `.claude/settings.local.json`.** It is gitignored, so no tracked file is mutated and the tracked-settings symlink defect does not apply. Back up the original first.
 3. **Verify the probe is live before compacting.** Hooks added to `settings.local.json` take effect mid-session with no restart — itself a finding worth keeping. Confirm by reading a file that triggers a path-scoped rule and checking that the log grew. A dead probe costs the session's whole context for no data, and the session cannot be un-compacted.
 

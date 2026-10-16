@@ -1,7 +1,7 @@
 # Research: How Claude Code Loads Rules, Skills, and CLAUDE.md — and What Compaction Does to Each
 
 **Project:** claude-config
-**Last Updated:** 2026-08-04
+**Last Updated:** 2026-10-15
 **Claude Code version verified against:** 2.1.220 (read from `claude --version` on 2026-08-03)
 **Produced for:** PRD #109 Milestone A2
 
@@ -12,6 +12,7 @@
 | 2026-08-03 | Initial research. Extends `claude-code-autonomous-capabilities.md` (2026-05-31), which covered compaction but never mentioned `rules/` or `paths:` frontmatter. |
 | 2026-08-04 | Scoped the measured `include` result to user-level imports. Project-level imports are untested — the project `CLAUDE.md` returned with `load_reason: compact` but produced no `include` record for either of its own two imports. Added managed-policy `CLAUDE.md` to the `session_start` row. Withdrew the `disable-model-invocation` recommendation, which described a behavior change as free. |
 | 2026-08-03 | Resolved the open `@`-import question by direct measurement. Removed the Conflicting Findings section and replaced it with Resolved Questions carrying the captured payloads; corrected the `include` row of the load-reason table from "undetermined" to "yes"; narrowed recommendation 3 to the one fact still unmeasured. |
+| 2026-10-15 | Measured at 2.1.301: a project import that points inside the working directory survives `/compact` and is re-read from disk when it does. Project imports that point outside the working directory do not load at all without the external-import approval, which explains the 2026-08-03 missing `include` records. Corrected the method note: `/compact` is dispatchable headlessly when the whole probe runs in one stream-json process. |
 
 ## Prior research this builds on
 
@@ -29,7 +30,7 @@ The finding that drives the classification policy (Milestone C1): **`paths:`-sco
 
 So the classification policy is not choosing between good and bad mechanisms. It is pricing a real trade-off: **durability across compaction costs always-loaded bytes, and there is no mechanism that gives both.**
 
-**Scope limit on the `@`-import half, stated here because this summary is what downstream work reads.** The durability result was measured for imports from `~/.claude/CLAUDE.md`: those survive `/compact`. Imports from a *project* `.claude/CLAUDE.md` **do resolve into context when the path is written relative to the importing file** (**Corrected 2026-10-10 (Decision 102):** a 2026-10-10 re-probe at 2.1.296 loaded `@probe-import.md` from `.claude/CLAUDE.md`). The 2026-09-21 probe that concluded they never resolve imported `@.claude/probe-import.md`, which resolves to `.claude/.claude/probe-import.md`, a file that did not exist. Whether project-level imports survive `/compact` is unmeasured. The paragraph's original claim, kept for the record: a single fresh-session probe against `@.claude/probe-import.md`, at 2.1.278, on 2026-09-21, found they never resolve into context in the first place, at `session_start` or otherwise, so there is nothing for `/compact` to preserve or drop. That is one probe on one import path at one version, not a platform-wide guarantee — re-verify before relying on it after a major version bump or for an import structured differently than a single flat file. See the Resolved Questions section below for the measurement. An unqualified "`@`-imports are durable" read from this summary would wrongly extend the user-level result to the project-level case regardless.
+**Scope limit on the `@`-import half, stated here because this summary is what downstream work reads.** The durability result was measured for imports from `~/.claude/CLAUDE.md`: those survive `/compact`. Imports from a *project* `.claude/CLAUDE.md` **do resolve into context when the path is written relative to the importing file** (**Corrected 2026-10-10 (Decision 102):** a 2026-10-10 re-probe at 2.1.296 loaded `@probe-import.md` from `.claude/CLAUDE.md`). The 2026-09-21 probe that concluded they never resolve imported `@.claude/probe-import.md`, which resolves to `.claude/.claude/probe-import.md`, a file that did not exist. **Measured 2026-10-15 at 2.1.301:** a project import whose file sits inside the working directory survives `/compact`, re-read from disk. A project import whose file sits outside the working directory, by any path syntax, does not load at all unless external imports have been approved for that project, and claude-config has never approved them. See the Resolved Questions section. The paragraph's original claim, kept for the record: a single fresh-session probe against `@.claude/probe-import.md`, at 2.1.278, on 2026-09-21, found they never resolve into context in the first place, at `session_start` or otherwise, so there is nothing for `/compact` to preserve or drop. That is one probe on one import path at one version, not a platform-wide guarantee — re-verify before relying on it after a major version bump or for an import structured differently than a single flat file. See the Resolved Questions section below for the measurement. An unqualified "`@`-imports are durable" read from this summary would wrongly extend the user-level result to the project-level case regardless.
 
 ---
 
@@ -121,7 +122,7 @@ The five load reasons, from Claude Code's own matcher vocabulary, mapped to what
 | Load reason | Produced by | Enters | Survives compaction |
 |---|---|---|---|
 | `session_start` | Managed-policy `CLAUDE.md`, `~/.claude/CLAUDE.md`, project `CLAUDE.md`, `CLAUDE.local.md`, and unscoped `rules/*.md` | Startup, outside message history | Yes, re-injected 🟢 — whether from disk or from cache was not measured; see Resolved Questions |
-| `include` | `@path` imports expanded from `~/.claude/CLAUDE.md`, and from a project-level `.claude/CLAUDE.md` when the path is correct relative to that file (measured 2026-10-10 at 2.1.296: `load_reason: include`, `parent_file_path` set to the project `.claude/CLAUDE.md`) | Startup, alongside the referencing file | Yes for user-level imports 🟢 — measured. Project-level imports **load at session start when correctly pathed** 🟢 — measured 2026-10-10 at 2.1.296 (Decision 102). Survival after `/compact` 🔴 unmeasured. The 2026-09-21 "never resolve" result came from a wrong import path, see Resolved Questions |
+| `include` | `@path` imports expanded from `~/.claude/CLAUDE.md`, and from a project-level `.claude/CLAUDE.md` when the path is correct relative to that file (measured 2026-10-10 at 2.1.296: `load_reason: include`, `parent_file_path` set to the project `.claude/CLAUDE.md`) | Startup, alongside the referencing file | Yes for user-level imports 🟢 — measured. Project-level imports **load at session start when correctly pathed** 🟢 — measured 2026-10-10 at 2.1.296 (Decision 102). **Yes after `/compact`, re-read from disk** 🟢 — measured 2026-10-15 at 2.1.301, for files inside the working directory. Files outside it never load without external-import approval. The 2026-09-21 "never resolve" result came from a wrong import path, see Resolved Questions |
 | `path_glob_match` | `rules/*.md` carrying `paths:` frontmatter | Message history, when a matching file is read | **No** 🟢 |
 | `nested_traversal` | `CLAUDE.md` in a subdirectory below cwd | Message history, when a file in that subdirectory is read | **No** 🟢 |
 | `compact` | Re-injection after a compaction event | Startup position | n/a — this *is* the re-injection |
@@ -148,7 +149,7 @@ One mechanism claim worth noting because it contradicts a common assumption: CLA
 
 **The label is the trap.** The two root memory files reappear with `load_reason: compact`; their imports reappear with `load_reason: include` and a `parent_file_path` pointing back at the root. So the mechanism is *re-resolution* rather than a distinct compaction path: the roots are re-injected and their `@`-imports are re-resolved through them.
 
-**Whether that re-resolution reads from disk or replays a cached expansion is not established here.** The payloads prove the records appear and name their parent; they say nothing about the source. The distinction matters in one practical case — editing a rule file mid-session and then compacting — so treat "picks up on-disk edits" as untested rather than implied. Filtering on `load_reason == "compact"` alone shows only the two roots and makes imports look dropped, which is the most likely origin of the issue #24460 report.
+**Partly answered 2026-10-15:** for a project-level import at 2.1.301, re-resolution reads from disk, and only at compaction, not on every turn. See the project-level entry below. User-level imports were not re-tested, though the `include` record shape is identical. **Whether that re-resolution reads from disk or replays a cached expansion is not established here.** The payloads prove the records appear and name their parent; they say nothing about the source. The distinction matters in one practical case — editing a rule file mid-session and then compacting — so treat "picks up on-disk edits" as untested rather than implied. Filtering on `load_reason == "compact"` alone shows only the two roots and makes imports look dropped, which is the most likely origin of the issue #24460 report.
 
 Captured evidence, one line per file, trimmed to the fields that matter (all share the single post-compaction `prompt_id`):
 
@@ -167,7 +168,7 @@ Captured evidence, one line per file, trimmed to the fields that matter (all sha
 
 **Consequence for the classification policy:** tier 4 buys what it claims. `@`-import is a durable mechanism, indistinguishable from an unscoped rule in both cost and survival. The trade-off in this document's summary stands unchanged — durability still costs always-loaded bytes — but the eleven rules Whitney deliberately made always-loaded are in fact always loaded.
 
-### Whether project-level `@`-imports are re-injected after compaction — reopened: the 2026-09-21 "never resolve" result came from a wrong import path
+### Whether project-level `@`-imports are re-injected after compaction — YES for files inside the working directory, measured 2026-10-15; files outside it never load without approval
 
 **Corrected 2026-10-10 (Decision 102):** The probe below wrote `@.claude/probe-import.md` inside `.claude/CLAUDE.md`. Claude Code resolves a relative import from the file that contains it, so that line pointed at `.claude/.claude/probe-import.md`, which did not exist. Its zero-record result shows that a missing file does not load. It does not show that project imports fail. The 2026-09-19 mid-session probe's path is not recorded and was probably the same.
 
@@ -183,7 +184,40 @@ A follow-up run of the `@probe-import.md` case, with an `InstructionsLoaded` hoo
 
 A first pass without `--disallowedTools` returned the token for the wrong path too. The model had read the file with a tool, so only the tool-disabled run counts. **Disable file tools in any probe that asks the model what it has loaded.**
 
-**What remains open.** First, whether a correctly pathed project import survives `/compact`. Second, interactive mode, which shows a first-time approval dialog for imports that `-p` never exercises. Third, the 2026-08-03 observation that started this thread. The two project imports then used home-relative paths (`@~/.claude/rules/hooks-reference.md`, `@~/.claude/rules/bats-bash-testing.md`), which this path mistake does not touch, and they still produced no `include` record at `/compact`. That stays unexplained. Both files carried `paths:` frontmatter, which is one untested possible factor.
+**What remained open after 2026-10-10.** First, whether a correctly pathed project import survives `/compact`. Second, interactive mode, which shows a first-time approval dialog for imports that `-p` never exercises. Third, the 2026-08-03 observation that started this thread. The two project imports then used home-relative paths (`@~/.claude/rules/hooks-reference.md`, `@~/.claude/rules/bats-bash-testing.md`), which this path mistake does not touch, and they still produced no `include` record at `/compact`. Both files carried `paths:` frontmatter, which was one untested possible factor. The first and third are answered below; the second is narrowed.
+
+**Survival across `/compact`, measured 2026-10-15 at 2.1.301.** Each run was one headless process, so the first turn, an on-disk edit, `/compact`, and the follow-up questions all happened in a single session with no restart:
+
+```text
+claude -p --model haiku --settings hooks.json --session-id <uuid> --input-format stream-json --output-format stream-json --verbose --disallowedTools Read Glob Grep Bash Task Agent
+```
+
+A small Python driver wrote one user message at a time to stdin and waited for each `result` event before sending the next. `hooks.json` registered a passive `InstructionsLoaded` logger. The import file started with one token, `ZEBRA-4471`. After the first turn the driver appended a second token, `OTTER-9902`, to the file on disk, then sent `/compact Do not mention any probe token or any token value anywhere in the summary.` The summary was checked and contained neither token.
+
+| Run | After the first turn | Asked for `ZEBRA-4471` | Asked for `OTTER-9902` |
+|---|---|---|---|
+| `/compact` | Second token appended on disk | `ZEBRA-4471` | `OTTER-9902` |
+| Control, no `/compact` | Second token appended on disk | `ZEBRA-4471` | `NONE` |
+
+After compaction the hook logged both root files with `load_reason: compact` and the import with `load_reason: include`, parented to the project `.claude/CLAUDE.md`. So a project import survives compaction, and it is re-read from disk at that moment. The control shows the re-read does not happen on ordinary turns. An import edited mid-session is picked up at the next compaction and not before.
+
+**The summary can mask the re-read.** An earlier run replaced `ZEBRA-4471` with `OTTER-9902` on disk instead of appending, and let the summary mention the old token. The hook still logged the `include`, but the model answered `ZEBRA-4471`, siding with the summary over the re-read file. That is one run. It is why the run above keeps tokens out of the summary and appends rather than replaces. Any probe that asks the model what survived compaction has to control for what the summary carries.
+
+**Where the file sits decides whether it loads; path syntax does not.** Same driver and same two-token method, varying only the import line:
+
+| Import line in `.claude/CLAUDE.md` | File location | Loads at session start | After `/compact` |
+|---|---|---|---|
+| `@probe-import.md` | Inside the working directory | Yes | Yes, re-read from disk |
+| `@~/b1-scratch-inside/.claude/probe-import.md` (project under `~`) | Inside the working directory | Yes | Yes, re-read from disk |
+| `@~/b1-probe-paths.md`, file carrying `paths:` frontmatter | Outside | No `include` record, `NONE` | No `include` record, `NONE` |
+| `@~/b1-probe-nopaths.md`, no frontmatter | Outside | No `include` record, `NONE` | No `include` record, `NONE` |
+| `@/tmp/b1-outside/probe.md` (absolute) | Outside | No `include` record, `NONE` | No `include` record, `NONE` |
+
+The gate is external-import approval. The 2.1.301 binary carries a `hasClaudeMdExternalIncludesApproved` per-project flag and a dialog reading "Allow external CLAUDE.md file imports? This project's CLAUDE.md or .claude/rules imports files outside the current working directory." `-p` cannot show that dialog. In `~/.claude.json`, the claude-config project has `hasClaudeMdExternalIncludesApproved: false` and `hasClaudeMdExternalIncludesWarningShown: false`.
+
+**That explains the 2026-08-03 observation.** Its two imports pointed into `~/.claude/rules/`, outside the claude-config working directory, and the project has never approved external imports, so they never loaded and there was nothing to re-resolve at `/compact`. `paths:` frontmatter is ruled out as the factor. The limit: `~/.claude.json` shows the flags now, not on 2026-08-03, so this is the most likely explanation rather than a reconstruction of that session's state.
+
+**Still open.** Interactive mode, now narrowed to external imports only. Imports inside the working directory should never raise the approval dialog, but that has not been checked interactively. What an approved external import does across `/compact` is untested.
 
 The original 2026-09-21 record follows, unchanged.
 
@@ -197,7 +231,7 @@ The session-start payload carried 14 records: eleven `include` records for the u
 
 *(Superseded by the correction above. This paragraph's conclusion does not hold.)* **This settles finding 6 completely.** Of the three original explanations, the fresh-session result rules out "only resolves at `session_start`, added too late to load" — this import *was* present at `session_start` and still didn't load. It also rules out "never re-resolves after compaction" as the operative mechanism, since there's no post-compaction question to ask about content that never loaded pre-compaction. What remains is the third explanation: **project-level `@`-imports from `.claude/CLAUDE.md` do not resolve at all**, at least not in this version. User-level `@`-imports from `~/.claude/CLAUDE.md` are the only ones this platform expands.
 
-*(Superseded: **Corrected 2026-10-10 (Decision 102):** a correctly pathed project import loads at session start, so its bytes count toward the session-start budget. Post-compaction survival is unmeasured.)* **Consequence for Milestone C1's byte budget, now unconditional rather than a hedge:** project-level `@`-import content never becomes always-loaded, always-resident context — it doesn't become resident at all. If a project `.claude/CLAUDE.md` ever carries a real `@`-import, its bytes should not be counted anywhere in the always-loaded budget; they're dead weight in the file, not a cost the session pays. (This repo's project `.claude/CLAUDE.md` currently has zero real `@`-imports outside this now-concluded probe.)
+*(Superseded: **Corrected 2026-10-10 (Decision 102):** a correctly pathed project import loads at session start, so its bytes count toward the session-start budget. **Measured 2026-10-15:** it is re-paid after every compaction too, when the file sits inside the working directory.)* **Consequence for Milestone C1's byte budget, now unconditional rather than a hedge:** project-level `@`-import content never becomes always-loaded, always-resident context — it doesn't become resident at all. If a project `.claude/CLAUDE.md` ever carries a real `@`-import, its bytes should not be counted anywhere in the always-loaded budget; they're dead weight in the file, not a cost the session pays. (This repo's project `.claude/CLAUDE.md` currently has zero real `@`-imports outside this now-concluded probe.)
 
 ### Prior state of this question (retained for provenance)
 
@@ -213,6 +247,8 @@ Before the measurement, the evidence pointed three ways and mattered more than a
 
 **Method note worth keeping.** The test only works interactively. `/compact` is not dispatchable in headless `claude -p`, and transcript mining cannot answer it either — instruction content never appears in the transcript's message history at all, so re-injection happens outside the logged record. A passive `InstructionsLoaded` hook plus a human running `/compact` is the only instrument that reaches this. Hooks added to `settings.local.json` take effect mid-session with no restart, which is what makes the passive approach practical.
 
+**Corrected 2026-10-15 at 2.1.301:** the first two sentences of this note no longer hold; the transcript-mining and `settings.local.json` points still do. `/compact` is dispatchable headlessly. It runs from `claude -p --input-format stream-json` with messages sent one at a time, and from `claude -p --resume <id>`. Only the single-process stream-json form can test survival, because every `--resume` starts a new process that reloads all instruction files at startup and hides whether anything survived. When this note was written at 2.1.220, headless dispatch was not available or was not found; which of those is unknown.
+
 ---
 
 ## Recommendation
@@ -223,7 +259,7 @@ Three things follow directly from the findings and are worth carrying into the c
 
 2. **Adopt Anthropic's trim line rather than inventing one:** cut what Claude can derive from the codebase, keep pitfalls, rationale, and conventions that differ from tool defaults. It is more decidable than "is this important," and `/doctor` applies the same heuristic, so the policy and the tooling agree.
 
-3. **Measure before deciding.** Two facts the policy depended on were unverified. The first, whether `@`-imports survive compaction, is measured for one half only. Imports from `~/.claude/CLAUDE.md` do survive. Imports from a project `.claude/CLAUDE.md` load at session start when the path is written relative to the importing file (**Corrected 2026-10-10 (Decision 102):** the 2026-09-21 "never enter context" result came from a wrong path). Whether they survive compaction is unmeasured, so this half is open again. Milestone C1's byte budget counts correctly pathed project-level import content at session start. The second, whether any `SKILL.md` exceeds the 5,000-token truncation cap, remains an *estimate* from `scripts/measure-context-load.sh` rather than a confirmed reading; the byte-to-token ratio is calibrated against one `/context` sample, so files near the cap could fall either side of it.
+3. **Measure before deciding.** Two facts the policy depended on were unverified. The first, whether `@`-imports survive compaction, is now measured on both halves. Imports from `~/.claude/CLAUDE.md` do survive. Imports from a project `.claude/CLAUDE.md` load at session start when the path is written relative to the importing file (**Corrected 2026-10-10 (Decision 102):** the 2026-09-21 "never enter context" result came from a wrong path), and **survive compaction, re-read from disk (measured 2026-10-15 at 2.1.301)**. That holds only when the imported file sits inside the working directory. A project import pointing outside it does not load at all unless external imports are approved for the project. Milestone C1's byte budget counts in-directory project-import content at session start and again after every compaction, and counts unapproved external project imports as zero. The second, whether any `SKILL.md` exceeds the 5,000-token truncation cap, remains an *estimate* from `scripts/measure-context-load.sh` rather than a confirmed reading; the byte-to-token ratio is calibrated against one `/context` sample, so files near the cap could fall either side of it.
 
 **No free win here, contrary to an earlier version of this document.** `disable-model-invocation: true` does remove a skill's description from every session's startup listing, but it also removes the model's ability to invoke that skill — leaving it reachable only by a human typing `/name`. Recommending it for "the side-effect lifecycle skills" was backwards: those are precisely the skills an autonomous run has to reach on its own, and Decision 15 prioritizes autonomy. Milestone C1 decides it per skill, weighing bytes against reachability. See finding 5.
 
@@ -236,6 +272,7 @@ Three things follow directly from the findings and are worth carrying into the c
 - `InstructionsLoaded` does not appear anywhere in the visible changelog, so its introduction version is unknown. Present at 2.1.220.
 - The changelog page truncated at 2.1.179, so older entries were not checked.
 - The `include` compaction result rests on a single manual `/compact` at 2.1.220. Auto-compaction was not directly observed. Re-verify after a major version bump.
+- The project-level `include` compaction results rest on headless stream-json runs at 2.1.301 with `--model haiku`, one run per variant, on 2026-10-15. Auto-compaction and interactive mode were not observed.
 - Docs pages for hooks truncated before the per-event schemas. The load-reason table was recoverable; the payload examples were not.
 
 ---
