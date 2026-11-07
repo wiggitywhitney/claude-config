@@ -137,6 +137,8 @@ Rules for the prompt:
 - Order it as the process to follow, step by step, not as a goal statement.
 - Keep it under about 350 words. When something needs more than a line, point to the file that holds it.
 - Write it in the user's voice, as a request to the next session ("Read…", "Run…", "Then…"). It is their message to send.
-- Don't put anything in it that the handoff files don't also say. If the prompt needs a fact that isn't in a file, write that fact into the handoff files first (Step 4 or 5) and commit again.
+- Don't put anything in it that the handoff files don't also say. If the prompt needs a fact that isn't in a file, write that fact into the handoff files (Step 4 or 5) so it lands in Step 6's commit.
 
 Before you send it, read the prompt as if you were the new session, with only the prompt and the repo. Check that you would know what to read first, what to run before any new work, and exactly where to resume. If any of those is unclear, fix the prompt, or the handoff files it points to.
+
+**Timing:** draft this prompt and do this read-through before Step 6's commit, so every handoff-file change it causes lands in that commit and the Step 7 report names the right SHA. If a handoff file changes after you commit anyway, commit it before you finish and report the newest SHA.
