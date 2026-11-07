@@ -1,12 +1,12 @@
 ---
 name: handoff-check
-description: Make sure a brand-new session could pick up exactly where this one left off. Writes down this session's decisions (with what was rejected and why), open questions, gotchas, and the next-session checklist in the project's own handoff files, then commits them. Use when the user asks for a handoff check, wants to log progress, or is about to pause, clear, or end a session that isn't PRD or issue work.
+description: Make sure a brand-new session could pick up exactly where this one left off. Writes down this session's decisions (with what was rejected and why), open questions, gotchas, and the next-session checklist in the project's own handoff files, commits them, and ends with a prompt to paste into the next session. Use when the user asks for a handoff check, wants to log progress, or is about to pause, clear, or end a session that isn't PRD or issue work.
 category: project-management
 ---
 
 # Handoff Check
 
-Follow the steps below in order: find the project's handoff files, check for edits made under you, list everything this session produced, write what's missing, update the next-session checklist, commit, and report.
+Follow the steps below in order: find the project's handoff files, check for edits made under you, list everything this session produced, write what's missing, update the next-session checklist, commit, report, and end with a prompt the user can paste into the next session.
 
 The next session starts cold, with no memory of this conversation, only the files in the repo. The check is done when every missing item has been written and committed, not when you've decided what's missing.
 
@@ -103,7 +103,7 @@ Before reporting, confirm each of these. Fix any that fail.
 - [ ] The cold-start test from Step 5 passes.
 - [ ] The commit contains only handoff files, and `git status` shows no handoff file left uncommitted.
 
-Then report in this shape, and keep it short. The detail lives in the files.
+Then report, and after the report, write the prompt for the next session (Step 8). Report in this shape, and keep it short. The detail lives in the files.
 
 ```markdown
 **Handoff check done.** Committed as `<sha>`.
@@ -113,3 +113,27 @@ Then report in this shape, and keep it short. The detail lives in the files.
 - **Left uncommitted, not mine:** <file> (one line each, or "nothing")
 - **Next session starts at:** <one line>
 ```
+
+## Step 8: Write the prompt for the next session
+
+End your reply with a prompt the user can paste, as is, into a brand-new session to pick up the work. Put it in a fenced `text` code block, under the heading **Prompt for the next session**, so it copies cleanly. If the prompt itself contains a triple-backtick fence, use four backticks for the outer block. It is the last thing in your reply.
+
+Write it for a reader who has never seen this conversation. That reader has the repo and the prompt, nothing else. Build it in this order, leaving out any step that doesn't apply:
+
+1. **Name the work.** One sentence: what project this is and that it picks up where the last session left off.
+2. **Run `date` first,** if the work involves dates, deadlines or dated files.
+3. **Say what to read, by exact path and section name.** Point to the handoff files and the sections you just wrote or updated (the next-session checklist, today's decisions, open questions, gotchas), plus any other file the next step depends on. Point, don't restate: the detail lives in the files, and a copy in the prompt goes stale.
+4. **Name the conventions that trip a newcomer,** in one line each: a numbering scheme, a naming rule, which document wins when two disagree.
+5. **Say what to check before any new work,** with the exact commands or scripts and where to run them, and what to report back from them.
+6. **Name the sessions or agents to reconnect with,** and how to find them (for example, "find the filer session with ListAgents; it has 'Filer' in its name"), and what to do if one is gone.
+7. **Say where to resume,** exactly: the item, slide, file or step, and the working loop the project uses there, if it has one.
+
+Rules for the prompt:
+
+- Use exact paths, commands, issue numbers and names. Never use shorthand coined in this conversation.
+- Order it as the process to follow, step by step, not as a goal statement.
+- Keep it under about 350 words. When something needs more than a line, point to the file that holds it.
+- Write it in the user's voice, as a request to the next session ("Read…", "Run…", "Then…"). It is their message to send.
+- Don't put anything in it that the handoff files don't also say. If the prompt needs a fact that isn't in a file, write that fact into the handoff files first (Step 4 or 5) and commit again.
+
+Before you send it, read the prompt as if you were the new session, with only the prompt and the repo. Check that you would know what to read first, what to run before any new work, and exactly where to resume. If any of those is unclear, fix the prompt, or the handoff files it points to.
