@@ -16,6 +16,7 @@ Shared Claude Code testing infrastructure, safety config, and developer tooling.
 | `/research` Skill | [`.claude/skills/research/`](.claude/skills/research/) | Structured technical research with cited sources |
 | `/write-prompt` Skill | [`.claude/skills/write-prompt/`](.claude/skills/write-prompt/) | Guided prompt engineering for system prompts and skills |
 | `/write-docs` Skill | [`.claude/skills/write-docs/`](.claude/skills/write-docs/) | Validated documentation with real command output |
+| `/handoff-check` Skill | [`.claude/skills/handoff-check/`](.claude/skills/handoff-check/) | Write down decisions, open questions, gotchas and the next-session checklist so a new session can resume |
 | `/anki` Skill | [`.claude/skills/anki/`](.claude/skills/anki/) | Create Anki cards from conversation context |
 | `/anki-yolo` Skill | [`.claude/skills/anki-yolo/`](.claude/skills/anki-yolo/) | Create and save Anki cards autonomously |
 | PRD Skills | [`.claude/skills/`](.claude/skills/) | Full PRD lifecycle: create, start, next, update, close, done |
