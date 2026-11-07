@@ -104,7 +104,7 @@ git pull
 ./setup.sh --install
 ```
 
-Since symlinks point into the repo, changes to CLAUDE.md, rules, and skills take effect immediately after `git pull`. Re-running `--install` is only needed when `settings.template.json` changes (new hooks, permissions, or settings).
+Since symlinks point into the repo, changes to CLAUDE.md, rules, and existing skills take effect immediately after `git pull`. Re-run `./setup.sh --install` when a new skill is added (each skill gets its own symlink) or when `settings.template.json` changes (new hooks, permissions, or settings).
 
 ### Customization
 

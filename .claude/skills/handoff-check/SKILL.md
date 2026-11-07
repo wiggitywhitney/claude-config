@@ -13,7 +13,7 @@ The next session starts cold, with no memory of this conversation, only the file
 ## When another skill fits better
 
 - **PRD work is active** (a `prds/` file is being implemented this session): use `/prd-update-progress`, which handles the PRD, the journal, and the commit together. Stop here.
-- **Issue work is active** (the branch is `feature/<numbers>-...`): use `/issue-update-progress`, which posts the checkpoint `/issue-next` reads. Stop here.
+- **Issue work is active** (this session implemented an issue, usually on a `feature/<numbers>-...` branch): use `/issue-update-progress`, which posts the checkpoint `/issue-next` reads. Stop here. Decide from what this session did, not from the branch name alone: a review or planning session can run on an issue-named branch, and `/issue-update-progress` would then commit unrelated work and post an unrelated checkpoint. If it's unclear, ask the user.
 
 Use this skill for everything else: walkthroughs, reviews, research, planning, and long working sessions that keep their state in a document.
 
@@ -40,9 +40,10 @@ Before editing, look at the working tree:
 ```bash
 git status --short
 git diff -- <each handoff file>
+git diff --cached -- <each handoff file>
 ```
 
-The user, or another session, may be editing the same files right now. Read any uncommitted edits in the handoff files and keep them. They are the user's words. If you edit with a script, re-read the file first, so a find-and-replace doesn't fail on (or overwrite) text the user just changed.
+The user, or another session, may be editing the same files right now. Read any uncommitted edits, staged or not, in the handoff files and keep them. They are the user's words. If you edit with a script, re-read the file first, so a find-and-replace doesn't fail on (or overwrite) text the user just changed.
 
 ## Step 3: Scan the conversation
 
@@ -89,6 +90,8 @@ Remove checklist items that are done. Then run the cold-start test: if a new ses
 Follow the repo's own workflow: its branch rules, and a `PROGRESS.md` entry if the repo requires one with every commit.
 
 - Stage **only the handoff files you checked or edited.** Never `git add -A` or `git commit -a`.
+- Check the index first with `git diff --cached --name-only`. If files you didn't touch are already staged, leave them staged and commit only your paths with `git commit -- <handoff files>`, so the commit can't sweep them in.
+- If nothing changed (the handoff was already current), don't make an empty commit. Report that the handoff was already up to date.
 - Leave other uncommitted files alone. They may belong to the user or to another session. List them in your report instead.
 - If a hook rejects the commit, read its message, fix the cause, and commit again.
 
@@ -106,7 +109,7 @@ Before reporting, confirm each of these. Fix any that fail.
 Then report, and after the report, write the prompt for the next session (Step 8). Report in this shape, and keep it short. The detail lives in the files.
 
 ```markdown
-**Handoff check done.** Committed as `<sha>`.
+**Handoff check done.** Committed as `<sha>` (or: already up to date, nothing to commit).
 
 - **Written:** <what> → `<file>`, <section> (one line each)
 - **Still open for you:** <question> (one line each, or "nothing")
