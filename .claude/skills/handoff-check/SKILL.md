@@ -141,4 +141,4 @@ Rules for the prompt:
 
 Before you send it, read the prompt as if you were the new session, with only the prompt and the repo. Check that you would know what to read first, what to run before any new work, and exactly where to resume. If any of those is unclear, fix the prompt, or the handoff files it points to.
 
-**Timing:** draft this prompt and do this read-through before Step 6's commit, so every handoff-file change it causes lands in that commit and the Step 7 report names the right SHA. If a handoff file changes after you commit anyway, commit it before you finish and report the newest SHA.
+**Timing:** draft this prompt and do this read-through before Step 6's commit, so every handoff-file change it causes lands in that commit and the Step 7 report names the right SHA. If a handoff file changes after you commit anyway, commit it, reread the prompt against the final files and update it so it matches them, and report the newest SHA.
