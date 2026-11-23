@@ -363,6 +363,18 @@ teardown() {
     [[ "$output" == *"[OK] private file: my-project/.claude/design-decisions.md"* ]]
 }
 
+@test "restores private file to a git worktree, whose .git is a file" {
+    mkdir -p "$CLAUDE_PERSONAL_DIR/private-files/my-project-live/rules"
+    echo "voice rules" > "$CLAUDE_PERSONAL_DIR/private-files/my-project-live/rules/voice.md"
+    mkdir -p "$REPOS_DIR/my-project-live"
+    echo "gitdir: /elsewhere/.git/worktrees/my-project-live" > "$REPOS_DIR/my-project-live/.git"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [ "$(cat "$REPOS_DIR/my-project-live/rules/voice.md")" = "voice rules" ]
+    [[ "$output" == *"[OK] private file: my-project-live/rules/voice.md"* ]]
+}
+
 @test "skips private file restore when repo not cloned" {
     mkdir -p "$CLAUDE_PERSONAL_DIR/private-files/missing-project/journal"
     echo "entry" > "$CLAUDE_PERSONAL_DIR/private-files/missing-project/journal/2026-04-13.md"

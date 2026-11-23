@@ -154,6 +154,21 @@ _commit_count() {
     [[ "$output" != *"not-a-repo"* ]]
 }
 
+@test "backs up .private-sync paths from a git worktree, whose .git is a file" {
+    _make_repo "my-project"
+    git -C "$REPOS_DIR/my-project" -c user.email=t@example.com -c user.name=T -c commit.gpgsign=false commit --allow-empty -m init --quiet
+    git -C "$REPOS_DIR/my-project" worktree add --quiet --detach "$REPOS_DIR/my-project-live"
+    [ -f "$REPOS_DIR/my-project-live/.git" ]
+    echo "rules/voice.md" > "$REPOS_DIR/my-project-live/.private-sync"
+    mkdir -p "$REPOS_DIR/my-project-live/rules"
+    echo "voice rules" > "$REPOS_DIR/my-project-live/rules/voice.md"
+
+    run "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"[OK] backed up my-project-live/rules/voice.md"* ]]
+    [ "$(cat "$CLAUDE_PERSONAL_DIR/private-files/my-project-live/rules/voice.md")" = "voice rules" ]
+}
+
 # ── --repos-dir flag ─────────────────────────────────────────────────────────
 
 @test "--repos-dir overrides default repos directory" {

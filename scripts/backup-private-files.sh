@@ -63,7 +63,8 @@ fi
 # ── Backup loop ───────────────────────────────────────────────────────────────
 
 for repo_path in "$REPOS_DIR"/*/; do
-    [[ -d "$repo_path/.git" ]] || continue
+    # -e, not -d: a git worktree has a .git file rather than a directory
+    [[ -e "$repo_path/.git" ]] || continue
     repo_name="$(basename "$repo_path")"
 
     # Build sync list: defaults plus any paths in .private-sync
