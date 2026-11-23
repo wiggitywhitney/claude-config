@@ -235,7 +235,8 @@ if [[ -d "$PRIVATE_FILES_SRC" ]]; then
         repo_name="$(basename "$repo_backup_dir")"
         repo_path="$REPOS_DIR/$repo_name"
 
-        if [[ ! -d "$repo_path/.git" ]]; then
+        # -e, not -d: a git worktree has a .git file rather than a directory
+        if [[ ! -e "$repo_path/.git" ]]; then
             skipped "private files: $repo_name — repo not cloned yet"
             SKIPPED_REPOS+=("$repo_name")
             continue
