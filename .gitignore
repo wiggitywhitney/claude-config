@@ -7,3 +7,6 @@ _autonomous-run.log
 !prds/
 research/repos/
 .claude/settings.local.json.bak-*
+
+# Voice rules quote private emails, feedback, and personal details; kept local only
+rules/writing-voice.md

@@ -39,7 +39,7 @@ Never both — a file carrying both loads twice. Never neither — a file with n
 | `macos-image-processing.md` | `sips` and filenames with spaces, screenshot narrow no-break space |
 | `testing-rules.md` | TDD cycle, always/never lists, test tier requirements |
 | `vals-secrets.md` | Injecting secrets with `vals exec` instead of extracting them |
-| `writing-voice.md` | Whitney's voice rules for anything she puts her name on |
+| `writing-voice.md` | Whitney's voice rules for anything she puts her name on. Gitignored: it lives only in the local checkout, because its examples quote private emails and feedback. |
 
 ## Loaded on demand (`paths:`-scoped)
 
@@ -66,9 +66,10 @@ Never both — a file carrying both loads twice. Never neither — a file with n
 | `social-video-upload-gotchas.md` | bluesky, mastodon, linkedin, video, social files | Bluesky service token audience, Mastodon async 202 poll, LinkedIn four-step upload and ETag stripping |
 | `microblog-api-gotchas.md` | microblog files, `src/**/*.js` | Dual auth tokens, `editPage` parameter order, feed-based cross-posting |
 | `yt-dlp-gotchas.md` | yt-dlp, youtube files, workflow YAML | Format selectors, ffmpeg-absent merge exits 0, PO tokens, Chrome cookies unreadable |
-| `presentation-slides.md` | `.qmd`, `slides/`, `_quarto.y*ml`, `custom.scss` | Progressive reveal patterns, readability at conference scale, speaker notes voice |
+| `presentation-slides.md` | `.qmd`, `slides/`, `_quarto.y*ml`, `custom.scss`, `talks/**/*speaker-notes*.md`, `talks/**/*slides-notes*` | Progressive reveal patterns, readability at conference scale, talk review process (read-alouds, numbered replies), speaker notes voice |
 | `quarto-revealjs-capabilities.md` | `.qmd`, `_quarto.y*ml`, `slides/`, `custom.scss` | What the slide stack can do — layout, animation, backgrounds, Mermaid, presenter tools |
 | `decktape-gotchas.md` | `.qmd`, `_quarto.y*ml`, `decktape*` | Converting reveal.js decks to PDF — why `?print-pdf` stalls capture, serving over HTTP not `file://`, matching `--size` to the deck viewport |
+| `slidev-gotchas.md` | `slides.md`, slidev files, `deck/**/*.md` | v53 needs Node 22.12+, notes only from the closing comment, frontmatter image paths break after build, export needs playwright-chromium and drops click steps |
 | `mmdc-gotchas.md` | `.mmd`, `.qmd`, `slides/` | Puppeteer peer dependency, Apple Silicon Chrome path, `npx -p` flag, invisible long labels |
 
 ### Tooling and platform
